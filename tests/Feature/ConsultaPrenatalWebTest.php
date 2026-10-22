@@ -200,6 +200,10 @@ class ConsultaPrenatalWebTest extends TestCase
         $respuesta->assertSee('FPP');
         $respuesta->assertSee('Sin FUR');
 
+        // El cálculo en vivo del cliente usa el día del consultorio y los 280 días de la regla del servidor.
+        $respuesta->assertSee('data-hoy="' . \App\Clinica\FechaDelConsultorio::hoyComoFecha()->toDateString() . '"', false);
+        $respuesta->assertSee('data-dias-fpp="280"', false);
+
         // Una historia sin gestas lo dice.
         $respuesta->assertSee('Esta historia todavía no tiene ninguna gesta');
         $respuesta->assertSee($this->urlGuardar($consulta), false);

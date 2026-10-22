@@ -116,7 +116,9 @@ class HoyLocalDelConsultorioTest extends TestCase
         $disponibilidad = app(PacienteAtencionContextService::class)->consultarProximoDiaDisponible($medico->reg_medico);
 
         $this->assertTrue($disponibilidad['disponible']);
-        $this->assertSame('2026-10-20', $disponibilidad['opciones'][0]['fecha']);
+        // Hoy local es el 20 a las 22:00, pero el chatbot exige 24 h de anticipación: el 21 a las 08:00 queda
+        // a 10 h y el primer día ofrecido es el 22 (con la regla vieja era el 20).
+        $this->assertSame('2026-10-22', $disponibilidad['opciones'][0]['fecha']);
     }
 
     public function test_el_prompt_de_gemini_dice_el_hoy_local(): void

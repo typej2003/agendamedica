@@ -115,6 +115,14 @@
             }
         });
 
+        // Submenús del menú lateral (<details>): el estado abierto/cerrado se refleja en aria-expanded del <summary>.
+        document.addEventListener('toggle', function (e) {
+            const grupo = e.target;
+            if (!grupo || !grupo.matches || !grupo.matches('details.nav-grupo')) return;
+            const resumen = grupo.querySelector(':scope > summary');
+            if (resumen) resumen.setAttribute('aria-expanded', grupo.open ? 'true' : 'false');
+        }, true);
+
         // Menú lateral del panel en pantallas chicas: se desliza sobre el contenido.
         (function () {
             const menu = document.getElementById('sidebarMenu');

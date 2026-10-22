@@ -17,6 +17,11 @@ use Illuminate\Support\Collection;
  */
 final class FichaDePacienteVista
 {
+    /** @var array{cuando:\Carbon\CarbonInterface, por:?string}|null */
+    private ?array $confirmacionDeCedula = null;
+
+    private ?string $urlConfirmarCedula = null;
+
     public function __construct(
         private object $paciente,
         private Collection $consultas,
@@ -149,6 +154,48 @@ final class FichaDePacienteVista
      * contenedor** (`tests/Unit/Clinica/`), y un `route()` adentro obligaría a levantar Laravel para
      * probar la ficha. Es el mismo criterio que `conSeguro()`, que recibe el catálogo ya leído.
      */
+    /**
+     * El mismo ViewModel con la **cédula confirmada** (identidad nivel 2: el personal vio la cédula laminada) y la URL
+     * para confirmarla. `$confirmacion` es `null` si todavía no se confirmó, o `['cuando' => Carbon, 'por' => ?string]`.
+     *
+     * @param  array{cuando:\Carbon\CarbonInterface, por:?string}|null  $confirmacion
+     */
+    public function conIdentidad(?array $confirmacion, ?string $urlConfirmarCedula): self
+    {
+        $copia = clone $this;
+        $copia->confirmacionDeCedula = $confirmacion;
+        $copia->urlConfirmarCedula = $urlConfirmarCedula;
+
+        return $copia;
+    }
+
+    public function cedulaConfirmada(): bool
+    {
+        return $this->confirmacionDeCedula !== null;
+    }
+
+    /** «Confirmada el 22/10/2026 por Ana Pérez», para el título del distintivo. */
+    public function textoDeCedulaConfirmada(): string
+    {
+        if ($this->confirmacionDeCedula === null) {
+            return '';
+        }
+
+        return 'Confirmada el ' . $this->confirmacionDeCedula['cuando']->format('d/m/Y')
+            . ($this->confirmacionDeCedula['por'] ? ' por ' . $this->confirmacionDeCedula['por'] : '') . '.';
+    }
+
+    /** ¿Se ofrece «Confirmar cédula»? Sólo con una cédula real y sin confirmar (o ya confirmada con otra). */
+    public function puedeConfirmarCedula(): bool
+    {
+        return $this->urlConfirmarCedula !== null && $this->cedula() !== null && ! $this->cedulaConfirmada();
+    }
+
+    public function urlConfirmarCedula(): ?string
+    {
+        return $this->urlConfirmarCedula;
+    }
+
     public function conUrlAsignarHistoria(string $url): self
     {
         $copia = clone $this;
@@ -294,6 +341,10 @@ final class FichaDePacienteVista
                 // El número está pero la historia no: el estado lo dice con el mismo tono que «Sin historia»
                 // para que no se lea como que el paciente ya se puede atender (trampa 143).
                 : ['tono' => 'aviso', 'icono' => 'bi-exclamation-triangle', 'texto' => 'Historia ' . $this->numeroDeHistoria() . ' sin registrar'])];
+
+        if ($this->cedulaConfirmada()) {
+            $estados[] = ['tono' => 'exito', 'icono' => 'bi-patch-check', 'texto' => 'Cédula confirmada', 'titulo' => $this->textoDeCedulaConfirmada()];
+        }
 
         if ($this->edad() !== null) {
             $estados[] = ['tono' => 'neutro', 'icono' => 'bi-cake2', 'texto' => $this->edad()];

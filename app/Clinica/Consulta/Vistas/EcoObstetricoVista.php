@@ -137,12 +137,6 @@ class EcoObstetricoVista
         $ayuda = 'La ecografía del embarazo temprano: el saco, la vitalidad del embrión, las medidas (LCC, DBP, '
             . 'translucencia nucal) y los marcadores de riesgo. Se guarda con el botón.';
 
-        if ($this->furSugerida !== null) {
-            $ayuda .= ' La FUR y la gesta se completan con las del control prenatal de la historia ('
-                . 'FUR ' . $this->furSugerida . ($this->gestaSugerida !== null ? ', gesta ' . $this->gestaSugerida : '')
-                . ') si no las escribes acá.';
-        }
-
         return $ayuda;
     }
 

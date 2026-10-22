@@ -106,7 +106,7 @@ class ExamenCatalogoController extends Controller
                 }
 
                 return redirect()
-                    ->route('clinica.catalogos.examenes', ['buscar' => trim((string) $creado->examen)])
+                    ->route('clinica.catalogos.examenes')
                     ->with('estado', 'Creaste «' . trim((string) $creado->examen) . '» en tus exámenes (código ' . trim((string) $creado->codeexamen) . ').');
             }
 

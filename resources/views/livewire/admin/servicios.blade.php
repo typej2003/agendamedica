@@ -4,19 +4,6 @@
 
     <x-ui.avisos />
 
-    <ul class="nav nav-tabs mb-3">
-        <li class="nav-item">
-            <button type="button" class="nav-link {{ $pestana === 'servicios' ? 'active' : '' }}" wire:click="cambiarPestana('servicios')">
-                <i class="bi bi-people me-1"></i> Servicios por médico
-            </button>
-        </li>
-        <li class="nav-item">
-            <button type="button" class="nav-link {{ $pestana === 'planes' ? 'active' : '' }}" wire:click="cambiarPestana('planes')">
-                <i class="bi bi-card-checklist me-1"></i> Planes
-            </button>
-        </li>
-    </ul>
-
     {{-- ========================= Servicios por médico ========================= --}}
     @if ($pestana === 'servicios')
         @php

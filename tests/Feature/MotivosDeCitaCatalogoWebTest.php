@@ -240,7 +240,8 @@ class MotivosDeCitaCatalogoWebTest extends TestCase
             'razon' => '  ecografía   obstétrica ', 'precio' => '120.5', 'office_id' => (string) $sede->id, 'admite_varias' => '1',
         ]);
 
-        $respuesta->assertRedirect(route('clinica.catalogos.motivos-cita', ['buscar' => 'ECOGRAFÍA OBSTÉTRICA']));
+        $respuesta->assertRedirect(route('clinica.catalogos.motivos-cita'));
+        $this->assertStringNotContainsString('buscar=', $respuesta->headers->get('Location'));
         $respuesta->assertSessionHas('estado', fn ($texto) => str_contains($texto, 'código 03'));
 
         $nuevo = MotivoCita::where('reg_medico', $medico->reg_medico)->where('tipo_atencion', 'ECOGRAFÍA OBSTÉTRICA')->firstOrFail();
@@ -621,7 +622,7 @@ class MotivosDeCitaCatalogoWebTest extends TestCase
         // El precio vigente viaja en cada opción para la ayuda del monto.
         $this->assertStringContainsString('data-precio="20.00"', $html);
         $this->assertStringContainsString('data-precio-texto="20,00"', $html);
-        $this->assertStringContainsString('Vacío = el precio del motivo.', $html);
+        $this->assertStringNotContainsString('Vacío = ', $html);
     }
 
     public function test_si_la_razon_se_repite_entre_la_sede_y_todas_se_ofrece_la_de_la_sede(): void
@@ -694,11 +695,13 @@ class MotivosDeCitaCatalogoWebTest extends TestCase
         $agendar($paciente2, '10:00', ['monto' => '40']);
         $this->assertSame(40.0, (float) Cola::where('reg_medico', $medico->reg_medico)->where('numhistoria', 2002)->value('monto'));
 
-        // Sin precio en el motivo y sin monto escrito, queda sin monto (como siempre).
+        // Sin precio en el motivo y sin monto escrito, no se agenda: hay que escribir el monto.
         $this->conContexto($user, $medico, $gineco)->post($this->url(), ['id' => $motivo->id, 'razon' => 'CONSULTA', 'precio' => '']);
         Cola::where('reg_medico', $medico->reg_medico)->where('numhistoria', 2002)->delete();
-        $agendar($paciente2, '10:00');
-        $this->assertNull(Cola::where('reg_medico', $medico->reg_medico)->where('numhistoria', 2002)->value('monto'));
+        $this->conContexto($user, $medico, $gineco)->post('/clinica/agenda', [
+            'sede' => $sede->id, 'fecha' => $this->lunes->toDateString(), 'hora' => '10:00', 'paciente_id' => $paciente2, 'motivo' => '01',
+        ])->assertSessionHasErrors('monto');
+        $this->assertSame(0, Cola::where('reg_medico', $medico->reg_medico)->where('numhistoria', 2002)->count());
     }
 
     public function test_la_secretaria_agenda_eligiendo_entre_los_motivos_del_medico(): void

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Actions\Catalogos\CargarCatalogosInicialesAlMedico;
+use App\Actions\Medicos\SiguienteRegMedico;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\Specialty;
@@ -103,10 +104,14 @@ class CuentaService
         $regMedico = trim((string) $datos['reg_medico']);
 
         $this->exigirCorreoLibre($email);
-        $this->exigirRegMedicoLibre($regMedico);
+        if ($regMedico !== '') {
+            $this->exigirRegMedicoLibre($regMedico);
+        }
         $clave = $this->claveParaAlta($clave);
 
         return DB::transaction(function () use ($datos, $email, $regMedico, $clave) {
+            // Vacío: se genera `med_NNNNN` dentro de esta transacción (con bloqueo).
+            $regMedico = $regMedico !== '' ? $regMedico : app(SiguienteRegMedico::class)->ejecutar();
             $hash = Hash::make($clave);
 
             $user = User::create([
@@ -162,7 +167,9 @@ class CuentaService
             throw ValidationException::withMessages(['name' => 'El nombre y el apellido del centro son obligatorios.']);
         }
 
-        $this->exigirRegMedicoLibre($regMedico);
+        if ($regMedico !== '') {
+            $this->exigirRegMedicoLibre($regMedico);
+        }
 
         $email = isset($datos['email']) && trim((string) $datos['email']) !== ''
             ? $this->normalizarCorreo((string) $datos['email'])
@@ -173,6 +180,8 @@ class CuentaService
         }
 
         return DB::transaction(function () use ($datos, $nombre, $apellido, $regMedico, $email) {
+            $regMedico = $regMedico !== '' ? $regMedico : app(SiguienteRegMedico::class)->ejecutar();
+
             return Medico::create([
                 'user_id'    => null,
                 'name'       => $nombre,

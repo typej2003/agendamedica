@@ -25,21 +25,16 @@
 
 
         <form method="POST" action="{{ $vm->urlGuardar() }}" id="estudio-fetal-form" novalidate
-              data-consulta-fechas data-aviso="{{ $vm->avisoSinGuardar() }}">
+              data-consulta-fechas data-consulta-fetal data-hoy="{{ $vm->hoyIso() }}"
+              data-dias-fpp="{{ \App\Clinica\Embarazo\EdadGestacional::DIAS_DE_LA_FPP }}" data-aviso="{{ $vm->avisoSinGuardar() }}">
             @csrf
 
-            @if ($eg !== null || $fpp !== null)
-                {{-- La EG y la FPP no son columnas: se calculan de la FUR. --}}
-                <p class="texto-tenue small mb-3">
-                    Calculadas con la FUR:
-                    @if ($eg !== null)
-                        <strong>EG</strong> {{ $eg }}
-                    @endif
-                    @if ($fpp !== null)
-                        · <strong>FPP</strong> {{ $fpp }}
-                    @endif
-                </p>
-            @endif
+            {{-- La EG y la FPP no son columnas: se calculan de la FUR y `consulta.js` las rehace al escribirla. --}}
+            <p class="texto-tenue small mb-3">
+                Calculadas con la FUR:
+                <strong>EG</strong> <span id="fetal-eg">{{ $eg ?? '—' }}</span>
+                · <strong>FPP</strong> <span id="fetal-fpp">{{ $fpp ?? '—' }}</span>
+            </p>
 
             @foreach ($vm->grupos() as $grupo)
                 <h3 class="h6 mt-4 mb-2">

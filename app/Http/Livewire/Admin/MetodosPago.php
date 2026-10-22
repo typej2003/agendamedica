@@ -66,6 +66,8 @@ class MetodosPago extends Component
     public function mount()
     {
         $this->autorizar();
+        // Cada pestaña es un submenú con su URL. Hoy la tasa es sólo VES; con más monedas, una pestaña por moneda.
+        $this->pestana = request()->route()?->getName() === 'admin.metodos-pago.tasas' ? 'tasa' : $this->pestana;
         $this->host = (string) config('pagos.sypago.host');
         $this->tasa = (string) (TasaDeCambio::actual()?->tasa ?? '');
         $this->tasaAutomatica = ConfiguracionPago::actual()->sincronizaLaTasa();

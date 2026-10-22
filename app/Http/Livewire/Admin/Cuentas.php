@@ -86,6 +86,14 @@ class Cuentas extends Component
     public function mount()
     {
         $this->autorizar();
+        // Médicos y Administradores son submenús con su URL propia (`admin.cuentas.administradores`).
+        $this->pestana = request()->route()?->getName() === 'admin.cuentas.administradores' ? 'administradores' : $this->pestana;
+
+        // `?editar=ID` (el botón «Editar» del detalle del médico): abre el diálogo de edición de ese médico.
+        $editar = (int) request()->query('editar');
+        if ($editar > 0 && $this->pestana === 'medicos' && Medico::whereKey($editar)->exists()) {
+            $this->abrirEditar('medico', $editar);
+        }
     }
 
     private function autorizar(): void
@@ -217,7 +225,7 @@ class Cuentas extends Component
                     'lastname'   => 'required|string|max:255',
                     'prefix'     => 'nullable|string|max:20',
                     'email'      => 'nullable|email|max:255',
-                    'reg_medico' => 'required|string|max:100',
+                    'reg_medico' => 'nullable|string|max:100',
                 ]);
                 $centro = $cuentas->crearCentro([
                     'name'       => $this->name,
@@ -239,7 +247,7 @@ class Cuentas extends Component
                     'lastname'   => 'required|string|max:255',
                     'prefix'     => 'nullable|string|max:20',
                     'email'      => 'required|email|max:255',
-                    'reg_medico' => 'required|string|max:100',
+                    'reg_medico' => 'nullable|string|max:100',
                 ]);
                 $r = $cuentas->crearMedico([
                     'name'       => $this->name,

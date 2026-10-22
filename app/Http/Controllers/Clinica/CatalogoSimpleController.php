@@ -119,7 +119,7 @@ abstract class CatalogoSimpleController extends Controller
                 }
 
                 return redirect()
-                    ->route($def->ruta(), ['buscar' => $nombre])
+                    ->route($def->ruta())
                     ->with('estado', 'Creaste «' . $nombre . '» en tus ' . $def->plural . ' (código ' . $codigo . ').');
             }
 

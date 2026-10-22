@@ -227,6 +227,22 @@ final class FormularioDeCitaVista
         return $this->jornada ? new JornadaVista($this->jornada, [], [], $this->ahora, false) : null;
     }
 
+    /**
+     * El puesto del paciente en la jornada («Paciente #N»): al editar, el que la cita ya tiene; al agendar, el que
+     * recibirá al guardarse (`Jornada::siguienteNumero()`, el mismo cálculo con el que `AgendamientoDeCitas` numera
+     * la fila). `null` si todavía no hay jornada (falta elegir la sede).
+     */
+    public function puestoDelPaciente(): ?int
+    {
+        if ($this->editando()) {
+            $numero = $this->valores['numorden'] ?? null;
+
+            return $numero !== null ? (int) $numero : null;
+        }
+
+        return $this->jornada?->siguienteNumero();
+    }
+
     /** ¿La hora elegida no cae en ningún bloque configurado de ese día? */
     public function horaFueraDeBloque(): bool
     {
@@ -354,12 +370,12 @@ final class FormularioDeCitaVista
         return $precio === null ? null : number_format((float) $precio, 2, '.', '');
     }
 
-    /** La ayuda del monto: dice de dónde sale lo que se cobra si se deja vacío, con el precio del motivo elegido si lo tiene. */
-    public function ayudaDelMonto(): string
+    /** ¿El motivo elegido no tiene precio configurado? Entonces el monto es obligatorio (y se guarda como su precio). */
+    public function montoObligatorio(): bool
     {
-        $precio = $this->motivos->firstWhere('codigo', $this->valor('motivo'))?->precio;
+        $motivo = (string) $this->valor('motivo');
 
-        return 'Vacío = el precio del motivo' . ($precio === null ? '.' : ' (' . number_format((float) $precio, 2, ',', '.') . ').');
+        return $motivo !== '' && $this->motivos->contains(fn ($m) => (string) $m->codigo === $motivo && $m->precio === null);
     }
 
     /**

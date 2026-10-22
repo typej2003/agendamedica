@@ -79,6 +79,9 @@ class Kernel extends HttpKernel
         'account.active' => \App\Http\Middleware\EnsureAccountActive::class,
         'password.changed' => \App\Http\Middleware\EnsurePasswordChanged::class,
 
+        // Portal del paciente: no reserva ni reprograma si está bloqueado o si la validación de su teléfono venció.
+        'paciente.habilitado' => \App\Http\Middleware\ExigirPacienteHabilitado::class,
+
         // Middlewares de Spatie/laravel-permission
         'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,

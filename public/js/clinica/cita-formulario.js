@@ -2,10 +2,10 @@
  * Formulario de la cita (`/clinica/agenda/nueva` y `/editar`):
  *
  *  1. El precio del motivo (WEB-8.1c). Al elegir el motivo, el campo Monto muestra como referencia el precio que ese motivo
- *     tiene en el catálogo (`data-precio` de cada `<option>`) y la ayuda lo dice. Es sólo una pista: el servidor sigue
+ *     tiene en el catálogo (`data-precio` de cada `<option>`) y, si el motivo no tiene precio, el monto pasa a ser obligatorio. Es sólo una pista: el servidor sigue
  *     resolviendo el monto vacío con el precio vigente del motivo, y lo escrito en Monto manda.
  *       <select id="motivo" data-motivo-select> <option data-precio="150.00" data-precio-texto="150,00">
- *       <input id="monto">   <span id="monto-ayuda">
+ *       <input id="monto">   <span id="monto-obligatorio">
  *
  *  2. El buscador de pacientes (abajo).
  */
@@ -14,16 +14,18 @@
 
     const motivo = document.querySelector('[data-motivo-select]');
     const monto = document.getElementById('monto');
-    const ayuda = document.getElementById('monto-ayuda');
-    if (!motivo || !monto || !ayuda) return;
+    const marca = document.getElementById('monto-obligatorio');
+    if (!motivo || !monto) return;
 
     function mostrarPrecio() {
         const opcion = motivo.options[motivo.selectedIndex];
         const precio = opcion ? opcion.dataset.precio : '';
-        const texto = opcion ? opcion.dataset.precioTexto : '';
+        // Un motivo elegido sin precio (data-precio vacío) obliga a escribir el monto; «Sin motivo» no.
+        const sinPrecio = !!opcion && opcion.value !== '' && precio === '';
 
-        monto.placeholder = precio || '';
-        ayuda.textContent = 'Vacío = el precio del motivo' + (texto ? ' (' + texto + ').' : '.');
+        monto.placeholder = sinPrecio ? 'Sin precio: escríbelo (0 si es gratis)' : (precio || '');
+        monto.required = sinPrecio;
+        if (marca) marca.hidden = !sinPrecio;
     }
 
     motivo.addEventListener('change', mostrarPrecio);

@@ -197,6 +197,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // secretaría al recibir al paciente, o el médico si llega a atenderlo sin historia; el
             // `reg_medico` sale del vínculo del paciente y **no** del formulario.
             Route::post('/pacientes/{paciente}/historia', [PacienteController::class, 'asignarHistoria'])->name('pacientes.asignar-historia');
+            // Confirmar la cédula (identidad nivel 2): la secretaria o el médico vieron la cédula laminada. Misma autorización
+            // que el resto de la ficha; la Action deja quién, cuándo y desde qué consultorio.
+            Route::post('/pacientes/{paciente}/confirmar-cedula', [PacienteController::class, 'confirmarCedula'])->name('pacientes.confirmar-cedula');
             // La **historia del paciente** (WEB-3.5): sus consultas, sus antecedentes y sus documentos, y
             // la impresión del resumen. Es de **sólo lectura** (la consulta es F4 y los documentos, F5) y
             // va aparte de la ficha porque es otra responsabilidad: la ficha es la filiación y el contacto,
@@ -244,6 +247,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/pacientes/{paciente}/atender', [PacienteController::class, 'atender'])->name('pacientes.atender');
 
                 Route::get('/consulta/{consulta}', [ConsultaController::class, 'ver'])->name('consulta');
+                // El candado suave «abierta en otro dispositivo»: registra o renueva (latido) el dispositivo que tiene la consulta abierta.
+                Route::post('/consulta/{consulta}/sesion', [\App\Http\Controllers\Clinica\ConsultaSesionController::class, 'registrar'])->name('consulta.sesion');
 
                 // **El crecimiento de un niño** (WEB-7.4.3c): las gráficas sobre las curvas de referencia, la tabla de sus mediciones y la
                 // hoja para imprimir. Es clínico —sólo del médico— y de un paciente: `/crecimiento` (la entrada del módulo en el menú) manda
