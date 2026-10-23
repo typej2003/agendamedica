@@ -95,8 +95,8 @@ class GuardarEcoObstetricoTest extends TestCase
         $medico = $this->medico();
         $consulta = $this->consulta($medico);
 
-        // El control prenatal existe, pero sus datos NO se copian: el escritorio teclea la FUR y elige la
-        // gesta en el desplegable (sus ventanas de eco no leen pre_natal).
+        // El control prenatal existe, pero el guardado escribe lo que llega del formulario: la pantalla es la
+        // que propone la FUR de la gesta en curso (2026-10-22); acá se manda otra a propósito.
         PreNatalObservacion::create([
             'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 2,
             'fur' => '2026-05-20',

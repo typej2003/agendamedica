@@ -431,36 +431,76 @@ class ConsultaEcoWebTest extends TestCase
 
     // -------------------------------------------------------------------------------- La FUR del prenatal
 
-    public function test_la_fur_no_se_prellena_del_control_prenatal_aunque_exista(): void
+    /**
+     * **La FUR del control prenatal llega puesta, sin preguntar** (2026-10-22): la de la **gesta en curso**
+     * (la de mayor `gesta_clave` y sin «Final de embarazo»), no la de un embarazo que ya terminó. Es la misma
+     * FUR del mismo embarazo: la del escritorio (`w_consulta_principal.srw:21391-21405`).
+     */
+    public function test_la_fur_se_trae_del_control_prenatal_de_la_gesta_en_curso(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // La gesta 1, cerrada: es el embarazo anterior y su FUR no se propone.
+        DB::table('pre_natal_observaciones')->insert([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1,
+            'fur' => '2026-01-10', 'final' => 'S', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        // La gesta 2, en curso: la suya sí.
+        DB::table('pre_natal_observaciones')->insert([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 2,
+            'fur' => '2026-05-20', 'final' => 'N', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        // El eco pélvico: su FUR es un `<input type="date">` y llega con la de la gesta en curso.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta))
+            ->assertOk()
+            ->assertSee('value="2026-05-20"', false)
+            ->assertDontSee('value="2026-01-10"', false);
+
+        // Los otros cuatro estudios con FUR también la traen, y tecleada `dd/mm/aaaa`.
+        foreach (['obstetrico', 'segundo', 'tercero', 'doppler', 'fetal'] as $tipo) {
+            $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta, $tipo))
+                ->assertOk()
+                ->assertSee('value="20/05/2026"', false);
+        }
+
+        // Y los que muestran la EG y la FPP ya las tienen calculadas en la primera carga, con la FUR
+        // prellenada: el campo y las dos cuentas dicen lo mismo sin tocar nada.
+        foreach (['obstetrico', 'fetal'] as $tipo) {
+            $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta, $tipo))
+                ->assertOk()
+                ->assertSee('19 semanas y 6 días')
+                ->assertSee('24/02/2027');
+        }
+
+        // Al guardar sin tocar la FUR queda escrita, como si la hubiera tecleado.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), $this->formulario([
+            'fur' => '20/05/2026',
+            'cuerpo' => '60',
+        ]))->assertSessionHas('estado');
+
+        $this->assertSame('2026-05-20', EcoPelvico::where('numhistoria', 1001)->first()->fur);
+    }
+
+    /** Sin gesta abierta no se propone nada: la FUR de un embarazo cerrado no se le pone a un estudio nuevo. */
+    public function test_con_la_gesta_cerrada_la_fur_no_se_prellena(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $consulta] = $this->pacienteYConsulta($medico);
 
         DB::table('pre_natal_observaciones')->insert([
-            'reg_medico' => $medico->reg_medico,
-            'historia'   => 1001,
-            'fur'        => '2026-05-20',
-            'created_at' => now(),
-            'updated_at' => now(),
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'gesta_clave' => 1,
+            'fur' => '2026-01-10', 'final' => 'S', 'created_at' => now(), 'updated_at' => now(),
         ]);
 
-        // El estudio nuevo abre con la FUR vacía: el médico la digita.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta))
             ->assertOk()
-            ->assertDontSee('value="2026-05-20"', false)
-            ->assertDontSee('del control prenatal');
+            ->assertDontSee('value="2026-01-10"', false);
 
-        // Y al escribirla y guardar, queda escrita y se vuelve a mostrar al editar.
-        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post($this->urlGuardar($consulta), $this->formulario([
-            'fur' => '2026-05-20',
-            'cuerpo' => '60',
-        ]))->assertSessionHas('estado');
-
-        $this->assertSame('2026-05-20', EcoPelvico::where('numhistoria', 1001)->first()->fur);
-
-        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta))
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta, 'obstetrico'))
             ->assertOk()
-            ->assertSee('value="2026-05-20"', false);
+            ->assertDontSee('value="10/01/2026"', false);
     }
 
     public function test_sin_control_prenatal_la_fur_queda_vacia(): void
@@ -616,6 +656,45 @@ class ConsultaEcoWebTest extends TestCase
             // El informe es el formulario lleno (WEB-11.13): los bloques sin datos también salen, con sus casilleros en blanco.
             ->assertSee('El riesgo del embarazo temprano')
             ->assertSee('Conclusión:');
+    }
+
+    /**
+     * **La EG y la FPP de los ecos obstétricos, en pantalla y sin guardar**: el escritorio las muestra con dos
+     * `compute` de su DataWindow y no las guarda (no hay columna); la web las calcula de la FUR con
+     * `EdadGestacional` y `consulta.js` las rehace al teclearla.
+     */
+    public function test_los_ecos_obstetricos_muestran_la_eg_y_la_fpp_calculadas_de_la_fur(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // El estudio del 1.er trimestre con su FUR: lo único que hace falta para las dos cuentas.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlGuardar($consulta, 'obstetrico'), ['fur' => '10/02/2026', 'lcc' => '45'])
+            ->assertSessionHas('estado');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta, 'obstetrico'));
+
+        $respuesta->assertOk()
+            // El bloque y lo que necesita `consulta.js` para recalcularlo en vivo.
+            ->assertSee('data-consulta-obstetrico', false)
+            ->assertSee('data-hoy="2026-10-06"', false)
+            ->assertSee('data-dias-fpp="280"', false)
+            ->assertSee('id="obstetrico-eg"', false)
+            ->assertSee('id="obstetrico-fpp"', false)
+            // Las dos cuentas de la FUR guardada: 238 días vividos y FUR + 280 días.
+            ->assertSee('34 semanas y 0 días')
+            ->assertSee('17/11/2026');
+
+        // Los tres trimestres usan el mismo parcial, así que los tres muestran el bloque.
+        foreach (['segundo', 'tercero'] as $tipo) {
+            $this->conContexto($user, $medico, $gineco)->actingAs($user)
+                ->get($this->urlSeccion($consulta, $tipo))
+                ->assertOk()
+                ->assertSee('id="obstetrico-eg"', false)
+                ->assertSee('id="obstetrico-fpp"', false);
+        }
     }
 
     public function test_un_eco_obstetrico_sin_datos_no_se_guarda(): void

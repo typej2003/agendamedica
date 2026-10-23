@@ -714,6 +714,12 @@ class ConsultaController extends Controller
             // días distintos, trampa 59). Los ViewModels no consultan el reloj: se la pasan.
             $hoyDelEstudio = FechaDelConsultorio::hoy()->toDateString();
 
+            // **La FUR de la gesta en curso** del control prenatal (2026-10-22): la misma que el escritorio
+            // copia al entrar a la pestaña del estudio. El ViewModel la pone en el campo FUR sólo si el
+            // estudio no tiene una guardada ni escrita, y si la gesta que se está siguiendo no está cerrada
+            // (`FurDelControlPrenatal`: `final` distinto de `S`). El médico no la teclea dos veces.
+            $furDeLaGesta = $furPrenatal->de($regMedico, (int) $consulta->numhistoria);
+
             // El del 2.º/3.er trimestre es el mismo contenedor con su propio ViewModel (su mapa tiene 55
             // columnas en seis bloques, contra las 38 del primero).
             if ($tipo === TiposDeEstudio::TERCERO || $tipo === TiposDeEstudio::SEGUNDO) {
@@ -730,7 +736,7 @@ class ConsultaController extends Controller
                         route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
                         route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
                         route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => $esSegundo ? DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO : DocumentoImpreso::ECO_OBSTETRICO_TERCERO]),
-                        null,
+                        $furDeLaGesta,
                         null,
                         (array) old(),
                         $hoyDelEstudio,
@@ -741,8 +747,8 @@ class ConsultaController extends Controller
             }
 
             // El eco Doppler perinatal (WEB-6.3): su mapa, su tabla llaveada por `historia` + `consulta` y
-            // su propio parcial. Su ficha (`fur`, `gesta`, `para`) la teclea el médico: su ventana del
-            // escritorio no la copia del control prenatal.
+            // su propio parcial. Su ficha (`fur`, `gesta`, `para`) la teclea el médico, pero la FUR se propone
+            // con la de la gesta en curso del control prenatal si el estudio todavía no tiene una.
             if ($tipo === TiposDeEstudio::DOPPLER) {
                 return new SeccionDeEstudioVista(
                     $tipo,
@@ -752,7 +758,7 @@ class ConsultaController extends Controller
                         route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
                         route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
                         route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_DOPPLER]),
-                        null,
+                        $furDeLaGesta,
                         null,
                         (array) old(),
                         $hoyDelEstudio,
@@ -778,7 +784,7 @@ class ConsultaController extends Controller
                         route('clinica.consulta.estudio.guardar', [$consulta->id, $tipo]),
                         route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipo]),
                         route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_CARDIOGRAMA_FETAL]),
-                        null,
+                        $furDeLaGesta,
                         null,
                         (array) old(),
                         $guardado,
@@ -852,8 +858,8 @@ class ConsultaController extends Controller
                         // La hoja del informe del obstétrico: la impresión de documentos de la consulta, con
                         // la clave del estudio (WEB-6.2).
                         route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_OBSTETRICO]),
-                        // La FUR y la gesta NO se traen del control prenatal: el médico las digita.
-                        null,
+                        // La FUR de la gesta en curso del control prenatal; la gesta la elige el médico.
+                        $furDeLaGesta,
                         null,
                         (array) old(),
                         $hoyDelEstudio,
@@ -865,8 +871,9 @@ class ConsultaController extends Controller
                     // La hoja del informe: la impresión de documentos de la consulta, con la clave del
                     // eco (WEB-6.1). Es la misma ruta que usan la constancia, el reposo y los demás.
                     route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_PELVICO]),
-                    // La FUR NO se trae del control prenatal (decisión 2026-10-22): abre vacía y la digita el médico.
-                    null,
+                    // La FUR de la gesta en curso del control prenatal, como la busca el escritorio al entrar a
+                    // la pestaña *Ginecologico* (`w_consulta_principal.srw:21391-21405`).
+                    $furDeLaGesta,
                     // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                     (array) old(),
                     $hoyDelEstudio,

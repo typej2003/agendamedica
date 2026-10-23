@@ -4,7 +4,9 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EstudioEcografico;
+use App\Clinica\Embarazo\EdadGestacional;
 use App\Clinica\Impresion\DocumentosParaImprimir;
+use App\Support\FechaClinica;
 use App\Support\FechaDeFormulario;
 
 /**
@@ -22,6 +24,11 @@ use App\Support\FechaDeFormulario;
  *    eco no las tiene, el campo lo dice y la Action las completa igual. La sugerencia es informativa.
  *  - El "¿esto es un documento?" cuenta los campos **del estudio**, sin la fecha, la FUR ni la gesta (las
  *    completa el servidor): un eco que sólo trae su FUR no ofrece hoja.
+ *  - **La EG y la FPP no son columnas**: el escritorio las muestra con dos `compute` de su DataWindow
+ *    (`int(daysafter(fur, today()) / 7) + ' Semanas y ' + mod(…, 7) + ' días'` y `relativedate(fur, 283)`,
+ *    `d_eco_obstetrico_nueva.srd:123-124` y `d_eco_obstetrico_trimestral_nueva.srd:181-183`) y acá se
+ *    calculan con `EdadGestacional` —la regla escrita una sola vez— porque la pantalla las muestra y
+ *    `consulta.js` las rehace al teclear la FUR, **sin guardar**.
  */
 class EcoObstetricoVista
 {
@@ -122,6 +129,52 @@ class EcoObstetricoVista
     }
 
     /**
+     * La **FPP** del estudio, calculada de su FUR y formateada `dd/mm/aaaa`, o `null` si no hay FUR.
+     *
+     * Es el `relativedate(fur, …)` del escritorio, con la **constante única** de {@see EdadGestacional}
+     * (280 días): la misma fecha que muestran el control prenatal y la hoja del estudio.
+     */
+    public function fpp(): ?string
+    {
+        $fpp = EdadGestacional::fpp(
+            $this->furVigente(),
+            EdadGestacional::DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO,
+        );
+
+        return $fpp === null ? null : FechaClinica::formato($fpp);
+    }
+
+    /**
+     * La **edad gestacional** de la FUR, como la lee el médico ("36 semanas y 2 días"), o `null` si la FUR no
+     * sirve (vacía, ilegible o futura). Es el `compute` del DataWindow, con la cuenta de siempre.
+     */
+    public function edadGestacional(): ?string
+    {
+        return EdadGestacional::de($this->furVigente())?->texto();
+    }
+
+    /** El día de la cuenta (`AAAA-MM-DD`) para la EG en vivo del JS: el mismo que usa el servidor. */
+    public function hoyIso(): string
+    {
+        return \App\Clinica\FechaDelConsultorio::hoyComoFecha()->toDateString();
+    }
+
+    /**
+     * **La FUR con la que se calculan la EG y la FPP**: la que se ve en el campo. Es la que volvió en un POST
+     * que falló, si no la guardada y, si el estudio todavía no tiene ninguna, **la de la gesta en curso** del
+     * control prenatal (la misma que el campo muestra prellenada): las dos cuentas tienen que decir lo mismo
+     * que el campo, también en la primera carga.
+     */
+    private function furVigente(): ?string
+    {
+        if (array_key_exists('fur', $this->old)) {
+            return FechaDeFormulario::aBase($this->old['fur']);
+        }
+
+        return $this->estudio->fur() ?? $this->furSugerida;
+    }
+
+    /**
      * La **clave del documento** que imprime el botón de la sección (`eco-obstetrico`, `eco-doppler`…): la que el botón
      * manda para guardar y después imprimir (O-16). Sale de la URL de la hoja, que ya la lleva, así que un tipo nuevo no
      * tiene que declararla dos veces.
@@ -211,6 +264,10 @@ class EcoObstetricoVista
      * (O-18 y O-19). Lo que hay en la columna y **no** es una fecha —un dato viejo escrito a mano, el
      * literal `none` del legado— se muestra **vacío**: no se inventa una fecha.
      *
+     * Si el estudio **no tiene FUR** guardada ni escrita, el campo abre con la **FUR de la gesta en curso**
+     * del control prenatal (`furSugerida`), sin preguntar: es la misma FUR del mismo embarazo y el médico no
+     * la teclea dos veces. La guardada y la que volvió en un POST que falló mandan siempre.
+     *
      * Los demás campos salen tal cual, como siempre.
      */
     private function valorDelCampo(array $campo): string
@@ -239,6 +296,17 @@ class EcoObstetricoVista
             return FechaDeFormulario::comoSeTecleo($this->old[$columna]);
         }
 
-        return FechaDeFormulario::paraTeclear($this->estudio->valor($columna));
+        $guardado = $this->estudio->valor($columna);
+
+        if ($guardado !== null) {
+            return FechaDeFormulario::paraTeclear($guardado);
+        }
+
+        // La FUR de la gesta en curso del control prenatal, sólo para la FUR y sólo si el estudio no la tiene.
+        if ($columna === 'fur' && $this->furSugerida !== null) {
+            return FechaDeFormulario::paraTeclear($this->furSugerida);
+        }
+
+        return '';
     }
 }
