@@ -214,7 +214,7 @@
     {{-- Renovar --}}
     @if ($modal === 'renovar' && $seleccionado)
         <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <form wire:submit.prevent="renovar">
                         <div class="modal-header">
@@ -275,7 +275,7 @@
     {{-- Reemplazar --}}
     @if ($modal === 'reemplazar' && $seleccionado)
         <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <form wire:submit.prevent="reemplazar">
                         <div class="modal-header">
@@ -452,7 +452,7 @@
             $ahorroVista = is_numeric($precio_tachado_usd) && is_numeric($precio_usd) ? round((float) $precio_tachado_usd - (float) $precio_usd, 2) : 0;
         @endphp
         <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <form wire:submit.prevent="guardarPlan">
                         <div class="modal-header">

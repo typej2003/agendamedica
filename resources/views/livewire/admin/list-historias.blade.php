@@ -171,7 +171,7 @@
 
     <!-- 1. Modal Formulario (Crear / Editar Historia) -->
     <div class="modal fade" id="modalEditCentro" tabindex="-1" wire:ignore.self>
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-lateral">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title fs-6">

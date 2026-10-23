@@ -96,7 +96,7 @@
     {{-- ============================ Alta y edición de la vacuna ============================ --}}
     @if ($modal === 'vacuna')
         <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="titulo-vacuna" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <form wire:submit.prevent="guardarVacuna">
                         <div class="modal-header">
@@ -161,7 +161,7 @@
     {{-- ============================ Dosis de una vacuna ============================ --}}
     @if ($modal === 'dosis' && $seleccionada)
         <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="titulo-dosis" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="titulo-dosis">Dosis de {{ $seleccionada->vacuna }}</h5>

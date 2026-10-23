@@ -86,7 +86,7 @@
     {{-- ============================ Alta y edición ============================ --}}
     @if ($modal === 'fila')
         <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="titulo-ini" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <form wire:submit.prevent="guardar">
                         <div class="modal-header">
@@ -169,7 +169,7 @@
     {{-- ============================ Medicamentos de un tratamiento ============================ --}}
     @if ($modal === 'lineas' && $tratamiento)
         <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="titulo-lineas" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="titulo-lineas">Medicamentos de {{ trim((string) $tratamiento->tratamiento) }}</h5>

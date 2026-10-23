@@ -66,7 +66,7 @@
 
     <!-- Modal Formulario Médico -->
     <div class="modal fade" id="modalMedico" tabindex="-1" aria-labelledby="modalMedicoLabel" aria-hidden="true" wire:ignore.self>
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lateral">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalMedicoLabel">{{ $medico_id ? 'Editar Médico' : 'Nuevo Médico' }}</h5>
