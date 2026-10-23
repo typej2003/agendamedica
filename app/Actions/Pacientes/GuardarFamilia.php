@@ -3,6 +3,7 @@
 namespace App\Actions\Pacientes;
 
 use App\Clinica\Pacientes\CamposDePaciente;
+use App\Clinica\Pacientes\RepresentanteDesdeLaFamilia;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -87,6 +88,9 @@ final class GuardarFamilia
                     'created_at' => now(),
                 ]);
             }
+
+            // Que `representante` (de donde salen el recordatorio y las hojas) no quede vacío mientras la familia ya lo dice.
+            (new RepresentanteDesdeLaFamilia())->completar($regMedico, $numeroDeFamilia);
 
             return (object) ['familia' => $numeroDeFamilia, 'historia' => $historia];
         });
