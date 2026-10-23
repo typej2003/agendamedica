@@ -558,6 +558,14 @@
             obstetrico.querySelector('#obstetrico-fpp'), obstetrico.querySelector('#obstetrico-eg'));
     }
 
+    // Eco Doppler perinatal: la misma cuenta (su ficha lleva FUR y el escritorio le muestra la EG).
+    const doppler = document.querySelector('[data-consulta-doppler]');
+
+    if (doppler) {
+        furEnVivo(doppler, doppler.querySelector('#fur'),
+            doppler.querySelector('#doppler-fpp'), doppler.querySelector('#doppler-eg'));
+    }
+
     // Las pestañas del embarazo cuyas filas son fechas (Laboratorio y Controles) usan el mismo aviso: el
     // cartel de cada una se llama como su formulario, más `-sin-guardar`.
     document.querySelectorAll('[data-consulta-fechas]').forEach(function (formulario) {

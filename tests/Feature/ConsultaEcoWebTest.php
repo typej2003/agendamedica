@@ -467,7 +467,7 @@ class ConsultaEcoWebTest extends TestCase
 
         // Y los que muestran la EG y la FPP ya las tienen calculadas en la primera carga, con la FUR
         // prellenada: el campo y las dos cuentas dicen lo mismo sin tocar nada.
-        foreach (['obstetrico', 'fetal'] as $tipo) {
+        foreach (['obstetrico', 'segundo', 'tercero', 'doppler', 'fetal'] as $tipo) {
             $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta, $tipo))
                 ->assertOk()
                 ->assertSee('19 semanas y 6 días')
@@ -503,14 +503,24 @@ class ConsultaEcoWebTest extends TestCase
             ->assertDontSee('value="10/01/2026"', false);
     }
 
+    /**
+     * Sin una gesta abierta con FUR no se propone nada: el campo de la FUR queda **vacío** y lo teclea el
+     * médico. La FUR **no** es la fecha del estudio: aunque las dos sean un `<input type="date">`, la de hoy
+     * es sólo para `fecha` (si no, el eco guardaría una FUR inventada sin que nadie la escriba).
+     */
     public function test_sin_control_prenatal_la_fur_queda_vacia(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $consulta] = $this->pacienteYConsulta($medico);
 
-        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta))
-            ->assertOk()
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
+
+        $respuesta->assertOk()
             ->assertDontSee('value="2026-05-20"', false);
+
+        // La fecha del estudio sí abre con hoy (O-13); la FUR, no.
+        $this->assertMatchesRegularExpression('/id="fur"[^>]*value=""/', $respuesta->getContent());
+        $this->assertMatchesRegularExpression('/id="fecha"[^>]*value="2026-10-06"/', $respuesta->getContent());
     }
 
     // ------------------------------------------------------------------------------------ Permisos
