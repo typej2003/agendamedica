@@ -137,7 +137,7 @@ class EcoObstetricoVista
     public function fpp(): ?string
     {
         $fpp = EdadGestacional::fpp(
-            $this->estudio->fur(),
+            $this->furVigente(),
             EdadGestacional::DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO,
         );
 
@@ -150,13 +150,28 @@ class EcoObstetricoVista
      */
     public function edadGestacional(): ?string
     {
-        return EdadGestacional::de($this->estudio->fur())?->texto();
+        return EdadGestacional::de($this->furVigente())?->texto();
     }
 
     /** El día de la cuenta (`AAAA-MM-DD`) para la EG en vivo del JS: el mismo que usa el servidor. */
     public function hoyIso(): string
     {
         return \App\Clinica\FechaDelConsultorio::hoyComoFecha()->toDateString();
+    }
+
+    /**
+     * **La FUR con la que se calculan la EG y la FPP**: la que se ve en el campo. Es la que volvió en un POST
+     * que falló, si no la guardada y, si el estudio todavía no tiene ninguna, **la de la gesta en curso** del
+     * control prenatal (la misma que el campo muestra prellenada): las dos cuentas tienen que decir lo mismo
+     * que el campo, también en la primera carga.
+     */
+    private function furVigente(): ?string
+    {
+        if (array_key_exists('fur', $this->old)) {
+            return FechaDeFormulario::aBase($this->old['fur']);
+        }
+
+        return $this->estudio->fur() ?? $this->furSugerida;
     }
 
     /**
@@ -249,6 +264,10 @@ class EcoObstetricoVista
      * (O-18 y O-19). Lo que hay en la columna y **no** es una fecha —un dato viejo escrito a mano, el
      * literal `none` del legado— se muestra **vacío**: no se inventa una fecha.
      *
+     * Si el estudio **no tiene FUR** guardada ni escrita, el campo abre con la **FUR de la gesta en curso**
+     * del control prenatal (`furSugerida`), sin preguntar: es la misma FUR del mismo embarazo y el médico no
+     * la teclea dos veces. La guardada y la que volvió en un POST que falló mandan siempre.
+     *
      * Los demás campos salen tal cual, como siempre.
      */
     private function valorDelCampo(array $campo): string
@@ -277,6 +296,17 @@ class EcoObstetricoVista
             return FechaDeFormulario::comoSeTecleo($this->old[$columna]);
         }
 
-        return FechaDeFormulario::paraTeclear($this->estudio->valor($columna));
+        $guardado = $this->estudio->valor($columna);
+
+        if ($guardado !== null) {
+            return FechaDeFormulario::paraTeclear($guardado);
+        }
+
+        // La FUR de la gesta en curso del control prenatal, sólo para la FUR y sólo si el estudio no la tiene.
+        if ($columna === 'fur' && $this->furSugerida !== null) {
+            return FechaDeFormulario::paraTeclear($this->furSugerida);
+        }
+
+        return '';
     }
 }

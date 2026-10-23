@@ -3,6 +3,7 @@
 namespace App\Actions\Embarazo;
 
 use App\Actions\Consulta\EscribeConRastro;
+use App\Clinica\Embarazo\FurDeUnEstudio;
 use App\Clinica\Embarazo\GestasDeLaHistoria;
 use App\Models\PreNatalObservacion;
 use Carbon\CarbonInterface;
@@ -19,6 +20,9 @@ use InvalidArgumentException;
  *    (`GestasDeLaHistoria::motivoParaNoCrear`, la misma regla que usa el guardado). La primera gesta de la historia siempre se puede.
  *  - **Un solo bebé** deja `multiple = N`; **dos o más** dejan `multiple = S` y `cantidad = n`. Entre 1 y 6.
  *  - El campo *Gestas* arranca con el número de la gesta (estar en la 3 quiere decir que hubo 3 embarazos), igual que el escritorio.
+ *  - **La FUR se completa sola si un estudio ecográfico ya la tiene** (2026-10-22): la FUR es la misma para la
+ *    misma gesta, así que si el médico hizo el eco primero no la teclea dos veces. Sólo cuenta un estudio cuya
+ *    FUR sea posterior a la de la gesta anterior: el eco de un embarazo cerrado no se le pega al que empieza.
  *
  * El rastro del sync es el de `GuardarGestaDelEmbarazo` (`created` de la fila con `source = web`).
  */
@@ -29,8 +33,10 @@ final class CrearGestaDelEmbarazo
     /** El tope de bebés de un embarazo múltiple que la pantalla ofrece. */
     public const MAXIMO_DE_BEBES = 6;
 
-    public function __construct(private GestasDeLaHistoria $gestas)
-    {
+    public function __construct(
+        private GestasDeLaHistoria $gestas,
+        private FurDeUnEstudio $furesDeLosEstudios,
+    ) {
     }
 
     /**
@@ -60,6 +66,14 @@ final class CrearGestaDelEmbarazo
 
             $clave = $this->gestas->siguienteClave($regMedico, $numhistoria);
 
+            // La FUR, si un estudio de esta misma gesta ya la tiene (la anterior ya está cerrada: su FUR es
+            // el piso, no la fuente).
+            $fur = $this->furesDeLosEstudios->de(
+                $regMedico,
+                $numhistoria,
+                $this->gestas->actual($regMedico, $numhistoria)?->fur(),
+            );
+
             $this->crearFila(PreNatalObservacion::class, GestasDeLaHistoria::TABLA, [
                 'reg_medico' => $regMedico,
                 'historia' => $numhistoria,
@@ -68,6 +82,8 @@ final class CrearGestaDelEmbarazo
                 'multiple' => $bebes > 1 ? 'S' : 'N',
                 'cantidad' => $bebes > 1 ? $bebes : null,
                 'final' => 'N',
+                // Sólo si un estudio de esta gesta ya la trae: sin estudio, la teclea el médico.
+                'fur' => $fur,
             ], $cuando, $origen);
 
             return $clave;
