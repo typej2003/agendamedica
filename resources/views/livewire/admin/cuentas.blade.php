@@ -204,7 +204,7 @@
     {{-- Alta de médico / administrador --}}
     @if ($modal === 'alta')
         <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <form wire:submit.prevent="guardarAlta">
                         <div class="modal-header">
@@ -294,7 +294,7 @@
     {{-- Crear acceso a un médico que no tenía cuenta --}}
     @if ($modal === 'acceso')
         <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <form wire:submit.prevent="guardarAcceso">
                         <div class="modal-header">
@@ -376,7 +376,7 @@
     {{-- Editar los datos --}}
     @if ($modal === 'editar')
         <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <form wire:submit.prevent="guardarEdicion">
                         <div class="modal-header">
@@ -493,7 +493,7 @@
             ];
         @endphp
         <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <form wire:submit.prevent="guardarRoles">
                         <div class="modal-header">

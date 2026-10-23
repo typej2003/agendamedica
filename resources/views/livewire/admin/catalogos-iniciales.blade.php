@@ -33,15 +33,31 @@
             </div>
         </div>
 
+        @if ($catalogo === 'medicamentos' && count($seleccion) > 0)
+            <div class="card-header bg-light py-2 d-flex flex-wrap align-items-center gap-2" role="status">
+                <span class="small">{{ count($seleccion) }} {{ count($seleccion) === 1 ? 'marcado' : 'marcados' }}</span>
+                <button type="button" class="btn btn-sm btn-primary" wire:click="abrirCombinar" @disabled(count($seleccion) < 2)>
+                    <i class="bi bi-intersect me-1" aria-hidden="true"></i> Combinar ({{ count($seleccion) }})
+                </button>
+                <button type="button" class="btn btn-sm btn-link" wire:click="$set('seleccion', [])">Quitar la selección</button>
+                @if (count($seleccion) < 2)
+                    <span class="text-muted small">Marca al menos dos para combinarlos en una sola ficha.</span>
+                @endif
+            </div>
+        @endif
+
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-dark">
-                        <tr><th>Código</th><th>{{ ucfirst($def['singular']) }}</th><th>Detalle</th><th>Especialidades</th><th class="text-end">Acciones</th></tr>
+                        <tr>@if ($catalogo === 'medicamentos')<th style="width:2.5rem"><span class="visually-hidden">Marcar</span></th>@endif<th>Código</th><th>{{ ucfirst($def['singular']) }}</th><th>Detalle</th><th>Especialidades</th><th class="text-end">Acciones</th></tr>
                     </thead>
                     <tbody>
                         @forelse ($filas as $fila)
                             <tr wire:key="ini-{{ $catalogo }}-{{ $fila->id }}">
+                                @if ($catalogo === 'medicamentos')
+                                    <td><input type="checkbox" class="form-check-input" value="{{ $fila->id }}" wire:model="seleccion" aria-label="Marcar {{ trim((string) $fila->{$def['etiqueta']}) }} para combinar"></td>
+                                @endif
                                 <td><code>{{ trim((string) $fila->{$def['codigo']}) }}</code></td>
                                 <td class="fw-semibold">{{ trim((string) $fila->{$def['etiqueta']}) }}</td>
                                 <td class="text-muted small">{{ $detalles[$fila->id] ?: '—' }}</td>
@@ -68,7 +84,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
+                                <td colspan="{{ $catalogo === 'medicamentos' ? 6 : 5 }}" class="text-center text-muted py-4">
                                     {{ trim($search) === '' && $especialidad === '' ? 'Todavía no hay filas en este catálogo inicial. Agrega la primera con «Nuevo ' . $def['singular'] . '».' : 'No se encontró nada.' }}
                                 </td>
                             </tr>
@@ -86,7 +102,7 @@
     {{-- ============================ Alta y edición ============================ --}}
     @if ($modal === 'fila')
         <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="titulo-ini" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <form wire:submit.prevent="guardar">
                         <div class="modal-header">
@@ -145,6 +161,83 @@
         </div>
     @endif
 
+    {{-- ============================ Combinar medicamentos duplicados ============================ --}}
+    @if ($modal === 'combinar' && $combinar)
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="titulo-combinar" style="background: rgba(0,0,0,.5)">
+            <div class="modal-dialog modal-lateral">
+                <div class="modal-content">
+                    <form wire:submit.prevent="combinarFichas">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="titulo-combinar">Combinar {{ count($combinar['fichas']) }} medicamentos</h5>
+                            <button type="button" class="btn-close" wire:click="cerrar" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            @error('c.formulario') <div class="alert alert-danger py-2 small">{{ $message }}</div> @enderror
+                            <p class="small text-muted">Quedará una sola ficha. Donde los textos difieren, elige uno con su botón o edítalo. Los tratamientos del catálogo inicial que llevaban las demás pasan a llevar esta.</p>
+
+                            <fieldset class="mb-3">
+                                <legend class="form-label fs-6 mb-1">Ficha que se conserva (mantiene su código)</legend>
+                                @foreach ($combinar['fichas'] as $ficha)
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="sobrevive" id="cmb-sobrevive-{{ $ficha['id'] }}" value="{{ $ficha['id'] }}" wire:model="combinar.sobrevive">
+                                        <label class="form-check-label" for="cmb-sobrevive-{{ $ficha['id'] }}"><code>{{ $ficha['codigo'] }}</code> {{ $ficha['nombre'] }}</label>
+                                    </div>
+                                @endforeach
+                            </fieldset>
+
+                            @foreach ($def['campos'] as $columna => $campo)
+                                @php [$rotulo, $tipo, $max, $requerido] = $campo; @endphp
+                                <div class="mb-3">
+                                    @if ($tipo === 'porkilo')
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="cmb-{{ $columna }}" wire:model.defer="c.{{ $columna }}">
+                                            <label class="form-check-label" for="cmb-{{ $columna }}">{{ $rotulo }}</label>
+                                        </div>
+                                    @else
+                                        <label class="form-label" for="cmb-{{ $columna }}">{{ $rotulo }}@if ($requerido) <span class="text-danger" aria-hidden="true">*</span>@endif</label>
+                                        @if ($tipo === 'area')
+                                            <textarea id="cmb-{{ $columna }}" rows="3" class="form-control" wire:model.defer="c.{{ $columna }}"></textarea>
+                                        @else
+                                            <input type="text" id="cmb-{{ $columna }}" class="form-control" @if ($max > 0) maxlength="{{ $max }}" @endif wire:model.defer="c.{{ $columna }}">
+                                        @endif
+                                        @if (count($combinar['opciones'][$columna] ?? []) > 1)
+                                            <div class="mt-1 d-flex flex-column gap-1">
+                                                <span class="form-text mt-0">Los textos difieren:</span>
+                                                @foreach ($combinar['opciones'][$columna] as $k => $valor)
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary text-start text-break" wire:click="usarValor('{{ $columna }}', {{ $k }})">{{ \Illuminate\Support\Str::limit($valor, 160) }}</button>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    @endif
+                                </div>
+                            @endforeach
+
+                            <fieldset>
+                                <legend class="form-label fs-6 mb-1">Aplica a</legend>
+                                <div class="d-flex flex-wrap gap-3">
+                                    @foreach ($especialidades as $id => $nombre)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="cmb-aplica-{{ $id }}" value="{{ $id }}" wire:model.defer="cAplica">
+                                            <label class="form-check-label" for="cmb-aplica-{{ $id }}">{{ $nombre }}</label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="form-text">Se suman las especialidades de todas las fichas. Sin ninguna marcada, es general.</div>
+                                @if ($combinar['mezcla'])
+                                    <div class="alert alert-warning py-2 small mt-2 mb-0">Alguna ficha era general y otra tenía especialidades: con las marcadas, la ficha dejaría de llegar a los demás médicos. Desmarca todas para dejarla general.</div>
+                                @endif
+                            </fieldset>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" wire:click="cerrar">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="combinarFichas"><i class="bi bi-intersect me-1" aria-hidden="true"></i> Combinar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- ============================ Quitar ============================ --}}
     @if ($modal === 'borrar')
         <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="titulo-ini-borrar" style="background: rgba(0,0,0,.5)">
@@ -169,7 +262,7 @@
     {{-- ============================ Medicamentos de un tratamiento ============================ --}}
     @if ($modal === 'lineas' && $tratamiento)
         <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="titulo-lineas" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="titulo-lineas">Medicamentos de {{ trim((string) $tratamiento->tratamiento) }}</h5>

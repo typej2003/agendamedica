@@ -57,7 +57,7 @@
 
     <!-- Modal Formulario Paciente -->
     <div class="modal fade" id="modalPaciente" tabindex="-1" aria-labelledby="modalPacienteLabel" aria-hidden="true" wire:ignore.self>
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lateral">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalPacienteLabel">{{ $paciente_id ? 'Editar Paciente' : 'Nuevo Paciente' }}</h5>

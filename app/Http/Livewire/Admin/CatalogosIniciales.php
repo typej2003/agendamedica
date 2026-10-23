@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Admin;
 
+use App\Actions\Catalogos\CombinarMedicamentosIniciales;
 use App\Actions\Catalogos\GuardarFilaDeCatalogoInicial;
 use App\Actions\Catalogos\GuardarLineaDeTratamientoInicial;
 use App\Actions\Catalogos\QuitarFilaDeCatalogoInicial;
@@ -43,7 +44,19 @@ class CatalogosIniciales extends Component
     /** @var array<int,string> las especialidades a las que aplica la fila del formulario (ninguna = general) */
     public $aplica = [];
 
-    /** Ventana abierta: `fila` | `borrar` | `lineas` | null */
+    /** @var array<int,string> los medicamentos marcados para combinar (sólo en el catálogo de medicamentos; sobreviven a la paginación y al filtro) */
+    public $seleccion = [];
+
+    /** La combinación en curso: las fichas, la que se conserva, las opciones de texto de cada campo y si se mezclan generales con marcadas. */
+    public $combinar = [];
+
+    /** @var array<string,mixed> los campos de la ficha resultante de la combinación (`columna => valor`) */
+    public $c = [];
+
+    /** @var array<int,string> las especialidades de la ficha resultante (la unión de las de las fichas; ninguna = general) */
+    public $cAplica = [];
+
+    /** Ventana abierta: `fila` | `borrar` | `lineas` | `combinar` | null */
     public $modal = null;
 
     public $filaId = null;
@@ -175,6 +188,85 @@ class CatalogosIniciales extends Component
             session()->flash('error', $e->getMessage());
         }
 
+        $this->cerrar();
+    }
+
+    // ------------------------------------------------------------------ Combinar medicamentos duplicados
+
+    public function abrirCombinar()
+    {
+        abort_unless($this->catalogo === 'medicamentos', 404);
+        $this->resetErrorBag();
+
+        $ids = collect($this->seleccion)->map(fn ($id) => (int) $id)->filter()->unique()->values();
+        $fichas = DB::table('vademecum')->whereNull('reg_medico')->whereIn('id', $ids->all())->orderBy('id')->get();
+
+        if ($fichas->count() < 2 || $fichas->count() !== $ids->count()) {
+            session()->flash('error', 'Marca al menos dos medicamentos para combinar.');
+
+            return;
+        }
+
+        $opciones = [];
+        $this->c = [];
+        foreach (Registro::de($this->catalogo)['campos'] as $columna => $campo) {
+            if ($campo[1] === 'porkilo') {
+                $this->c[$columna] = $fichas->contains(fn ($f) => strtoupper(trim((string) $f->{$columna})) === DosisPediatrica::POR_KILO);
+
+                continue;
+            }
+            $valores = $fichas->map(function ($f) use ($columna, $campo) {
+                $v = trim((string) $f->{$columna});
+
+                return $v !== '' && $campo[1] === 'decimal' && is_numeric($v) ? rtrim(rtrim(number_format((float) $v, 3, '.', ''), '0'), '.') : $v;
+            })->filter(fn ($v) => $v !== '')->unique()->values()->all();
+            $opciones[$columna] = $valores;
+            // Por defecto, el valor de la ficha que se conserva (la más antigua) y, si ahí está vacío, el primero que haya.
+            $this->c[$columna] = $valores[0] ?? '';
+        }
+
+        $marcas = Especialidades::de($this->catalogo, $ids->all());
+        $this->cAplica = collect($marcas)->flatten()->unique()->map(fn ($id) => (string) $id)->values()->all();
+        $this->combinar = [
+            'sobrevive' => (int) $fichas->first()->id,
+            'opciones' => $opciones,
+            'mezcla' => $fichas->contains(fn ($f) => ! isset($marcas[(int) $f->id])) && $marcas !== [],
+            'fichas' => $fichas->map(fn ($f) => [
+                'id' => (int) $f->id, 'codigo' => trim((string) $f->codemedicina),
+                'nombre' => trim($f->nombrecomercial . ' ' . $f->presentacion),
+            ])->all(),
+        ];
+        $this->modal = 'combinar';
+    }
+
+    public function usarValor($columna, $indice)
+    {
+        $valor = $this->combinar['opciones'][$columna][(int) $indice] ?? null;
+        if ($valor !== null) {
+            $this->c[$columna] = $valor;
+        }
+    }
+
+    public function combinarFichas()
+    {
+        $this->resetErrorBag();
+
+        try {
+            $descartadas = app(CombinarMedicamentosIniciales::class)->ejecutar(
+                collect($this->combinar['fichas'] ?? [])->pluck('id')->all(),
+                (int) ($this->combinar['sobrevive'] ?? 0),
+                $this->c,
+                (array) $this->cAplica
+            );
+        } catch (InvalidArgumentException $e) {
+            $this->addError('c.formulario', $e->getMessage());
+
+            return;
+        }
+
+        session()->flash('message', 'Se combinaron ' . ($descartadas + 1) . ' medicamentos en una sola ficha.');
+        $this->seleccion = [];
+        $this->combinar = [];
         $this->cerrar();
     }
 
