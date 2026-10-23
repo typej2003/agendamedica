@@ -68,15 +68,26 @@ class GeminiService
                 }
 
                 if ($fechaElegida !== null) {
-                    $resultado = $this->contextService->reservarCitaEnCola(
-                        $contexto['telefono'],
-                        $pendiente['reg_medico'],
-                        $fechaElegida,
-                        null,
-                        // Lo que se ofreció manda: 90 si la oferta fue de urgencia; si no, 24 h. Así «sí» o
-                        // «el martes» nunca se mandan a Jev.
-                        (int) ($pendiente['anticipacion_minutos'] ?? PacienteAtencionContextService::ANTICIPACION_MINIMA_MINUTOS)
-                    );
+                    if (!empty($pendiente['reprogramar']) && !empty($pendiente['cita_id'])) {
+                        $resultado = $this->contextService->reprogramarCitaEnCola(
+                            $contexto['telefono'],
+                            $pendiente['reg_medico'],
+                            $fechaElegida,
+                            null,
+                            (int) ($pendiente['anticipacion_minutos'] ?? PacienteAtencionContextService::ANTICIPACION_MINIMA_MINUTOS),
+                            (int) $pendiente['cita_id']
+                        );
+                    } else {
+                        $resultado = $this->contextService->reservarCitaEnCola(
+                            $contexto['telefono'],
+                            $pendiente['reg_medico'],
+                            $fechaElegida,
+                            null,
+                            // Lo que se ofreció manda: 90 si la oferta fue de urgencia; si no, 24 h. Así «sí» o
+                            // «el martes» nunca se mandan a Jev.
+                            (int) ($pendiente['anticipacion_minutos'] ?? PacienteAtencionContextService::ANTICIPACION_MINIMA_MINUTOS)
+                        );
+                    }
                     Cache::forget("wa_pendiente_{$contexto['telefono']}");
                     if ($cleanTel) {
                         Cache::forget("wa_pendiente_{$cleanTel}");
@@ -92,6 +103,12 @@ class GeminiService
                     }
                 }
             }
+        }
+
+        // 2b. Si el paciente indica que perdió la cita o solicita cambiar el día de su cita
+        $respuestaCambio = $this->resolverSolicitudCambioOPerdidaDeCita($mensajeUsuario, $contexto);
+        if ($respuestaCambio !== null) {
+            return $respuestaCambio;
         }
 
         // 3. Manejo directo si el usuario seleccionó un médico de una especialidad previamente consultada
@@ -177,6 +194,23 @@ class GeminiService
                 if (!empty($contexto['telefono'])) {
                     $citaActiva = $this->contextService->obtenerCitaPendienteConMedicoPorTelefono($contexto['telefono'], $medicoElegido['reg_medico']);
                     if ($citaActiva) {
+                        if (!empty($citaActiva['cita_perdida'])) {
+                            $disponibilidad = $this->contextService->consultarProximoDiaDisponible($medicoElegido['reg_medico']);
+                            if (!empty($disponibilidad['disponible'])) {
+                                $cleanTel = preg_replace('/\D/', '', $contexto['telefono']);
+                                $datosPendientes = $this->datosPendientesDeDisponibilidad($medicoElegido['reg_medico'], $disponibilidad);
+                                $datosPendientes['reprogramar'] = true;
+                                $datosPendientes['cita_id'] = $citaActiva['cita']->id;
+                                Cache::put("wa_pendiente_{$contexto['telefono']}", $datosPendientes, now()->addMinutes(30));
+                                if ($cleanTel) {
+                                    Cache::put("wa_pendiente_{$cleanTel}", $datosPendientes, now()->addMinutes(30));
+                                }
+
+                                return "Notamos que tenías una cita con el/la *{$medicoElegido['nombre']}* ({$medicoElegido['especialidad']}) que no pudo ser atendida (cita perdida).\n\n"
+                                    . "Con gusto podemos cambiar el día de tu cita. Los próximos días con disponibilidad son:\n\n"
+                                    . DisponibilidadEnTexto::de($disponibilidad);
+                            }
+                        }
                         return $citaActiva['mensaje'];
                     }
                 }
@@ -249,6 +283,20 @@ class GeminiService
         // Si el paciente ya tiene una cita activa pendiente (atendido = 0) con ese médico, mostrar mensaje de la cita
         $citaActiva = $this->contextService->obtenerCitaPendienteConMedicoPorTelefono($telefono, $medicoElegido['reg_medico']);
         if ($citaActiva) {
+            if (!empty($citaActiva['cita_perdida'])) {
+                $disponibilidad = $this->contextService->consultarProximoDiaDisponible($medicoElegido['reg_medico']);
+                if (!empty($disponibilidad['disponible'])) {
+                    $datosPendientes = $this->datosPendientesDeDisponibilidad($medicoElegido['reg_medico'], $disponibilidad);
+                    $datosPendientes['reprogramar'] = true;
+                    $datosPendientes['cita_id'] = $citaActiva['cita']->id;
+                    Cache::put("wa_pendiente_{$telefono}", $datosPendientes, now()->addMinutes(30));
+                    Cache::put("wa_pendiente_{$cleanTel}", $datosPendientes, now()->addMinutes(30));
+
+                    return "Notamos que tenías una cita con el/la *{$medicoElegido['nombre']}* ({$medicoElegido['especialidad']}) que no pudo ser atendida (cita perdida).\n\n"
+                        . "Con gusto podemos cambiar el día de tu cita. Los próximos días con disponibilidad son:\n\n"
+                        . DisponibilidadEnTexto::de($disponibilidad);
+                }
+            }
             return $citaActiva['mensaje'];
         }
 
@@ -308,6 +356,93 @@ class GeminiService
     }
 
     /**
+     * Evalúa y procesa si el usuario indica que perdió su cita o solicita cambiar la fecha/día de su cita.
+     */
+    protected function resolverSolicitudCambioOPerdidaDeCita(string $mensaje, array $contexto): ?string
+    {
+        $limpio = mb_strtolower(trim($mensaje));
+        $esCambio = (bool) preg_match('/(?:perd[ií]|no\s+pude\s+(?:ir|asistir)|cambiar\s+(?:el\s+d[ií]a|la\s+fecha|mi\s+cita|de\s+cita)|reprogramar|mover\s+cita)/iu', $limpio);
+
+        if (!$esCambio) {
+            return null;
+        }
+
+        $telefono = $contexto['telefono'] ?? null;
+        if (!$telefono) {
+            return null;
+        }
+
+        $cleanTel = preg_replace('/\D/', '', $telefono);
+
+        // Extraer médico si se menciona explícitamente
+        $criterioMedico = null;
+        if (preg_match('/(?:dr\.?|dra\.?|doctor(?:a)?|m[eé]dico)\s+([a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+)/iu', $limpio, $m)) {
+            $cand = preg_replace('/\s+(por\s+favor|porfa|gracias|\?)\s*$/iu', '', trim($m[1]));
+            $criterioMedico = trim($cand);
+        }
+
+        if (empty($criterioMedico) && !empty($contexto['medicos_asociados']) && count($contexto['medicos_asociados']) === 1) {
+            $criterioMedico = $contexto['medicos_asociados'][0]['reg_medico'] ?? $contexto['medicos_asociados'][0]['nombre'];
+        }
+
+        if (empty($criterioMedico) && !empty($contexto['medicos_asociados'])) {
+            $criterioMedico = $contexto['medicos_asociados'][0]['reg_medico'] ?? null;
+        }
+
+        if (empty($criterioMedico)) {
+            if (!empty($contexto['medicos_asociados'])) {
+                $msg = "¿Con cuál de tus médicos deseas cambiar o reprogramar tu cita?\n\n";
+                foreach ($contexto['medicos_asociados'] as $idx => $med) {
+                    $numEmoji = $this->contextService->obtenerNumeroEmoji($idx + 1);
+                    $msg .= "{$numEmoji} *{$med['nombre']}* ({$med['especialidad']})\n";
+                }
+                return $msg;
+            }
+            return "¿Con cuál doctor deseas cambiar o reprogramar el día de tu cita? Indícanos su nombre para ayudarte con gusto. 😊";
+        }
+
+        $medico = $this->contextService->resolverMedico($criterioMedico);
+        if (!$medico) {
+            return "No encontramos al médico en nuestro sistema para cambiar tu cita. ¿Deseas verificar con otro nombre?";
+        }
+
+        $regMedico = $medico->regMedicoPrincipal() ?? $medico->reg_medico;
+        $citaData = $this->contextService->obtenerCitaPendienteConMedicoPorTelefono($telefono, $regMedico);
+
+        $disponibilidad = $this->contextService->consultarProximoDiaDisponible($regMedico);
+
+        if (empty($disponibilidad['disponible'])) {
+            return "Hemos verificado la agenda del *{$medico->nombre_mostrar}*, pero lamentablemente no cuenta con cupos en los próximos 30 días para cambiar tu cita.\n\n"
+                . "¿Deseas consultar la disponibilidad de otra especialidad o médico?";
+        }
+
+        $datosPendientes = $this->datosPendientesDeDisponibilidad($regMedico, $disponibilidad);
+        $datosPendientes['reprogramar'] = true;
+        if (!empty($citaData['cita'])) {
+            $datosPendientes['cita_id'] = $citaData['cita']->id;
+        }
+
+        Cache::put("wa_pendiente_{$telefono}", $datosPendientes, now()->addMinutes(30));
+        if ($cleanTel) {
+            Cache::put("wa_pendiente_{$cleanTel}", $datosPendientes, now()->addMinutes(30));
+        }
+
+        $esPerdida = !empty($citaData['cita_perdida']);
+        $nombreMed = $medico->nombre_mostrar;
+        $especialidad = $medico->specialties->pluck('name')->first() ?? $medico->biography ?? 'Consulta Médica';
+
+        if ($esPerdida) {
+            return "Entendemos que no pudiste asistir o perdiste tu cita con el/la *{$nombreMed}* ({$especialidad}). ¡No te preocupes! Con gusto podemos cambiar el día de tu cita.\n\n"
+                . "Los próximos días con disponibilidad son:\n\n"
+                . DisponibilidadEnTexto::de($disponibilidad);
+        }
+
+        return "Con gusto podemos cambiar el día de tu cita con el/la *{$nombreMed}* ({$especialidad}).\n\n"
+            . "Los próximos días con disponibilidad son:\n\n"
+            . DisponibilidadEnTexto::de($disponibilidad);
+    }
+
+    /**
      * Resuelve si el usuario solicita directamente a un médico específico en su mensaje.
      */
     protected function resolverSolicitudDirectaMedico(string $mensajeUsuario, array $contexto): ?string
@@ -332,6 +467,24 @@ class GeminiService
         if ($telefono) {
             $citaActiva = $this->contextService->obtenerCitaPendienteConMedicoPorTelefono($telefono, $regMedico);
             if ($citaActiva) {
+                if (!empty($citaActiva['cita_perdida'])) {
+                    $disponibilidad = $this->contextService->consultarProximoDiaDisponible($regMedico);
+                    if (!empty($disponibilidad['disponible'])) {
+                        $cleanTel = preg_replace('/\D/', '', $telefono);
+                        $datosPendientes = $this->datosPendientesDeDisponibilidad($regMedico, $disponibilidad);
+                        $datosPendientes['reprogramar'] = true;
+                        $datosPendientes['cita_id'] = $citaActiva['cita']->id;
+                        Cache::put("wa_pendiente_{$telefono}", $datosPendientes, now()->addMinutes(30));
+                        if ($cleanTel) {
+                            Cache::put("wa_pendiente_{$cleanTel}", $datosPendientes, now()->addMinutes(30));
+                        }
+
+                        $especialidad = $medico->specialties->pluck('name')->first() ?? $medico->biography ?? 'Consulta Médica';
+                        return "Notamos que tenías una cita con el/la *{$medico->nombre_mostrar}* ({$especialidad}) que no pudo ser atendida (cita perdida).\n\n"
+                            . "Con gusto podemos cambiar el día de tu cita. Los próximos días con disponibilidad son:\n\n"
+                            . DisponibilidadEnTexto::de($disponibilidad);
+                    }
+                }
                 return $citaActiva['mensaje'];
             }
         }

@@ -431,4 +431,49 @@ class PacienteFamiliaWebTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $accion->comoHermano($reg, '651', null, $nino);
     }
+
+    public function test_guardar_la_familia_completa_el_representante_sin_pisar_lo_cargado(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $reg = $medico->reg_medico;
+        $id = $this->nino($medico, 'Mateo', 541);
+        $this->chamo($reg, 541, 55, 'PEREZ MATEO');
+        $this->chamo($reg, 542, 55, 'PEREZ ANA');
+        $this->familia($reg, 55, ['status' => 'F']);
+        // El 542 ya tiene un representante cargado en la ficha: su nombre manda, sólo se le llena lo que falta.
+        DB::table('representante')->insert(['reg_medico' => $reg, 'numhistoria' => 542, 'nombre' => 'TIA CARMEN', 'created_at' => now(), 'updated_at' => now()]);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->post(route('clinica.pacientes.familia', $id), ['nom_madre' => 'ROSA GÓMEZ'])
+            ->assertRedirect();
+
+        $uno = DB::table('representante')->where('reg_medico', $reg)->where('numhistoria', 541)->first();
+        $this->assertSame('ROSA GÓMEZ', $uno->nombre);
+        $this->assertSame('M', $uno->codeparentesco);
+        $this->assertSame('12345678', $uno->cedula);
+        $this->assertSame('04141234567', $uno->telefono);
+
+        $otro = DB::table('representante')->where('reg_medico', $reg)->where('numhistoria', 542)->get();
+        $this->assertCount(1, $otro);
+        $this->assertSame('TIA CARMEN', $otro[0]->nombre);
+        $this->assertSame('12345678', $otro[0]->cedula);
+    }
+
+    public function test_el_relleno_de_toda_la_base_es_idempotente_y_respeta_cada_consultorio(): void
+    {
+        [, $medico] = $this->medicoConAcceso();
+        $reg = $medico->reg_medico;
+        $this->chamo($reg, 541, 55, 'PEREZ MATEO');
+        $this->familia($reg, 55, ['status' => 'M']);
+        $this->chamo('OTRO-REG', 9, 55, 'AJENO');
+
+        $relleno = new \App\Clinica\Pacientes\RepresentanteDesdeLaFamilia();
+        $this->assertSame(1, $relleno->completarTodo($reg));
+        $this->assertSame(0, $relleno->completarTodo($reg));
+
+        $fila = DB::table('representante')->where('reg_medico', $reg)->where('numhistoria', 541)->first();
+        $this->assertSame('LUIS PÉREZ', $fila->nombre);
+        $this->assertSame('P', $fila->codeparentesco);
+        $this->assertSame('04127654321', $fila->telefono);
+        $this->assertSame(0, DB::table('representante')->where('reg_medico', 'OTRO-REG')->count());
+    }
 }
