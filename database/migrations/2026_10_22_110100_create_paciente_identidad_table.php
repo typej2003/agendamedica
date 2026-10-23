@@ -16,6 +16,12 @@ return new class extends Migration
 {
     public function up()
     {
+        // Con guarda: si una corrida anterior creó la tabla y murió antes de anotar la migración, la
+        // siguiente no puede volver a crearla (misma razón que la guarda de `users.telefono_validado`).
+        if (Schema::hasTable('paciente_identidad')) {
+            return;
+        }
+
         Schema::create('paciente_identidad', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('paciente_id')->unique();

@@ -16,15 +16,37 @@ use Illuminate\Support\Facades\Schema;
  * así que las cuentas de paciente existentes quedan con el teléfono de su ficha (normalizado) y la fecha de alta
  * como validación. Es lo único que se puede afirmar con honestidad; el resto (cuentas sin ficha o sin teléfono
  * válido) queda sin validar.
+ *
+ * **Guarda de columnas y relleno**: MySQL no corre el `ALTER` dentro de una transacción, así que si la migración
+ * falla después de agregar las columnas la fila de `migrations` no queda escrita y la siguiente corrida se topa
+ * con «Column already exists» (pasó en QA con la 0.3.0). Por eso cada columna se agrega sólo si falta y el
+ * relleno **no pisa** una validación que ya esté anotada. Es inocuo en la base que ya las tiene.
+ *
+ * El relleno depende de `pacientes.user_id`, que en las bases migradas antes del 2026-08-29 **no existe** (la
+ * columna se agregó editando la migración base; ver `2026_10_23_110000_add_user_id_a_pacientes`): sin esa
+ * columna no hay cuenta enlazada que rellenar, así que el relleno simplemente no corre.
  */
 return new class extends Migration
 {
     public function up()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('telefono_validado', 20)->nullable()->after('blocked_by');
-            $table->timestamp('telefono_validado_en')->nullable()->after('telefono_validado');
-        });
+        if (! Schema::hasColumn('users', 'telefono_validado')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('telefono_validado', 20)->nullable()->after('blocked_by');
+            });
+        }
+
+        if (! Schema::hasColumn('users', 'telefono_validado_en')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->timestamp('telefono_validado_en')->nullable()->after('telefono_validado');
+            });
+        }
+
+        // Sin `pacientes.user_id` no hay ninguna cuenta enlazada que rellenar (y la columna la agrega la
+        // migración 2026_10_23_110000, que corre después de ésta).
+        if (! Schema::hasColumn('pacientes', 'user_id')) {
+            return;
+        }
 
         $cuentas = DB::table('users')
             ->join('pacientes', 'pacientes.user_id', '=', 'users.id')
@@ -33,6 +55,8 @@ return new class extends Migration
             })
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->where('roles.name', 'Paciente')
+            ->whereNull('users.telefono_validado')
+            ->whereNull('users.telefono_validado_en')
             ->get(['users.id as user_id', 'users.created_at', 'pacientes.telefono']);
 
         foreach ($cuentas as $cuenta) {
@@ -49,8 +73,12 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['telefono_validado', 'telefono_validado_en']);
-        });
+        foreach (['telefono_validado', 'telefono_validado_en'] as $columna) {
+            if (Schema::hasColumn('users', $columna)) {
+                Schema::table('users', function (Blueprint $table) use ($columna) {
+                    $table->dropColumn($columna);
+                });
+            }
+        }
     }
 };
