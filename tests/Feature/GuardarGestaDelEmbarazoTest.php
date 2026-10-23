@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\Embarazo\GuardarGestaDelEmbarazo;
+use App\Models\EcoObstetrico as EcoObstetricoModelo;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\PreNatalObservacion;
@@ -283,5 +284,56 @@ class GuardarGestaDelEmbarazoTest extends TestCase
         $this->assertSame('S', $segunda->multiple);
         $this->assertSame(2, (int) $segunda->cantidad);
         $this->assertSame(2, (int) $segunda->gestas);
+    }
+
+    // ---------------------------------------------- La FUR de la gesta nueva, de un estudio ecográfico
+
+    /**
+     * **La FUR es la misma para la misma gesta** (2026-10-22): si el médico hizo el eco primero y tecleó la
+     * FUR ahí, «Nueva gesta» la completa sola —sólo pregunta cuántos bebés son— sin volver a pedirla.
+     */
+    public function test_al_crear_la_gesta_la_fur_se_completa_con_la_del_estudio_ecografico(): void
+    {
+        $medico = $this->medico();
+        $crear = app(\App\Actions\Embarazo\CrearGestaDelEmbarazo::class);
+
+        // La gesta 1 (sin estudios todavía) se cierra con su FUR.
+        $this->assertSame(1, $crear->ejecutar($medico->reg_medico, 1020, 1));
+        PreNatalObservacion::where('historia', 1020)->where('gesta_clave', 1)
+            ->update(['fur' => '2026-01-10', 'final' => 'S']);
+
+        // El eco del embarazo nuevo, hecho antes de crear la gesta: ya lleva su FUR.
+        EcoObstetricoModelo::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1020, 'consulta' => 1,
+            'fecha' => '2026-08-20', 'fur' => '2026-05-01', 'lcc' => 45,
+        ]);
+
+        $this->assertSame(2, $crear->ejecutar($medico->reg_medico, 1020, 1));
+
+        $segunda = PreNatalObservacion::where('historia', 1020)->where('gesta_clave', 2)->first();
+        $this->assertSame('2026-05-01', (string) $segunda->fur);
+    }
+
+    /** El eco de un embarazo que ya terminó no le pone la FUR al que empieza: tiene que ser posterior. */
+    public function test_al_crear_la_gesta_no_se_copia_la_fur_de_un_estudio_del_embarazo_anterior(): void
+    {
+        $medico = $this->medico();
+        $crear = app(\App\Actions\Embarazo\CrearGestaDelEmbarazo::class);
+
+        PreNatalObservacion::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1021, 'gesta_clave' => 1,
+            'fur' => '2026-01-10', 'final' => 'S',
+        ]);
+
+        // El eco de ese embarazo, con la misma FUR de la gesta cerrada.
+        EcoObstetricoModelo::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1021, 'consulta' => 1,
+            'fecha' => '2026-03-01', 'fur' => '2026-01-10', 'lcc' => 45,
+        ]);
+
+        $this->assertSame(2, $crear->ejecutar($medico->reg_medico, 1021, 1));
+
+        $segunda = PreNatalObservacion::where('historia', 1021)->where('gesta_clave', 2)->first();
+        $this->assertNull($segunda->fur);
     }
 }

@@ -3,6 +3,9 @@
 namespace Tests\Unit\Clinica;
 
 use App\Clinica\Consulta\EcoObstetrico;
+use App\Clinica\Consulta\EstudioEcografico;
+use App\Clinica\Consulta\Vistas\EcoObstetricoVista;
+use Carbon\Carbon;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -18,6 +21,19 @@ use PHPUnit\Framework\TestCase;
  */
 class EcoObstetricoMapaTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // "Hoy" fijo: la EG y la FPP salen de la FUR y de la fecha del día.
+        Carbon::setTestNow(Carbon::parse('2026-10-06 09:00:00'));
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
+    }
+
     /** @return array<string,array<string,mixed>> */
     private function campos(): array
     {
@@ -74,5 +90,28 @@ class EcoObstetricoMapaTest extends TestCase
                 'El campo ' . $columna . ' volvió a texto: en el escritorio era numérico.',
             );
         }
+    }
+
+    // ------------------------------------------------------------------------- La EG y la FPP en vivo
+
+    /**
+     * Los dos obstétricos muestran la **EG** y la **FPP** de su FUR, como los `compute` del DataWindow
+     * (`d_eco_obstetrico_nueva.srd:123-124`, `d_eco_obstetrico_trimestral_nueva.srd:181-183`): no son
+     * columnas ni se guardan, y la pantalla las rehace al teclear la FUR (`consulta.js`).
+     */
+    public function test_la_eg_y_la_fpp_del_eco_obstetrico_salen_de_su_fur(): void
+    {
+        $vista = new EcoObstetricoVista(new EstudioEcografico(['fur' => '2026-02-10']));
+
+        // 10/02/2026 → 06/10/2026: 238 días exactos, 34 semanas y 0 días; FPP, FUR + 280 días.
+        $this->assertSame('34 semanas y 0 días', $vista->edadGestacional());
+        $this->assertSame('17/11/2026', $vista->fpp());
+        // El día de la cuenta es el del consultorio, el mismo que usa el servidor para la hoja.
+        $this->assertSame('2026-10-06', $vista->hoyIso());
+
+        // Sin FUR no se inventa ninguna de las dos.
+        $sinFur = new EcoObstetricoVista(new EstudioEcografico([]));
+        $this->assertNull($sinFur->edadGestacional());
+        $this->assertNull($sinFur->fpp());
     }
 }

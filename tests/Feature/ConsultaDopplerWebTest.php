@@ -238,6 +238,32 @@ class ConsultaDopplerWebTest extends TestCase
         ]);
     }
 
+    /**
+     * **La EG y la FPP del Doppler salen de su FUR** (2026-10-22): el escritorio le muestra la EG como un
+     * `compute` del DataWindow (`d_eco_doppler.srd:82-83`); la web suma la FPP con la misma regla de los ecos
+     * y `consulta.js` las rehace al teclear la FUR, sin guardar.
+     */
+    public function test_la_eg_y_la_fpp_se_muestran_calculadas_de_la_fur(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $this->como($user, $medico, $gineco)->post($this->urlGuardar($consulta), $this->formulario([
+            'fur' => '2026-05-20',
+            'ductos_venosos' => 'S',
+        ]))->assertSessionHas('estado');
+
+        $respuesta = $this->como($user, $medico, $gineco)->get($this->urlSeccion($consulta));
+
+        $respuesta->assertOk()
+            ->assertSee('data-consulta-doppler', false)
+            ->assertSee('id="doppler-eg"', false)
+            ->assertSee('id="doppler-fpp"', false)
+            // Del 20/05/2026 al 07/10/2026 hay 140 días exactos: 20 semanas y 0 días; FPP, + 280 días.
+            ->assertSee('20 semanas y 0 días')
+            ->assertSee('24/02/2027');
+    }
+
     public function test_guardar_dos_veces_no_duplica_la_fila_y_solo_escribe_lo_que_cambio(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();

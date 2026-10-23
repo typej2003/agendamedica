@@ -59,6 +59,12 @@ php artisan route:list
 el filtro de la tarea (`php -d memory_limit=2G artisan test --filter=…`) y **el usuario avisa cuándo correrla entera**,
 antes de subir. Motivo: en serie tarda unos 13 minutos; **en paralelo, `composer test:rapido` (`php artisan test --parallel --processes=10`), baja a ~100 s** (trampa 166). Los números de más abajo son mediciones
 puntuales, no un paso obligatorio de cada cambio.
+
+🧪 **Los tests se corren SIEMPRE en paralelo (regla del usuario, 2026-10-22): `php artisan test --parallel
+--processes=10`**, y cuando no haga falta la suite entera se le pasa **la ruta del archivo**
+(`… tests/Feature/ConsultaEcoWebTest.php`), porque `paratest` v6 no admite `--filter` fuera del modo funcional
+(`--functional --filter=…` si hiciera falta). Nunca un `php artisan test` pelado: la suite en serie tarda ~13
+minutos y el paralelo ~100 s. Es el mismo comando de `composer test:rapido`.
 📝 **Tratamiento** (WEB-5.7, `?seccion=tratamiento`): el ítem TRATAMIENTO del legado, un texto libre con plantillas `TR` en
 `consultas.laringe`, entre Récipes y Solicitudes. **Es `TextosDelExamen::TRATAMIENTO`** (marcado `panel`, así que `claves()` no lo
 cuenta entre las solapas del examen; la ruta de guardado, que es la misma, usa `claves(true)`), con el mismo ViewModel

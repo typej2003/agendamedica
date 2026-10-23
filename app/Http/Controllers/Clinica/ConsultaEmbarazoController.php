@@ -8,6 +8,7 @@ use App\Actions\Embarazo\GuardarGestaDelEmbarazo;
 use App\Actions\Embarazo\GuardarLaboratorioDelEmbarazo;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
+use App\Clinica\Embarazo\GestasDeLaHistoria;
 use App\Clinica\Embarazo\Vistas\PestanasDelEmbarazo;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
@@ -82,7 +83,7 @@ class ConsultaEmbarazoController extends Controller
     /**
      * **«Nueva gesta»** (WEB-11.15): sólo pregunta cuántos bebés son. La regla —la anterior tiene que estar cerrada— es de la Action.
      */
-    public function crearGesta(Request $request, Consulta $consulta, CrearGestaDelEmbarazo $crear)
+    public function crearGesta(Request $request, Consulta $consulta, CrearGestaDelEmbarazo $crear, GestasDeLaHistoria $gestas)
     {
         $contexto = $request->attributes->get('contexto_clinico');
 
@@ -102,9 +103,16 @@ class ConsultaEmbarazoController extends Controller
             return $this->destino($consulta)->with('error', $excepcion->getMessage());
         }
 
+        // La Action completa la FUR sola si un estudio ecográfico de esta gesta ya la traía: el aviso lo dice
+        // en vez de pedirla de nuevo (2026-10-22).
+        $creada = $gestas->fila((string) $consulta->reg_medico, (int) $consulta->numhistoria, $clave);
+        $aviso = $creada !== null && trim((string) ($creada->fur ?? '')) !== ''
+            ? 'Gesta ' . $clave . ' creada con la FUR del estudio ecográfico.'
+            : 'Gesta ' . $clave . ' creada. Ahora completa su FUR y guárdala.';
+
         return redirect()
             ->route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EMBARAZO, 'pestana' => PestanasDelEmbarazo::PRENATAL, 'gesta' => $clave])
-            ->with('estado', 'Gesta ' . $clave . ' creada. Ahora completa su FUR y guárdala.');
+            ->with('estado', $aviso);
     }
 
     /**
