@@ -16,15 +16,27 @@ use Illuminate\Support\Facades\Schema;
  * así que las cuentas de paciente existentes quedan con el teléfono de su ficha (normalizado) y la fecha de alta
  * como validación. Es lo único que se puede afirmar con honestidad; el resto (cuentas sin ficha o sin teléfono
  * válido) queda sin validar.
+ *
+ * **Guarda de columnas y relleno**: MySQL no corre el `ALTER` dentro de una transacción, así que si la migración
+ * falla después de agregar las columnas la fila de `migrations` no queda escrita y la siguiente corrida se topa
+ * con «Column already exists» (pasó en QA con la 0.3.0). Por eso cada columna se agrega sólo si falta y el
+ * relleno **no pisa** una validación que ya esté anotada. Es inocuo en la base que ya las tiene.
  */
 return new class extends Migration
 {
     public function up()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('telefono_validado', 20)->nullable()->after('blocked_by');
-            $table->timestamp('telefono_validado_en')->nullable()->after('telefono_validado');
-        });
+        if (! Schema::hasColumn('users', 'telefono_validado')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('telefono_validado', 20)->nullable()->after('blocked_by');
+            });
+        }
+
+        if (! Schema::hasColumn('users', 'telefono_validado_en')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->timestamp('telefono_validado_en')->nullable()->after('telefono_validado');
+            });
+        }
 
         $cuentas = DB::table('users')
             ->join('pacientes', 'pacientes.user_id', '=', 'users.id')
@@ -33,6 +45,8 @@ return new class extends Migration
             })
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->where('roles.name', 'Paciente')
+            ->whereNull('users.telefono_validado')
+            ->whereNull('users.telefono_validado_en')
             ->get(['users.id as user_id', 'users.created_at', 'pacientes.telefono']);
 
         foreach ($cuentas as $cuenta) {
@@ -49,8 +63,12 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['telefono_validado', 'telefono_validado_en']);
-        });
+        foreach (['telefono_validado', 'telefono_validado_en'] as $columna) {
+            if (Schema::hasColumn('users', $columna)) {
+                Schema::table('users', function (Blueprint $table) use ($columna) {
+                    $table->dropColumn($columna);
+                });
+            }
+        }
     }
 };
