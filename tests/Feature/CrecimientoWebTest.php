@@ -200,18 +200,19 @@ class CrecimientoWebTest extends TestCase
             ->assertDontSee('Fuente: Fundacredesa');
     }
 
-    public function test_muestra_los_dos_juegos_de_edades_a_la_vez(): void
+    public function test_el_juego_de_edades_es_0_a_19_por_defecto_y_se_puede_cambiar(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
         $chico = $this->nino($medico, 5001, 'M', '2024-10-13');
         $this->medir($medico, 5001, 1, '2026-10-13', ['peso' => 12]);
 
         $respuesta = $this->conContexto($medico, $pediatria)->actingAs($user);
-        // El niño de 2 años: la de 0 a 5 trae su punto y la de 5 a 19 avisa que no hay mediciones.
-        $respuesta->get($this->url($chico))->assertSee('Peso · 0 a 5 años')->assertSee('Peso · 5 a 19 años')
+        $respuesta->get($this->url($chico))->assertSee('Peso · 0 a 19 años');
+        $respuesta->get($this->url($chico, ['juego' => '5-19']))->assertSee('Peso · 5 a 19 años')
             ->assertSee('no tiene mediciones de esta gráfica entre los 5 a 19 años');
-        // Una gráfica que no existe vuelve a la de siempre.
-        $respuesta->get($this->url($chico, ['grafica' => 'y']))->assertOk()->assertSee('Peso · 0 a 5 años');
+        $respuesta->get($this->url($chico, ['juego' => '0-5']))->assertSee('Peso · 0 a 5 años');
+        // Un juego o una gráfica que no existen vuelven a los de siempre.
+        $respuesta->get($this->url($chico, ['juego' => 'x', 'grafica' => 'y']))->assertOk()->assertSee('Peso · 0 a 19 años');
     }
 
     public function test_un_valor_en_cero_no_se_grafica(): void
@@ -234,9 +235,9 @@ class CrecimientoWebTest extends TestCase
 
         $sesion = $this->conContexto($medico, $pediatria)->actingAs($user);
 
-        $sesion->get($this->url($id, ['grafica' => 'talla']))->assertOk()->assertSee('Talla · 0 a 5 años');
-        $sesion->get($this->url($id, ['grafica' => 'cefalica']))->assertOk()->assertSee('Perímetro cefálico · 0 a 5 años')->assertSee('grafica-nino-punto', false);
-        $sesion->get($this->url($id, ['grafica' => 'imc']))->assertOk()->assertSee('IMC · 0 a 5 años')->assertSee('grafica-nino-punto', false);
+        $sesion->get($this->url($id, ['grafica' => 'talla']))->assertOk()->assertSee('Talla · 0 a 19 años');
+        $sesion->get($this->url($id, ['grafica' => 'cefalica']))->assertOk()->assertSee('Perímetro cefálico · 0 a 19 años')->assertSee('grafica-nino-punto', false);
+        $sesion->get($this->url($id, ['grafica' => 'imc']))->assertOk()->assertSee('IMC · 0 a 19 años')->assertSee('grafica-nino-punto', false);
         $sesion->get($this->url($id, ['grafica' => 'peso-talla']))->assertOk()->assertSee('Peso para la talla')->assertSee('talla 88 cm', false);
     }
 

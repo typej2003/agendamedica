@@ -35,20 +35,17 @@
             <x-ui.estado tono="aviso" icono="bi-info-circle" class="mb-3" id="crecimiento-sin-referencia">{{ $aviso['titulo'] }}. {{ $aviso['texto'] }}</x-ui.estado>
         @endif
 
-        {{-- Los dos juegos de edades a la vez: lado a lado en pantalla ancha, uno sobre otro en la angosta. --}}
-        <div class="row g-3 mb-3" id="crecimiento-graficas">
-            @foreach ($vm->graficasPorJuego() as $juego => $g)
-                <div class="col-12 col-xl-6">
-                    <x-ui.tarjeta :id="'crecimiento-grafica-' . $juego" :titulo="$g['grafica']->titulo()" icono="bi-graph-up" class="h-100">
-                        @unless ($g['grafica']->conPuntos())
-                            <x-ui.estado tono="neutro" icono="bi-info-circle" class="mb-2">El niño no tiene mediciones de esta gráfica entre los {{ $g['texto'] }}.</x-ui.estado>
-                        @endunless
+        <x-ui.tarjeta id="crecimiento-grafica" :titulo="$vm->grafica()->titulo()" icono="bi-graph-up" class="mb-3">
+            <x-slot name="acciones">
+                <x-ui.segmentado :opciones="$vm->juegos()" etiqueta="Edades" />
+            </x-slot>
 
-                        @include('clinica.crecimiento._grafica', ['grafica' => $g['grafica'], 'id' => 'grafica-' . $juego])
-                    </x-ui.tarjeta>
-                </div>
-            @endforeach
-        </div>
+            @if ($vm->sinPuntosEnElJuego())
+                <x-ui.estado tono="neutro" icono="bi-info-circle" class="mb-2">El niño no tiene mediciones de esta gráfica entre los {{ $vm->textoDelJuego() }}.</x-ui.estado>
+            @endif
+
+            @include('clinica.crecimiento._grafica', ['grafica' => $vm->grafica(), 'id' => 'grafica'])
+        </x-ui.tarjeta>
 
         <x-ui.tarjeta id="crecimiento-tabla" titulo="Mediciones" icono="bi-table" class="mb-3">
             @include('clinica.crecimiento._tabla')

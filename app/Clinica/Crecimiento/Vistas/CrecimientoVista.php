@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
 
 /**
  * **El crecimiento de un niño** (WEB-7.4.3c): las gráficas de peso, talla, perímetro cefálico, IMC y peso para la talla con las tres curvas
- * de la referencia y los puntos de sus consultas, en dos juegos de edades (0 a 5 y 5 a 19 años) como el escritorio, y la tabla de sus
+ * de la referencia y los puntos de sus consultas, en tres juegos de edades (0 a 19, 0 a 5 y 5 a 19 años; por defecto el primero), y la tabla de sus
  * mediciones con dónde cae cada una.
  *
  * No consulta nada ni sabe de rutas: recibe lo leído (`CrecimientoDelPaciente`, la referencia ya armada) y una función que arma el enlace
@@ -21,6 +21,7 @@ use Illuminate\Support\Collection;
 final class CrecimientoVista
 {
     public const POR_DEFECTO = 'peso';
+    public const POR_DEFECTO_JUEGO = '0-19';
 
     /** clave => [título, eje x, eje y, medida de la referencia, columna de la medición, tipo de eje x]. */
     private const GRAFICAS = [
@@ -33,6 +34,7 @@ final class CrecimientoVista
 
     /** clave => [desde, hasta (años), texto, marcas del eje x]. */
     private const JUEGOS = [
+        '0-19' => [0.0, 19.0, '0 a 19 años', [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 19.0]],
         '0-5' => [0.0, 5.0, '0 a 5 años', [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]],
         '5-19' => [5.0, 19.0, '5 a 19 años', [5.0, 7.0, 9.0, 11.0, 13.0, 15.0, 17.0, 19.0]],
     ];
@@ -62,16 +64,14 @@ final class CrecimientoVista
         return isset(self::GRAFICAS[(string) $clave]) ? (string) $clave : self::POR_DEFECTO;
     }
 
-    /** El juego que se pide, o —si no se pidió ninguno— el que corresponde a la edad del niño (hasta los 5 años, el primero). */
+    /** El juego que se pide, o —si no se pidió ninguno— todas las edades (0 a 19 años). */
     public static function normalizarJuego(?string $clave, ?string $nacimiento, ?string $hoy = null): string
     {
         if (isset(self::JUEGOS[(string) $clave])) {
             return (string) $clave;
         }
 
-        $dias = PercentilesDeCrecimiento::diasDeEdad($nacimiento, $hoy ?? \App\Clinica\FechaDelConsultorio::hoyComoTexto());
-
-        return $dias !== null && $dias / 365.25 > 5 ? '5-19' : '0-5';
+        return self::POR_DEFECTO_JUEGO;
     }
 
     public function graficaActiva(): string
@@ -154,21 +154,6 @@ final class CrecimientoVista
     public function grafica(): GraficaDeCrecimiento
     {
         return $this->armar($this->grafica, $this->juego);
-    }
-
-    /**
-     * Las gráficas activas de **los dos juegos de edades** (0 a 5 y 5 a 19), para ponerlas lado a lado en pantalla ancha.
-     *
-     * @return array<string,array{texto:string, grafica:GraficaDeCrecimiento}>
-     */
-    public function graficasPorJuego(): array
-    {
-        $salida = [];
-        foreach (self::JUEGOS as $clave => $definicion) {
-            $salida[$clave] = ['texto' => $definicion[2], 'grafica' => $this->armar($this->grafica, $clave)];
-        }
-
-        return $salida;
     }
 
     /** Todas las gráficas del juego activo, para la hoja impresa. @return array<string,GraficaDeCrecimiento> */
