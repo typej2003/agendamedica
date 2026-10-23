@@ -33,16 +33,15 @@
             </div>
         </div>
 
-        @if ($catalogo === 'medicamentos' && count($seleccion) > 0)
-            <div class="card-header bg-light py-2 d-flex flex-wrap align-items-center gap-2" role="status">
-                <span class="small">{{ count($seleccion) }} {{ count($seleccion) === 1 ? 'marcado' : 'marcados' }}</span>
-                <button type="button" class="btn btn-sm btn-primary" wire:click="abrirCombinar" @disabled(count($seleccion) < 2)>
+        @if ($catalogo === 'medicamentos')
+            {{-- La selección se lleva en el navegador (`wire:model.defer` + este script): marcar una casilla no hace ninguna petición; la selección viaja con «Combinar». --}}
+            <div id="barra-combinar" class="card-header bg-light py-2 flex-wrap align-items-center gap-2 {{ count($seleccion) > 0 ? 'd-flex' : 'd-none' }}" role="status" data-sel="{{ json_encode(array_values($seleccion)) }}">
+                <span class="small" data-barra-n>{{ count($seleccion) }} {{ count($seleccion) === 1 ? 'marcado' : 'marcados' }}</span>
+                <button type="button" class="btn btn-sm btn-primary" wire:click="abrirCombinar" data-barra-combinar @disabled(count($seleccion) < 2)>
                     <i class="bi bi-intersect me-1" aria-hidden="true"></i> Combinar ({{ count($seleccion) }})
                 </button>
-                <button type="button" class="btn btn-sm btn-link" wire:click="$set('seleccion', [])">Quitar la selección</button>
-                @if (count($seleccion) < 2)
-                    <span class="text-muted small">Marca al menos dos para combinarlos en una sola ficha.</span>
-                @endif
+                <button type="button" class="btn btn-sm btn-link" data-barra-quitar>Quitar la selección</button>
+                <span class="text-muted small {{ count($seleccion) >= 2 ? 'd-none' : '' }}" data-barra-aviso>Marca al menos dos para combinarlos en una sola ficha.</span>
             </div>
         @endif
 
@@ -56,7 +55,7 @@
                         @forelse ($filas as $fila)
                             <tr wire:key="ini-{{ $catalogo }}-{{ $fila->id }}">
                                 @if ($catalogo === 'medicamentos')
-                                    <td><input type="checkbox" class="form-check-input" value="{{ $fila->id }}" wire:model="seleccion" aria-label="Marcar {{ trim((string) $fila->{$def['etiqueta']}) }} para combinar"></td>
+                                    <td><input type="checkbox" class="form-check-input" value="{{ $fila->id }}" wire:model.defer="seleccion" aria-label="Marcar {{ trim((string) $fila->{$def['etiqueta']}) }} para combinar"></td>
                                 @endif
                                 <td><code>{{ trim((string) $fila->{$def['codigo']}) }}</code></td>
                                 <td class="fw-semibold">{{ trim((string) $fila->{$def['etiqueta']}) }}</td>
@@ -179,7 +178,7 @@
                                 <legend class="form-label fs-6 mb-1">Ficha que se conserva (mantiene su código)</legend>
                                 @foreach ($combinar['fichas'] as $ficha)
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="sobrevive" id="cmb-sobrevive-{{ $ficha['id'] }}" value="{{ $ficha['id'] }}" wire:model="combinar.sobrevive">
+                                        <input class="form-check-input" type="radio" name="sobrevive" id="cmb-sobrevive-{{ $ficha['id'] }}" value="{{ $ficha['id'] }}" wire:model.defer="combinar.sobrevive">
                                         <label class="form-check-label" for="cmb-sobrevive-{{ $ficha['id'] }}"><code>{{ $ficha['codigo'] }}</code> {{ $ficha['nombre'] }}</label>
                                     </div>
                                 @endforeach
@@ -204,7 +203,7 @@
                                             <div class="mt-1 d-flex flex-column gap-1">
                                                 <span class="form-text mt-0">Los textos difieren:</span>
                                                 @foreach ($combinar['opciones'][$columna] as $k => $valor)
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary text-start text-break" wire:click="usarValor('{{ $columna }}', {{ $k }})">{{ \Illuminate\Support\Str::limit($valor, 160) }}</button>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary text-start text-break" data-usar-valor="cmb-{{ $columna }}" data-valor="{{ $valor }}">{{ \Illuminate\Support\Str::limit($valor, 160) }}</button>
                                                 @endforeach
                                             </div>
                                         @endif
@@ -326,5 +325,53 @@
                 </div>
             </div>
         </div>
+    @endif
+
+    @if ($catalogo === 'medicamentos')
+        <script>
+            // Sin peticiones al marcar o elegir: la barra de «Combinar» y los botones de textos alternativos trabajan en el navegador.
+            if (! window.__combinarMedicamentos) {
+                window.__combinarMedicamentos = true;
+
+                const pintar = (barra, ids) => {
+                    barra.dataset.sel = JSON.stringify(ids);
+                    barra.classList.toggle('d-flex', ids.length > 0);
+                    barra.classList.toggle('d-none', ids.length === 0);
+                    barra.querySelector('[data-barra-n]').textContent = ids.length + (ids.length === 1 ? ' marcado' : ' marcados');
+                    const boton = barra.querySelector('[data-barra-combinar]');
+                    boton.disabled = ids.length < 2;
+                    boton.lastChild.textContent = ' Combinar (' + ids.length + ')';
+                    barra.querySelector('[data-barra-aviso]').classList.toggle('d-none', ids.length >= 2);
+                };
+
+                document.addEventListener('change', (e) => {
+                    const casilla = e.target.closest('input[wire\\:model\\.defer="seleccion"]');
+                    const barra = document.getElementById('barra-combinar');
+                    if (! casilla || ! barra) { return; }
+                    let ids = JSON.parse(barra.dataset.sel || '[]').map(String).filter((id) => id !== casilla.value);
+                    if (casilla.checked) { ids.push(casilla.value); }
+                    pintar(barra, ids);
+                });
+
+                document.addEventListener('click', (e) => {
+                    const quitar = e.target.closest('[data-barra-quitar]');
+                    if (quitar) {
+                        const barra = quitar.closest('#barra-combinar');
+                        document.querySelectorAll('input[wire\\:model\\.defer="seleccion"]').forEach((c) => { c.checked = false; });
+                        window.Livewire.find(barra.closest('[wire\\:id]').getAttribute('wire:id')).set('seleccion', [], true);
+                        pintar(barra, []);
+
+                        return;
+                    }
+
+                    const alterno = e.target.closest('[data-usar-valor]');
+                    if (alterno) {
+                        const campo = document.getElementById(alterno.dataset.usarValor);
+                        campo.value = alterno.dataset.valor;
+                        campo.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                });
+            }
+        </script>
     @endif
 </div>
