@@ -99,6 +99,18 @@ return [
             'visibility' => 'private',
         ],
 
+        /*
+         * **El canal de publicación del escritorio** (el instalador "Standalone" que se le manda al
+         * consultorio): cada versión publicada con sus archivos y el manifiesto. Es contenido público
+         * —los mismos binarios que hoy viajan en el paquete— pero vive fuera de `public/`, igual que los
+         * otros discos privados, y se sirve con `Storage::response()` desde la ruta del API. Ver
+         * `config/escritorio.php` y `App\Escritorio\Canal\CanalDelEscritorio`.
+         */
+        'escritorio' => [
+            'driver' => 'local',
+            'root' => storage_path('app/escritorio'),
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
