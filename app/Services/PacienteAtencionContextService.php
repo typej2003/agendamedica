@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Actions\Agenda\CrearCita;
+use App\Actions\Agenda\EditarCita;
 use App\Clinica\Agenda\ArmadorDeAgenda;
 use App\Clinica\Agenda\Jornada;
 use App\Models\Cola;
+use App\Models\DiaNoLaborable;
 use App\Models\Evolucion;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
@@ -796,7 +798,8 @@ class PacienteAtencionContextService
     }
 
     /**
-     * Consulta en la tabla evolucion los días y horarios de atención del médico.
+     * Consulta los días y horarios de atención del médico (en office_schedules o evolucion),
+     * considerando días no laborables y disponibilidad de cupos en la semana.
      */
     public function obtenerHorariosAtencion(string $criterioMedico): array
     {
@@ -814,44 +817,137 @@ class PacienteAtencionContextService
             $especialidad = $evolucion?->especialidad
                 ?: ($medico?->specialties->pluck('name')->first() ?? 'Consulta Médica');
 
-            if (!$evolucion) {
-                return [
-                    'encontrado' => false,
-                    'medico' => $nombreMedico,
-                    'especialidad' => $especialidad,
-                    'reg_medico' => $regMedico,
-                    'mensaje' => "No se registraron horarios de atención específicos en el sistema para {$nombreMedico}.",
-                ];
-            }
-
+            $sedes = $medico ? $this->armador()->sedes($regMedico, $medico->id) : collect();
             $diasConfigurados = [];
-            $mapaDias = [
-                'lunes'     => ['nombre' => 'Lunes',     'inicio' => $evolucion->lunes_i,     'fin' => $evolucion->lunes_f],
-                'martes'    => ['nombre' => 'Martes',    'inicio' => $evolucion->martes_i,    'fin' => $evolucion->martes_f],
-                'miercoles' => ['nombre' => 'Miércoles', 'inicio' => $evolucion->miercoles_i, 'fin' => $evolucion->miercoles_f],
-                'jueves'    => ['nombre' => 'Jueves',    'inicio' => $evolucion->jueves_i,    'fin' => $evolucion->jueves_f],
-                'viernes'   => ['nombre' => 'Viernes',   'inicio' => $evolucion->vienes_i ?? $evolucion->viernes_i ?? null, 'fin' => $evolucion->viernes_f],
-                'sabado'    => ['nombre' => 'Sábado',    'inicio' => $evolucion->sabado_i,    'fin' => $evolucion->sabado_f],
-                'domingo'   => ['nombre' => 'Domingo',   'inicio' => $evolucion->domingo_i,   'fin' => $evolucion->domigo_f ?? $evolucion->domingo_f ?? null],
-            ];
+            $modalidad = null;
+            $consultorioNombre = null;
 
-            foreach ($mapaDias as $campoDia => $info) {
-                $activo = $evolucion->{$campoDia};
-                $esActivo = !empty($activo) && !in_array(strtolower(trim((string)$activo)), ['0', 'n', 'no', 'false', 'none'], true);
-
-                if ($esActivo) {
-                    $horario = 'Horario no especificado';
-                    if (!empty($info['inicio']) && !empty($info['fin'])) {
-                        $horario = "{$info['inicio']} a {$info['fin']}";
-                    } elseif (!empty($info['inicio'])) {
-                        $horario = "Desde las {$info['inicio']}";
+            if ($sedes->isNotEmpty()) {
+                foreach ($sedes as $sede) {
+                    $consultorioNombre = $sede->office_number ?: ($sede->medicalCenter->name ?? 'Consultorio principal');
+                    $modEtiqueta = $sede->modalidad === Office::MODALIDAD_ORDEN ? 'Por orden de llegada' : 'Por cita previa';
+                    if ($modalidad === null) {
+                        $modalidad = $modEtiqueta;
                     }
-                    $diasConfigurados[] = "{$info['nombre']}: {$horario}";
+
+                    $bloquesPorDia = $sede->schedules->sortBy('hora_inicio')->groupBy('dia_semana');
+                    foreach ($bloquesPorDia as $diaNum => $bloques) {
+                        $nombreDia = OfficeSchedule::DIAS[(int)$diaNum] ?? "Día {$diaNum}";
+                        $rangos = [];
+                        foreach ($bloques as $bloque) {
+                            $ini = \App\Support\HoraLocal::hora12(substr((string)$bloque->hora_inicio, 0, 5));
+                            $fin = \App\Support\HoraLocal::hora12(substr((string)$bloque->hora_fin, 0, 5));
+                            $cupoStr = $bloque->cupo ? " (cupo: {$bloque->cupo})" : '';
+                            $rangos[] = "{$ini} a {$fin}{$cupoStr}";
+                        }
+                        $diasConfigurados[] = "{$nombreDia}: " . implode(', ', $rangos) . " ({$modEtiqueta})";
+                    }
                 }
             }
 
-            $citaPreviaBool = !empty($evolucion->cita_previa) && !in_array(strtolower(trim((string)$evolucion->cita_previa)), ['0', 'n', 'no', 'false'], true);
-            $modalidad = $citaPreviaBool ? 'Por cita previa' : 'Por orden de llegada';
+            if (empty($diasConfigurados)) {
+                if (!$evolucion) {
+                    return [
+                        'encontrado' => false,
+                        'medico' => $nombreMedico,
+                        'especialidad' => $especialidad,
+                        'reg_medico' => $regMedico,
+                        'mensaje' => "No se registraron horarios de atención específicos en el sistema para {$nombreMedico}.",
+                    ];
+                }
+
+                $mapaDias = [
+                    'lunes'     => ['nombre' => 'Lunes',     'inicio' => $evolucion->lunes_i,     'fin' => $evolucion->lunes_f],
+                    'martes'    => ['nombre' => 'Martes',    'inicio' => $evolucion->martes_i,    'fin' => $evolucion->martes_f],
+                    'miercoles' => ['nombre' => 'Miércoles', 'inicio' => $evolucion->miercoles_i, 'fin' => $evolucion->miercoles_f],
+                    'jueves'    => ['nombre' => 'Jueves',    'inicio' => $evolucion->jueves_i,    'fin' => $evolucion->jueves_f],
+                    'viernes'   => ['nombre' => 'Viernes',   'inicio' => $evolucion->vienes_i ?? $evolucion->viernes_i ?? null, 'fin' => $evolucion->viernes_f],
+                    'sabado'    => ['nombre' => 'Sábado',    'inicio' => $evolucion->sabado_i,    'fin' => $evolucion->sabado_f],
+                    'domingo'   => ['nombre' => 'Domingo',   'inicio' => $evolucion->domingo_i,   'fin' => $evolucion->domigo_f ?? $evolucion->domingo_f ?? null],
+                ];
+
+                foreach ($mapaDias as $campoDia => $info) {
+                    $activo = $evolucion->{$campoDia};
+                    $esActivo = !empty($activo) && !in_array(strtolower(trim((string)$activo)), ['0', 'n', 'no', 'false', 'none'], true);
+
+                    if ($esActivo) {
+                        $horario = 'Horario no especificado';
+                        if (!empty($info['inicio']) && !empty($info['fin'])) {
+                            $ini = \App\Support\HoraLocal::hora12(substr((string)$info['inicio'], 0, 5));
+                            $fin = \App\Support\HoraLocal::hora12(substr((string)$info['fin'], 0, 5));
+                            $horario = "{$ini} a {$fin}";
+                        } elseif (!empty($info['inicio'])) {
+                            $ini = \App\Support\HoraLocal::hora12(substr((string)$info['inicio'], 0, 5));
+                            $horario = "Desde las {$ini}";
+                        }
+                        $diasConfigurados[] = "{$info['nombre']}: {$horario}";
+                    }
+                }
+
+                $citaPreviaBool = !empty($evolucion->cita_previa) && !in_array(strtolower(trim((string)$evolucion->cita_previa)), ['0', 'n', 'no', 'false'], true);
+                $modalidad = $citaPreviaBool ? 'Por cita previa' : 'Por orden de llegada';
+            }
+
+            // Días no laborables registrados próximos (próximos 30 días)
+            $hoy = \App\Clinica\FechaDelConsultorio::hoyComoFecha();
+            $claveMedico = $medico ? ($medico->claveDeEvolucion($medico->registrosDeTrabajo()) ?? (int) $medico->id) : null;
+            $diasNoLaborables = [];
+
+            try {
+                $noLabQuery = DiaNoLaborable::whereDate('dia', '>=', $hoy->toDateString())
+                    ->whereDate('dia', '<=', $hoy->copy()->addDays(30)->toDateString());
+
+                if ($claveMedico) {
+                    $noLabQuery->where(function ($q) use ($regMedico, $claveMedico, $medico) {
+                        $q->where(function ($sub) use ($regMedico, $claveMedico) {
+                            $sub->where('reg_medico', $regMedico)
+                                ->where('medico', $claveMedico);
+                        })
+                        ->orWhere('medico', $claveMedico)
+                        ->orWhere('medico', $medico->id)
+                        ->orWhere('reg_medico', $regMedico);
+                    });
+                } else {
+                    $noLabQuery->where('reg_medico', $regMedico);
+                }
+
+                $itemsNoLab = $noLabQuery->orderBy('dia')->get();
+                foreach ($itemsNoLab as $nl) {
+                    $fechaNl = Carbon::parse($nl->dia);
+                    $fechaNlStr = ucfirst($fechaNl->locale('es')->isoFormat('dddd D [de] MMMM'));
+                    $motivoNl = $nl->motivo ?: ($nl->tipo ? (DiaNoLaborable::etiquetas()[$nl->tipo] ?? 'No laborable') : 'No laborable');
+                    $diasNoLaborables[] = "{$fechaNlStr} ({$motivoNl})";
+                }
+            } catch (\Throwable $e) {}
+
+            // Consultar disponibilidad próxima y cupos disponibles
+            $disponibilidad = $this->consultarProximoDiaDisponible($regMedico, 30, 3);
+
+            // Armar mensaje estructurado para el paciente
+            $msg = "📅 *Horarios de atención de {$nombreMedico}* ({$especialidad}):\n\n";
+            if ($consultorioNombre) {
+                $msg .= "📍 *Consultorio:* {$consultorioNombre}\n";
+            }
+            if ($modalidad) {
+                $msg .= "📋 *Modalidad:* {$modalidad}\n";
+            }
+            if (!empty($diasConfigurados)) {
+                $msg .= "⏰ *Días de atención en la semana:*\n" . implode("\n", array_map(fn($d) => "• {$d}", $diasConfigurados)) . "\n\n";
+            } else {
+                $msg .= "⏰ Horarios no especificados en el sistema.\n\n";
+            }
+
+            if (!empty($diasNoLaborables)) {
+                $msg .= "⚠️ *Días que no labora próximamente:*\n" . implode("\n", array_map(fn($d) => "• {$d}", $diasNoLaborables)) . "\n\n";
+            }
+
+            if (!empty($disponibilidad['disponible'])) {
+                $msg .= "✨ *Próximos días con cupos disponibles:*\n\n" . DisponibilidadEnTexto::de($disponibilidad) . "\n\n";
+            } else {
+                $msg .= "ℹ️ En este momento no cuenta con cupos disponibles para los próximos 30 días.\n\n";
+            }
+
+            $msg .= "¿Deseas agendar o cambiar tu cita para alguno de estos días?";
 
             return [
                 'encontrado' => true,
@@ -859,9 +955,12 @@ class PacienteAtencionContextService
                 'especialidad' => $especialidad,
                 'reg_medico' => $regMedico,
                 'dias_atencion' => $diasConfigurados,
-                'modalidad' => $modalidad,
-                'tiempo_por_paciente' => $evolucion->tiempo_paci ? "{$evolucion->tiempo_paci} minutos aprox." : null,
-                'cupos_maximos_diarios' => $evolucion->cantidad_paciente ?: self::LIMITE_CUPOS_DIARIOS,
+                'modalidad' => $modalidad ?? 'Por orden de llegada',
+                'tiempo_por_paciente' => $evolucion?->tiempo_paci ? "{$evolucion->tiempo_paci} minutos aprox." : null,
+                'cupos_maximos_diarios' => $evolucion?->cantidad_paciente ?: self::LIMITE_CUPOS_DIARIOS,
+                'dias_no_laborables' => $diasNoLaborables,
+                'disponibilidad' => $disponibilidad,
+                'mensaje' => trim($msg),
             ];
 
         } catch (\Throwable $e) {
@@ -920,7 +1019,12 @@ class PacienteAtencionContextService
         // D) Dirección general del médico
         $esDireccionMedico = preg_match('/(?:donde\s+queda|d[oó]nde\s+queda|direcci[oó]n|ubicaci[oó]n)\s+(?:de(?:l)?\s+)?(?:el\s+|la\s+)?(?:dr\.?|dra\.?|doctor(?:a)?)/iu', $limpio);
 
-        if (!$esDondeAtiende && !$esTelefonoMedico && !$esConsultorio && !$esDireccionMedico) {
+        // E) Días u horarios de atención del médico
+        $esHorarioOAtencion = preg_match('/(?:qu[eé]\s+d[ií]as?|cu[aá]ndo)\s+(?:tiene\s+atenci[oó]n|atiende|pasa\s+consulta|est[aá]\s+disponible|hay\s+consulta|labora|trabaja)/iu', $limpio)
+            || preg_match('/(?:cu[aá]l\s+es\s+el\s+)?horario\s+(?:de\s+atenci[oó]n\s+)?(?:del?\s+)?(?:m[eé]dico|doctor(?:a)?|dr\.?|dra\.?)/iu', $limpio)
+            || preg_match('/(?:d[ií]as\s+de\s+(?:atenci[oó]n|consulta)|horario\s+de\s+consulta)/iu', $limpio);
+
+        if (!$esDondeAtiende && !$esTelefonoMedico && !$esConsultorio && !$esDireccionMedico && !$esHorarioOAtencion) {
             return null;
         }
 
@@ -957,6 +1061,23 @@ class PacienteAtencionContextService
             $res = $this->obtenerDatosConsultorio($criterioMedico);
             if (!empty($res['encontrado']) && !empty($res['mensaje'])) {
                 return "🏥 *Datos del consultorio de {$res['medico']}:*\n\n" . $res['mensaje'];
+            }
+            return $res['mensaje'] ?? null;
+        }
+
+        // 4. Días u horarios de atención del médico (con cupos y días no laborables)
+        if ($esHorarioOAtencion) {
+            $res = $this->obtenerHorariosAtencion($criterioMedico);
+            if (!empty($res['encontrado'])) {
+                if (!empty($contexto['telefono']) && !empty($res['disponibilidad']['disponible'])) {
+                    $cleanTel = preg_replace('/\D/', '', $contexto['telefono']);
+                    $datosPendientes = $this->datosPendientesDeDisponibilidad($res['reg_medico'], $res['disponibilidad']);
+                    Cache::put("wa_pendiente_{$contexto['telefono']}", $datosPendientes, now()->addMinutes(30));
+                    if ($cleanTel) {
+                        Cache::put("wa_pendiente_{$cleanTel}", $datosPendientes, now()->addMinutes(30));
+                    }
+                }
+                return $res['mensaje'] ?? null;
             }
             return $res['mensaje'] ?? null;
         }
@@ -1423,6 +1544,19 @@ class PacienteAtencionContextService
             // Validar si el paciente ya tiene una cita activa pendiente (atendido = 0) con este médico
             $citaPendiente = $this->obtenerCitaPendienteConMedico($paciente, $medico);
             if ($citaPendiente) {
+                if (!empty($citaPendiente['cita_perdida'])) {
+                    // Si la cita anterior ya pasó y no fue atendida (cita perdida),
+                    // se permite cambiar el día reprogramando la cita previa en lugar de bloquear.
+                    return $this->reprogramarCitaEnCola(
+                        $telefono,
+                        $regMedico,
+                        $fecha ?? '',
+                        $motivo,
+                        $anticipacionMinutos,
+                        $citaPendiente['cita']->id
+                    );
+                }
+
                 return [
                     'exito' => false,
                     'ya_tiene_cita' => true,
@@ -1613,6 +1747,24 @@ class PacienteAtencionContextService
             return [];
         }
 
+        // Considerar días que no labora el médico (cola_dia_no_labor)
+        $claveMedico = $medico->claveDeEvolucion($medico->registrosDeTrabajo()) ?? (int) $medico->id;
+        $esNoLaborable = DiaNoLaborable::whereDate('dia', $fecha->toDateString())
+            ->where(function ($q) use ($regMedico, $claveMedico, $medico) {
+                $q->where(function ($sub) use ($regMedico, $claveMedico) {
+                    $sub->where('reg_medico', $regMedico)
+                        ->where('medico', $claveMedico);
+                })
+                ->orWhere('medico', $claveMedico)
+                ->orWhere('medico', $medico->id)
+                ->orWhere('reg_medico', $regMedico);
+            })
+            ->exists();
+
+        if ($esNoLaborable) {
+            return [];
+        }
+
         $armador = $this->armador();
         $sedes = $armador->sedes($regMedico, $medico->id);
         $limite = \App\Clinica\FechaDelConsultorio::ahora()
@@ -1790,15 +1942,188 @@ class PacienteAtencionContextService
             return null;
         }
 
+        $hoy = \App\Clinica\FechaDelConsultorio::hoyComoFecha();
+        $fechaCita = Carbon::parse($citaExistente->fecha)->startOfDay();
+        $citaPerdida = $fechaCita->lt($hoy);
+
         $nombrePaciente = trim("{$paciente->nombres} {$paciente->apellidos}");
         if (empty($nombrePaciente) || $nombrePaciente === 'Paciente WhatsApp') {
             $nombrePaciente = $paciente->telefono ? "Paciente ({$paciente->telefono})" : 'Paciente';
         }
 
+        $msg = $citaPerdida
+            ? $this->generarMensajeCitaPerdida($citaExistente, $nombrePaciente, $medico)
+            : $this->generarMensajeCitaExistente($citaExistente, $nombrePaciente, $medico);
+
         return [
             'cita' => $citaExistente,
-            'mensaje' => $this->generarMensajeCitaExistente($citaExistente, $nombrePaciente, $medico),
+            'cita_perdida' => $citaPerdida,
+            'mensaje' => $msg,
         ];
+    }
+
+    /**
+     * Genera el mensaje informativo cuando la cita previa del paciente ya pasó de fecha y no fue atendida (cita perdida).
+     */
+    public function generarMensajeCitaPerdida(Cola $cita, string $nombrePaciente, Medico $medico): string
+    {
+        $regMedico = $medico->regMedicoPrincipal() ?? $medico->reg_medico;
+        $consultorio = $this->obtenerDatosConsultorio($regMedico);
+        $especialidad = $medico->specialties->pluck('name')->first() ?? $medico->biography ?? 'Consulta Médica';
+
+        $fechaCarbon = Carbon::parse($cita->fecha);
+        $fechaFormateada = ucfirst($fechaCarbon->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY'));
+
+        $msg = "ℹ️ *CITA PREVIA NO ATENDIDA*\n\n";
+        $msg .= "Estimado(a) *{$nombrePaciente}*, verificamos que tenías una cita programada para el *{$fechaFormateada}* con el/la *{$medico->nombre_mostrar}* ({$especialidad}) que no pudo ser atendida (cita perdida).\n\n";
+        $msg .= "Con gusto te permitimos cambiar el día de tu cita para una nueva fecha disponible. 😊";
+
+        return $msg;
+    }
+
+    /**
+     * Permite cambiar el día de una cita (reprogramar) por orden de llegada o por hora de cita según esté configurada la sede.
+     */
+    public function reprogramarCitaEnCola(
+        string $telefono,
+        string $criterioMedico,
+        string $nuevaFecha,
+        ?string $motivo = null,
+        ?int $anticipacionMinutos = null,
+        ?int $citaId = null
+    ): array {
+        try {
+            $paciente = $this->buscarPacientePorTelefono($telefono);
+            if (!$paciente) {
+                return [
+                    'exito' => false,
+                    'error' => "No se encontró un paciente registrado con el teléfono {$telefono}.",
+                ];
+            }
+
+            $medico = $this->resolverMedico($criterioMedico);
+            if (!$medico) {
+                return [
+                    'exito' => false,
+                    'error' => "No se pudo identificar al médico '{$criterioMedico}' para cambiar la cita.",
+                ];
+            }
+
+            $regMedico = $medico->regMedicoPrincipal() ?? $medico->reg_medico;
+            $nombrePaciente = trim("{$paciente->nombres} {$paciente->apellidos}");
+            if (empty($nombrePaciente) || $nombrePaciente === 'Paciente WhatsApp') {
+                $nombrePaciente = "Paciente ({$telefono})";
+            }
+            $nombreMedico = $medico->nombre_mostrar;
+            $especialidad = $medico->specialties->pluck('name')->first() ?? $medico->biography ?? 'Consulta Médica';
+
+            $cita = null;
+            if ($citaId) {
+                $cita = Cola::find($citaId);
+            }
+            if (!$cita) {
+                $citaData = $this->obtenerCitaPendienteConMedico($paciente, $medico);
+                $cita = $citaData['cita'] ?? null;
+            }
+
+            if (!$cita) {
+                return $this->reservarCitaEnCola($telefono, $criterioMedico, $nuevaFecha, $motivo, $anticipacionMinutos);
+            }
+
+            $anticipacion = $anticipacionMinutos !== null
+                ? $this->anticipacionPermitida($anticipacionMinutos)
+                : $this->anticipacionDeLaConversacion($regMedico, $medico, Carbon::parse($nuevaFecha));
+
+            $fechaObj = Carbon::parse($nuevaFecha);
+            if (\App\Clinica\FechaDelConsultorio::esAnteriorAHoy($fechaObj)) {
+                return [
+                    'exito' => false,
+                    'mensaje' => "La fecha solicitada ({$nuevaFecha}) ya ha pasado. Por favor indica una fecha actual o futura.",
+                ];
+            }
+            if ($fechaObj->isSunday()) {
+                return [
+                    'exito' => false,
+                    'mensaje' => "Los días domingos no hay atención de consulta. Por favor selecciona un día de lunes a sábado.",
+                ];
+            }
+
+            $lugar = $this->primerLugarDisponible($regMedico, $medico, $fechaObj, 30, $anticipacion);
+            if (!$lugar['disponible']) {
+                return [
+                    'exito' => false,
+                    'mensaje' => $lugar['mensaje'] ?? 'No hay disponibilidad en la fecha solicitada.',
+                ];
+            }
+
+            $fechaFinal = $lugar['fecha'];
+            $fechaCarbon = Carbon::parse($fechaFinal);
+            $horaFinal = $lugar['hora'];
+            $numOrden = $lugar['numorden'];
+            $centroId = $lugar['centro_id'];
+            $sede = $lugar['sede'];
+
+            $esPorOrden = $sede ? $sede->modalidad === Office::MODALIDAD_ORDEN : false;
+
+            $cambios = [
+                'fecha' => $fechaFinal,
+                'hora_ini' => $horaFinal,
+                'turno' => Jornada::turnoDe($horaFinal),
+                'numorden' => $numOrden,
+                'medical_center_id' => $centroId,
+                'estado' => Cola::ESTADO_CONFIRMADA_PACIENTE,
+                'motivo' => $motivo ?: ($cita->motivo ?: 'Cita reprogramada vía WhatsApp'),
+                'atendido' => 0,
+            ];
+
+            app(EditarCita::class)->ejecutar($cita, $cambios, Carbon::now(), 'whatsapp');
+
+            $consultorio = $sede !== null
+                ? [
+                    'consultorio' => $sede->office_number ?: ($sede->medicalCenter->name ?? 'Consultorio principal'),
+                    'direccion' => $sede->medicalCenter->address ?? 'Dirección no especificada',
+                ]
+                : $this->obtenerDatosConsultorio($regMedico);
+
+            $fechaFormateada = ucfirst($fechaCarbon->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY'));
+            $horaEstimada = \App\Support\HoraLocal::hora12(substr($horaFinal, 0, 5));
+
+            $msg = "✅ *¡CITA CAMBIADA CON ÉXITO!*\n\n";
+            $msg .= "Estimado(a) *{$nombrePaciente}*, hemos cambiado el día de tu cita con el/la *{$nombreMedico}* ({$especialidad}):\n\n";
+            $msg .= "📅 *Nueva fecha:* {$fechaFormateada}\n";
+            $msg .= "🎫 *Turno asignado:* #{$numOrden}" . ($esPorOrden ? " (Por orden de llegada)" : "") . "\n";
+            $msg .= "⏰ *Hora " . ($esPorOrden ? "sugerida (apertura)" : "de cita") . ":* {$horaEstimada}\n";
+            $msg .= "📍 *Consultorio:* " . ($consultorio['consultorio'] ?? 'Consultorio principal') . "\n";
+            $msg .= "🏢 *Dirección:* " . ($consultorio['direccion'] ?? 'Dirección no especificada') . "\n\n";
+            $msg .= "ℹ️ *Nota:* Tu cita ha sido actualizada. Te esperamos con gusto. 😊";
+
+            return [
+                'exito' => true,
+                'cita_id' => $cita->id,
+                'datos' => [
+                    'cita_id' => $cita->id,
+                    'paciente' => $nombrePaciente,
+                    'medico' => $nombreMedico,
+                    'especialidad' => $especialidad,
+                    'fecha' => $fechaFormateada,
+                    'hora_estimada' => $horaEstimada,
+                    'turno' => $numOrden,
+                    'es_orden_llegada' => $esPorOrden,
+                    'consultorio' => $consultorio['consultorio'] ?? 'Consultorio principal',
+                    'direccion' => $consultorio['direccion'] ?? 'Dirección no especificada',
+                ],
+                'mensaje_confirmacion' => $msg,
+            ];
+
+        } catch (\Throwable $e) {
+            Log::error('PacienteAtencionContextService::reprogramarCitaEnCola error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return [
+                'exito' => false,
+                'error' => 'No fue posible cambiar la cita en este momento: ' . $e->getMessage(),
+            ];
+        }
     }
 
     /**
