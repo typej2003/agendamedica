@@ -200,22 +200,30 @@ class CrecimientoWebTest extends TestCase
             ->assertDontSee('Fuente: Fundacredesa');
     }
 
-    public function test_el_juego_de_edades_sigue_al_nino_y_se_puede_cambiar(): void
+    public function test_muestra_los_dos_juegos_de_edades_a_la_vez(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
         $chico = $this->nino($medico, 5001, 'M', '2024-10-13');
-        $grande = $this->nino($medico, 5002, 'F', '2016-10-13');
         $this->medir($medico, 5001, 1, '2026-10-13', ['peso' => 12]);
-        $this->medir($medico, 5002, 1, '2026-10-13', ['peso' => 30]);
 
         $respuesta = $this->conContexto($medico, $pediatria)->actingAs($user);
-        $respuesta->get($this->url($chico))->assertSee('Peso · 0 a 5 años');
-        $respuesta->get($this->url($grande))->assertSee('Peso · 5 a 19 años');
-        // Cambiar el juego: el niño de 2 años no tiene mediciones entre los 5 y 19.
-        $respuesta->get($this->url($chico, ['juego' => '5-19']))->assertSee('Peso · 5 a 19 años')
+        // El niño de 2 años: la de 0 a 5 trae su punto y la de 5 a 19 avisa que no hay mediciones.
+        $respuesta->get($this->url($chico))->assertSee('Peso · 0 a 5 años')->assertSee('Peso · 5 a 19 años')
             ->assertSee('no tiene mediciones de esta gráfica entre los 5 a 19 años');
-        // Un juego o una gráfica que no existen vuelven a los de siempre.
-        $respuesta->get($this->url($chico, ['juego' => 'x', 'grafica' => 'y']))->assertOk()->assertSee('Peso · 0 a 5 años');
+        // Una gráfica que no existe vuelve a la de siempre.
+        $respuesta->get($this->url($chico, ['grafica' => 'y']))->assertOk()->assertSee('Peso · 0 a 5 años');
+    }
+
+    public function test_un_valor_en_cero_no_se_grafica(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $id = $this->nino($medico);
+        $this->medir($medico, 5001, 1, '2026-10-13', ['peso' => 0, 'talla' => 0]);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->get($this->url($id))
+            ->assertOk()
+            ->assertDontSee('grafica-nino-punto', false)
+            ->assertSee('no tiene mediciones de esta gráfica');
     }
 
     public function test_cada_grafica_tiene_su_dato_y_el_peso_para_la_talla_usa_la_talla(): void

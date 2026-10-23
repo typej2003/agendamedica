@@ -156,6 +156,21 @@ final class CrecimientoVista
         return $this->armar($this->grafica, $this->juego);
     }
 
+    /**
+     * Las gráficas activas de **los dos juegos de edades** (0 a 5 y 5 a 19), para ponerlas lado a lado en pantalla ancha.
+     *
+     * @return array<string,array{texto:string, grafica:GraficaDeCrecimiento}>
+     */
+    public function graficasPorJuego(): array
+    {
+        $salida = [];
+        foreach (self::JUEGOS as $clave => $definicion) {
+            $salida[$clave] = ['texto' => $definicion[2], 'grafica' => $this->armar($this->grafica, $clave)];
+        }
+
+        return $salida;
+    }
+
     /** Todas las gráficas del juego activo, para la hoja impresa. @return array<string,GraficaDeCrecimiento> */
     public function todas(): array
     {
@@ -178,13 +193,14 @@ final class CrecimientoVista
             $anos = $this->anos($m->fecha);
             $y = $m->{$columna};
 
-            if ($anos === null || $anos < $desde || $anos > $hasta || $y === null) {
+            // Un 0 es «sin medir» (el escritorio y el formulario lo guardan así): no se grafica.
+            if ($anos === null || $anos < $desde || $anos > $hasta || $y === null || (float) $y <= 0) {
                 continue;
             }
 
             if ($tipo === 'edad') {
                 $x = $anos;
-            } elseif ($m->talla !== null) {
+            } elseif ($m->talla !== null && (float) $m->talla > 0) {
                 $x = (float) $m->talla;
             } else {
                 continue;
