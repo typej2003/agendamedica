@@ -239,14 +239,6 @@ class CatalogosIniciales extends Component
         $this->modal = 'combinar';
     }
 
-    public function usarValor($columna, $indice)
-    {
-        $valor = $this->combinar['opciones'][$columna][(int) $indice] ?? null;
-        if ($valor !== null) {
-            $this->c[$columna] = $valor;
-        }
-    }
-
     public function combinarFichas()
     {
         $this->resetErrorBag();

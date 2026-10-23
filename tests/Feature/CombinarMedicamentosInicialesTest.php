@@ -154,8 +154,8 @@ class CombinarMedicamentosInicialesTest extends TestCase
         $this->assertEqualsCanonicalizing([(string) $oft->id, (string) $neu->id], $componente->get('cAplica'));
 
         $opciones = $componente->get('combinar')['opciones']['uso'];
-        $k = array_search('TOMAR 1 TABLETA CADA 12 HORAS', $opciones, true);
-        $componente->call('usarValor', 'uso', $k)->assertSet('c.uso', 'TOMAR 1 TABLETA CADA 12 HORAS')
+        $this->assertContains('TOMAR 1 TABLETA CADA 12 HORAS', $opciones);
+        $componente->set('c.uso', 'TOMAR 1 TABLETA CADA 12 HORAS')
             ->call('combinarFichas')->assertSet('modal', null)->assertSet('seleccion', []);
 
         $this->assertSame(1, DB::table('vademecum')->whereNull('reg_medico')->count());
