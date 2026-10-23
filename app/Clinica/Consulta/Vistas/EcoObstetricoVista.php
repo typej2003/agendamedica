@@ -4,7 +4,9 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EstudioEcografico;
+use App\Clinica\Embarazo\EdadGestacional;
 use App\Clinica\Impresion\DocumentosParaImprimir;
+use App\Support\FechaClinica;
 use App\Support\FechaDeFormulario;
 
 /**
@@ -22,6 +24,11 @@ use App\Support\FechaDeFormulario;
  *    eco no las tiene, el campo lo dice y la Action las completa igual. La sugerencia es informativa.
  *  - El "¿esto es un documento?" cuenta los campos **del estudio**, sin la fecha, la FUR ni la gesta (las
  *    completa el servidor): un eco que sólo trae su FUR no ofrece hoja.
+ *  - **La EG y la FPP no son columnas**: el escritorio las muestra con dos `compute` de su DataWindow
+ *    (`int(daysafter(fur, today()) / 7) + ' Semanas y ' + mod(…, 7) + ' días'` y `relativedate(fur, 283)`,
+ *    `d_eco_obstetrico_nueva.srd:123-124` y `d_eco_obstetrico_trimestral_nueva.srd:181-183`) y acá se
+ *    calculan con `EdadGestacional` —la regla escrita una sola vez— porque la pantalla las muestra y
+ *    `consulta.js` las rehace al teclear la FUR, **sin guardar**.
  */
 class EcoObstetricoVista
 {
@@ -119,6 +126,37 @@ class EcoObstetricoVista
     public function urlImprimir(): string
     {
         return $this->urlImprimir;
+    }
+
+    /**
+     * La **FPP** del estudio, calculada de su FUR y formateada `dd/mm/aaaa`, o `null` si no hay FUR.
+     *
+     * Es el `relativedate(fur, …)` del escritorio, con la **constante única** de {@see EdadGestacional}
+     * (280 días): la misma fecha que muestran el control prenatal y la hoja del estudio.
+     */
+    public function fpp(): ?string
+    {
+        $fpp = EdadGestacional::fpp(
+            $this->estudio->fur(),
+            EdadGestacional::DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO,
+        );
+
+        return $fpp === null ? null : FechaClinica::formato($fpp);
+    }
+
+    /**
+     * La **edad gestacional** de la FUR, como la lee el médico ("36 semanas y 2 días"), o `null` si la FUR no
+     * sirve (vacía, ilegible o futura). Es el `compute` del DataWindow, con la cuenta de siempre.
+     */
+    public function edadGestacional(): ?string
+    {
+        return EdadGestacional::de($this->estudio->fur())?->texto();
+    }
+
+    /** El día de la cuenta (`AAAA-MM-DD`) para la EG en vivo del JS: el mismo que usa el servidor. */
+    public function hoyIso(): string
+    {
+        return \App\Clinica\FechaDelConsultorio::hoyComoFecha()->toDateString();
     }
 
     /**

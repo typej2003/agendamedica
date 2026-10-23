@@ -618,6 +618,45 @@ class ConsultaEcoWebTest extends TestCase
             ->assertSee('Conclusión:');
     }
 
+    /**
+     * **La EG y la FPP de los ecos obstétricos, en pantalla y sin guardar**: el escritorio las muestra con dos
+     * `compute` de su DataWindow y no las guarda (no hay columna); la web las calcula de la FUR con
+     * `EdadGestacional` y `consulta.js` las rehace al teclearla.
+     */
+    public function test_los_ecos_obstetricos_muestran_la_eg_y_la_fpp_calculadas_de_la_fur(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // El estudio del 1.er trimestre con su FUR: lo único que hace falta para las dos cuentas.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlGuardar($consulta, 'obstetrico'), ['fur' => '10/02/2026', 'lcc' => '45'])
+            ->assertSessionHas('estado');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta, 'obstetrico'));
+
+        $respuesta->assertOk()
+            // El bloque y lo que necesita `consulta.js` para recalcularlo en vivo.
+            ->assertSee('data-consulta-obstetrico', false)
+            ->assertSee('data-hoy="2026-10-06"', false)
+            ->assertSee('data-dias-fpp="280"', false)
+            ->assertSee('id="obstetrico-eg"', false)
+            ->assertSee('id="obstetrico-fpp"', false)
+            // Las dos cuentas de la FUR guardada: 238 días vividos y FUR + 280 días.
+            ->assertSee('34 semanas y 0 días')
+            ->assertSee('17/11/2026');
+
+        // Los tres trimestres usan el mismo parcial, así que los tres muestran el bloque.
+        foreach (['segundo', 'tercero'] as $tipo) {
+            $this->conContexto($user, $medico, $gineco)->actingAs($user)
+                ->get($this->urlSeccion($consulta, $tipo))
+                ->assertOk()
+                ->assertSee('id="obstetrico-eg"', false)
+                ->assertSee('id="obstetrico-fpp"', false);
+        }
+    }
+
     public function test_un_eco_obstetrico_sin_datos_no_se_guarda(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
