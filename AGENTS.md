@@ -36,6 +36,22 @@ una variable de entorno), **avisarlo antes del push** para que el usuario lo agr
 La versión vive en `config/app.php` (`'version'`) y se ve en el pie del menú lateral. Antes de mergear a `main`,
 revisar si hay migraciones o variables de entorno nuevas y decirlo.
 
+### Migraciones ya desplegadas: no se editan
+
+**Regla del usuario (2026-10-23).** Una migración que ya se subió a `origin/desarrollo` o a `origin/main`
+**está desplegada y no se edita**, ni siquiera para corregirla: la corrección va en una **migración nueva**. Si
+la migración todavía no se pusheó a ninguna de las dos, sí se puede modificar en la rama de trabajo.
+
+- **Única excepción:** un **error de ejecución que no cambia lo que la migración le hace a la base** —un `join`
+  con una columna mal escrita, un relleno que falla, un error de PHP— se corrige en la misma migración.
+- Si la corrección toca el esquema (agregar o quitar columnas, índices o tablas), va en una **migración nueva**
+  con la fecha del día. **Ante la duda, migración nueva.**
+
+El motivo es el de la trampa 167: MySQL no corre el `ALTER` dentro de una transacción, `migrations` ya marca la
+migración como corrida en los servidores y los tests migran desde cero, así que editar una migración desplegada
+deja las bases divergentes y el próximo deploy falla de formas que la suite no ve. Las migraciones aditivas van
+con guardas (`Schema::hasColumn` por columna, `Schema::hasTable` por tabla).
+
 ### Entorno
 
 - Remoto: `github.com/typej2003/agendamedica` — es el repo compartido con el sistema legado, de ahí el
