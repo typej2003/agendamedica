@@ -197,7 +197,12 @@ final class EcoGinecologicoVista
         // (`w_cargar_visualizar_ecografia.srw:223`, `fecha = today()`), y lo que la ayuda del campo prometía
         // mientras el formulario abría el campo vacío. Una fecha ya guardada —o la que volvió en un POST que
         // falló— manda: el default es sólo para el campo vacío.
-        if (($campo['tipo'] ?? 'texto') === 'fecha' && $valor === ''
+        //
+        // ⚠️ **Sólo la fecha del estudio**: la FUR también es un `<input type="date">` y no lleva hoy (sería
+        // inventar la fecha de la última regla). Si el control prenatal no tiene una gesta abierta con FUR, el
+        // campo queda **vacío** y lo teclea el médico.
+        if ($campo['columna'] === EcoGinecologico::COLUMNA_FECHA
+            && ($campo['tipo'] ?? 'texto') === 'fecha' && $valor === ''
             && ! array_key_exists($campo['columna'], $this->old)) {
             $valor = (string) $this->fechaPorDefecto;
         }
