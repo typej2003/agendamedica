@@ -123,6 +123,27 @@ class CanalEscritorioTest extends TestCase
         $this->get('/api/escritorio/canal/bridge/sync.exe')->assertOk();
     }
 
+    /**
+     * Los `.bat`/`.vbs` se piden con la ruta en la query: nginx los bloquea por extensión antes de
+     * llegar a PHP, y el instalador del escritorio son justamente esos dos archivos.
+     */
+    public function test_sirve_los_bat_y_vbs_por_query(): void
+    {
+        $this->publicar(self::VERSION, [
+            'actualizar-consultorio.bat' => "@echo off\n",
+            'actualizar-consultorio.vbs' => "' vbs\n",
+        ]);
+
+        $this->assertSame(
+            "@echo off\n",
+            $this->get('/api/escritorio/descarga?ruta=actualizar-consultorio.bat')->streamedContent()
+        );
+
+        $this->get('/api/escritorio/descarga?ruta=actualizar-consultorio.vbs')->assertOk();
+        $this->get('/api/escritorio/descarga?ruta=no-existe.bat')->assertStatus(404);
+        $this->get('/api/escritorio/descarga?ruta=..%2Fmanifiesto.txt')->assertStatus(404);
+    }
+
     public function test_no_sirve_una_ruta_que_no_esta_en_el_manifiesto(): void
     {
         $this->publicar(self::VERSION, ['bridge/sync.exe' => 'binario']);

@@ -47,6 +47,23 @@ class CanalEscritorioController extends Controller
     /** Un archivo **listado en el manifiesto vigente**. Cualquier otra ruta es 404. */
     public function archivo(CanalDelEscritorio $canal, string $ruta): StreamedResponse
     {
+        return $this->servir($canal, $ruta);
+    }
+
+    /**
+     * Lo mismo que `archivo`, pero con la ruta en la query (`?ruta=actualizar-consultorio.bat`).
+     *
+     * Existe porque nginx bloquea por extensión los `.bat`/`.vbs` **antes** de llegar a PHP —y el
+     * instalador del escritorio son justamente esos dos archivos—: el launcher pide todo por acá y así
+     * no depende de la configuración del hosting.
+     */
+    public function descarga(Request $request, CanalDelEscritorio $canal): StreamedResponse
+    {
+        return $this->servir($canal, (string) $request->query('ruta', ''));
+    }
+
+    private function servir(CanalDelEscritorio $canal, string $ruta): StreamedResponse
+    {
         $path = $canal->archivoPublicado($ruta);
 
         abort_if($path === null, 404);

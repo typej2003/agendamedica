@@ -93,6 +93,7 @@ Route::prefix('sync/imagenes')
 Route::prefix('escritorio')->group(function () {
     Route::middleware('throttle:600,1,canal-escritorio')->group(function () {
         Route::get('/canal', [CanalEscritorioController::class, 'manifiesto']);
+        Route::get('/descarga', [CanalEscritorioController::class, 'descarga']);
         Route::get('/canal/{ruta}', [CanalEscritorioController::class, 'archivo'])->where('ruta', '.*');
         Route::get('/launcher', [CanalEscritorioController::class, 'launcher']);
     });
