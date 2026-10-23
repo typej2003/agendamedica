@@ -720,7 +720,7 @@ a una instancia local de este backend (`http://10.0.2.2:8000/api` desde el emula
 
 También existe [`../DoctorisimoApp/`](../DoctorisimoApp/AGENTS.md), la app Android **antigua y
 discontinuada** (Kotlin) — no la tomes como referencia de lo que este backend debe exponer hoy: apunta a
-un backend ya **desplegado** (`https://mercadoexpres.com/api/`) que puede divergir de este código, y usa
+un backend ya **desplegado** (`https://ddrsistemas.com/medic-report/api/`) que puede divergir de este código, y usa
 endpoints previos (`app/refresh-data`) en vez de `sync-app-data`.
 
 **Stack:** Laravel 8 (`laravel/framework ^8.0`), PHP `^8.0` (composer configurado con `platform 8.2.12`),
