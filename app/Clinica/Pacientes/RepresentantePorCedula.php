@@ -247,7 +247,7 @@ final class RepresentantePorCedula
      *
      * @return array{nombre:?string, codeparentesco:?string, telefono:?string, email:?string, direccion:?string}
      */
-    private function datosDeLaFamilia(?object $familia): array
+    public function datosDeLaFamilia(?object $familia): array
     {
         $vacio = ['nombre' => null, 'codeparentesco' => null, 'telefono' => null, 'email' => null, 'direccion' => null];
 
