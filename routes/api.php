@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\MotivoConsultaController;
 use App\Http\Controllers\Api\CargaInicialController;
 use App\Http\Controllers\Api\CambiosEscritorioController;
 use App\Http\Controllers\Api\CanalEscritorioController;
+use App\Http\Controllers\Api\ReportesEscritorioController;
 use App\Http\Controllers\Api\ImagenesPcController;
 use App\Http\Controllers\Api\RecipeFormatoController;
 use App\Http\Controllers\Api\UploadServerController;
@@ -104,6 +105,11 @@ Route::prefix('escritorio')->group(function () {
         Route::post('/cerrar', [CanalEscritorioController::class, 'cerrar']);
         Route::post('/launcher', [CanalEscritorioController::class, 'subirLauncher']);
     });
+
+    // Reportes de fallo del consultorio (instalador, launcher, sync). Público: el que falla puede ser el
+    // paso previo a tener credencial. La bandeja está en /admin/reportes-escritorio.
+    Route::post('/reportes', [ReportesEscritorioController::class, 'guardar'])
+        ->middleware('throttle:30,1,reportes-escritorio');
 });
 
 // ** App para notificación médica ** //
