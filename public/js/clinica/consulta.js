@@ -549,6 +549,23 @@
         furEnVivo(fetal, fetal.querySelector('#fur'), fetal.querySelector('#fetal-fpp'), fetal.querySelector('#fetal-eg'));
     }
 
+    // Ecos obstétricos (1.º, 2.º y 3.er trimestre): la misma cuenta arriba del formulario, para que la EG y la
+    // FPP se vean al teclear la FUR **sin guardar**, como los dos `compute` del DataWindow del escritorio.
+    const obstetrico = document.querySelector('[data-consulta-obstetrico]');
+
+    if (obstetrico) {
+        furEnVivo(obstetrico, obstetrico.querySelector('#fur'),
+            obstetrico.querySelector('#obstetrico-fpp'), obstetrico.querySelector('#obstetrico-eg'));
+    }
+
+    // Eco Doppler perinatal: la misma cuenta (su ficha lleva FUR y el escritorio le muestra la EG).
+    const doppler = document.querySelector('[data-consulta-doppler]');
+
+    if (doppler) {
+        furEnVivo(doppler, doppler.querySelector('#fur'),
+            doppler.querySelector('#doppler-fpp'), doppler.querySelector('#doppler-eg'));
+    }
+
     // Las pestañas del embarazo cuyas filas son fechas (Laboratorio y Controles) usan el mismo aviso: el
     // cartel de cada una se llama como su formulario, más `-sin-guardar`.
     document.querySelectorAll('[data-consulta-fechas]').forEach(function (formulario) {

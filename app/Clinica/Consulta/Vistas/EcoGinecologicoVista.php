@@ -21,8 +21,9 @@ use App\Clinica\Impresion\DocumentosParaImprimir;
  *  - **La FUR que se propone.** El escritorio, al entrar a la pestaña *Ginecologico*, busca la FUR del
  *    **control prenatal** de esa historia y la pone en el campo si el eco no tenía ninguna
  *    (`w_consulta_principal.srw:21391-21405`: `SELECT "pre_natal_observaciones"."fur" … WHERE historia =
- *    :historia`). La web hace lo mismo: si el estudio no tiene FUR y el control prenatal sí, el campo
- *    llega con ese valor y se dice de dónde salió. Es lo que evita que el médico la vuelva a teclear.
+ *    :historia`). La web hace lo mismo con la FUR de la **gesta en curso** (la de mayor `gesta_clave`, y
+ *    sólo si no tiene marcado «Final de embarazo»: ver `FurDelControlPrenatal`): el campo llega con ese
+ *    valor, sin preguntar, y el médico lo puede cambiar. Es lo que evita que la teclee dos veces.
  *  - **Los códigos desconocidos del escritorio.** Cada desplegable ofrece los códigos del legado **más el
  *    valor guardado** si no está en la lista (igual que el `codeparentesco` de WEB-3.4): los datos reales
  *    pueden traer cualquier código y no se inventa una traducción ni se cambia el valor sin querer.
@@ -35,7 +36,7 @@ final class EcoGinecologicoVista
      * @param  string  $urlGuardar  a dónde postea "Guardar el estudio"
      * @param  string  $urlVolver  la vuelta a la sección (el "Cancelar" de la guía de UI)
      * @param  string  $urlImprimir  la hoja del informe (en blanco no: el estudio tiene que existir)
-     * @param  string|null  $furSugerida  la FUR del control prenatal de la historia, si la hay
+     * @param  string|null  $furSugerida  la FUR de la gesta en curso del control prenatal, si la hay
      * @param  array<string,mixed>  $old  el `old()` del formulario (`[]` en la primera carga)
      */
     public function __construct(
@@ -196,7 +197,12 @@ final class EcoGinecologicoVista
         // (`w_cargar_visualizar_ecografia.srw:223`, `fecha = today()`), y lo que la ayuda del campo prometía
         // mientras el formulario abría el campo vacío. Una fecha ya guardada —o la que volvió en un POST que
         // falló— manda: el default es sólo para el campo vacío.
-        if (($campo['tipo'] ?? 'texto') === 'fecha' && $valor === ''
+        //
+        // ⚠️ **Sólo la fecha del estudio**: la FUR también es un `<input type="date">` y no lleva hoy (sería
+        // inventar la fecha de la última regla). Si el control prenatal no tiene una gesta abierta con FUR, el
+        // campo queda **vacío** y lo teclea el médico.
+        if ($campo['columna'] === EcoGinecologico::COLUMNA_FECHA
+            && ($campo['tipo'] ?? 'texto') === 'fecha' && $valor === ''
             && ! array_key_exists($campo['columna'], $this->old)) {
             $valor = (string) $this->fechaPorDefecto;
         }
@@ -226,15 +232,15 @@ final class EcoGinecologicoVista
         return OpcionesDelDesplegable::de($campo, $valor);
     }
 
-    /** La ayuda del campo, con el agregado de la FUR cuando el valor lo puso el control prenatal. */
+    /** La ayuda del campo (los estudios no la muestran: el rótulo y el control ya dicen lo que hay que hacer). */
     private function ayudaDelCampo(array $campo): string
     {
         return $campo['ayuda'];
     }
 
     /**
-     * Lo escrito en el POST que falló, si no lo guardado, si no —sólo para la FUR— lo que trae el control
-     * prenatal de la historia.
+     * Lo escrito en el POST que falló, si no lo guardado, si no —sólo para la FUR— la de la gesta en curso
+     * del control prenatal de la historia.
      */
     private function valor(string $columna): string
     {
@@ -248,8 +254,7 @@ final class EcoGinecologicoVista
             return $guardado;
         }
 
-        // La FUR no se prellena de otra fuente: sin dato guardado ni escrito, abre vacía.
-        return '';
+        return $columna === EcoGinecologico::COLUMNA_FUR ? (string) ($this->furSugerida ?? '') : '';
     }
 
     /**

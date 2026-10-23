@@ -4,8 +4,6 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EstudioEcografico;
-use App\Clinica\Embarazo\EdadGestacional;
-use App\Support\FechaClinica;
 
 /**
  * **El ecocardiograma fetal en la sección de estudio** (WEB-6.3): el formulario de sus seis bloques y el
@@ -18,9 +16,9 @@ use App\Support\FechaClinica;
  *  - **Su mapa, su tabla y su ficha**: la ficha del ecocardiograma es más ancha que la de los obstétricos —la
  *    fecha, la FUR, la gesta y la paridad (el `para`, los abortos, las cesáreas y los `otros`)—, así que la
  *    cuenta de campos cargados excluye siete columnas y no tres.
- *  - **La FPP y la EG**, que la pantalla muestra calculadas de la FUR: la FPP suma **283** (`fur + 283`, el
- *    número de los ecos y los reportes) y la EG es la cuenta de siempre. Las dos salen de `EdadGestacional`:
- *    la regla está escrita una sola vez.
+ *  - **La FPP y la EG**, que la pantalla muestra calculadas de la FUR: las hereda de `EcoObstetricoVista`
+ *    (su `fpp()` y su `edadGestacional()`), con la constante única de `EdadGestacional`: la regla está
+ *    escrita una sola vez y es la misma de los ecos obstétricos.
  *  - **La precarga del escritorio** (los dos memos) la resuelve la lectura (`deParaLaPantalla`), no este
  *    ViewModel; lo que este agrega es que **la hoja no se ofrece hasta que el estudio exista**: una consulta
  *    sin fila muestra los textos precargados, pero no hay nada guardado que imprimir.
@@ -115,34 +113,5 @@ final class EcoCardiogramaFetalVista extends EcoObstetricoVista
     public function avisoSinGuardar(): string
     {
         return 'Hay cambios sin guardar en el ecocardiograma fetal. Si sales ahora, se pierden.';
-    }
-
-    /**
-     * La **FPP** del estudio como la muestra el escritorio (`relativedate(fur, 283)`), ya formateada, o `null`
-     * si no hay FUR.
-     */
-    public function fpp(): ?string
-    {
-        $fpp = EdadGestacional::fpp(
-            $this->estudio->fur(),
-            EdadGestacional::DIAS_DE_LA_FPP_DEL_ECO_OBSTETRICO,
-        );
-
-        return $fpp === null ? null : FechaClinica::formato($fpp);
-    }
-
-    /**
-     * La **edad gestacional** de la FUR como la muestra el escritorio (su `compute`): "20 semanas y 0 días",
-     * o `null` si la FUR no sirve.
-     */
-    public function edadGestacional(): ?string
-    {
-        return EdadGestacional::de($this->estudio->fur())?->texto();
-    }
-
-    /** El día de la cuenta (`AAAA-MM-DD`) que el JS usa para la EG en vivo: el mismo que usa el servidor (hoy del consultorio). */
-    public function hoyIso(): string
-    {
-        return \App\Clinica\FechaDelConsultorio::hoyComoFecha()->toDateString();
     }
 }

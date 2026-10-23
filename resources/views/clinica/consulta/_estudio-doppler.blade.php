@@ -10,6 +10,8 @@
      lista; el memo grande del estudio va sin rótulo porque el DataWindow tampoco se lo pone. --}}
 @php
     $estado = $vm->estado();
+    $eg = $vm->edadGestacional();
+    $fpp = $vm->fpp();
 @endphp
 
 <div class="consulta-seccion" id="consulta-estudio-doppler">
@@ -22,8 +24,19 @@
 
 
         <form method="POST" action="{{ $vm->urlGuardar() }}" id="estudio-doppler-form" novalidate
-              data-consulta-fechas data-aviso="{{ $vm->avisoSinGuardar() }}">
+              data-consulta-fechas data-consulta-doppler data-hoy="{{ $vm->hoyIso() }}"
+              data-dias-fpp="{{ \App\Clinica\Embarazo\EdadGestacional::DIAS_DE_LA_FPP }}"
+              data-aviso="{{ $vm->avisoSinGuardar() }}">
             @csrf
+
+            {{-- La EG y la FPP no son columnas: el escritorio muestra la EG como `compute` de su DataWindow
+                 (`d_eco_doppler.srd:82-83`) y la web suma la FPP con la misma regla que el resto de los ecos.
+                 `consulta.js` las rehace al escribir la FUR, sin guardar. --}}
+            <p class="texto-tenue small mb-3">
+                Calculadas con la FUR:
+                <strong>EG</strong> <span id="doppler-eg">{{ $eg ?? '—' }}</span>
+                · <strong>FPP</strong> <span id="doppler-fpp">{{ $fpp ?? '—' }}</span>
+            </p>
 
             @foreach ($vm->grupos() as $grupo)
                 <h3 class="h6 mt-4 mb-2">

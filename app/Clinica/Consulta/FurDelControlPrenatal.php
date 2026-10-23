@@ -19,29 +19,34 @@ use Illuminate\Support\Facades\DB;
  * `fur`). Si falla o viene nula, **no toca** lo que había. Es decir: la FUR del eco y la del control
  * prenatal son **la misma** y el médico no la teclea dos veces.
  *
- * Dos diferencias con la fuente, a propósito:
+ * Tres diferencias con la fuente, a propósito:
  *
  *  - se acota al `reg_medico` del contexto (la ventana del escritorio no lo hace porque su base es de un
  *    solo médico; en la nube el mismo número de historia puede existir para dos);
- *  - si la historia tiene **varias gestas** (varias filas, cada una con su FUR), se toma la **más
- *    reciente** (`fur desc`): es la del embarazo en curso, que es la que el eco necesita. La fuente no
- *    ordena y toma la primera fila que devuelve el cursor.
+ *  - se toma la gesta **en curso** (la de mayor `gesta_clave`), no «la FUR más reciente»: la anterior puede
+ *    haber sido un embarazo que ya terminó y su FUR no es la que se está siguiendo;
+ *  - si esa gesta tiene marcado **«Final de embarazo»** (`final = 'S'`), no hay embarazo en curso y no se
+ *    propone nada: la FUR de un embarazo cerrado no se le pone a un estudio nuevo.
  */
 final class FurDelControlPrenatal
 {
     /** La tabla del control de embarazo donde vive la FUR. */
     public const TABLA = 'pre_natal_observaciones';
 
-    /** La FUR de la historia, en `AAAA-MM-DD`, o `null` si el control prenatal no tiene ninguna. */
+    /** La FUR de la gesta en curso, en `AAAA-MM-DD`, o `null` si no hay ninguna gesta abierta con FUR. */
     public function de(string $regMedico, int $numhistoria): ?string
     {
-        $fur = DB::table(self::TABLA)
+        $gesta = DB::table(self::TABLA)
             ->where('reg_medico', $regMedico)
             ->where('historia', $numhistoria)
-            ->whereNotNull('fur')
-            ->orderByDesc('fur')
-            ->value('fur');
+            ->reorder()
+            ->orderByRaw('COALESCE(gesta_clave, 1) DESC')
+            ->first(['fur', 'final']);
 
-        return $fur === null ? null : (string) $fur;
+        if ($gesta === null || ($gesta->final ?? null) === 'S') {
+            return null;
+        }
+
+        return $gesta->fur === null ? null : (string) $gesta->fur;
     }
 }

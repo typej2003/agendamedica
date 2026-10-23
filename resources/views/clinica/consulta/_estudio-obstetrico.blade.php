@@ -5,9 +5,15 @@
      obstétrico (`EcoObstetrico::grupos()`, seis bloques) y aquí **no hay unidades** en el informe (sus
      medidas son texto libre, con los `mm` que el escritorio escribe en la columna).
 
-     Los campos usan el parcial `_estudio-campo`, que ya sabe pintar fecha, número, texto, área y lista. --}}
+     Los campos usan el parcial `_estudio-campo`, que ya sabe pintar fecha, número, texto, área y lista.
+
+     Arriba del formulario van la **EG** y la **FPP**, que el escritorio muestra con dos `compute` de su
+     DataWindow (`d_eco_obstetrico_nueva.srd`, `d_eco_obstetrico_trimestral_nueva.srd`): no son campos ni
+     columnas, se calculan de la FUR y `consulta.js` las rehace al teclearla, **sin guardar**. --}}
 @php
     $estado = $vm->estado();
+    $eg = $vm->edadGestacional();
+    $fpp = $vm->fpp();
 @endphp
 
 <div class="consulta-seccion" id="consulta-estudio-obstetrico">
@@ -20,8 +26,18 @@
 
 
         <form method="POST" action="{{ $vm->urlGuardar() }}" id="estudio-obstetrico-form" novalidate
-              data-consulta-fechas data-aviso="{{ $vm->avisoSinGuardar() }}">
+              data-consulta-fechas data-consulta-obstetrico data-hoy="{{ $vm->hoyIso() }}"
+              data-dias-fpp="{{ \App\Clinica\Embarazo\EdadGestacional::DIAS_DE_LA_FPP }}"
+              data-aviso="{{ $vm->avisoSinGuardar() }}">
             @csrf
+
+            {{-- La EG y la FPP no son columnas: el escritorio las muestra como dos `compute` del DataWindow y
+                 `consulta.js` las rehace al escribir la FUR (así se ven sin guardar). --}}
+            <p class="texto-tenue small mb-3">
+                Calculadas con la FUR:
+                <strong>EG</strong> <span id="obstetrico-eg">{{ $eg ?? '—' }}</span>
+                · <strong>FPP</strong> <span id="obstetrico-fpp">{{ $fpp ?? '—' }}</span>
+            </p>
 
             @foreach ($vm->grupos() as $grupo)
                 <h3 class="h6 mt-4 mb-2">
