@@ -113,7 +113,7 @@
         </x-slot>
     </x-ui.dos-listas>
 
-    <x-ui.dialogo id="dialogo-motivo" titulo="Crear un motivo en tu catálogo">
+    <x-ui.dialogo id="dialogo-motivo" titulo="Crear un motivo en tu catálogo" lateral>
         <form method="POST" action="{{ $seccion->urlCrear() }}">
             @csrf
             <div class="dialogo-cuerpo">

@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\ConfiguracionMedicoController;
 use App\Http\Controllers\Api\MotivoConsultaController;
 use App\Http\Controllers\Api\CargaInicialController;
 use App\Http\Controllers\Api\CambiosEscritorioController;
+use App\Http\Controllers\Api\CanalEscritorioController;
 use App\Http\Controllers\Api\ImagenesPcController;
 use App\Http\Controllers\Api\RecipeFormatoController;
 use App\Http\Controllers\Api\UploadServerController;
@@ -84,6 +85,25 @@ Route::prefix('sync/imagenes')
         Route::post('/subir', [ImagenesPcController::class, 'subir']);
         Route::post('/omitir', [ImagenesPcController::class, 'omitir']);
     });
+
+// ** Canal de publicación del escritorio (instalador "Standalone") **
+// Lo baja el launcher que se le manda al consultorio: el manifiesto y los archivos van SIN credencial (como
+// hoy el paquete), y publicar exige `X-API-KEY` (ESCRITORIO_CANAL_KEY). El manifiesto es la única verdad: un
+// archivo que no está listado ahí no se sirve. Se sirven con `Storage::response()` desde el disco `escritorio`.
+Route::prefix('escritorio')->group(function () {
+    Route::middleware('throttle:600,1,canal-escritorio')->group(function () {
+        Route::get('/canal', [CanalEscritorioController::class, 'manifiesto']);
+        Route::get('/canal/{ruta}', [CanalEscritorioController::class, 'archivo'])->where('ruta', '.*');
+        Route::get('/launcher', [CanalEscritorioController::class, 'launcher']);
+    });
+
+    Route::prefix('publicar')->middleware(['clave.canal', 'throttle:120,1,publicar-escritorio'])->group(function () {
+        Route::post('/iniciar', [CanalEscritorioController::class, 'iniciar']);
+        Route::post('/archivo', [CanalEscritorioController::class, 'subirArchivo']);
+        Route::post('/cerrar', [CanalEscritorioController::class, 'cerrar']);
+        Route::post('/launcher', [CanalEscritorioController::class, 'subirLauncher']);
+    });
+});
 
 // ** App para notificación médica ** //
 Route::post('/app/login', [LoginAppController::class, 'login']);

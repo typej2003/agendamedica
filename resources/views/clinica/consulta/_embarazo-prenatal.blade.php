@@ -129,7 +129,7 @@
 </x-ui.dialogo>
 
 {{-- «Nueva gesta» (WEB-11.15): sólo pregunta cuántos bebés son, como la ventana del escritorio. --}}
-<x-ui.dialogo id="dialogo-gesta" titulo="Nueva gesta">
+<x-ui.dialogo id="dialogo-gesta" titulo="Nueva gesta" lateral>
     <form method="POST" action="{{ $vm->urlCrearGesta() }}">
         @csrf
         <div class="dialogo-cuerpo">

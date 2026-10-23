@@ -103,7 +103,7 @@
     {{-- ============================ Ventana de asignación ============================ --}}
     @if ($modal === 'asignar' && $seleccionado)
         <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <form wire:submit.prevent="guardarAsignacion">
                         <div class="modal-header">

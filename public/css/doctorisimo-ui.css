@@ -603,6 +603,27 @@ textarea.form-control { min-height: calc(var(--ds-control-alto) * 2); }
 
 .modal-header, .modal-footer { border-color: var(--ds-borde); }
 
+/* Formularios de alta y edición del panel: entran por la derecha, a alto completo (igual que
+   `dialog.dialogo-lateral`). Las alertas y confirmaciones siguen centradas. El encabezado y el pie quedan
+   fijos y sólo el cuerpo se desplaza; el <form> puede envolver todo o sólo cuerpo y pie. */
+.modal-dialog.modal-lateral {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(32rem, 100vw);
+    max-width: 100vw;
+    height: 100%;
+    margin: 0;
+}
+.modal-dialog.modal-lateral .modal-content { height: 100%; border-radius: 0; border-width: 0 0 0 1px; }
+.modal-dialog.modal-lateral .modal-content > form { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+.modal-dialog.modal-lateral .modal-header,
+.modal-dialog.modal-lateral .modal-footer { flex: 0 0 auto; }
+.modal-dialog.modal-lateral .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.modal.fade .modal-dialog.modal-lateral { transform: translateX(100%); }
+.modal.show .modal-dialog.modal-lateral { transform: none; animation: lateral-entra var(--ds-dur-panel) var(--ds-ease); }
+
 .spinner-border.text-primary, .spinner-grow.text-primary { color: var(--ds-violeta-700) !important; }
 
 /* ==========================================================================

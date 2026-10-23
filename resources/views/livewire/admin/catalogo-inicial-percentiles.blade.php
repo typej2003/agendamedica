@@ -82,7 +82,7 @@
     {{-- ============================ Alta y edición de una fila ============================ --}}
     @if ($modal === 'fila')
         <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="titulo-pct" style="background: rgba(0,0,0,.5)">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
                     <form wire:submit.prevent="guardar">
                         <div class="modal-header">
