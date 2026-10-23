@@ -21,6 +21,10 @@ use Illuminate\Support\Facades\Schema;
  * falla después de agregar las columnas la fila de `migrations` no queda escrita y la siguiente corrida se topa
  * con «Column already exists» (pasó en QA con la 0.3.0). Por eso cada columna se agrega sólo si falta y el
  * relleno **no pisa** una validación que ya esté anotada. Es inocuo en la base que ya las tiene.
+ *
+ * El relleno depende de `pacientes.user_id`, que en las bases migradas antes del 2026-08-29 **no existe** (la
+ * columna se agregó editando la migración base; ver `2026_10_23_110000_add_user_id_a_pacientes`): sin esa
+ * columna no hay cuenta enlazada que rellenar, así que el relleno simplemente no corre.
  */
 return new class extends Migration
 {
@@ -36,6 +40,12 @@ return new class extends Migration
             Schema::table('users', function (Blueprint $table) {
                 $table->timestamp('telefono_validado_en')->nullable()->after('telefono_validado');
             });
+        }
+
+        // Sin `pacientes.user_id` no hay ninguna cuenta enlazada que rellenar (y la columna la agrega la
+        // migración 2026_10_23_110000, que corre después de ésta).
+        if (! Schema::hasColumn('pacientes', 'user_id')) {
+            return;
         }
 
         $cuentas = DB::table('users')
