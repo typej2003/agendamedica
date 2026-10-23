@@ -14,6 +14,11 @@ return new class extends Migration
 {
     public function up()
     {
+        // Con guarda, por la misma razón que `paciente_identidad` y `users.telefono_validado`.
+        if (Schema::hasTable('bloqueos_de_paciente')) {
+            return;
+        }
+
         Schema::create('bloqueos_de_paciente', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable()->index();
