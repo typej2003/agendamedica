@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\Pacientes\PacientesDelConsultorio;
 use App\Jobs\ReconstruirIndiceDePacientes;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
@@ -244,14 +245,19 @@ class BusquedaDePacientesCorregidaWebTest extends TestCase
         $this->construirIndice();
 
         // Así guarda la carga inicial: sin eventos, para no pagar el vocabulario del corrector por fila.
-        $this->pacienteGuardado('Heriberta', 'Herrera', '44444444', '2003', $medico, sinEventos: true);
+        // El apellido es inventado para que ninguna otra paciente del vocabulario lo tape.
+        $this->pacienteGuardado('Zzulemario', 'Qqinteroco', '44444444', '2003', $medico, sinEventos: true);
 
-        $buscador = app(PecleSearchManager::class);
-        $this->assertSame('Herera', $buscador->resolve('Herera', 'pacientes')->applied, 'la carga no lo indexó');
+        $porTokens = fn () => app(PacientesDelConsultorio::class)
+            ->listar([$medico->reg_medico], $medico->reg_medico, 'Qqinteroco', 'todos')
+            ->pluck('nombres')
+            ->all();
 
-        // El trabajo que dispara `CargaInicialCompletada` rehace el índice y ya lo corrige.
-        (new ReconstruirIndiceDePacientes)->handle($buscador);
-        $this->assertSame('Herrera', $buscador->resolve('Herera', 'pacientes')->applied);
+        $this->assertSame([], $porTokens(), 'la carga no lo indexó');
+
+        // El trabajo que dispara `CargaInicialCompletada` rehace el índice y ya lo encuentra.
+        (new ReconstruirIndiceDePacientes)->handle(app(PecleSearchManager::class));
+        $this->assertSame(['Zzulemario'], $porTokens());
     }
 
     /**
