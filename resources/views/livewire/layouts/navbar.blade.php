@@ -50,6 +50,17 @@
                             </a>
                         </li>
                     @endif
+
+                    {{-- El tablero de Laravel Pulse (`/pulse`): sólo lo ve quien puede entrar (Root). --}}
+                    @can('viewPulse')
+                        <li class="nav-item me-lg-2 mt-3 mt-lg-0">
+                            <a class="btn btn-outline-primary d-inline-flex align-items-center justify-content-center"
+                               href="{{ route('pulse') }}" title="Pulse: rendimiento de la aplicación"
+                               aria-label="Abrir el tablero de Pulse">
+                                <i class="bi bi-activity fs-5" aria-hidden="true"></i>
+                            </a>
+                        </li>
+                    @endcan
                 @endauth
 
                 <li class="nav-item ms-lg-2 mt-3 mt-lg-0">
