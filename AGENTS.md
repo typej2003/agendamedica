@@ -796,10 +796,21 @@ el comienzo de palabra y sobre el índice entero— ni el autocompletado `sugges
 otros consultorios. El vocabulario es global y sólo cambia el término; los resultados siguen acotados por
 `reg_medico`.
 
+**El corrector entra sólo cuando hace falta.** Primero se busca **lo escrito**; si eso no encuentra a
+nadie y no se pidió `?literal=1`, recién ahí se resuelve el término y se busca otra vez. Armar el trie del
+vocabulario cuesta ~30 ms con 6.000 pacientes (y más con la base entera: es global), así que una búsqueda
+que ya encuentra no lo paga. Si la corrección tampoco encuentra, se queda lo escrito y no se avisa.
+
+**Comparar sin acentos.** En MySQL la columna se compara tal cual (`LIKE '%…%'`): la colación
+`utf8mb4_unicode_ci` de las tablas del legado ya pliega acentos y mayúsculas (verificado contra el MariaDB
+local con `GONZÁLEZ`), y la cadena de trece `REPLACE` por columna y por palabra encarecía el listado
+(medido en MariaDB con 6.000 filas: 6,8 → 2,5 ms; en SQLite, 55 → 1,6 ms). SQLite —desarrollo y tests—
+sólo pliega mayúsculas ASCII, así que ahí la normalización explícita sigue siendo la que hace que `Jaquez`
+encuentre a `Jáquez`.
+
 **Lo que ve el usuario.** El listado **avisa** («Se buscó «Gonzalez»…») y ofrece «Buscar tal cual»
-(`?literal=1`), porque el corrector puede equivocarse con un nombre que todavía no está en el índice. Si
-el término corregido no encuentra nada, se busca lo escrito y no se avisa. El JSON de «Nueva cita»
-conserva su forma (un arreglo de pacientes) y corrige en silencio.
+(`?literal=1`), porque el corrector puede equivocarse con un nombre que todavía no está en el índice. El
+JSON de «Nueva cita» conserva su forma (un arreglo de pacientes) y corrige en silencio.
 
 **La búsqueda en vivo pide el fragmento, no la pantalla.** `public/js/clinica/buscar-auto.js` pide la misma
 URL con `X-Requested-With` y reemplaza sólo `[data-buscar-resultados]`: el controlador devuelve
