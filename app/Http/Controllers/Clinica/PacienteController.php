@@ -122,17 +122,28 @@ class PacienteController extends Controller
             ));
         }
 
-        return view('clinica.pacientes.index', [
-            'vm' => new ListadoDePacientesVista(
-                $listado,
-                $busqueda,
-                $filtro,
-                $this->pacientes->conteos($registros, $contexto['reg_medico'], $busqueda->aplicado),
-                // La URL base la resuelve el controlador: el ViewModel no llama a `route()` (se prueba
-                // sin contenedor) y el segmentado arma sus enlaces sobre esto.
-                route('clinica.pacientes'),
-            ),
-        ]);
+        // La **búsqueda en vivo** (`public/js/clinica/buscar-auto.js`) pide esta misma URL con
+        // `X-Requested-With` y se queda sólo con la región `[data-buscar-resultados]`: mandarle la pantalla
+        // entera —armazón, menú, encabezado y segmentado— es renderizar de más en cada tecla. Al pedido en
+        // vivo se le devuelve el fragmento; y como el segmentado queda fuera de él, tampoco se calculan sus
+        // tres conteos (que en ese camino nadie muestra).
+        $enVivo = $request->ajax();
+
+        $vm = new ListadoDePacientesVista(
+            $listado,
+            $busqueda,
+            $filtro,
+            $enVivo
+                ? ['todos' => 0, 'sinHistoria' => 0, 'conHistoria' => 0]
+                : $this->pacientes->conteos($registros, $contexto['reg_medico'], $busqueda->aplicado),
+            // La URL base la resuelve el controlador: el ViewModel no llama a `route()` (se prueba
+            // sin contenedor) y el segmentado arma sus enlaces sobre esto.
+            route('clinica.pacientes'),
+        );
+
+        return $enVivo
+            ? response()->view('clinica.pacientes._resultados', ['vm' => $vm])
+            : view('clinica.pacientes.index', ['vm' => $vm]);
     }
 
     /** JSON para el buscador de "Nueva cita": pocos pacientes del contexto que coinciden con `q`. */

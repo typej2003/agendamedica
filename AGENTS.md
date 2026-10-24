@@ -801,6 +801,14 @@ otros consultorios. El vocabulario es global y sólo cambia el término; los res
 el término corregido no encuentra nada, se busca lo escrito y no se avisa. El JSON de «Nueva cita»
 conserva su forma (un arreglo de pacientes) y corrige en silencio.
 
+**La búsqueda en vivo pide el fragmento, no la pantalla.** `public/js/clinica/buscar-auto.js` pide la misma
+URL con `X-Requested-With` y reemplaza sólo `[data-buscar-resultados]`: el controlador devuelve
+`clinica/pacientes/_resultados.blade.php` (la región sola, sin armazón, menú, encabezado ni barra) y **no
+calcula los conteos del segmentado**, que quedan fuera de la región y en ese camino nadie muestra. Antes se
+renderizaba la pantalla entera por cada tecla y se tiraba la mitad: ~130 ms y 28 KB de menos en local
+(mediana 566 → 436 ms con el servidor de desarrollo, que tiene ~320 ms de piso). El listado completo —Enter,
+recarga, paginación— sigue siendo la misma pantalla de siempre, con sus conteos.
+
 **Mantenimiento del índice.** Hay tres caminos y conviene no mezclarlos:
 - **Guardado suelto** (la web, el móvil, la subida incremental del escritorio): la sincronización del
   paquete reindexa ese paciente y refresca el vocabulario **en el acto** (~30 ms medidos con 6.000

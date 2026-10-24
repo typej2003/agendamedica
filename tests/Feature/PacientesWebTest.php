@@ -500,4 +500,35 @@ class PacientesWebTest extends TestCase
             ->assertOk()
             ->assertExactJson([]);
     }
+
+    /**
+     * La búsqueda en vivo (`buscar-auto.js`) pide la misma URL con `X-Requested-With` y reemplaza sólo la región
+     * `[data-buscar-resultados]`. El servidor le manda **el fragmento** —sin armazón, menú, encabezado ni la barra
+     * con el buscador y el segmentado—, que es lo que evita renderizar la pantalla entera en cada tecla.
+     */
+    public function test_la_busqueda_en_vivo_recibe_solo_la_region_de_resultados(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->paciente($medico, 'Ana', 'Reynoso', '11111111', '2001');
+
+        $completa = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/pacientes?buscar=Reynoso');
+
+        $completa->assertOk()
+            ->assertSee('<!DOCTYPE html>', false)
+            ->assertSee('data-buscar-resultados', false)
+            ->assertSee('Filtrar por historia clínica')
+            ->assertSee('Reynoso');
+
+        $enVivo = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->withHeader('X-Requested-With', 'XMLHttpRequest')
+            ->get('/clinica/pacientes?buscar=Reynoso');
+
+        $enVivo->assertOk()
+            ->assertSee('data-buscar-resultados', false)
+            ->assertSee('Reynoso')
+            ->assertDontSee('<!DOCTYPE html>', false)
+            ->assertDontSee('<html', false)
+            ->assertDontSee('Filtrar por historia clínica');
+    }
 }
