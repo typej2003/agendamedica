@@ -801,16 +801,24 @@ otros consultorios. El vocabulario es global y sólo cambia el término; los res
 el término corregido no encuentra nada, se busca lo escrito y no se avisa. El JSON de «Nueva cita»
 conserva su forma (un arreglo de pacientes) y corrige en silencio.
 
-**Mantenimiento del índice.** `config/pecle_search.php` deja la **sincronización apagada** a propósito: el
-paquete reindexa en el `saved` de cada paciente y, con `QUEUE_CONNECTION=sync`, reconstruiría el
-vocabulario entero en el request; la carga inicial del escritorio crea miles de pacientes seguidos. Se
-reconstruye con `php artisan pecle-search:rebuild pacientes`, que `Kernel::schedule()` corre **todas las
-noches a las 03:20 de Caracas** (necesita el `schedule:run` del servidor, como las demás tareas). **En el
-despliegue hay que correrlo una vez** después de `migrate --force` para no esperar a la primera noche; sin
-índice el buscador funciona igual, sólo que sin corrección.
+**Mantenimiento del índice.** Hay tres caminos y conviene no mezclarlos:
+- **Guardado suelto** (la web, el móvil, la subida incremental del escritorio): la sincronización del
+  paquete reindexa ese paciente y refresca el vocabulario **en el acto** (~30 ms medidos con 6.000
+  pacientes; `sync.enabled` en `config/pecle_search.php`). Si el médico crea o corrige un paciente, el
+  corrector ya lo conoce.
+- **Cargas masivas** (la carga inicial del escritorio): `CargaInicialService::guardarPacientes` envuelve el
+  lote en `Paciente::withoutEvents()` para no pagar el vocabulario por cada una de las miles de filas; al
+  completarse la carga, el evento `CargaInicialCompletada` dispara `Jobs\ReconstruirIndiceDePacientes` con
+  `dispatchAfterResponse()`: el escritorio recibe su «carga completa» y el índice se rehace después de
+  responder, sin necesidad de un worker.
+- **Red de seguridad**: `php artisan pecle-search:rebuild pacientes`, programado a las **03:20 de Caracas**
+  en `Kernel::schedule()` (necesita el `schedule:run` del servidor, como las demás tareas), cubre lo que
+  entre sin eventos de Eloquent (una importación, un `UPDATE` masivo). **En el despliegue hay que correrlo
+  una vez** después de `migrate --force`; sin índice el buscador funciona igual, sólo que sin corrección.
 
-**Pruebas.** `Feature/BusquedaDePacientesCorregidaWebTest` (6: corrige y avisa, `literal`, cédula e
-historia intactas, no se escapa del consultorio, vuelve a lo escrito, JSON) y dos de
+**Pruebas.** `Feature/BusquedaDePacientesCorregidaWebTest` (8: corrige y avisa, `literal`, cédula e
+historia intactas, no se escapa del consultorio, vuelve a lo escrito, JSON, indexado al instante y el
+trabajo de reconstrucción), una de `Feature/CargaInicialTest` (el aviso único al completar) y dos de
 `Unit/Clinica/PacientesVistasTest`. Verificador en Chrome: `../.agent-tools/verificar-busqueda-corregida-web.js`.
 
 

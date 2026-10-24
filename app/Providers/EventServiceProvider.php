@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use App\Events\ActividadWebRegistrada;
+use App\Events\CargaInicialCompletada;
 use App\Events\EscritorioSincronizo;
 use App\Events\MedicoRegistrado;
 use App\Listeners\GuardarUltimaActividadWeb;
 use App\Listeners\OtorgarAnioPowerBuilder;
 use App\Listeners\OtorgarServicioDePrueba;
+use App\Listeners\ReconstruirIndiceDePacientesTrasLaCarga;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -34,6 +36,11 @@ class EventServiceProvider extends ServiceProvider
         // Última actividad web (sección "API Keys"): el listener es `ShouldQueue`.
         ActividadWebRegistrada::class => [
             GuardarUltimaActividadWeb::class,
+        ],
+        // Carga inicial del escritorio: los pacientes no se indexaron uno por uno (PecleSearch), así que
+        // al terminar se rehace el índice del buscador después de responder.
+        CargaInicialCompletada::class => [
+            ReconstruirIndiceDePacientesTrasLaCarga::class,
         ],
     ];
 

@@ -25,13 +25,14 @@ return [
         ],
     ],
 
-    // **Apagada a propósito.** La sincronización del paquete reindexa en el `saved` de cada modelo
-    // y, con la cola en `sync`, además reconstruye el vocabulario entero en el mismo request: la
-    // carga inicial del escritorio crea miles de pacientes en una transacción y pagaría ese costo
-    // por fila. El índice se reconstruye con `php artisan pecle-search:rebuild pacientes`
-    // (el despliegue lo corre una vez; después, a demanda o con un cron nocturno).
+    // **Encendida.** Un guardado suelto —la web, el móvil, la subida incremental del escritorio— reindexa
+    // ese paciente y refresca el vocabulario en el acto (~30 ms medidos con 6.000 pacientes): si el médico
+    // crea o corrige un paciente, el corrector ya lo conoce. Lo que queda afuera son las **cargas
+    // masivas**: `CargaInicialService` envuelve el lote en `Paciente::withoutEvents()` y, al completarse
+    // la carga, `CargaInicialCompletada` manda a reconstruir el índice después de responder. El rebuild
+    // nocturno (`Kernel::schedule`) sigue siendo la red de lo que entre sin eventos de Eloquent.
     'sync' => [
-        'enabled' => false,
+        'enabled' => true,
         'vocabulary_delay_seconds' => 30,
     ],
 ];
