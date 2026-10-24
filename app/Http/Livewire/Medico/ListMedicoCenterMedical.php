@@ -152,13 +152,13 @@ class ListMedicoCenterMedical extends Component
     public function openModal()
     {
         $this->resetFields();
-        $this->dispatchBrowserEvent('open-modal');
+        $this->dispatch('open-modal');
     }
 
     public function closeModal()
     {
         $this->resetFields();
-        $this->dispatchBrowserEvent('close-modal');
+        $this->dispatch('close-modal');
     }
 
     public function store()
@@ -170,11 +170,7 @@ class ListMedicoCenterMedical extends Component
             ->exists();
 
         if ($exists) {
-            $this->dispatchBrowserEvent('swal:alert', [
-                'type'  => 'error',
-                'title' => 'Relación Duplicada',
-                'text'  => 'El médico ya está asignado a este centro médico.',
-            ]);
+            $this->dispatch('swal:alert', type: 'error', title: 'Relación Duplicada', text: 'El médico ya está asignado a este centro médico.');
             return;
         }
 
@@ -192,11 +188,7 @@ class ListMedicoCenterMedical extends Component
 
         $this->closeModal();
 
-        $this->dispatchBrowserEvent('swal:alert', [
-            'type'  => 'success',
-            'title' => '¡Éxito!',
-            'text'  => 'La relación se ha guardado correctamente.',
-        ]);
+        $this->dispatch('swal:alert', type: 'success', title: '¡Éxito!', text: 'La relación se ha guardado correctamente.');
     }
 
     public function edit($id)
@@ -219,7 +211,7 @@ class ListMedicoCenterMedical extends Component
             $this->reg_medico = $registro->reg_medico;
         }
 
-        $this->dispatchBrowserEvent('open-modal');
+        $this->dispatch('open-modal');
     }
 
     public function update()
@@ -232,11 +224,7 @@ class ListMedicoCenterMedical extends Component
             ->exists();
 
         if ($exists) {
-            $this->dispatchBrowserEvent('swal:alert', [
-                'type'  => 'error',
-                'title' => 'Relación Duplicada',
-                'text'  => 'El médico ya se encuentra asignado a este centro médico.',
-            ]);
+            $this->dispatch('swal:alert', type: 'error', title: 'Relación Duplicada', text: 'El médico ya se encuentra asignado a este centro médico.');
             return;
         }
 
@@ -255,30 +243,18 @@ class ListMedicoCenterMedical extends Component
 
         $this->closeModal();
 
-        $this->dispatchBrowserEvent('swal:alert', [
-            'type'  => 'success',
-            'title' => '¡Actualizado!',
-            'text'  => 'La relación ha sido actualizada exitosamente.',
-        ]);
+        $this->dispatch('swal:alert', type: 'success', title: '¡Actualizado!', text: 'La relación ha sido actualizada exitosamente.');
     }
 
     public function confirmDelete($id)
     {
-        $this->dispatchBrowserEvent('swal:confirm', [
-            'id'    => $id,
-            'title' => '¿Estás seguro?',
-            'text'  => 'Se eliminará la relación de este médico con el centro médico.',
-        ]);
+        $this->dispatch('swal:confirm', id: $id, title: '¿Estás seguro?', text: 'Se eliminará la relación de este médico con el centro médico.');
     }
 
     public function deleteRelation($id)
     {
         MedicoMedicalCenter::destroy($id);
 
-        $this->dispatchBrowserEvent('swal:alert', [
-            'type'  => 'success',
-            'title' => '¡Eliminado!',
-            'text'  => 'El registro ha sido eliminado correctamente.',
-        ]);
+        $this->dispatch('swal:alert', type: 'success', title: '¡Eliminado!', text: 'El registro ha sido eliminado correctamente.');
     }
 }

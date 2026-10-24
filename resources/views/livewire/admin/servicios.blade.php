@@ -30,7 +30,7 @@
             <div class="card-header bg-white py-3">
                 <div class="row">
                     <div class="col-md-5">
-                        <input type="text" wire:model.debounce.400ms="search" class="form-control"
+                        <input type="text" wire:model.live.debounce.400ms="search" class="form-control"
                                placeholder="Buscar por nombre o registro...">
                     </div>
                 </div>
@@ -230,7 +230,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Plan <span class="text-danger">*</span></label>
-                                <select class="form-select" wire:model="planElegido">
+                                <select class="form-select" wire:model.live="planElegido">
                                     @foreach ($planesActivos as $plan)
                                         <option value="{{ $plan->id }}">
                                             {{ $plan->nombre }} · {{ $plan->frecuencia === 'anual' ? 'anual' : 'mensual' }} · USD {{ number_format((float) $plan->precio_usd, 2, ',', '.') }}
@@ -243,13 +243,13 @@
                             <div class="row">
                                 <div class="col-6 mb-3">
                                     <label class="form-label">Meses de servicio</label>
-                                    <input type="number" min="1" max="60" class="form-control" wire:model.defer="meses">
+                                    <input type="number" min="1" max="60" class="form-control" wire:model="meses">
                                     <div class="form-text">Se pueden dar más de los que cobra el plan (por ejemplo, paga 10 y disfruta 12).</div>
                                     @error('meses') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-6 mb-3">
                                     <label class="form-label">Monto cobrado (USD)</label>
-                                    <input type="number" min="0" step="0.01" class="form-control" wire:model.defer="monto">
+                                    <input type="number" min="0" step="0.01" class="form-control" wire:model="monto">
                                     <div class="form-text">0 = cortesía, no cuenta como compra.</div>
                                     @error('monto') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
@@ -257,7 +257,7 @@
 
                             <div class="mb-1">
                                 <label class="form-label">Nota</label>
-                                <input type="text" class="form-control" wire:model.defer="nota" maxlength="255" autocomplete="off"
+                                <input type="text" class="form-control" wire:model="nota" maxlength="255" autocomplete="off"
                                        placeholder="Por ejemplo: transferencia del 05/10, ref. 1234">
                                 @error('nota') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
@@ -298,7 +298,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Plan nuevo <span class="text-danger">*</span></label>
-                                <select class="form-select" wire:model="planElegido">
+                                <select class="form-select" wire:model.live="planElegido">
                                     @foreach ($planesActivos as $plan)
                                         <option value="{{ $plan->id }}">
                                             {{ $plan->nombre }} · {{ $plan->frecuencia === 'anual' ? 'anual' : 'mensual' }} · USD {{ number_format((float) $plan->precio_usd, 2, ',', '.') }}
@@ -311,12 +311,12 @@
                             <div class="row">
                                 <div class="col-6 mb-3">
                                     <label class="form-label">Meses de servicio</label>
-                                    <input type="number" min="1" max="60" class="form-control" wire:model.defer="meses">
+                                    <input type="number" min="1" max="60" class="form-control" wire:model="meses">
                                     @error('meses') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-6 mb-3">
                                     <label class="form-label">Monto cobrado (USD)</label>
-                                    <input type="number" min="0" step="0.01" class="form-control" wire:model.defer="monto">
+                                    <input type="number" min="0" step="0.01" class="form-control" wire:model="monto">
                                     <div class="form-text">0 = cortesía, no cuenta como compra.</div>
                                     @error('monto') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
@@ -324,7 +324,7 @@
 
                             <div class="mb-1">
                                 <label class="form-label">Motivo <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model.defer="motivo" maxlength="150" autocomplete="off"
+                                <input type="text" class="form-control" wire:model="motivo" maxlength="150" autocomplete="off"
                                        placeholder="Por ejemplo: se asignó el plan equivocado">
                                 <div class="form-text">Queda escrito en el historial, con tu nombre y la fecha.</div>
                                 @error('motivo') <span class="text-danger small d-block">{{ $message }}</span> @enderror
@@ -367,7 +367,7 @@
 
                             <div class="mb-1">
                                 <label class="form-label">Motivo <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model.defer="motivo" maxlength="150" autocomplete="off"
+                                <input type="text" class="form-control" wire:model="motivo" maxlength="150" autocomplete="off"
                                        placeholder="Por ejemplo: pago revertido">
                                 <div class="form-text">Queda escrito en el historial, con tu nombre y la fecha.</div>
                                 @error('motivo') <span class="text-danger small d-block">{{ $message }}</span> @enderror
@@ -463,19 +463,19 @@
                             <div class="row">
                                 <div class="col-7 mb-3">
                                     <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" wire:model.defer="nombre" maxlength="100" autocomplete="off">
+                                    <input type="text" class="form-control" wire:model="nombre" maxlength="100" autocomplete="off">
                                     @error('nombre') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-5 mb-3">
                                     <label class="form-label">Código <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" wire:model.defer="codigo" maxlength="40" autocomplete="off" placeholder="anual-12">
+                                    <input type="text" class="form-control" wire:model="codigo" maxlength="40" autocomplete="off" placeholder="anual-12">
                                     @error('codigo') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Descripción</label>
-                                <input type="text" class="form-control" wire:model.defer="descripcion" maxlength="255" autocomplete="off">
+                                <input type="text" class="form-control" wire:model="descripcion" maxlength="255" autocomplete="off">
                                 <div class="form-text">Solo para mostrar, por ejemplo "Paga 10 meses y disfruta 12".</div>
                                 @error('descripcion') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
@@ -483,7 +483,7 @@
                             <div class="row">
                                 <div class="col-4 mb-3">
                                     <label class="form-label">Frecuencia</label>
-                                    <select class="form-select" wire:model.defer="frecuencia">
+                                    <select class="form-select" wire:model="frecuencia">
                                         <option value="mensual">Mensual (1 mes)</option>
                                         <option value="anual">Anual (12 meses)</option>
                                     </select>
@@ -491,12 +491,12 @@
                                 </div>
                                 <div class="col-4 mb-3">
                                     <label class="form-label">Monto (USD) <span class="text-danger">*</span></label>
-                                    <input type="number" min="0" step="0.01" class="form-control" wire:model="precio_usd">
+                                    <input type="number" min="0" step="0.01" class="form-control" wire:model.live="precio_usd">
                                     @error('precio_usd') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-4 mb-3">
                                     <label class="form-label">Tachado (USD)</label>
-                                    <input type="number" min="0" step="0.01" class="form-control" wire:model="precio_tachado_usd">
+                                    <input type="number" min="0" step="0.01" class="form-control" wire:model.live="precio_tachado_usd">
                                     @error('precio_tachado_usd') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -511,21 +511,21 @@
                             <div class="row">
                                 <div class="col-4 mb-3">
                                     <label class="form-label">Orden</label>
-                                    <input type="number" min="0" class="form-control" wire:model.defer="orden">
+                                    <input type="number" min="0" class="form-control" wire:model="orden">
                                     @error('orden') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-8 pt-4">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="plan-visible" wire:model.defer="visible">
+                                        <input class="form-check-input" type="checkbox" id="plan-visible" wire:model="visible">
                                         <label class="form-check-label" for="plan-visible">Visible en el catálogo que se le ofrece al médico</label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="plan-activo" wire:model.defer="activo">
+                                        <input class="form-check-input" type="checkbox" id="plan-activo" wire:model="activo">
                                         <label class="form-check-label" for="plan-activo">Activo (se puede asignar)</label>
                                     </div>
                                     @error('activo') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="plan-default" wire:model.defer="es_default">
+                                        <input class="form-check-input" type="checkbox" id="plan-default" wire:model="es_default">
                                         <label class="form-check-label" for="plan-default">Predeterminado (lo recibe quien se registra, gratis el primer mes)</label>
                                     </div>
                                     @error('es_default') <span class="text-danger small d-block">{{ $message }}</span> @enderror

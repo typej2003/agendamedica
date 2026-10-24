@@ -15,7 +15,7 @@
         <div class="card-header bg-white py-3">
             <div class="row">
                 <div class="col-md-4">
-                    <input type="text" wire:model="search" class="form-control" placeholder="Buscar por nombre o correo...">
+                    <input type="text" wire:model.live="search" class="form-control" placeholder="Buscar por nombre o correo...">
                 </div>
             </div>
         </div>
@@ -88,25 +88,25 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nombre Completo</label>
-                            <input type="text" wire:model.defer="name" class="form-control @error('name') is-invalid @enderror">
+                            <input type="text" wire:model="name" class="form-control @error('name') is-invalid @enderror">
                             @error('name') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Correo Electrónico</label>
-                            <input type="email" wire:model.defer="email" class="form-control @error('email') is-invalid @enderror">
+                            <input type="email" wire:model="email" class="form-control @error('email') is-invalid @enderror">
                             @error('email') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Contraseña {{ $isEditMode ? '(Dejar en blanco para conservar)' : '' }}</label>
-                            <input type="password" wire:model.defer="password" class="form-control @error('password') is-invalid @enderror">
+                            <input type="password" wire:model="password" class="form-control @error('password') is-invalid @enderror">
                             @error('password') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Rol del Usuario</label>
-                            <select wire:model.defer="role" class="form-select @error('role') is-invalid @enderror">
+                            <select wire:model="role" class="form-select @error('role') is-invalid @enderror">
                                 <option value="">-- Seleccionar Rol --</option>
                                 @foreach($roles as $r)
                                     <option value="{{ $r->name }}">{{ $r->name }}</option>

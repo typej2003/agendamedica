@@ -88,7 +88,7 @@
                             @if ($seleccionado)
                                 <div class="mb-3">
                                     <label class="form-label" for="horario-dia">Día <span class="text-danger">*</span></label>
-                                    <select id="horario-dia" class="form-select @error('dia_semana') is-invalid @enderror" wire:model.defer="dia_semana">
+                                    <select id="horario-dia" class="form-select @error('dia_semana') is-invalid @enderror" wire:model="dia_semana">
                                         @foreach ($nombresDeDias as $numero => $dia)
                                             <option value="{{ $numero }}">{{ $dia }}</option>
                                         @endforeach
@@ -101,7 +101,7 @@
                                     <div class="d-flex flex-wrap gap-2">
                                         @foreach ($nombresDeDias as $numero => $dia)
                                             {{-- `.defer`: tildar varios seguidos no se pisa (TRAMPAS 51). --}}
-                                            <input type="checkbox" class="btn-check" id="dia-{{ $numero }}" value="{{ $numero }}" wire:model.defer="dias">
+                                            <input type="checkbox" class="btn-check" id="dia-{{ $numero }}" value="{{ $numero }}" wire:model="dias">
                                             <label class="btn btn-sm btn-outline-primary" for="dia-{{ $numero }}">{{ $dia }}</label>
                                         @endforeach
                                     </div>
@@ -113,17 +113,17 @@
                             <div class="row g-3">
                                 <div class="col-6">
                                     <label class="form-label" for="horario-inicio">Desde <span class="text-danger">*</span></label>
-                                    <input id="horario-inicio" type="time" class="form-control @error('hora_inicio') is-invalid @enderror" wire:model.defer="hora_inicio">
+                                    <input id="horario-inicio" type="time" class="form-control @error('hora_inicio') is-invalid @enderror" wire:model="hora_inicio">
                                     @error('hora_inicio') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label" for="horario-fin">Hasta <span class="text-danger">*</span></label>
-                                    <input id="horario-fin" type="time" class="form-control @error('hora_fin') is-invalid @enderror" wire:model.defer="hora_fin">
+                                    <input id="horario-fin" type="time" class="form-control @error('hora_fin') is-invalid @enderror" wire:model="hora_fin">
                                     @error('hora_fin') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label" for="horario-cupo">Cupo (pacientes)</label>
-                                    <input id="horario-cupo" type="number" min="1" class="form-control @error('cupo') is-invalid @enderror" wire:model.defer="cupo"
+                                    <input id="horario-cupo" type="number" min="1" class="form-control @error('cupo') is-invalid @enderror" wire:model="cupo"
                                            placeholder="Vacío = sin tope">
                                     @error('cupo') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>

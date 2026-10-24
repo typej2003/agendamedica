@@ -54,7 +54,7 @@ class ListMedicos extends Component
     public function create()
     {
         $this->resetFields();
-        $this->dispatchBrowserEvent('open-modal-medico');
+        $this->dispatch('open-modal-medico');
     }
 
     public function edit($id)
@@ -72,7 +72,7 @@ class ListMedicos extends Component
         $this->reg_medico = $medico->{'reg_medico'};
         $this->is_active = (bool) $medico->is_active;
 
-        $this->dispatchBrowserEvent('open-modal-medico');
+        $this->dispatch('open-modal-medico');
     }
 
     public function save()
@@ -96,14 +96,14 @@ class ListMedicos extends Component
             ]
         );
 
-        $this->dispatchBrowserEvent('close-modal-medico');
+        $this->dispatch('close-modal-medico');
         session()->flash('message', $this->medico_id ? 'Médico actualizado exitosamente.' : 'Médico registrado exitosamente.');
         $this->resetFields();
     }
 
     public function triggerDeleteConfirm($id)
     {
-        $this->dispatchBrowserEvent('show-delete-confirmation-medico', ['id' => $id]);
+        $this->dispatch('show-delete-confirmation-medico', id: $id);
     }
 
     public function delete($id)

@@ -17,7 +17,7 @@
                         <div class="row px-4 mb-3">
                             <div class="col-md-4">
                                 <div class="input-group input-group-outline">
-                                    <input type="text" wire:model.debounce.300ms="search" class="form-control text-dark" placeholder="Buscar por médico, N° Licencia, Centro o Reg. Médico...">
+                                    <input type="text" wire:model.live.debounce.300ms="search" class="form-control text-dark" placeholder="Buscar por médico, N° Licencia, Centro o Reg. Médico...">
                                 </div>
                             </div>
                         </div>
@@ -115,7 +115,7 @@
                                     </button>
                                 </div>
                             @else
-                                <input type="text" wire:model.debounce.300ms="searchMedicoModal" class="form-control border px-2 text-dark @error('medico_id') is-invalid @enderror" placeholder="Escriba nombre, apellido o N° licencia...">
+                                <input type="text" wire:model.live.debounce.300ms="searchMedicoModal" class="form-control border px-2 text-dark @error('medico_id') is-invalid @enderror" placeholder="Escriba nombre, apellido o N° licencia...">
                                 
                                 @if(!empty($medicosSearchResults) && count($medicosSearchResults) > 0)
                                     <ul class="list-group position-absolute w-100 shadow-lg mt-1" style="z-index: 1050; max-height: 200px; overflow-y: auto;">
@@ -137,7 +137,7 @@
                         <!-- Selección de Centro Médico -->
                         <div class="mb-3">
                             <label class="form-label font-weight-bold text-xs text-dark">Centro Médico <span class="text-danger">*</span></label>
-                            <select wire:model="medical_center_id" class="form-select border px-2 text-dark @error('medical_center_id') is-invalid @enderror">
+                            <select wire:model.live="medical_center_id" class="form-select border px-2 text-dark @error('medical_center_id') is-invalid @enderror">
                                 <option value="" class="text-dark">-- Seleccione Centro Médico --</option>
                                 @foreach ($centrosMedicos as $centro)
                                     <option value="{{ $centro->id }}" class="text-dark">{{ $centro->name }}</option>
@@ -149,7 +149,7 @@
                         <!-- Registro Médico -->
                         <div class="mb-3">
                             <label class="form-label font-weight-bold text-xs text-dark">Reg. Médico</label>
-                            <input type="text" wire:model="reg_medico" class="form-control border px-2 text-dark @error('reg_medico') is-invalid @enderror" placeholder="Número de Registro Médico">
+                            <input type="text" wire:model.live="reg_medico" class="form-control border px-2 text-dark @error('reg_medico') is-invalid @enderror" placeholder="Número de Registro Médico">
                             @error('reg_medico') <span class="text-danger text-xs">{{ $message }}</span> @enderror
                         </div>
                     </form>
@@ -205,7 +205,7 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    Livewire.emit('deleteRelationConfirmed', event.detail.id);
+                    Livewire.dispatch('deleteRelationConfirmed', { id: event.detail.id });
                 }
             });
         });

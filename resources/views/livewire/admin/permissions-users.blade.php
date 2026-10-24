@@ -10,7 +10,7 @@
             <!-- Selector de Usuario -->
             <div class="mb-4">
                 <label for="userSelect" class="form-label fw-bold">Selecciona un Usuario</label>
-                <select wire:model="selectedUserId" id="userSelect" class="form-select">
+                <select wire:model.live="selectedUserId" id="userSelect" class="form-select">
                     <option value="">-- Elige un usuario --</option>
                     @foreach($users as $user)
                         <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
@@ -35,7 +35,7 @@
                                            role="switch"
                                            id="perm-{{ $permission->id }}"
                                            value="{{ $permission->name }}"
-                                           wire:model.defer="userPermissions">
+                                           wire:model="userPermissions">
                                     <label class="form-check-label" for="perm-{{ $permission->id }}">
                                         {{ $permission->name }}
                                     </label>

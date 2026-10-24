@@ -115,9 +115,9 @@ class SelectorBuscableTest extends TestCase
 
     public function test_livewire_manda_los_atributos_wire_al_input_oculto(): void
     {
-        $html = Blade::render('<x-ui.selector-buscable name="city_id" url="/b" wire:model.defer="city_id" />');
+        $html = Blade::render('<x-ui.selector-buscable name="city_id" url="/b" wire:model="city_id" />');
 
-        $this->assertMatchesRegularExpression('/<input type="hidden" name="city_id"[^>]*wire:model\.defer="city_id"/', $html);
+        $this->assertMatchesRegularExpression('/<input type="hidden" name="city_id"[^>]*wire:model="city_id"/', $html);
         $this->assertStringContainsString('wire:ignore', $html);
     }
 
@@ -268,8 +268,8 @@ class SelectorBuscableTest extends TestCase
         $componente->assertSeeHtml('data-crear-url="' . route('admin.ciudades.crear') . '"')
             ->assertSeeHtml('data-url="' . route('admin.ciudades.buscar') . '"')
             ->assertSeeHtml('value="Maracaibo — ' . $ciudad->state->name . '"')
-            ->assertSeeHtml('wire:model.defer="city_id"');
-        $this->assertStringContainsString('&quot;label&quot;:&quot;Estado&quot;', $componente->payload['effects']['html']);
+            ->assertSeeHtml('wire:model="city_id"');
+        $this->assertStringContainsString('&quot;label&quot;:&quot;Estado&quot;', $componente->html());
     }
 
     public function test_el_registro_publico_usa_el_selector_en_modo_libre_sin_crear(): void

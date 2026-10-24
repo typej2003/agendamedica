@@ -30,11 +30,11 @@
             <directory suffix="Test.php">./tests/Feature</directory>
         </testsuite>
     </testsuites>
-    <coverage processUncoveredFiles="true">
+    <source>
         <include>
             <directory suffix=".php">./app</directory>
         </include>
-    </coverage>
+    </source>
     <php>
         <!-- Mismo bloque que `phpunit.xml`, salvo la base: la suite pasa de 1.300 tests y cada uno arranca
              la aplicacion con todas las rutas, asi que con los 128 MB por defecto aborta por memoria. -->

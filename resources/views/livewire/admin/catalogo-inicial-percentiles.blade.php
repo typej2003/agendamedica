@@ -93,27 +93,27 @@
                             <div class="row g-3">
                                 <div class="col-6 col-md-3">
                                     <label class="form-label" for="pct-ini">Desde (día)</label>
-                                    <input type="number" min="0" id="pct-ini" class="form-control" wire:model.defer="f.edad_ini_dia">
+                                    <input type="number" min="0" id="pct-ini" class="form-control" wire:model="f.edad_ini_dia">
                                     @error('f.edad_ini_dia') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-6 col-md-3">
                                     <label class="form-label" for="pct-fin">Hasta (día)</label>
-                                    <input type="number" min="0" id="pct-fin" class="form-control" wire:model.defer="f.edad_fin_dia">
+                                    <input type="number" min="0" id="pct-fin" class="form-control" wire:model="f.edad_fin_dia">
                                     @error('f.edad_fin_dia') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-12 col-md-6">
                                     <label class="form-label" for="pct-texto">Texto de la edad</label>
-                                    <input type="text" id="pct-texto" class="form-control" maxlength="100" wire:model.defer="f.edad_texto" placeholder="3 a 6 meses">
+                                    <input type="text" id="pct-texto" class="form-control" maxlength="100" wire:model="f.edad_texto" placeholder="3 a 6 meses">
                                     @error('f.edad_texto') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-6 col-md-3">
                                     <label class="form-label" for="pct-meses">Edad en meses</label>
-                                    <input type="text" inputmode="numeric" id="pct-meses" class="form-control" wire:model.defer="f.edad_meses">
+                                    <input type="text" inputmode="numeric" id="pct-meses" class="form-control" wire:model="f.edad_meses">
                                     @error('f.edad_meses') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-6 col-md-3">
                                     <label class="form-label" for="pct-anos">Edad en años</label>
-                                    <input type="text" inputmode="decimal" id="pct-anos" class="form-control" wire:model.defer="f.anos">
+                                    <input type="text" inputmode="decimal" id="pct-anos" class="form-control" wire:model="f.anos">
                                     @error('f.anos') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-12 col-md-6 d-flex align-items-end">
@@ -131,7 +131,7 @@
                                     @foreach (['b' => 'Bajo', 'm' => 'Medio', 'a' => 'Alto'] as $letra => $rotulo)
                                         <div class="col-4 col-md-3">
                                             <label class="form-label small mb-0" for="pct-{{ $clave }}-{{ $letra }}">{{ $rotulo }}</label>
-                                            <input type="text" inputmode="decimal" id="pct-{{ $clave }}-{{ $letra }}" class="form-control form-control-sm" wire:model.defer="f.{{ $clave }}_{{ $letra }}">
+                                            <input type="text" inputmode="decimal" id="pct-{{ $clave }}-{{ $letra }}" class="form-control form-control-sm" wire:model="f.{{ $clave }}_{{ $letra }}">
                                         </div>
                                     @endforeach
                                 </div>

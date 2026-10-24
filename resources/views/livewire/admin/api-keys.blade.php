@@ -9,7 +9,7 @@
         <div class="card-header bg-white py-3">
             <div class="row">
                 <div class="col-md-5">
-                    <input type="text" wire:model.debounce.400ms="search" class="form-control"
+                    <input type="text" wire:model.live.debounce.400ms="search" class="form-control"
                            placeholder="Buscar por nombre o registro...">
                 </div>
             </div>

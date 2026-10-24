@@ -72,7 +72,7 @@ class ListUsers extends Component
     public function create()
     {
         $this->resetFields();
-        $this->dispatchBrowserEvent('open-user-modal');
+        $this->dispatch('open-user-modal');
     }
 
     public function store()
@@ -87,7 +87,7 @@ class ListUsers extends Component
 
         $user->assignRole($this->role);
 
-        $this->dispatchBrowserEvent('close-user-modal');
+        $this->dispatch('close-user-modal');
         session()->flash('message', 'Usuario creado correctamente.');
         $this->resetFields();
     }
@@ -103,7 +103,7 @@ class ListUsers extends Component
         $this->email = $user->email;
         $this->role = $user->roles->pluck('name')->first() ?? '';
 
-        $this->dispatchBrowserEvent('open-user-modal');
+        $this->dispatch('open-user-modal');
     }
 
     public function update()
@@ -123,7 +123,7 @@ class ListUsers extends Component
         $user->update($data);
         $user->syncRoles([$this->role]);
 
-        $this->dispatchBrowserEvent('close-user-modal');
+        $this->dispatch('close-user-modal');
         session()->flash('message', 'Usuario actualizado correctamente.');
         $this->resetFields();
     }
@@ -131,7 +131,7 @@ class ListUsers extends Component
     public function confirmDelete($id)
     {
         $this->userToDeleteId = $id;
-        $this->dispatchBrowserEvent('open-delete-modal');
+        $this->dispatch('open-delete-modal');
     }
 
     public function delete()
@@ -148,7 +148,7 @@ class ListUsers extends Component
             }
         }
 
-        $this->dispatchBrowserEvent('close-delete-modal');
+        $this->dispatch('close-delete-modal');
         $this->resetFields();
     }
 }

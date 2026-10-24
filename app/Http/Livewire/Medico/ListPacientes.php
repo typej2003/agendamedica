@@ -111,7 +111,7 @@ class ListPacientes extends Component
     public function create()
     {
         $this->resetInputFields();
-        $this->dispatchBrowserEvent('open-modal-paciente');
+        $this->dispatch('open-modal-paciente');
     }
 
     public function edit($id)
@@ -144,7 +144,7 @@ class ListPacientes extends Component
         $this->profesion    = $paciente->profesion;
         $this->direccion    = $paciente->direccion;
 
-        $this->dispatchBrowserEvent('open-modal-paciente');
+        $this->dispatch('open-modal-paciente');
     }
 
     public function save()
@@ -221,19 +221,19 @@ class ListPacientes extends Component
 
             DB::commit();
 
-            $this->dispatchBrowserEvent('close-modal-paciente');
-            $this->dispatchBrowserEvent('swal-success', ['message' => $mensaje]);
+            $this->dispatch('close-modal-paciente');
+            $this->dispatch('swal-success', message: $mensaje);
             $this->resetInputFields();
 
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->dispatchBrowserEvent('swal-error', ['message' => 'Ocurrió un error al procesar la solicitud: ' . $e->getMessage()]);
+            $this->dispatch('swal-error', message: 'Ocurrió un error al procesar la solicitud: ' . $e->getMessage());
         }
     }
 
     public function triggerDeleteConfirm($id)
     {
-        $this->dispatchBrowserEvent('show-delete-confirm', ['id' => $id]);
+        $this->dispatch('show-delete-confirm', id: $id);
     }
 
     public function delete($id)
@@ -250,9 +250,9 @@ class ListPacientes extends Component
             // Eliminar el paciente
             $paciente->delete();
 
-            $this->dispatchBrowserEvent('swal-success', ['message' => 'Paciente eliminado correctamente.']);
+            $this->dispatch('swal-success', message: 'Paciente eliminado correctamente.');
         } catch (\Exception $e) {
-            $this->dispatchBrowserEvent('swal-error', ['message' => 'No se pudo eliminar el paciente debido a registros asociados.']);
+            $this->dispatch('swal-error', message: 'No se pudo eliminar el paciente debido a registros asociados.');
         }
     }
 

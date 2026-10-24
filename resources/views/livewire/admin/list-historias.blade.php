@@ -17,7 +17,7 @@
             </span>
             <input type="text" class="form-control border-start-0 ps-0" 
                 placeholder="Buscar por Registro Médico, N° Historia, Paciente, Médico o Centro..." 
-                wire:model.debounce.300ms="search">
+                wire:model.live.debounce.300ms="search">
             @if(!empty($search))
                 <button class="btn btn-outline-secondary" type="button" wire:click="$set('search', '')">
                     <i class="bi bi-x-lg"></i> Limpiar
@@ -186,13 +186,13 @@
                             
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Registro Médico (reg-medico)</label>
-                                <input type="text" class="form-control" wire:model.defer="reg_medico" placeholder="Ej. RM-2026-001">
+                                <input type="text" class="form-control" wire:model="reg_medico" placeholder="Ej. RM-2026-001">
                                 @error('reg_medico') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Número de Historia (numhistoria)</label>
-                                <input type="text" class="form-control" wire:model.defer="numhistoria" placeholder="Ej. HIST-09823">
+                                <input type="text" class="form-control" wire:model="numhistoria" placeholder="Ej. HIST-09823">
                                 @error('numhistoria') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
 
@@ -207,7 +207,7 @@
                                         </button>
                                     </div>
                                 @else
-                                    <input type="text" class="form-control" placeholder="Escriba para buscar un Centro Médico..." wire:model.debounce.300ms="searchCentro">
+                                    <input type="text" class="form-control" placeholder="Escriba para buscar un Centro Médico..." wire:model.live.debounce.300ms="searchCentro">
                                     @if(count($centrosResult) > 0)
                                         <div class="list-group position-absolute w-100 shadow-sm z-3 mt-1" style="max-height: 200px; overflow-y: auto;">
                                             @foreach($centrosResult as $centro)
@@ -237,7 +237,7 @@
                                         </button>
                                     </div>
                                 @else
-                                    <input type="text" class="form-control" placeholder="Escriba cédula o nombre del paciente..." wire:model.debounce.300ms="searchPaciente">
+                                    <input type="text" class="form-control" placeholder="Escriba cédula o nombre del paciente..." wire:model.live.debounce.300ms="searchPaciente">
                                     @if(count($pacientesResult) > 0)
                                         <div class="list-group position-absolute w-100 shadow-sm z-3 mt-1" style="max-height: 200px; overflow-y: auto;">
                                             @foreach($pacientesResult as $paciente)
@@ -270,7 +270,7 @@
                                         </button>
                                     </div>
                                 @else
-                                    <input type="text" class="form-control" placeholder="Escriba nombre o matrícula del médico..." wire:model.debounce.300ms="searchMedico">
+                                    <input type="text" class="form-control" placeholder="Escriba nombre o matrícula del médico..." wire:model.live.debounce.300ms="searchMedico">
                                     @if(count($medicosResult) > 0)
                                         <div class="list-group position-absolute w-100 shadow-sm z-3 mt-1" style="max-height: 200px; overflow-y: auto;">
                                             @foreach($medicosResult as $medico)

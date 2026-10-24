@@ -13,8 +13,7 @@ use Tests\TestCase;
  */
 class LandingWebTest extends TestCase
 {
-    /** @test */
-    public function la_landing_explica_los_beneficios_para_pacientes_y_medicos(): void
+    public function test_la_landing_explica_los_beneficios_para_pacientes_y_medicos(): void
     {
         $respuesta = $this->get('/');
 
@@ -32,8 +31,7 @@ class LandingWebTest extends TestCase
         $respuesta->assertSee('Informes de ecografía');
     }
 
-    /** @test */
-    public function la_landing_lleva_a_cada_publico_a_su_puerta_de_entrada(): void
+    public function test_la_landing_lleva_a_cada_publico_a_su_puerta_de_entrada(): void
     {
         $respuesta = $this->get('/');
 
@@ -44,8 +42,7 @@ class LandingWebTest extends TestCase
         $respuesta->assertSee('mailto:soporte@ginecoreport.com', false);
     }
 
-    /** @test */
-    public function las_capturas_de_la_seccion_existen_y_tienen_texto_alternativo(): void
+    public function test_las_capturas_de_la_seccion_existen_y_tienen_texto_alternativo(): void
     {
         $respuesta = $this->get('/');
 

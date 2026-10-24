@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use App\Clinica\Consulta\EcoAbdominal;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoDoppler;
@@ -106,34 +107,34 @@ class SyncEcoNuevoCreacionTest extends TestCase
      * legado) y una **columna propia del mapa** con su valor. La columna tiene que estar en el mapa: lo que
      * no está se descarta (y el test de la columna desconocida lo comprueba).
      *
-     * @return array<string,array{clase:class-string,modelo:class-string,lectura:class-string,columna:string,valor:string}>
+     * @return array<string,array{tabla:class-string,modelo:class-string,lectura:class-string,columna:string,valor:string}>
      */
     public static function estudios(): array
     {
         return [
             'doppler' => [
-                'clase' => 'eco_doppler',
+                'tabla' => 'eco_doppler',
                 'modelo' => ModeloDoppler::class,
                 'lectura' => EcoDoppler::class,
                 'columna' => 'conclusion',
                 'valor' => 'DOPPLER SIN ALTERACIONES',
             ],
             'mamario' => [
-                'clase' => 'ultra_mama',
+                'tabla' => 'ultra_mama',
                 'modelo' => ModeloMamario::class,
                 'lectura' => EcoMamario::class,
                 'columna' => 'conclusion',
                 'valor' => 'MAMAS SIN LESIONES',
             ],
             'abdominal' => [
-                'clase' => 'ultra_abdominal',
+                'tabla' => 'ultra_abdominal',
                 'modelo' => ModeloAbdominal::class,
                 'lectura' => EcoAbdominal::class,
                 'columna' => 'conclusiones',
                 'valor' => 'ABDOMEN NORMAL',
             ],
             'fetal' => [
-                'clase' => 'ecocadiograma_fetal',
+                'tabla' => 'ecocadiograma_fetal',
                 'modelo' => ModeloFetal::class,
                 'lectura' => EcoCardiogramaFetal::class,
                 'columna' => 'conclusion',
@@ -162,7 +163,7 @@ class SyncEcoNuevoCreacionTest extends TestCase
             ->first();
     }
 
-    /** @dataProvider estudios */
+    #[DataProvider('estudios')]
     public function test_crear_un_estudio_deja_la_fila_en_su_tabla_con_la_clave_del_legado(
         string $tabla,
         string $modelo,
@@ -202,7 +203,7 @@ class SyncEcoNuevoCreacionTest extends TestCase
         $this->assertSame((int) $fila->id, (int) $rastro->record_id);
     }
 
-    /** @dataProvider estudios */
+    #[DataProvider('estudios')]
     public function test_el_reintento_del_mismo_temp_id_no_duplica(
         string $tabla,
         string $modelo,
@@ -233,7 +234,7 @@ class SyncEcoNuevoCreacionTest extends TestCase
             ->count(), 'no se duplica la fila del estudio');
     }
 
-    /** @dataProvider estudios */
+    #[DataProvider('estudios')]
     public function test_una_columna_fuera_del_mapa_se_descarta(
         string $tabla,
         string $modelo,
@@ -266,7 +267,7 @@ class SyncEcoNuevoCreacionTest extends TestCase
         $this->assertSame($medico->reg_medico, (string) $fila->reg_medico, 'el tenant lo pone el servidor');
     }
 
-    /** @dataProvider estudios */
+    #[DataProvider('estudios')]
     public function test_una_consulta_de_otro_medico_se_rechaza(
         string $tabla,
         string $modelo,
@@ -292,7 +293,7 @@ class SyncEcoNuevoCreacionTest extends TestCase
         $this->assertSame($medico->reg_medico !== $ajeno->reg_medico, true);
     }
 
-    /** @dataProvider estudios */
+    #[DataProvider('estudios')]
     public function test_la_edicion_de_una_columna_del_estudio_aplica_y_deja_rastro(
         string $tabla,
         string $modelo,
@@ -346,7 +347,7 @@ class SyncEcoNuevoCreacionTest extends TestCase
         $tempId = -80;
         foreach (self::estudios() as $estudio) {
             $changes[] = [
-                'table' => $estudio['clase'],
+                'table' => $estudio['tabla'],
                 'operation' => 'created',
                 'temp_id' => $tempId++,
                 'consulta_id' => $consulta->id,
@@ -359,7 +360,7 @@ class SyncEcoNuevoCreacionTest extends TestCase
 
         foreach (self::estudios() as $estudio) {
             $fila = $this->fila($estudio['modelo'], $medico, $consulta);
-            $this->assertNotNull($fila, $estudio['clase'] . ' quedó guardado');
+            $this->assertNotNull($fila, $estudio['tabla'] . ' quedó guardado');
             $this->assertSame($estudio['valor'], (string) $fila->{$estudio['columna']});
         }
     }
@@ -371,12 +372,12 @@ class SyncEcoNuevoCreacionTest extends TestCase
             $esperadas = $estudio['lectura']::columnas();
             $esperadas = array_is_list($esperadas) ? array_values($esperadas) : array_keys($esperadas);
 
-            $this->assertSame($esperadas, SyncAppDataRequest::columnasEditables($estudio['clase']), $estudio['clase']);
-            $this->assertArrayHasKey($estudio['clase'], SyncAppDataRequest::MAPAS_DE_LOS_ECOS);
+            $this->assertSame($esperadas, SyncAppDataRequest::columnasEditables($estudio['tabla']), $estudio['tabla']);
+            $this->assertArrayHasKey($estudio['tabla'], SyncAppDataRequest::MAPAS_DE_LOS_ECOS);
             // Y están en las listas que abren el camino del sync.
-            $this->assertContains($estudio['clase'], SyncAppDataRequest::TABLAS_EDITABLES);
-            $this->assertContains($estudio['clase'], SyncAppDataRequest::CLINICAL_TABLES);
-            $this->assertContains($estudio['clase'], SyncAppDataRequest::SYNC_TABLES);
+            $this->assertContains($estudio['tabla'], SyncAppDataRequest::TABLAS_EDITABLES);
+            $this->assertContains($estudio['tabla'], SyncAppDataRequest::CLINICAL_TABLES);
+            $this->assertContains($estudio['tabla'], SyncAppDataRequest::SYNC_TABLES);
         }
     }
 }

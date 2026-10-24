@@ -39,6 +39,11 @@ return [
     |
     | Supported Drivers: "local", "ftp", "sftp", "s3"
     |
+    | `throw` => true restaura el comportamiento de Laravel 8: una escritura
+    | que falla (permisos, disco lleno) lanza excepción en vez de devolver
+    | `false` en silencio. Laravel 9 pasó a Flysystem 3, que devuelve `false`;
+    | el código clínico fue escrito esperando la excepción.
+    |
     */
 
     'disks' => [
@@ -46,6 +51,7 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),
+            'throw' => true,
         ],
 
         'public' => [
@@ -53,6 +59,7 @@ return [
             'root' => storage_path('app/public'),
             'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
+            'throw' => true,
         ],
 
         /*
@@ -69,6 +76,7 @@ return [
             'driver' => 'local',
             'root' => storage_path('app/clinica'),
             'visibility' => 'private',
+            'throw' => true,
         ],
 
         /*
@@ -86,6 +94,7 @@ return [
             'driver' => 'local',
             'root' => storage_path('app/comentarios'),
             'visibility' => 'private',
+            'throw' => true,
         ],
 
         /*
@@ -97,6 +106,7 @@ return [
             'driver' => 'local',
             'root' => storage_path('app/solicitudes'),
             'visibility' => 'private',
+            'throw' => true,
         ],
 
         /*
@@ -109,6 +119,7 @@ return [
         'escritorio' => [
             'driver' => 'local',
             'root' => storage_path('app/escritorio'),
+            'throw' => true,
         ],
 
         's3' => [
