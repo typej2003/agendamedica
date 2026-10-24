@@ -352,6 +352,9 @@ class ConsultaRecipesWebTest extends TestCase
 
         $this->assertStringContainsString('data-imprimir-recipe', $guardado, 'El editor del récipe guardado no ofrece imprimir.');
         $this->assertStringContainsString('id="dialogo-imprimir-recipe"', $guardado, 'Sin el diálogo de impresión, el botón no hace nada.');
+        // 2026-10-23: el tratamiento se crea y se edita en su ventana del catálogo, que se abre sin salir del récipe.
+        $this->assertStringContainsString(route('clinica.catalogos.tratamientos.nuevo'), $guardado, 'El editor no ofrece crear un tratamiento.');
+        $this->assertStringContainsString('target="_blank"', $guardado);
 
         $nuevo = $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get($this->urlSeccion($consulta, 'nuevo'))->assertOk()->getContent();
