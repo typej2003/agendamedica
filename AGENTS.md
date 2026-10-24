@@ -873,6 +873,20 @@ recarga, paginación— sigue siendo la misma pantalla de siempre, con sus conte
 historia intactas, no se escapa del consultorio, vuelve a lo escrito, JSON, indexado al instante y el
 trabajo de reconstrucción), una de `Feature/CargaInicialTest` (el aviso único al completar) y dos de
 `Unit/Clinica/PacientesVistasTest`. Verificador en Chrome: `../.agent-tools/verificar-busqueda-corregida-web.js`.
+Los catálogos suman `Feature/BusquedaDeCatalogoCorregidaWebTest` (4: el récipe, los motivos, `literal` y
+«si lo escrito encuentra no se toca»).
+
+**El tablero de Laravel Pulse** (`/pulse`, 2026-10-24). `laravel/pulse` v1.8.1 registra los requests, las
+consultas lentas, las excepciones, la cache, las colas y la foto del servidor; el tablero se abre en `/pulse`
+y **sólo entra el rol `Root`** (gate `viewPulse` en `AppServiceProvider::boot()`; el resto de las cuentas y
+los invitados reciben 403 —Pulse autoriza antes del `auth`, por eso el gate acepta un usuario nulo—). El
+scheduler corre **`pulse:check --once`** cada minuto: una foto por minuto que termina; el demonio sin `--once`
+no va en el scheduler porque `schedule:run` lo esperaría para siempre (si algún día se quiere, va bajo
+Supervisor). En los tests va `PULSE_ENABLED=false` (`phpunit.xml`): graba una escritura por request y la
+bitácora cuenta las consultas por página. Despliegue: `migrate --force` crea `pulse_values`, `pulse_entries` y
+`pulse_aggregates`; `config:clear`/`config:cache` por el `config/pulse.php` nuevo; no hace falta un cron nuevo
+(el `schedule:run` existente toma `pulse:check`). En Windows `pulse:check --once` registra la CPU y la memoria
+en 0 (el recorder usa `wmic`, que Windows 11 ya no trae); en Linux usa `top`/`/proc`.
 
 
 
