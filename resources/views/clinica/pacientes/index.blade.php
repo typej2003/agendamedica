@@ -31,6 +31,15 @@
     </x-ui.barra-herramientas>
 
     <div data-buscar-resultados>
+    {{-- La corrección de errores de tecleo (PecleSearch) se avisa y se puede deshacer: el listado busca
+         con el término corregido y este aviso ofrece buscar lo escrito tal cual (`?literal=1`). Va dentro
+         de la región que reemplaza la búsqueda en vivo, para que aparezca y desaparezca con ella. --}}
+    @if ($vm->hayCorreccion())
+        <p class="small texto-tenue mb-2" data-busqueda-corregida>
+            Se buscó «{{ $vm->terminoBuscado() }}» porque «{{ $vm->buscar() }}» parece un error de tecleo.
+            <a href="{{ $vm->urlBuscarLoEscrito() }}">Buscar «{{ $vm->buscar() }}» tal cual</a>.
+        </p>
+    @endif
     <x-ui.tarjeta sin-relleno>
         @if ($vm->estaVacio())
             @php $vacio = $vm->vacio(); @endphp

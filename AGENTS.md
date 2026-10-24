@@ -779,7 +779,41 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `config/` | Config Laravel estándar (`auth.php` define el guard `api` con driver **sanctum**; `services.php` las credenciales de WhatsApp). |
 | `tests/` | `bootstrap.php` arma sola la base de tests aislada (`database/database.testing.sqlite`). `Feature/`: tests reales con `DatabaseTransactions` (sync del legado, credenciales, configuración, citas, récipes…). `php artisan test` corre la suite completa. |
 
-## Pagos: cobro de planes con SyPago (en producción desde el 2026-10-21)
+## Buscador de pacientes con corrección de errores de tecleo (PecleSearch, 2026-10-24)
+
+**Qué hace.** Escribir «Gonzlez» en el buscador de pacientes encuentra a González: el término pasa por un
+corrector que cambia cada palabra desconocida por la que más se le parece (una letra de más, una de menos,
+dos cruzadas o una tecla vecina). Es una **prueba con pacientes**: el listado y el buscador JSON de
+«Nueva cita»; no toca la agenda, los catálogos ni el móvil.
+
+**Cómo está armado.** Es el paquete [`edyjen/pecle-search`](https://github.com/edyjen/Pecle-Search)
+(v0.3.0, con Laravel 13 agregado el mismo día): mantiene un **índice de palabras** de los nombres en
+`search_tokens` + `search_indexes` (migración del paquete) y un corrector que se usa como **vocabulario**.
+`App\Clinica\Pacientes\CorrectorDeLaBusqueda` devuelve un `BusquedaCorregida` (lo escrito y lo aplicado) y
+`PacienteController` lo pasa a `PacientesDelConsultorio`. **La búsqueda sigue siendo `BusquedaDePacientes`**
+(por palabras, sin acentos, cédula y n.º de historia): no se usa el `whereIndexed` del paquete —busca por
+el comienzo de palabra y sobre el índice entero— ni el autocompletado `suggest`, que leería nombres de
+otros consultorios. El vocabulario es global y sólo cambia el término; los resultados siguen acotados por
+`reg_medico`.
+
+**Lo que ve el usuario.** El listado **avisa** («Se buscó «Gonzalez»…») y ofrece «Buscar tal cual»
+(`?literal=1`), porque el corrector puede equivocarse con un nombre que todavía no está en el índice. Si
+el término corregido no encuentra nada, se busca lo escrito y no se avisa. El JSON de «Nueva cita»
+conserva su forma (un arreglo de pacientes) y corrige en silencio.
+
+**Mantenimiento del índice.** `config/pecle_search.php` deja la **sincronización apagada** a propósito: el
+paquete reindexa en el `saved` de cada paciente y, con `QUEUE_CONNECTION=sync`, reconstruiría el
+vocabulario entero en el request; la carga inicial del escritorio crea miles de pacientes seguidos. Se
+reconstruye con `php artisan pecle-search:rebuild pacientes`, que `Kernel::schedule()` corre **todas las
+noches a las 03:20 de Caracas** (necesita el `schedule:run` del servidor, como las demás tareas). **En el
+despliegue hay que correrlo una vez** después de `migrate --force` para no esperar a la primera noche; sin
+índice el buscador funciona igual, sólo que sin corrección.
+
+**Pruebas.** `Feature/BusquedaDePacientesCorregidaWebTest` (6: corrige y avisa, `literal`, cédula e
+historia intactas, no se escapa del consultorio, vuelve a lo escrito, JSON) y dos de
+`Unit/Clinica/PacientesVistasTest`. Verificador en Chrome: `../.agent-tools/verificar-busqueda-corregida-web.js`.
+
+
 
 **Alcance.** El médico paga **su plan** con SyPago desde `/clinica/plan`; al aprobarse, el servicio se renueva
 solo. El paciente **todavía no** paga consultas: el modelo ya lo prevé (`Pago::PAGABLE_CITA`,
