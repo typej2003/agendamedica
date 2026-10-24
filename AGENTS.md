@@ -733,7 +733,8 @@ endpoints previos (`app/refresh-data`) en vez de `sync-app-data`.
 escalones 9, 10 y 11 son *waypoints* EOL y **no se despliegan**; el salto a producción se hace desde esta
 rama ya en **Laravel 13 y PHP 8.3**. `composer audit` queda limpio y el bloqueo de avisos está activo. Antes
 de desplegar: **cambiar Plesk a PHP 8.3**, `composer install`, `migrate --force` (la migración de Sanctum
-tiene guardas) y verificar en QA las URLs de Livewire bajo `/medic-report`. Ver las trampas 168 a 171.
+tiene guardas). Las URLs de Livewire se arman con `url()` en `layouts._livewire-scripts` para respetar la
+subcarpeta `/medic-report` (trampa 172). Ver las trampas 168 a 172.
 
 Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 
