@@ -31,6 +31,10 @@
         <server name="DB_CONNECTION" value="sqlite"/>
         <server name="DB_DATABASE" value=":memory:"/>
         <server name="MAIL_MAILER" value="array"/>
+        <!-- Pulse graba cada request (una escritura mas en la base) y la pagina de la bitacora cuenta las
+             consultas para que no crezcan por fila: se apaga en la suite, como sugiere el propio paquete.
+             El tablero `/pulse` igual registra su ruta y su gate, que es lo que prueba `PulseWebTest`. -->
+        <server name="PULSE_ENABLED" value="false"/>
         <server name="QUEUE_CONNECTION" value="sync"/>
         <server name="SESSION_DRIVER" value="array"/>
         <server name="TELESCOPE_ENABLED" value="false"/>

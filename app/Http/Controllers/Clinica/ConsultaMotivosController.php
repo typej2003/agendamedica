@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Clinica;
 use App\Actions\Consulta\AgregarMotivoALaConsulta;
 use App\Actions\Consulta\AgregarMotivoAlCatalogo;
 use App\Actions\Consulta\QuitarMotivoDeLaConsulta;
+use App\Clinica\Busquedas\BusquedaConCorrector;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\MotivosDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
@@ -167,7 +168,7 @@ class ConsultaMotivosController extends Controller
      * buscador ofrece "crear el que falta" —con "DOLOR" escrito y "DOLOR PÉLVICO" en el catálogo sí se
      * ofrece, porque son motivos distintos—.
      */
-    public function buscar(Request $request, Consulta $consulta, MotivosDeLaConsulta $motivos)
+    public function buscar(Request $request, Consulta $consulta, MotivosDeLaConsulta $motivos, BusquedaConCorrector $corrector)
     {
         $contexto = $request->attributes->get('contexto_clinico');
         $consulta = $this->delContexto($request, $consulta);
@@ -176,7 +177,16 @@ class ConsultaMotivosController extends Controller
         $cargados = $motivos->deLaConsulta($contexto['reg_medico'], (int) $consulta->numhistoria, (int) $consulta->nroconsulta);
         $codigosCargados = $cargados->pluck('codigo')->all();
 
-        $resultados = $motivos->buscar($contexto['reg_medico'], $buscar)->map(fn ($motivo) => [
+        // Primero lo escrito; si no encontró nada, el término corregido (PecleSearch). La búsqueda del
+        // catálogo no cambia: el índice es sólo el vocabulario.
+        [$encontrados, $correccion] = $corrector->con(
+            fn (string $termino) => $motivos->buscar($contexto['reg_medico'], $termino),
+            'motivos',
+            $buscar,
+            $request->boolean('literal'),
+        );
+
+        $resultados = $encontrados->map(fn ($motivo) => [
             'codemotivo' => trim((string) $motivo->codemotivo),
             'descripcion' => trim((string) $motivo->descripcion),
             'yaEsta' => in_array(trim((string) $motivo->codemotivo), $codigosCargados, true),
@@ -184,8 +194,11 @@ class ConsultaMotivosController extends Controller
 
         return response()->json([
             'motivos' => $resultados,
-            'existe' => $buscar !== '' && $motivos->existeEnElCatalogo($contexto['reg_medico'], $buscar),
-            'buscar' => $buscar,
+            'existe' => $buscar !== '' && $motivos->existeEnElCatalogo($contexto['reg_medico'], $correccion->aplicado),
+            'buscar' => $correccion->aplicado,
+            'correccion' => $correccion->corregida()
+                ? ['escrito' => $correccion->escrito, 'aplicado' => $correccion->aplicado]
+                : null,
         ]);
     }
 

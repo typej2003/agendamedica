@@ -55,13 +55,23 @@ class Kernel extends ConsoleKernel
             ->between('17:00', '21:00')
             ->withoutOverlapping();
 
-        // **Red de seguridad del índice del buscador de pacientes** (PecleSearch, 2026-10-24): los
-        // guardados sueltos se indexan al instante y las cargas masivas reconstruyen el índice al
-        // completarse; esto cubre lo que entre sin eventos de Eloquent (una importación, un `UPDATE`
-        // masivo). De madrugada, hora de Caracas, la de los consultorios.
-        $schedule->command('pecle-search:rebuild pacientes')
+        // **Red de seguridad de los índices de PecleSearch** (2026-10-24): los guardados sueltos se indexan
+        // al instante y las cargas masivas reconstruyen el de pacientes al completarse; esto cubre lo que
+        // entre sin eventos de Eloquent (una importación, un `UPDATE` masivo) y mantiene el vocabulario de
+        // los catálogos (vademécum, diagnósticos, antecedentes, motivos, exámenes y doctores). Sin
+        // argumentos reconstruye **todos** los índices. De madrugada, hora de Caracas, la de los consultorios.
+        $schedule->command('pecle-search:rebuild')
             ->timezone('America/Caracas')
             ->dailyAt('03:20')
+            ->withoutOverlapping();
+
+        // Laravel Pulse (2026-10-24): `pulse:check --once` toma **una** foto del servidor (CPU, memoria,
+        // disco) para la tarjeta «Servers» y termina. No se programa el demonio (`pulse:check` sin
+        // `--once`): `schedule:run` lo esperaría para siempre. Si algún día se quiere muestreo continuo,
+        // el demonio va bajo Supervisor, no acá. Necesita el cron del servidor (`schedule:run`), como el
+        // resto de las tareas.
+        $schedule->command('pulse:check --once')
+            ->everyMinute()
             ->withoutOverlapping();
     }
 
