@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Events\CargaInicialCompletada;
 use App\Models\Historia;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
@@ -10,6 +11,7 @@ use App\Models\Paciente;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -426,4 +428,28 @@ class CargaInicialTest extends TestCase
     {
         $this->postJson('/api/sync/carga-inicial/iniciar', ['reg_medico' => 'x', 'tablas' => []])
             ->assertStatus(401);    }
+
+    /**
+     * La carga no indexa paciente por paciente (PecleSearch); al completarse avisa **una sola vez** para
+     * que el índice del buscador se rehaga después de responder. Reintentar la finalización no vuelve a
+     * avisar: el escritorio reintenta sin miedo.
+     */
+    public function test_la_carga_avisa_al_terminar_para_reconstruir_el_indice(): void
+    {
+        Event::fake([CargaInicialCompletada::class]);
+
+        $this->crearMedico('carga-index-1');
+        $carga = $this->iniciar('carga-index-1', ['pacientes' => 1])->json('carga_id');
+
+        $this->enviar('lote', ['carga_id' => $carga, 'tabla' => 'pacientes', 'desde' => 0, 'filas' => [
+            $this->paciente(1, 'IDX-1'),
+        ]])->assertOk();
+
+        $this->enviar('finalizar', ['carga_id' => $carga])->assertOk();
+        Event::assertDispatchedTimes(CargaInicialCompletada::class, 1);
+
+        // El escritorio no vio la respuesta y reintenta: la carga ya estaba completa.
+        $this->enviar('finalizar', ['carga_id' => $carga])->assertOk();
+        Event::assertDispatchedTimes(CargaInicialCompletada::class, 1);
+    }
 }

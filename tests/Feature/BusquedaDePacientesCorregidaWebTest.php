@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\ReconstruirIndiceDePacientes;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
+use App\Models\Paciente;
 use App\Models\Specialty;
 use App\Models\User;
 use Database\Seeders\EspecialidadesYModulosSeeder;
@@ -215,5 +217,72 @@ class BusquedaDePacientesCorregidaWebTest extends TestCase
             ->getJson('/clinica/pacientes/buscar?q=Gonzlez')
             ->assertOk()
             ->assertJsonFragment(['nombre' => 'González, Ana']);
+    }
+
+    public function test_un_paciente_guardado_despues_del_indice_se_corrige_al_instante(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->paciente($medico, 'Ana', 'González', '11111111', '2001');
+        $this->construirIndice();
+
+        // Un guardado suelto —la web, el móvil, la subida incremental del escritorio— pasa por Eloquent y
+        // la sincronización del paquete reindexa a ese paciente y refresca el vocabulario en el acto.
+        $this->pacienteGuardado('Heriberta', 'Herrera', '44444444', '2003', $medico);
+
+        $this->conContexto($user, $medico, $gineco)
+            ->actingAs($user)
+            ->get('/clinica/pacientes?buscar=Herera')
+            ->assertOk()
+            ->assertSee('Herrera')
+            ->assertSeeText('Se buscó «Herrera»');
+    }
+
+    public function test_el_trabajo_de_reconstruccion_incorpora_lo_que_la_carga_masiva_dejo_afuera(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->paciente($medico, 'Ana', 'González', '11111111', '2001');
+        $this->construirIndice();
+
+        // Así guarda la carga inicial: sin eventos, para no pagar el vocabulario del corrector por fila.
+        $this->pacienteGuardado('Heriberta', 'Herrera', '44444444', '2003', $medico, sinEventos: true);
+
+        $buscador = app(PecleSearchManager::class);
+        $this->assertSame('Herera', $buscador->resolve('Herera', 'pacientes')->applied, 'la carga no lo indexó');
+
+        // El trabajo que dispara `CargaInicialCompletada` rehace el índice y ya lo corrige.
+        (new ReconstruirIndiceDePacientes)->handle($buscador);
+        $this->assertSame('Herrera', $buscador->resolve('Herera', 'pacientes')->applied);
+    }
+
+    /**
+     * Un paciente con su vínculo, guardado como lo hace la app (Eloquent). `$sinEventos` reproduce lo que
+     * hace la carga inicial: guardar sin disparar los eventos del modelo (y por lo tanto sin indexar).
+     */
+    private function pacienteGuardado(
+        string $nombres,
+        string $apellidos,
+        string $cedula,
+        string $numhistoria,
+        Medico $medico,
+        bool $sinEventos = false,
+    ): void {
+        $crear = fn () => Paciente::create([
+            'nombres'     => $nombres,
+            'apellidos'   => $apellidos,
+            'cedula'      => $cedula,
+            'sexo'        => 'F',
+            'fnacimiento' => '1990-05-04',
+        ]);
+
+        $paciente = $sinEventos ? Paciente::withoutEvents($crear) : $crear();
+
+        DB::table('medico_pacientes')->insert([
+            'medico_id'   => $medico->id,
+            'paciente_id' => $paciente->id,
+            'numhistoria' => $numhistoria,
+            'reg_medico'  => $medico->reg_medico,
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
     }
 }

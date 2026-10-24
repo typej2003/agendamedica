@@ -55,12 +55,10 @@ class Kernel extends ConsoleKernel
             ->between('17:00', '21:00')
             ->withoutOverlapping();
 
-        // **Vocabulario del corrector de errores de tecleo del buscador de pacientes** (PecleSearch,
-        // 2026-10-24). El paquete sabe reindexar al guardar cada modelo, pero acá la sincronización está
-        // apagada (`config/pecle_search.php`): la carga inicial del escritorio crea miles de pacientes en
-        // una transacción y la cola va en `sync`, así que se pagaría el vocabulario entero por fila. Se
-        // reconstruye de madrugada —hora de Caracas, la de los consultorios— y el despliegue corre el
-        // comando una vez para no esperar a la primera noche.
+        // **Red de seguridad del índice del buscador de pacientes** (PecleSearch, 2026-10-24): los
+        // guardados sueltos se indexan al instante y las cargas masivas reconstruyen el índice al
+        // completarse; esto cubre lo que entre sin eventos de Eloquent (una importación, un `UPDATE`
+        // masivo). De madrugada, hora de Caracas, la de los consultorios.
         $schedule->command('pecle-search:rebuild pacientes')
             ->timezone('America/Caracas')
             ->dailyAt('03:20')

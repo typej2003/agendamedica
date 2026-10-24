@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Clinica\Catalogos\Iniciales\CatalogosIniciales;
+use App\Events\CargaInicialCompletada;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
+use App\Models\Paciente;
 use App\Models\Specialty;
 use App\Models\SyncCarga;
 use App\Models\SyncCargaTabla;
@@ -387,6 +389,10 @@ class CargaInicialService
             $carga->estado = SyncCarga::COMPLETA;
             $carga->finalizada_at = now();
             $carga->save();
+
+            // La carga no fue indexando a cada paciente (`guardarPacientes`): el índice del buscador se
+            // rehace después de responder, cuando el escritorio ya tiene su "carga completa".
+            CargaInicialCompletada::dispatch($carga);
         }
 
         $conIgnoradas = $tablas->filter(fn ($t) => $t->columnas_ignoradas);
@@ -503,19 +509,25 @@ class CargaInicialService
         $pacientes = new PacientesLegado($this->tablas);
         $omitidas = 0;
 
-        foreach ($filas as $fila) {
-            if (! is_array($fila)) {
-                $omitidas++;
-                continue;
-            }
+        // **No se indexa paciente por paciente** (PecleSearch): una carga trae miles de filas y el
+        // corrector del buscador pagaría el vocabulario entero en cada una. La carga no es un guardado
+        // suelto: al terminar, `CargaInicialCompletada` manda a reconstruir el índice en segundo plano
+        // (`ReconstruirIndiceDePacientes`).
+        Paciente::withoutEvents(function () use ($filas, $carga, $mapa, $pacientes, &$omitidas, &$ignoradas): void {
+            foreach ($filas as $fila) {
+                if (! is_array($fila)) {
+                    $omitidas++;
+                    continue;
+                }
 
-            $fila = $this->tablas->traducirPaciente($fila, $mapa);
-            if (! isset($fila['numhistoria'])) {
-                $omitidas++;
-                continue;
+                $fila = $this->tablas->traducirPaciente($fila, $mapa);
+                if (! isset($fila['numhistoria'])) {
+                    $omitidas++;
+                    continue;
+                }
+                $pacientes->guardar($carga, $fila, $fila['numhistoria'], TablasLegado::claveHistoria($fila['numhistoria']), $ignoradas);
             }
-            $pacientes->guardar($carga, $fila, $fila['numhistoria'], TablasLegado::claveHistoria($fila['numhistoria']), $ignoradas);
-        }
+        });
 
         // Un lote del que no se pudo usar NINGUNA fila no puede responder "recibido": así fue como la
         // carga de pediatría terminó "Completa" con 1,19 M de filas y **0 pacientes**, sin un solo error
