@@ -27,8 +27,10 @@
         <div class="informe-dibujo">
             <img class="informe-dibujo-base" src="{{ $imagen['base'] }}"
                  alt="Imagen base del {{ $imagen['descripcion'] ?? 'dibujo' }}">
-            <img class="informe-dibujo-trazo" src="{{ $imagen['src'] }}"
-                 alt="{{ $imagen['descripcion'] ?? 'Dibujo del cuello uterino' }}">
+            @if (! empty($imagen['src']))
+                <img class="informe-dibujo-trazo" src="{{ $imagen['src'] }}"
+                     alt="{{ $imagen['descripcion'] ?? 'Dibujo del cuello uterino' }}">
+            @endif
         </div>
     @else
         <img src="{{ $imagen['src'] }}" alt="{{ $imagen['descripcion'] ?? 'Imagen del estudio' }}">
