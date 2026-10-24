@@ -587,7 +587,7 @@ class ConsultaColposcopiaWebTest extends TestCase
         $this->imagen($medico, $consulta, 'Una descripción libre');
 
         $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes']))
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => 'imagenes']))
             ->assertOk()->getContent();
 
         // La etiqueta se traduce (el código `@` no le dice nada al médico) y la descripción se respeta.
@@ -628,7 +628,7 @@ class ConsultaColposcopiaWebTest extends TestCase
 
         // `H` es la etiqueta de la histeroscopía: como descripción haría que la imagen apareciera ahí.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->from(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes']))
+            ->from(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => 'imagenes']))
             ->post(route('clinica.consulta.examenes.subir', $consulta->id), [
                 'imagen' => $this->png(),
                 'descripcion' => 'H',
@@ -836,10 +836,10 @@ class ConsultaColposcopiaWebTest extends TestCase
         $actual = $this->imagen($medico, $segunda, 'm', true);
         $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
 
-        $esta = $web->get(route('clinica.consulta', [$segunda->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes']))->assertOk()->assertSee('Esta consulta')->getContent();
+        $esta = $web->get(route('clinica.consulta', [$segunda->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => 'imagenes']))->assertOk()->assertSee('Esta consulta')->getContent();
         $this->assertSame(1, substr_count($esta, '<li class="examen-imagen '));
 
-        $todas = $web->get(route('clinica.consulta', [$segunda->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes', 'alcance' => 'todas']))->assertOk()->getContent();
+        $todas = $web->get(route('clinica.consulta', [$segunda->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => 'imagenes', 'alcance' => 'todas']))->assertOk()->getContent();
         $this->assertSame(2, substr_count($todas, '<li class="examen-imagen '));
         $this->assertStringContainsString('Consulta N.º 1', $todas);
         // Quitar sólo se ofrece para la imagen de esta consulta.
@@ -1035,6 +1035,28 @@ class ConsultaColposcopiaWebTest extends TestCase
     }
 
     // ----------------------------------------------------------------- La impresión con imágenes (A-13)
+
+    /** 2026-10-23 (Alexander): la galería está en Solicitudes → Imágenes, como en el escritorio; el enlace viejo lleva allí. */
+    public function test_la_galeria_esta_en_solicitudes_y_el_enlace_viejo_redirige(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
+
+        $nueva = $web->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => 'imagenes']))
+            ->assertOk()->getContent();
+        $this->assertStringContainsString('id="consulta-solicitudes-imagenes"', $nueva);
+        $this->assertStringContainsString('Imágenes de los estudios', $nueva);
+
+        // La pestaña ya no está en la evaluación física…
+        $evaluacion = $web->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION]))->assertOk()->getContent();
+        $this->assertStringNotContainsString('pestana=imagenes', $evaluacion);
+
+        // …y el enlace de antes (y el de la sección Exámenes, retirada) siguen llegando a su lugar.
+        $destino = route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => 'imagenes']);
+        $web->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes']))->assertRedirect($destino);
+        $web->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EXAMENES]))->assertRedirect($destino);
+    }
 
     public function test_el_informe_ofrece_incluir_imagenes_con_los_dibujos_del_cuello(): void
     {

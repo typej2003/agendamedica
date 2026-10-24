@@ -62,7 +62,7 @@ final class PestanasDelExamen
     public const IMAGENES = 'imagenes';
 
     /** Las solapas que se ofrecen en **todas** las especialidades, además de las de cada una. */
-    public const COMUNES = [self::IMAGENES];
+    public const COMUNES = [];
 
     public const POR_DEFECTO = self::FISICO;
 

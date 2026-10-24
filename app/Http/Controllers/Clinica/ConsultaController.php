@@ -226,9 +226,21 @@ class ConsultaController extends Controller
         if ((string) $request->query('seccion', '') === ConsultaShellVista::SECCION_EXAMENES) {
             return redirect()->route('clinica.consulta', [
                 $consulta->id,
-                'seccion' => ConsultaShellVista::SECCION_EVALUACION,
-                'pestana' => PestanasDelExamen::IMAGENES,
+                'seccion' => ConsultaShellVista::SECCION_SOLICITUDES,
+                'solicitud' => PestanasDeSolicitudes::IMAGENES,
             ]);
+        }
+
+        // 2026-10-23: la galería ya no es una solapa de la evaluación física (en el escritorio está en Solicitudes → Imágenes): el
+        // enlace viejo `?seccion=evaluacion&pestana=imagenes` sigue funcionando y lleva a su lugar, con el alcance que traía.
+        if ((string) $request->query('seccion', '') === ConsultaShellVista::SECCION_EVALUACION
+            && (string) $request->query('pestana', '') === PestanasDelExamen::IMAGENES) {
+            return redirect()->route('clinica.consulta', array_filter([
+                $consulta->id,
+                'seccion' => ConsultaShellVista::SECCION_SOLICITUDES,
+                'solicitud' => PestanasDeSolicitudes::IMAGENES,
+                'alcance' => $request->query('alcance'),
+            ]));
         }
 
         // El día de la consulta, ya interpretado una sola vez: es lo que muestra el encabezado y lo que
@@ -335,7 +347,7 @@ class ConsultaController extends Controller
             // nombre del **ViewModel** para los parciales de cada sección (el shell y la sección no pueden
             // llamarse igual).
             'contenido' => $seccion === ConsultaShellVista::SECCION_SOLICITUDES
-                ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes, $resumenes)
+                ? $this->solicitudes($consulta, $registros, $dia, $paciente, $constancias, $reposos, $referencias, $informes, $doctores, $hospitalizaciones, $dietas, $laboratorio, $estudios, $catalogoDeExamenes, $resumenes, $imagenes, $contexto['reg_medico'])
                 : $this->seccion($seccion, $consulta, $contexto['reg_medico'], $motivos, $examen, $antecedentes, $diagnosticos, $evolucion, $examenes, $imagenes, $recipes, $pareja, $dia, (int) $paciente->id, $contexto['medico'], $eco, $ecoObstetrico, $ecoObstetricoTercero, $ecoDoppler, $ecoFetal, $furPrenatal, $gestas, $informePrenatal, $ecoMamario, $ecoAbdominal, $doctores),
             // Las tarjetas que acompañan a una sección y no son parte de su contenido: el buscador del
             // catálogo de antecedentes (WEB-4.4) y la subida de imágenes de los exámenes (WEB-4.7). Las dos
@@ -569,17 +581,6 @@ class ConsultaController extends Controller
                         $url($pestana),
                         (array) old(),
                     ),
-                );
-            }
-
-            // La **galería de imágenes de los estudios** (O-22): una solapa más, al final, que no es de texto.
-            // Es la que vivía en la sección *Exámenes* retirada: «Esta consulta / Todas» y la subida, con el
-            // parcial `_imagenes` de siempre (la columna `observacion` sigue teniendo dos dueños, trampa 116).
-            if ($pestana === PestanasDelExamen::IMAGENES) {
-                return new SeccionDeEvaluacionVista(
-                    $pestana,
-                    new PestanasDelExamen($url, $ocultas),
-                    $this->galeria($consulta, $regMedico, $imagenes),
                 );
             }
 
@@ -1446,6 +1447,8 @@ class ConsultaController extends Controller
         EstudiosDeLaConsulta $estudios,
         CatalogoParaPedirExamenes $catalogoDeExamenes,
         ResumenMedicoDeLaConsulta $resumenes,
+        ImagenesDeLaConsulta $imagenes,
+        string $regMedico,
     ): SeccionDeSolicitudesVista {
         $id = $consulta->id;
         // Las pestañas que esta especialidad no ofrece (en pediatría, *Dieta*: es su ítem *Alimentación*, con sección propia).
@@ -1474,6 +1477,9 @@ class ConsultaController extends Controller
                 route('clinica.pacientes.historia', $paciente->id),
                 $this->alcance()->esPediatria() ? 'Historia pediátrica' : 'Historia clínica',
             );
+        } elseif ($activa === PestanasDeSolicitudes::IMAGENES) {
+            // Las imágenes de los estudios (2026-10-23): la galería de siempre, ahora en su lugar del escritorio.
+            $vista = $this->galeria($consulta, $regMedico, $imagenes, ConsultaShellVista::SECCION_SOLICITUDES, ['solicitud' => PestanasDeSolicitudes::IMAGENES]);
         } elseif ($activa === PestanasDeSolicitudes::LABORATORIO) {
             $vista = $this->laboratorio($consulta, $laboratorio, $catalogoDeExamenes, $old, $imprimir('laboratorio'));
         } elseif ($activa === PestanasDeSolicitudes::ESTUDIOS) {
@@ -1930,14 +1936,14 @@ class ConsultaController extends Controller
      * No se le pide nada nuevo a la tabla: `imagen_consulta.observacion` sigue teniendo dos dueños (trampa
      * 116) y la fila del escritorio se sigue leyendo como se leía.
      */
-    private function galeria(Consulta $consulta, string $regMedico, ImagenesDeLaConsulta $imagenes): ImagenesDeLaConsultaVista
+    private function galeria(Consulta $consulta, string $regMedico, ImagenesDeLaConsulta $imagenes, string $seccion = ConsultaShellVista::SECCION_SOLICITUDES, array $pestana = ['solicitud' => PestanasDeSolicitudes::IMAGENES]): ImagenesDeLaConsultaVista
     {
         $todas = request()->query('alcance') === 'todas';
 
         $url = fn (?string $alcance) => route('clinica.consulta', array_filter([
             $consulta->id,
-            'seccion' => ConsultaShellVista::SECCION_EVALUACION,
-            'pestana' => PestanasDelExamen::IMAGENES,
+            'seccion' => $seccion,
+        ] + $pestana + [
             'alcance' => $alcance,
         ]));
 
