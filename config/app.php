@@ -17,34 +17,34 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | VersiÃ³n de la aplicaciÃ³n
+    | VersiÃƒÂ³n de la aplicaciÃƒÂ³n
     |--------------------------------------------------------------------------
     |
-    | Se muestra en el pie del menÃº lateral. En `main` (producciÃ³n) es X.Y.Z; en
-    | `desarrollo` (QA) es la de producciÃ³n mÃ¡s +N. Reglas en AGENTS.md.
+    | Se muestra en el pie del menÃƒÂº lateral. En `main` (producciÃƒÂ³n) es X.Y.Z; en
+    | `desarrollo` (QA) es la de producciÃƒÂ³n mÃƒÂ¡s +N. Reglas en AGENTS.md.
     |
     */
 
-    'version' => '0.7.0+1',
+    'version' => '0.7.0+2',
 
     /*
     |--------------------------------------------------------------------------
-    | Clave estÃ¡tica de sincronizaciÃ³n del escritorio (PowerBuilder)
+    | Clave estÃƒÂ¡tica de sincronizaciÃƒÂ³n del escritorio (PowerBuilder)
     |--------------------------------------------------------------------------
     |
     | La usan SOLO los endpoints de subida del legado (`/api/sync/upload-batch`,
     | `/api/pacientes/sincronizar`, `/api/consultas/sincronizar`, `/api/cola/sincronizar`)
-    | vÃ­a el header `X-API-KEY`, a travÃ©s de App\Services\SyncAuthService.
+    | vÃƒÂ­a el header `X-API-KEY`, a travÃƒÂ©s de App\Services\SyncAuthService.
     |
     | El valor por defecto `MiClaveSecreta123!` estaba HARDCODEADO en el `.pbl` del
-    | escritorio: cualquiera con los `.pbl` podÃ­a escribir en el API. EstÃ¡ acÃ¡ para no
+    | escritorio: cualquiera con los `.pbl` podÃƒÂ­a escribir en el API. EstÃƒÂ¡ acÃƒÂ¡ para no
     | romper las instalaciones existentes mientras se migra a credenciales por equipo
     | (`php artisan sync:credencial`), pero hay que rotarla:
     |
     |     php artisan sync:clave-estatica --rotar
     |
     | IMPORTANTE: dejar esto en `env(...)` sin default obliga a definirlo en el `.env`.
-    | Se mantiene el default a propÃ³sito, para que un despliegue sin la variable no
+    | Se mantiene el default a propÃƒÂ³sito, para que un despliegue sin la variable no
     | deje el escritorio sin sincronizar de golpe.
     |
     */
@@ -116,9 +116,9 @@ return [
     |
     */
 
-    // **En espaÃ±ol** (O-15): la app es de un consultorio venezolano y los mensajes de validaciÃ³n son para el
-    // mÃ©dico. Los textos viven en `lang/es/validation.php`; el fallback es el mismo idioma para que un mensaje
-    // que falte no se escape en inglÃ©s.
+    // **En espaÃƒÂ±ol** (O-15): la app es de un consultorio venezolano y los mensajes de validaciÃƒÂ³n son para el
+    // mÃƒÂ©dico. Los textos viven en `lang/es/validation.php`; el fallback es el mismo idioma para que un mensaje
+    // que falte no se escape en inglÃƒÂ©s.
     'locale' => 'es',
 
     /*
