@@ -1,0 +1,360 @@
+/* ==========================================================================
+   Portada pública (/): le habla al médico; el paciente tiene un bloque secundario.
+   Usa sólo los tokens de `gineco.css`. El héroe repite el degradado del portal de reservas.
+   ========================================================================== */
+
+html { scroll-behavior: smooth; }
+/* Las anclas (#funciones, #planes…) no quedan debajo de la barra fija. */
+.portada-seccion, .portada-hero { scroll-margin-top: var(--navbar-height); }
+
+/* ---- 1. Héroe ---- */
+.portada-hero {
+    padding: clamp(3rem, 7vw, 5.5rem) 0 clamp(3rem, 6vw, 5rem);
+    color: #fff;
+    background:
+        radial-gradient(900px 420px at 90% -10%, rgba(64, 176, 216, .22), transparent 60%),
+        radial-gradient(700px 380px at -10% 110%, rgba(255, 255, 255, .08), transparent 60%),
+        linear-gradient(135deg, var(--ds-barra) 0%, var(--ds-violeta-900) 55%, var(--ds-violeta-700) 100%);
+    overflow: hidden;
+}
+
+.portada-etiqueta {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .35rem .8rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .14);
+    font-size: .8125rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+.portada-titulo {
+    margin: 1rem 0 1rem;
+    font-size: clamp(2rem, 4.6vw, 3.25rem);
+    font-weight: 800;
+    letter-spacing: -.03em;
+    line-height: 1.08;
+}
+
+/* El segundo renglón del título en lila claro: 7,9:1 sobre el violeta más claro del degradado. */
+.portada-titulo span { color: var(--ds-violeta-200); }
+
+.portada-bajada {
+    max-width: 34rem;
+    margin-bottom: 2rem;
+    color: rgba(255, 255, 255, .85);
+    font-size: clamp(1rem, 1.6vw, 1.125rem);
+    line-height: 1.6;
+}
+
+.portada-acciones { display: flex; flex-wrap: wrap; gap: .75rem; }
+
+.portada-cta {
+    --bs-btn-font-size: 1rem;
+    --bs-btn-font-weight: 700;
+    --bs-btn-padding-y: .8rem;
+    --bs-btn-padding-x: 1.5rem;
+    color: var(--ds-violeta-800);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+}
+
+.portada-cta:hover, .portada-cta:focus { color: var(--ds-violeta-900); }
+
+.portada-cta-secundario {
+    --bs-btn-font-size: 1rem;
+    --bs-btn-font-weight: 600;
+    --bs-btn-padding-y: .8rem;
+    --bs-btn-padding-x: 1.25rem;
+    --bs-btn-color: #fff;
+    --bs-btn-border-color: rgba(255, 255, 255, .4);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: rgba(255, 255, 255, .1);
+    --bs-btn-hover-border-color: #fff;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: rgba(255, 255, 255, .16);
+}
+
+.portada-hero :focus-visible { outline-color: #fff; }
+
+.portada-garantias {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.25rem;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    list-style: none;
+    color: rgba(255, 255, 255, .85);
+    font-size: .875rem;
+}
+
+.portada-garantias i { color: var(--ds-celeste-500); margin-right: .25rem; }
+
+/* ---- Capturas del héroe: la agenda web en una ventana y la app móvil encima ---- */
+.portada-vista { position: relative; padding: 0 0 2.5rem; }
+
+.portada-ventana {
+    overflow: hidden;
+    border-radius: var(--ds-radio-lg);
+    background: var(--ds-superficie);
+    box-shadow: 0 30px 60px rgba(10, 4, 30, .35);
+}
+
+.portada-ventana-barra {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--ds-borde);
+    background: var(--ds-superficie-2);
+}
+
+.portada-ventana-barra span { width: 9px; height: 9px; border-radius: 50%; background: #e3a8a2; }
+.portada-ventana-barra span:nth-child(2) { background: #e6d09f; }
+.portada-ventana-barra span:nth-child(3) { background: #afd6b2; }
+.portada-ventana-barra em { margin-left: 10px; color: var(--ds-texto-3); font-size: .72rem; font-style: normal; white-space: nowrap; }
+
+.portada-ventana img, .portada-movil img { display: block; width: 100%; height: auto; }
+
+.portada-movil {
+    position: absolute;
+    right: -1rem;
+    bottom: 0;
+    width: 27%;
+    padding: 5px;
+    border-radius: 26px;
+    background: var(--ds-tinta);
+    box-shadow: 0 24px 48px rgba(10, 4, 30, .4);
+    transform: rotate(2deg);
+}
+
+.portada-movil img { border-radius: 21px; }
+
+/* ---- Secciones ---- */
+.portada-seccion { padding: clamp(3.5rem, 7vw, 5.5rem) 0; background: var(--ds-superficie); }
+.portada-seccion-suave { background: var(--ds-fondo); }
+
+.portada-encabezado { max-width: 40rem; margin: 0 auto 2.75rem; text-align: center; }
+
+.portada-antetitulo {
+    display: inline-block;
+    margin-bottom: .5rem;
+    color: var(--ds-violeta-700);
+    font-size: .8125rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.portada-encabezado h2, .portada-pacientes h2 {
+    margin-bottom: .75rem;
+    font-size: clamp(1.6rem, 3vw, 2.25rem);
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.15;
+}
+
+.portada-encabezado p, .portada-pacientes p { color: var(--ds-texto-2); font-size: 1.0625rem; margin: 0; }
+
+/* ---- 2. Beneficios y funciones ---- */
+.portada-beneficio {
+    height: 100%;
+    padding: 1.75rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-lg);
+    background: var(--ds-superficie);
+    transition: border-color var(--ds-dur-base) var(--ds-ease), box-shadow var(--ds-dur-base) var(--ds-ease);
+}
+
+.portada-beneficio:hover { border-color: var(--ds-violeta-200); box-shadow: var(--ds-sombra-2); }
+
+.portada-icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1.1rem;
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-violeta-100);
+    color: var(--ds-violeta-700);
+    font-size: 1.4rem;
+}
+
+.portada-beneficio h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: .5rem; }
+.portada-beneficio p { color: var(--ds-texto-2); margin: 0; }
+
+.portada-funciones {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    gap: 1.5rem 2rem;
+    margin: 3rem 0 0;
+    padding: 2.25rem 0 0;
+    border-top: 1px solid var(--ds-borde);
+    list-style: none;
+}
+
+.portada-funciones li { display: flex; gap: .9rem; }
+.portada-funciones i { color: var(--ds-violeta-700); font-size: 1.25rem; line-height: 1.3; }
+.portada-funciones strong { display: block; margin-bottom: .15rem; }
+.portada-funciones span { color: var(--ds-texto-3); font-size: .9375rem; }
+
+/* ---- 3. Pasos y migración ---- */
+.portada-pasos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: none;
+}
+
+.portada-pasos li {
+    padding: 1.75rem;
+    border-radius: var(--ds-radio-lg);
+    background: var(--ds-superficie);
+    box-shadow: var(--ds-sombra-1);
+}
+
+.portada-paso-numero {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin-bottom: 1rem;
+    border-radius: 50%;
+    background: var(--ds-violeta-700);
+    color: #fff;
+    font-weight: 700;
+}
+
+.portada-pasos h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: .4rem; }
+.portada-pasos p { color: var(--ds-texto-2); margin: 0; }
+
+.portada-migracion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    margin-top: 2rem;
+    padding: 1.5rem 1.75rem;
+    border: 1px solid var(--ds-violeta-200);
+    border-radius: var(--ds-radio-lg);
+    background: var(--ds-violeta-50);
+}
+
+.portada-migracion h3 { font-size: 1.0625rem; font-weight: 700; margin-bottom: .25rem; }
+.portada-migracion p { color: var(--ds-texto-2); margin: 0; }
+
+/* ---- 4. Planes ---- */
+.portada-plan {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 2rem 1.75rem 1.75rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-lg);
+    background: var(--ds-superficie);
+}
+
+.portada-plan-destacado { border: 2px solid var(--ds-violeta-700); box-shadow: var(--ds-sombra-2); }
+
+.portada-plan-sello {
+    position: absolute;
+    top: -.8rem;
+    left: 1.75rem;
+    padding: .2rem .7rem;
+    border-radius: 999px;
+    background: var(--ds-violeta-700);
+    color: #fff;
+    font-size: .75rem;
+    font-weight: 700;
+}
+
+.portada-plan h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: .25rem; }
+.portada-plan-descripcion { color: var(--ds-texto-3); font-size: .9375rem; margin-bottom: 0; }
+
+.portada-plan-precio { margin: 1.25rem 0 1.25rem; }
+.portada-plan-precio del { display: block; color: var(--ds-texto-3); font-size: .9375rem; }
+.portada-plan-precio strong { font-size: 2.5rem; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+.portada-plan-precio span { color: var(--ds-texto-3); font-size: .9375rem; margin-left: .25rem; }
+
+.portada-plan ul { flex: 1; margin: 0 0 1.5rem; padding: 0; list-style: none; }
+.portada-plan li { padding: .3rem 0; color: var(--ds-texto-2); }
+.portada-plan li i { color: var(--ds-exito); margin-right: .4rem; }
+
+/* ---- 5. Pacientes ---- */
+.portada-pacientes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+    align-items: center;
+}
+
+@media (min-width: 768px) {
+    .portada-pacientes { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 4rem; }
+}
+
+.portada-pacientes p { margin-bottom: 1.25rem; }
+
+.portada-pacientes-lista { margin: 0 0 1.5rem; padding: 0; list-style: none; }
+.portada-pacientes-lista li { padding: .3rem 0; color: var(--ds-texto-2); }
+.portada-pacientes-lista i { color: var(--ds-violeta-700); margin-right: .5rem; }
+
+.portada-pacientes-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem; margin-bottom: 1.75rem; }
+
+.portada-enlace { color: var(--ds-violeta-700); font-weight: 600; text-decoration: none; }
+.portada-enlace:hover, .portada-enlace:focus-visible { color: var(--ds-violeta-800); text-decoration: underline; }
+
+/* El lienzo del teléfono no necesita la altura que tenía en la landing anterior. */
+.portada-pacientes .porque-lienzo-paciente { min-height: 0; padding: 2rem; }
+
+.portada-especialidades { display: flex; flex-wrap: wrap; gap: .5rem; }
+
+/* La galería viene de `landing-por-que.css`; acá sólo se acerca a la lista de funciones. */
+.portada-seccion .porque-galeria { margin-top: 3.5rem; }
+
+.portada-especialidades a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: .45rem 1rem;
+    border: 1px solid var(--ds-borde-2);
+    border-radius: 999px;
+    background: var(--ds-superficie);
+    color: var(--ds-texto-2);
+    font-size: .9375rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color var(--ds-dur-base) var(--ds-ease), color var(--ds-dur-base) var(--ds-ease);
+}
+
+.portada-especialidades a:hover { border-color: var(--ds-violeta-700); color: var(--ds-violeta-700); }
+
+/* ---- 6. Cierre ---- */
+.portada-cierre {
+    padding: clamp(3.5rem, 7vw, 5rem) 0;
+    color: #fff;
+    text-align: center;
+    background: linear-gradient(135deg, var(--ds-violeta-900) 0%, var(--ds-violeta-700) 100%);
+}
+
+.portada-cierre h2 {
+    max-width: 36rem;
+    margin: 0 auto 1.75rem;
+    font-size: clamp(1.6rem, 3.2vw, 2.4rem);
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.15;
+}
+
+.portada-cierre h2 span { color: var(--ds-violeta-200); }
+.portada-cierre p { margin: 1.25rem 0 0; color: rgba(255, 255, 255, .85); font-size: .9375rem; }
+.portada-cierre p a { color: #fff; font-weight: 600; }
+.portada-cierre :focus-visible { outline-color: #fff; }
