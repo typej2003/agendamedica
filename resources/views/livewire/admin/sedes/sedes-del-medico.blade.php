@@ -106,16 +106,16 @@
                         </div>
                         <div class="modal-body">
                             <div class="btn-group mb-3" role="group" aria-label="Qué sede">
-                                <input type="radio" class="btn-check" id="modo-existente" value="existente" wire:model="modo">
+                                <input type="radio" class="btn-check" id="modo-existente" value="existente" wire:model.live="modo">
                                 <label class="btn btn-outline-primary" for="modo-existente">Sede existente</label>
-                                <input type="radio" class="btn-check" id="modo-nueva" value="nueva" wire:model="modo">
+                                <input type="radio" class="btn-check" id="modo-nueva" value="nueva" wire:model.live="modo">
                                 <label class="btn btn-outline-primary" for="modo-nueva">Sede nueva</label>
                             </div>
 
                             @if ($modo === 'existente')
                                 <div class="mb-3">
                                     <label class="form-label" for="sede-existente">Sede <span class="text-danger">*</span></label>
-                                    <select id="sede-existente" class="form-select @error('sede_existente_id') is-invalid @enderror" wire:model.defer="sede_existente_id">
+                                    <select id="sede-existente" class="form-select @error('sede_existente_id') is-invalid @enderror" wire:model="sede_existente_id">
                                         <option value="">Elige…</option>
                                         @foreach ($catalogo as $opcion)
                                             <option value="{{ $opcion->id }}">{{ $opcion->name }}{{ $opcion->city ? ' · ' . $opcion->city->name : '' }}</option>
@@ -132,12 +132,12 @@
                                 <div class="col-md-4">
                                     <label class="form-label" for="alta-numero">Consultorio <span class="text-danger">*</span></label>
                                     <input id="alta-numero" type="text" class="form-control @error('office_number') is-invalid @enderror"
-                                           wire:model.defer="office_number" placeholder="Ej.: 204">
+                                           wire:model="office_number" placeholder="Ej.: 204">
                                     @error('office_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label" for="alta-modalidad">Modalidad <span class="text-danger">*</span></label>
-                                    <select id="alta-modalidad" class="form-select @error('modalidad') is-invalid @enderror" wire:model.defer="modalidad">
+                                    <select id="alta-modalidad" class="form-select @error('modalidad') is-invalid @enderror" wire:model="modalidad">
                                         @foreach ($modalidades as $valor => $etiqueta)
                                             <option value="{{ $valor }}">{{ $etiqueta }}</option>
                                         @endforeach
@@ -147,13 +147,13 @@
                                 <div class="col-md-4">
                                     <label class="form-label" for="alta-duracion">Duración de la cita (min)</label>
                                     <input id="alta-duracion" type="number" min="5" max="480" class="form-control @error('duracion_cita') is-invalid @enderror"
-                                           wire:model.defer="duracion_cita">
+                                           wire:model="duracion_cita">
                                     @error('duracion_cita') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label" for="alta-telefono-consultorio">Teléfono del consultorio</label>
                                     <input id="alta-telefono-consultorio" type="text" class="form-control @error('office_phone') is-invalid @enderror"
-                                           wire:model.defer="office_phone">
+                                           wire:model="office_phone">
                                     @error('office_phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             </div>

@@ -180,7 +180,8 @@ class ContextoDoctorYCentroWebTest extends TestCase
         ['user' => $user, 'doctor' => $doctor, 'centros' => $centros] = $this->doctorConDosCentros();
 
         $delCentro = $this->consultorio($centros[0]->reg_medico, $centros[0]->id, 'C1');
-        $delOtroDoctor = $this->consultorio($centros[0]->reg_medico, $doctor->id + 999, 'C2');
+        $otroDoctor = $this->ficha('Dr. Otro', 'otro-' . substr(uniqid(), -6));
+        $delOtroDoctor = $this->consultorio($centros[0]->reg_medico, $otroDoctor->id, 'C2');
         // Y uno del registro personal del doctor, para que no se mezclen.
         $personal = $this->consultorio($doctor->reg_medico, $doctor->id, 'P1');
 

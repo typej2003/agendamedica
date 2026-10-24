@@ -17,11 +17,11 @@
             <div class="row align-items-center">
                 <div class="col-md-5">
                     <label class="visually-hidden" for="buscar-inicial">Buscar</label>
-                    <input type="text" id="buscar-inicial" wire:model.debounce.400ms="search" class="form-control" placeholder="Buscar por nombre o código...">
+                    <input type="text" id="buscar-inicial" wire:model.live.debounce.400ms="search" class="form-control" placeholder="Buscar por nombre o código...">
                 </div>
                 <div class="col-md-4 mt-2 mt-md-0">
                     <label class="visually-hidden" for="especialidad-inicial">Especialidad</label>
-                    <select id="especialidad-inicial" class="form-select" wire:model="especialidad">
+                    <select id="especialidad-inicial" class="form-select" wire:model.live="especialidad">
                         <option value="">Todas</option>
                         <option value="general">Generales</option>
                         @foreach ($especialidades as $id => $nombre)
@@ -34,7 +34,7 @@
         </div>
 
         @if ($catalogo === 'medicamentos')
-            {{-- La selección se lleva en el navegador (`wire:model.defer` + este script): marcar una casilla no hace ninguna petición; la selección viaja con «Combinar». --}}
+            {{-- La selección se lleva en el navegador (`wire:model` + este script): marcar una casilla no hace ninguna petición; la selección viaja con «Combinar». --}}
             <div id="barra-combinar" class="card-header bg-light py-2 flex-wrap align-items-center gap-2 {{ count($seleccion) > 0 ? 'd-flex' : 'd-none' }}" role="status" data-sel="{{ json_encode(array_values($seleccion)) }}">
                 <span class="small" data-barra-n>{{ count($seleccion) }} {{ count($seleccion) === 1 ? 'marcado' : 'marcados' }}</span>
                 <button type="button" class="btn btn-sm btn-primary" wire:click="abrirCombinar" data-barra-combinar @disabled(count($seleccion) < 2)>
@@ -55,7 +55,7 @@
                         @forelse ($filas as $fila)
                             <tr wire:key="ini-{{ $catalogo }}-{{ $fila->id }}">
                                 @if ($catalogo === 'medicamentos')
-                                    <td><input type="checkbox" class="form-check-input" value="{{ $fila->id }}" wire:model.defer="seleccion" aria-label="Marcar {{ trim((string) $fila->{$def['etiqueta']}) }} para combinar"></td>
+                                    <td><input type="checkbox" class="form-check-input" value="{{ $fila->id }}" wire:model="seleccion" aria-label="Marcar {{ trim((string) $fila->{$def['etiqueta']}) }} para combinar"></td>
                                 @endif
                                 <td><code>{{ trim((string) $fila->{$def['codigo']}) }}</code></td>
                                 <td class="fw-semibold">{{ trim((string) $fila->{$def['etiqueta']}) }}</td>
@@ -141,7 +141,7 @@
                                 <div class="d-flex flex-wrap gap-3">
                                     @foreach ($especialidades as $id => $nombre)
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="aplica-{{ $id }}" value="{{ $id }}" wire:model.defer="aplica">
+                                            <input class="form-check-input" type="checkbox" id="aplica-{{ $id }}" value="{{ $id }}" wire:model="aplica">
                                             <label class="form-check-label" for="aplica-{{ $id }}">{{ $nombre }}</label>
                                         </div>
                                     @endforeach
@@ -178,7 +178,7 @@
                                 <legend class="form-label fs-6 mb-1">Ficha que se conserva (mantiene su código)</legend>
                                 @foreach ($combinar['fichas'] as $ficha)
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="sobrevive" id="cmb-sobrevive-{{ $ficha['id'] }}" value="{{ $ficha['id'] }}" wire:model.defer="combinar.sobrevive">
+                                        <input class="form-check-input" type="radio" name="sobrevive" id="cmb-sobrevive-{{ $ficha['id'] }}" value="{{ $ficha['id'] }}" wire:model="combinar.sobrevive">
                                         <label class="form-check-label" for="cmb-sobrevive-{{ $ficha['id'] }}"><code>{{ $ficha['codigo'] }}</code> {{ $ficha['nombre'] }}</label>
                                     </div>
                                 @endforeach
@@ -189,15 +189,15 @@
                                 <div class="mb-3">
                                     @if ($tipo === 'porkilo')
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" role="switch" id="cmb-{{ $columna }}" wire:model.defer="c.{{ $columna }}">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="cmb-{{ $columna }}" wire:model="c.{{ $columna }}">
                                             <label class="form-check-label" for="cmb-{{ $columna }}">{{ $rotulo }}</label>
                                         </div>
                                     @else
                                         <label class="form-label" for="cmb-{{ $columna }}">{{ $rotulo }}@if ($requerido) <span class="text-danger" aria-hidden="true">*</span>@endif</label>
                                         @if ($tipo === 'area')
-                                            <textarea id="cmb-{{ $columna }}" rows="3" class="form-control" wire:model.defer="c.{{ $columna }}"></textarea>
+                                            <textarea id="cmb-{{ $columna }}" rows="3" class="form-control" wire:model="c.{{ $columna }}"></textarea>
                                         @else
-                                            <input type="text" id="cmb-{{ $columna }}" class="form-control" @if ($max > 0) maxlength="{{ $max }}" @endif wire:model.defer="c.{{ $columna }}">
+                                            <input type="text" id="cmb-{{ $columna }}" class="form-control" @if ($max > 0) maxlength="{{ $max }}" @endif wire:model="c.{{ $columna }}">
                                         @endif
                                         @if (count($combinar['opciones'][$columna] ?? []) > 1)
                                             <div class="mt-1 d-flex flex-column gap-1">
@@ -216,7 +216,7 @@
                                 <div class="d-flex flex-wrap gap-3">
                                     @foreach ($especialidades as $id => $nombre)
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="cmb-aplica-{{ $id }}" value="{{ $id }}" wire:model.defer="cAplica">
+                                            <input class="form-check-input" type="checkbox" id="cmb-aplica-{{ $id }}" value="{{ $id }}" wire:model="cAplica">
                                             <label class="form-check-label" for="cmb-aplica-{{ $id }}">{{ $nombre }}</label>
                                         </div>
                                     @endforeach
@@ -297,7 +297,7 @@
                             <div class="row g-3">
                                 <div class="col-md-7">
                                     <label class="form-label" for="lin-med">Medicamento del vademécum inicial</label>
-                                    <select id="lin-med" class="form-select" wire:model.defer="l.codemedicina">
+                                    <select id="lin-med" class="form-select" wire:model="l.codemedicina">
                                         <option value="">Elige…</option>
                                         @foreach ($medicamentos as $m)
                                             <option value="{{ $m->codemedicina }}">{{ trim($m->nombrecomercial . ' ' . $m->presentacion) }}</option>
@@ -306,11 +306,11 @@
                                 </div>
                                 <div class="col-md-5">
                                     <label class="form-label" for="lin-cant">Cantidad</label>
-                                    <input type="text" inputmode="numeric" id="lin-cant" class="form-control" wire:model.defer="l.cantidad">
+                                    <input type="text" inputmode="numeric" id="lin-cant" class="form-control" wire:model="l.cantidad">
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label" for="lin-ind">Indicaciones</label>
-                                    <textarea id="lin-ind" rows="2" class="form-control" wire:model.defer="l.indicaciones"></textarea>
+                                    <textarea id="lin-ind" rows="2" class="form-control" wire:model="l.indicaciones"></textarea>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-end gap-2 mt-3">

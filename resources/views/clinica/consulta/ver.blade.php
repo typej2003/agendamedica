@@ -202,7 +202,7 @@
     {{-- Las mediciones de pediatría (WEB-7.4.3a): el IMC y el AC se recalculan al escribir el peso o la talla. --}}
     <script src="{{ asset('js/clinica/consulta-mediciones.js') }}"></script>
     {{-- El panel lateral de plantillas con buscador (WEB-11.2): evolución, solapas de texto del examen, dieta e informe. --}}
-    <script src="{{ asset('js/clinica/plantillas-panel.js') }}"></script>
+    <script src="{{ asset('js/clinica/plantillas-panel.js') }}?v={{ @filemtime(public_path('js/clinica/plantillas-panel.js')) }}"></script>
     {{-- Las plantillas del **formato** del estudio (O-17): completan sólo los campos vacíos del eco y guardan
          los campos descriptivos como plantilla, sin pisar lo escrito. --}}
     <script src="{{ asset('js/clinica/plantillas-formato.js') }}"></script>

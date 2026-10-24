@@ -73,18 +73,18 @@
         <div class="card-header bg-white py-3">
             <div class="row g-2">
                 <div class="col-md-6">
-                    <input type="text" wire:model.debounce.400ms="search" class="form-control"
+                    <input type="text" wire:model.live.debounce.400ms="search" class="form-control"
                            placeholder="Buscar por referencia, consultorio o concepto...">
                 </div>
                 <div class="col-md-3">
-                    <select class="form-select" wire:model="estado" aria-label="Filtrar por estado">
+                    <select class="form-select" wire:model.live="estado" aria-label="Filtrar por estado">
                         @foreach ($estados as $clave => $etiqueta)
                             <option value="{{ $clave }}">{{ $etiqueta }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <select class="form-select" wire:model="canal" aria-label="Filtrar por canal">
+                    <select class="form-select" wire:model.live="canal" aria-label="Filtrar por canal">
                         @foreach ($canales as $clave => $etiqueta)
                             <option value="{{ $clave }}">{{ $etiqueta }}</option>
                         @endforeach

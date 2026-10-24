@@ -24,7 +24,7 @@
         <div class="card-header bg-white py-3">
             <div class="row">
                 <div class="col-md-5">
-                    <input type="text" wire:model.debounce.400ms="search" class="form-control"
+                    <input type="text" wire:model.live.debounce.400ms="search" class="form-control"
                            placeholder="{{ $pestana === 'medicos' ? 'Buscar por nombre, correo o registro...' : 'Buscar por nombre o correo...' }}">
                 </div>
             </div>
@@ -216,28 +216,28 @@
                                 @if ($tipoAlta === 'medico')
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Prefijo</label>
-                                        <input type="text" class="form-control" maxlength="20" placeholder="Dr" wire:model.defer="prefix">
+                                        <input type="text" class="form-control" maxlength="20" placeholder="Dr" wire:model="prefix">
                                         @error('prefix') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                     </div>
                                 @endif
 
                                 <div class="{{ $tipoAlta === 'administrador' ? 'col-12' : 'col-md-4' }} mb-3">
                                     <label class="form-label">{{ $tipoAlta === 'administrador' ? 'Nombre' : 'Nombres' }} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" wire:model.defer="name">
+                                    <input type="text" class="form-control" wire:model="name">
                                     @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
                                 </div>
 
                                 @if ($tipoAlta === 'medico')
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Apellidos <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" wire:model.defer="lastname">
+                                        <input type="text" class="form-control" wire:model="lastname">
                                         @error('lastname') <span class="text-danger small">{{ $message }}</span> @enderror
                                     </div>
                                 @endif
 
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Correo @if (! $es_centro) <span class="text-danger">*</span> @endif</label>
-                                    <input type="email" class="form-control" wire:model.defer="email" autocomplete="off">
+                                    <input type="email" class="form-control" wire:model="email" autocomplete="off">
                                     @if ($es_centro)
                                         <div class="form-text">Opcional: un centro médico no inicia sesión.</div>
                                     @endif
@@ -247,7 +247,7 @@
                                 @if ($tipoAlta === 'medico')
                                     <div class="col-12 mb-3">
                                         <label class="form-label">Registro médico (reg_medico)</label>
-                                        <input type="text" class="form-control" wire:model.defer="reg_medico" autocomplete="off" placeholder="Vacío = se genera uno">
+                                        <input type="text" class="form-control" wire:model="reg_medico" autocomplete="off" placeholder="Vacío = se genera uno">
                                         <div class="form-text">Vacío = se genera uno (med_00001, med_00002…).</div>
                                         @error('reg_medico') <span class="text-danger small">{{ $message }}</span> @enderror
                                     </div>
@@ -257,7 +257,7 @@
                                          los doctores; el centro no atiende. --}}
                                     <div class="col-12 mb-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="alta-es-centro" wire:model="es_centro">
+                                            <input class="form-check-input" type="checkbox" id="alta-es-centro" wire:model.live="es_centro">
                                             <label class="form-check-label" for="alta-es-centro">
                                                 <strong>Es centro médico</strong>
                                                 <span class="d-block form-text mb-0">
@@ -272,7 +272,7 @@
 
                                 <div class="col-12 mb-1">
                                     <label class="form-label">Contraseña temporal</label>
-                                    <input type="text" class="form-control" wire:model.defer="clave" autocomplete="off"
+                                    <input type="text" class="form-control" wire:model="clave" autocomplete="off"
                                            placeholder="{{ $es_centro ? 'No se usa: un centro no inicia sesión' : 'Vacío = se genera una' }}"
                                            {{ $es_centro ? 'disabled' : '' }}>
                                     <div class="form-text">Mínimo 8 caracteres. En su primer inicio de sesión se le obliga a cambiarla.</div>
@@ -306,7 +306,7 @@
                             @error('email') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
                             @error('medico') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
                             <label class="form-label">Contraseña temporal</label>
-                            <input type="text" class="form-control" wire:model.defer="clave" autocomplete="off" placeholder="Vacío = se genera una">
+                            <input type="text" class="form-control" wire:model="clave" autocomplete="off" placeholder="Vacío = se genera una">
                             <div class="form-text">Mínimo 8 caracteres. Se le obliga a cambiarla en el primer inicio de sesión.</div>
                             @error('password') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
@@ -333,7 +333,7 @@
                         <div class="modal-body">
                             <p>Se le pondrá una clave temporal y se <strong>cerrarán todas sus sesiones</strong>. En su próximo inicio de sesión tendrá que elegir una clave nueva.</p>
                             <label class="form-label">Contraseña temporal</label>
-                            <input type="text" class="form-control" wire:model.defer="clave" autocomplete="off" placeholder="Vacío = se genera una">
+                            <input type="text" class="form-control" wire:model="clave" autocomplete="off" placeholder="Vacío = se genera una">
                             @error('password') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                         <div class="modal-footer">
@@ -360,7 +360,7 @@
                             @error('cuenta') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
                             <p>No podrá usar el app ni el panel y se cerrarán sus sesiones. <strong>La sincronización del escritorio no se corta</strong>: sus datos siguen respaldándose.</p>
                             <label class="form-label">Motivo (opcional)</label>
-                            <input type="text" class="form-control" wire:model.defer="motivo" maxlength="255" placeholder="Ej.: falta de pago">
+                            <input type="text" class="form-control" wire:model="motivo" maxlength="255" placeholder="Ej.: falta de pago">
                             @error('motivo') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                         <div class="modal-footer">
@@ -388,28 +388,28 @@
                                 @if ($tipoEdicion === 'medico')
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Prefijo</label>
-                                        <input type="text" class="form-control" maxlength="20" placeholder="Dr" wire:model.defer="prefix">
+                                        <input type="text" class="form-control" maxlength="20" placeholder="Dr" wire:model="prefix">
                                         @error('prefix') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                     </div>
                                 @endif
 
                                 <div class="{{ $tipoEdicion === 'administrador' ? 'col-12' : 'col-md-4' }} mb-3">
                                     <label class="form-label">{{ $tipoEdicion === 'administrador' ? 'Nombre' : 'Nombres' }} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" wire:model.defer="name">
+                                    <input type="text" class="form-control" wire:model="name">
                                     @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
                                 </div>
 
                                 @if ($tipoEdicion === 'medico')
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Apellidos <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" wire:model.defer="lastname">
+                                        <input type="text" class="form-control" wire:model="lastname">
                                         @error('lastname') <span class="text-danger small">{{ $message }}</span> @enderror
                                     </div>
                                 @endif
 
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Correo @if (! $es_centro) <span class="text-danger">*</span> @endif</label>
-                                    <input type="email" class="form-control" wire:model.defer="email" autocomplete="off">
+                                    <input type="email" class="form-control" wire:model="email" autocomplete="off">
                                     <div class="form-text">
                                         {{ $es_centro ? 'Opcional: un centro médico no inicia sesión.' : 'Es el correo con el que inicia sesión.' }}
                                     </div>
@@ -419,12 +419,12 @@
                                 @if ($tipoEdicion === 'medico')
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Teléfono</label>
-                                        <input type="text" class="form-control" wire:model.defer="phone">
+                                        <input type="text" class="form-control" wire:model="phone">
                                         @error('phone') <span class="text-danger small">{{ $message }}</span> @enderror
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Número de licencia</label>
-                                        <input type="text" class="form-control" wire:model.defer="license_number">
+                                        <input type="text" class="form-control" wire:model="license_number">
                                         @error('license_number') <span class="text-danger small">{{ $message }}</span> @enderror
                                     </div>
                                     <div class="col-12 mb-3">
@@ -440,7 +440,7 @@
                                          fila; Fase 5 de la impresión). --}}
                                     <div class="col-12 mb-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="editar-es-centro" wire:model="es_centro">
+                                            <input class="form-check-input" type="checkbox" id="editar-es-centro" wire:model.live="es_centro">
                                             <label class="form-check-label" for="editar-es-centro">
                                                 <strong>Es centro médico</strong>
                                                 <span class="d-block form-text mb-0">
@@ -453,7 +453,7 @@
                                     @if ($es_centro)
                                         <div class="col-12 mb-1">
                                             <label class="form-label" for="editar-formato">Formato de los reportes</label>
-                                            <select class="form-select" id="editar-formato" wire:model.defer="formato_reportes">
+                                            <select class="form-select" id="editar-formato" wire:model="formato_reportes">
                                                 <option value="">— Sin elegir (se usa el del médico) —</option>
                                                 @foreach ($formatosDeReporte as $formato)
                                                     <option value="{{ $formato }}">{{ $formato === 'centro' ? 'Del centro' : 'Del médico' }}</option>
@@ -507,7 +507,7 @@
 
                             @foreach ($rolesDisponibles as $rol)
                                 <div class="form-check mb-2" wire:key="rol-{{ $rol }}">
-                                    <input class="form-check-input" type="checkbox" id="rol-{{ $rol }}" value="{{ $rol }}" wire:model.defer="rolesSeleccionados">
+                                    <input class="form-check-input" type="checkbox" id="rol-{{ $rol }}" value="{{ $rol }}" wire:model="rolesSeleccionados">
                                     <label class="form-check-label" for="rol-{{ $rol }}">
                                         <span class="fw-semibold">{{ $rol }}</span>
                                         @if (isset($descripciones[$rol]))
@@ -585,7 +585,7 @@
                                 </p>
                             @else
                                 <form wire:submit.prevent="vincularDoctorAlCentro" class="d-flex gap-2">
-                                    <select class="form-select" wire:model.defer="doctorNuevo" aria-label="doctor a vincular al centro">
+                                    <select class="form-select" wire:model="doctorNuevo" aria-label="doctor a vincular al centro">
                                         <option value="">Elegir un doctor…</option>
                                         @foreach ($doctoresVinculables as $doctor)
                                             <option value="{{ $doctor->id }}">{{ trim($doctor->name . ' ' . $doctor->lastname) }} ({{ $doctor->reg_medico }})</option>
@@ -623,7 +623,7 @@
                             </ul>
 
                             <form wire:submit.prevent="asignarRegistro" class="d-flex gap-2">
-                                <select class="form-select" wire:model.defer="regNuevo" aria-label="reg_medico a asignar">
+                                <select class="form-select" wire:model="regNuevo" aria-label="reg_medico a asignar">
                                     <option value="">Asignar un reg_medico…</option>
                                     @foreach ($asignables as $reg => $etiqueta)
                                         <option value="{{ $reg }}">{{ $etiqueta }}</option>

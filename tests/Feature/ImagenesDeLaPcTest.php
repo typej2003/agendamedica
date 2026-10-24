@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use App\Clinica\Archivos\ArchivosClinicos;
 use App\Models\ImagenDeLaPc;
 use App\Models\Medico;
@@ -343,7 +344,7 @@ class ImagenesDeLaPcTest extends TestCase
 
     // ------------------------------------------------------------------------------------ 3) subir
 
-    /** @dataProvider formatos */
+    #[DataProvider('formatos')]
     public function test_sube_cada_formato_por_su_contenido_con_nombre_del_servidor(string $formato, string $mime, string $extension): void
     {
         $a = $this->medico();

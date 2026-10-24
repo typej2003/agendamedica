@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Support;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use App\Support\HoraLocal;
 use Carbon\Carbon;
 use Tests\TestCase;
@@ -13,7 +14,7 @@ use Tests\TestCase;
  */
 class HoraLocalTest extends TestCase
 {
-    /** @dataProvider horas */
+    #[DataProvider('horas')]
     public function test_hora12_formatea_una_hora_local(string $entrada, string $esperada): void
     {
         $this->assertSame($esperada, HoraLocal::hora12($entrada));

@@ -97,8 +97,8 @@ class ListadoDeEmbarazosTest extends TestCase
         $this->assertSame('1996-10-14', $nacimiento->hasta());
 
         // Los bordes: el que nace en el extremo alto cumple 30 hoy; el del día anterior ya cumplió 31.
-        $this->assertSame(30, Carbon::createFromFormat('!Y-m-d', $nacimiento->hasta())->diffInYears($this->hoy()));
-        $this->assertSame(31, Carbon::createFromFormat('!Y-m-d', $nacimiento->desde())->subDay()->diffInYears($this->hoy()));
+        $this->assertSame(30, (int) Carbon::createFromFormat('!Y-m-d', $nacimiento->hasta())->diffInYears($this->hoy()));
+        $this->assertSame(31, (int) Carbon::createFromFormat('!Y-m-d', $nacimiento->desde())->subDay()->diffInYears($this->hoy()));
 
         // Por defecto, 1..110.
         $porDefecto = FiltroDeEmbarazos::de([], $this->hoy())->rangoDeNacimiento();

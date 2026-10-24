@@ -4,22 +4,32 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Livewire en una subcarpeta del dominio
+    | Livewire 3 sobre la estructura de siempre
     |--------------------------------------------------------------------------
     |
-    | Livewire arma la URL de su script (`/livewire/livewire.js`) y la de sus peticiones
-    | (`/livewire/message/...`) desde la raíz del dominio. Si la app no vive en la raíz —el QA en
-    | `https://ddrsistemas.com/medic-report`, donde la raíz es otra app Laravel con Livewire—, esas
-    | peticiones caen en la otra app y vuelven con 419 (la pestaña no cambia, el formulario no guarda).
+    | Livewire 3 cambió el namespace por defecto a `App\Livewire` y el layout de
+    | página a `components.layouts.app`. La app sigue con `App\Http\Livewire` y
+    | `layouts.app`, así que se declaran acá. `inject_assets` va en false porque
+    | los layouts cargan `@livewireStyles` y el parcial `layouts._livewire-scripts`.
     |
-    | En ese servidor se ponen las dos con la URL de la app (`LIVEWIRE_ASSET_URL` y `LIVEWIRE_APP_URL`).
-    | Sin ellas quedan en `null`, que es el default del paquete: local, mercadoexpres y producción no
-    | cambian. El resto de la configuración sale del paquete (`mergeConfigFrom` completa lo que falta).
+    | `@livewireScripts` arma el src y el `data-update-uri` relativos a la raíz
+    | (`/livewire/...`), que bajo la subcarpeta de QA (`/medic-report`) pegan en
+    | el dominio equivocado. Por eso el tag se arma en
+    | `layouts/_livewire-scripts.blade.php` con `url()`, que respeta la
+    | subcarpeta; no hacen falta `setUpdateRoute()` ni `setScriptRoute()`.
     |
     */
 
-    'asset_url' => env('LIVEWIRE_ASSET_URL'),
+    'class_namespace' => 'App\\Http\\Livewire',
 
-    'app_url' => env('LIVEWIRE_APP_URL'),
+    'view_path' => resource_path('views/livewire'),
+
+    'layout' => 'layouts.app',
+
+    'pagination_theme' => 'bootstrap',
+
+    'inject_assets' => false,
+
+    'legacy_model_binding' => false,
 
 ];

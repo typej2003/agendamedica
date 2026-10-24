@@ -103,7 +103,14 @@ final class ReglasDelFormato
                 ? ['alineacion', 'fuente', 'negrita', 'italica', 'subrayado', 'borde', 'visible']
                 : ['alineacion', 'tamano', 'borde', 'visible'];
 
-            foreach (array_intersect_key($elementos[$elemento], array_flip($permitidas)) as $opcion => $valor) {
+            // Se recorre la lista canónica y no el arreglo recibido: desde Laravel 9 `validated()` arma el arreglo
+            // en el orden de las reglas, así que el JSON guardado quedaría con un orden distinto en cada versión.
+            foreach ($permitidas as $opcion) {
+                if (! array_key_exists($opcion, $elementos[$elemento])) {
+                    continue;
+                }
+
+                $valor = $elementos[$elemento][$opcion];
                 $resultado[$elemento][$opcion] = in_array($opcion, self::OPCIONES_BOOLEANAS, true)
                     ? filter_var($valor, FILTER_VALIDATE_BOOLEAN)
                     : $valor;

@@ -8,7 +8,7 @@
 
 <x-ui.tarjeta titulo="Examen ginecológico" icono="bi-gender-female">
     <x-slot name="acciones">
-        <x-ui.plantillas :plantillas="$seccion->plantillasGinecologico()" destino="#total_g" tipo="EG"
+        <x-ui.plantillas :plantillas="$seccion->plantillasGinecologico()" destino="#total_g" tipo="EG" repartir="#evaluacion-form"
                          nombre="examen ginecológico" />
         <span class="texto-tenue small me-2">{{ $seccion->cargados() }} de {{ $seccion->totalCampos() }} campos con dato</span>
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"

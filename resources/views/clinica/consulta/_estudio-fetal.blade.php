@@ -54,6 +54,7 @@
                             </div>
                         @else
                             @include('clinica.consulta._estudio-campo', [
+                                'omitirEtiqueta' => isset($grupo) && count($grupo['campos']) === 1 && mb_strtolower(trim($campo['etiqueta'])) === mb_strtolower(trim($grupo['titulo'])),
                                 'campo' => $campo,
                                 'columnas' => ($campo['tipo'] ?? 'texto') === 'area' ? 'col-12' : 'col-6 col-md-4',
                             ])

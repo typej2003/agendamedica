@@ -49,7 +49,7 @@
        con-old (false si el formulario comparte 
 ame con otro), required, disabled, placeholder, error (mensaje; si falta se toma de `$errors` del campo).
 
-     Livewire 2: los atributos extra (`wire:model.defer="city_id"`) van al input oculto; el control va en `wire:ignore`
+     Livewire 3: los atributos extra (`wire:model="city_id"`) van al input oculto; el control va en `wire:ignore`
      y el mensaje de error queda fuera para que se actualice. Cada cambio dispara `input` y `change` en el oculto. --}}
 @php
     $campoId = $id ?? 'selector-' . preg_replace('/[^A-Za-z0-9_-]/', '-', $name);

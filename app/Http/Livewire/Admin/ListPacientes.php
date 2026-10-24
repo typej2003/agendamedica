@@ -53,7 +53,7 @@ class ListPacientes extends Component
     public function create()
     {
         $this->resetFields();
-        $this->dispatchBrowserEvent('open-modal-paciente');
+        $this->dispatch('open-modal-paciente');
     }
 
     public function edit($id)
@@ -71,7 +71,7 @@ class ListPacientes extends Component
         $this->email = $paciente->email;
         $this->direccion = $paciente->direccion;
 
-        $this->dispatchBrowserEvent('open-modal-paciente');
+        $this->dispatch('open-modal-paciente');
     }
 
     public function save()
@@ -95,14 +95,14 @@ class ListPacientes extends Component
             ]
         );
 
-        $this->dispatchBrowserEvent('close-modal-paciente');
+        $this->dispatch('close-modal-paciente');
         session()->flash('message', $this->paciente_id ? 'Paciente actualizado correctamente.' : 'Paciente registrado correctamente.');
         $this->resetFields();
     }
 
     public function triggerDeleteConfirm($id)
     {
-        $this->dispatchBrowserEvent('show-delete-confirmation-paciente', ['id' => $id]);
+        $this->dispatch('show-delete-confirmation-paciente', id: $id);
     }
 
     public function delete($id)

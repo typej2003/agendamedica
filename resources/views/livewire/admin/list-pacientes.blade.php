@@ -10,7 +10,7 @@
     <x-ui.avisos />
 
     <div class="mb-3">
-        <input type="text" class="form-control" placeholder="Buscar por cédula, nombre o apellido..." wire:model="search">
+        <input type="text" class="form-control" placeholder="Buscar por cédula, nombre o apellido..." wire:model.live="search">
     </div>
 
     <div class="table-responsive">
@@ -68,7 +68,7 @@
                         <div class="row">
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">Nacionalidad <span class="text-danger">*</span></label>
-                                <select class="form-select" wire:model.defer="nac">
+                                <select class="form-select" wire:model="nac">
                                     <option value="V">V - Venezolano</option>
                                     <option value="E">E - Extranjero</option>
                                     <option value="P">P - Pasaporte</option>
@@ -77,24 +77,24 @@
                             </div>
                             <div class="col-md-9 mb-3">
                                 <label class="form-label">Cédula / Documento <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model.defer="cedula">
+                                <input type="text" class="form-control" wire:model="cedula">
                                 @error('cedula') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Nombres <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model.defer="nombres">
+                                <input type="text" class="form-control" wire:model="nombres">
                                 @error('nombres') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Apellidos <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model.defer="apellidos">
+                                <input type="text" class="form-control" wire:model="apellidos">
                                 @error('apellidos') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Sexo</label>
-                                <select class="form-select" wire:model.defer="sexo">
+                                <select class="form-select" wire:model="sexo">
                                     <option value="">Seleccione...</option>
                                     <option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
@@ -103,18 +103,18 @@
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Teléfono</label>
-                                <input type="text" class="form-control" wire:model.defer="telefono">
+                                <input type="text" class="form-control" wire:model="telefono">
                                 @error('telefono') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Email</label>
-                                <input type="email" class="form-control" wire:model.defer="email">
+                                <input type="email" class="form-control" wire:model="email">
                                 @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Dirección</label>
-                                <textarea class="form-control" rows="2" wire:model.defer="direccion"></textarea>
+                                <textarea class="form-control" rows="2" wire:model="direccion"></textarea>
                                 @error('direccion') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -164,12 +164,12 @@
                         cancelButtonText: 'Cancelar'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            Livewire.emit('confirmDeletePaciente', id);
+                            Livewire.dispatch('confirmDeletePaciente', { id: id });
                         }
                     });
                 } else {
                     if (confirm('¿Está seguro de eliminar este paciente?')) {
-                        Livewire.emit('confirmDeletePaciente', id);
+                        Livewire.dispatch('confirmDeletePaciente', { id: id });
                     }
                 }
             });

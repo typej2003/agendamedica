@@ -21,6 +21,39 @@
         campo.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
+    // Reparte el texto de una plantilla en los cuadros del formulario por su rótulo (2026-10-23): «GENERAL: sin hallazgos.
+    // TIROIDES: no palpable.» llena «General» y «Tiroides». Es el formato del resumen del examen, así que la plantilla
+    // «NORMAL» del escritorio sirve tal cual. Sólo toca los cuadros de texto (`textarea`) cuyos rótulos aparecen; las
+    // medidas (peso, talla…) son del paciente y nunca se rellenan desde una plantilla.
+    function repartir(formulario, texto) {
+        if (!formulario) { return; }
+
+        var cuadros = [];
+        formulario.querySelectorAll('label[for]').forEach(function (rotulo) {
+            var cuadro = document.getElementById(rotulo.getAttribute('for'));
+            var nombre = normal(rotulo.textContent).replace(/[*:]/g, '').replace(/\s+/g, ' ').trim();
+            if (cuadro && cuadro.tagName === 'TEXTAREA' && nombre !== '') { cuadros.push({ cuadro: cuadro, nombre: nombre }); }
+        });
+
+        var plano = normal(texto).replace(/\s+/g, ' ');
+        var original = texto.replace(/\s+/g, ' ');
+        var hallados = [];
+        cuadros.forEach(function (c) {
+            var posicion = plano.indexOf(c.nombre + ':');
+            // El rótulo tiene que empezar el texto o una palabra: «MAMA DERECHA:» no puede ser «DERECHA:».
+            if (posicion !== -1 && (posicion === 0 || /[\s.]/.test(plano.charAt(posicion - 1)))) {
+                hallados.push({ cuadro: c.cuadro, desde: posicion, largo: c.nombre.length + 1 });
+            }
+        });
+
+        hallados.sort(function (a, b) { return a.desde - b.desde; });
+        hallados.forEach(function (h, i) {
+            var hasta = i + 1 < hallados.length ? hallados[i + 1].desde : original.length;
+            var valor = original.slice(h.desde + h.largo, hasta).trim().replace(/\.$/, '').trim();
+            escribir(h.cuadro, valor);
+        });
+    }
+
     document.querySelectorAll('[data-plantillas-panel]').forEach(function (panel) {
         var campo = document.querySelector(panel.dataset.destino);
         var campoTitulo = panel.dataset.tituloDestino ? document.querySelector(panel.dataset.tituloDestino) : null;
@@ -71,6 +104,7 @@
             }
             escribir(campo, boton.dataset.plantillaTexto);
             if (campoTitulo) { escribir(campoTitulo, boton.dataset.plantillaTitulo); }
+            if (panel.dataset.repartir) { repartir(document.querySelector(panel.dataset.repartir), boton.dataset.plantillaTexto); }
             // Elegir una plantilla termina la tarea: el cajón se cierra y el foco vuelve solo al botón.
             cerrar();
         });

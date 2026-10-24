@@ -68,7 +68,11 @@ class CanalEscritorioController extends Controller
 
         abort_if($path === null, 404);
 
-        return Storage::disk($canal->disco())->response($path);
+        // El canal sirve binarios de Windows (`.exe`, `.bat`, `.vbs`). Laravel 11/Flysystem no
+        // reconocen `.vbs` y `mimeType()` lanza «Unable to retrieve the mime_type»; con el
+        // Content-Type explícito no se consulta y el launcher recibe siempre un binario.
+        return Storage::disk($canal->disco())
+            ->response($path, null, ['Content-Type' => 'application/octet-stream']);
     }
 
     /** El launcher publicado (`instalar.exe`), para volver a mandarlo sin compilarlo. */
@@ -78,7 +82,7 @@ class CanalEscritorioController extends Controller
 
         abort_unless($disco->exists($canal->rutaLauncher()), 404);
 
-        return $disco->response($canal->rutaLauncher());
+        return $disco->response($canal->rutaLauncher(), null, ['Content-Type' => 'application/octet-stream']);
     }
 
     /** Arranca (o retoma) una versión. Los archivos que no cambiaron se reutilizan. */

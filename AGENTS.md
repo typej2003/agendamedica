@@ -723,9 +723,18 @@ discontinuada** (Kotlin) — no la tomes como referencia de lo que este backend 
 un backend ya **desplegado** (`https://ddrsistemas.com/medic-report/api/`) que puede divergir de este código, y usa
 endpoints previos (`app/refresh-data`) en vez de `sync-app-data`.
 
-**Stack:** Laravel 8 (`laravel/framework ^8.0`), PHP `^8.0` (composer configurado con `platform 8.2.12`),
-MySQL (`DB_CONNECTION=mysql`), tokens con **Laravel Sanctum 2.15**, roles/permisos con
-**spatie/laravel-permission 6.25**, panel web con **Livewire 2.12**, CORS con `fruitcake/laravel-cors`.
+**Stack:** Laravel 13 (`laravel/framework ^13.0`, 13.38.0), PHP `^8.3` (composer configurado con
+`platform 8.3.36`), MySQL (`DB_CONNECTION=mysql`), tokens con **Laravel Sanctum 4.3**, roles/permisos con
+**spatie/laravel-permission 6.25**, panel web con **Livewire 3.8**, CORS con el middleware del framework
+(`Illuminate\Http\Middleware\HandleCors`) y tests con **PHPUnit 12.5** + **paratest 7.20**
+(`minimum-stability: stable`).
+
+**Subida de Laravel cerrada (2026-10-24):** 8 → 9 → 10 → **Livewire 3** → 11 → 12 → **13.38.0**. Los
+escalones 9, 10 y 11 son *waypoints* EOL y **no se despliegan**; el salto a producción se hace desde esta
+rama ya en **Laravel 13 y PHP 8.3**. `composer audit` queda limpio y el bloqueo de avisos está activo. Antes
+de desplegar: **cambiar Plesk a PHP 8.3**, `composer install`, `migrate --force` (la migración de Sanctum
+tiene guardas). Las URLs de Livewire se arman con `url()` en `layouts._livewire-scripts` para respetar la
+subcarpeta `/medic-report` (trampa 172). Ver las trampas 168 a 172.
 
 Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 

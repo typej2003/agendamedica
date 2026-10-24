@@ -17,7 +17,7 @@
             <div class="row align-items-center">
                 <div class="col-md-5">
                     <label class="visually-hidden" for="buscar-vacunas">Buscar vacuna</label>
-                    <input type="text" id="buscar-vacunas" wire:model.debounce.400ms="search" class="form-control"
+                    <input type="text" id="buscar-vacunas" wire:model.live.debounce.400ms="search" class="form-control"
                            placeholder="Buscar por nombre o código...">
                 </div>
                 <div class="col-md-7 text-md-end mt-2 mt-md-0 text-muted small">{{ $total }} {{ $total === 1 ? 'vacuna inicial' : 'vacunas iniciales' }}</div>
@@ -107,22 +107,22 @@
                             <div class="row g-3">
                                 <div class="col-md-3">
                                     <label class="form-label" for="vac-codigo">Código</label>
-                                    <input type="text" id="vac-codigo" class="form-control text-uppercase" maxlength="4" wire:model.defer="codi_vacuna">
+                                    <input type="text" id="vac-codigo" class="form-control text-uppercase" maxlength="4" wire:model="codi_vacuna">
                                     @error('codi_vacuna') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-md-9">
                                     <label class="form-label" for="vac-nombre">Vacuna</label>
-                                    <input type="text" id="vac-nombre" class="form-control" maxlength="100" wire:model.defer="vacuna">
+                                    <input type="text" id="vac-nombre" class="form-control" maxlength="100" wire:model="vacuna">
                                     @error('vacuna') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label" for="vac-edad">Edad inicial (meses)</label>
-                                    <input type="number" min="0" id="vac-edad" class="form-control" wire:model.defer="edad_inicial_meses">
+                                    <input type="number" min="0" id="vac-edad" class="form-control" wire:model="edad_inicial_meses">
                                     @error('edad_inicial_meses') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label" for="vac-fija">Tipo</label>
-                                    <select id="vac-fija" class="form-select" wire:model.defer="fija">
+                                    <select id="vac-fija" class="form-select" wire:model="fija">
                                         @foreach (\App\Clinica\Vacunas\ConvencionDeVacunas::FIJA as $codigo => $texto)
                                             <option value="{{ $codigo }}">{{ $texto }}</option>
                                         @endforeach
@@ -131,7 +131,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label" for="vac-sexo">Aplica a</label>
-                                    <select id="vac-sexo" class="form-select" wire:model.defer="sexo">
+                                    <select id="vac-sexo" class="form-select" wire:model="sexo">
                                         @foreach (\App\Clinica\Vacunas\ConvencionDeVacunas::SEXO as $codigo => $texto)
                                             <option value="{{ $codigo }}">{{ $texto }}</option>
                                         @endforeach
@@ -140,7 +140,7 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label" for="vac-cobertura">Cobertura</label>
-                                    <input type="text" id="vac-cobertura" class="form-control" maxlength="200" wire:model.defer="cobertura"
+                                    <input type="text" id="vac-cobertura" class="form-control" maxlength="200" wire:model="cobertura"
                                            placeholder="Contra qué enfermedades protege">
                                     @error('cobertura') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
@@ -207,17 +207,17 @@
                             <div class="row g-3">
                                 <div class="col-md-3">
                                     <label class="form-label" for="dos-numero">N.º de dosis</label>
-                                    <input type="number" min="1" id="dos-numero" class="form-control" wire:model.defer="dosis_numero">
+                                    <input type="number" min="1" id="dos-numero" class="form-control" wire:model="dosis_numero">
                                     @error('dosis_numero') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-md-5">
                                     <label class="form-label" for="dos-rotulo">Rótulo</label>
-                                    <input type="text" id="dos-rotulo" class="form-control" maxlength="50" wire:model.defer="dosis_descri" placeholder="1era. Dosis, Refuerzo…">
+                                    <input type="text" id="dos-rotulo" class="form-control" maxlength="50" wire:model="dosis_descri" placeholder="1era. Dosis, Refuerzo…">
                                     @error('dosis_descri') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label" for="dos-meses">Edad (meses)</label>
-                                    <input type="number" min="0" step="any" id="dos-meses" class="form-control" wire:model.defer="meses">
+                                    <input type="number" min="0" step="any" id="dos-meses" class="form-control" wire:model="meses">
                                     @error('meses') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -253,7 +253,7 @@
                         <p>Se quita del catálogo inicial. Los consultorios que ya la copiaron la conservan; los que no, ya no la recibirán.</p>
                         @if ($cuantas > 0)
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="confirma-borrado" wire:model="confirmaBorrado">
+                                <input class="form-check-input" type="checkbox" id="confirma-borrado" wire:model.live="confirmaBorrado">
                                 <label class="form-check-label" for="confirma-borrado">
                                     Entiendo que se borran también sus {{ $cuantas }} {{ $cuantas === 1 ? 'dosis' : 'dosis' }}.
                                 </label>

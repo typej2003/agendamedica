@@ -118,17 +118,17 @@
                                 <div class="col-md-6">
                                     <label class="form-label" for="consultorio-numero">Consultorio <span class="text-danger">*</span></label>
                                     <input id="consultorio-numero" type="text" class="form-control @error('office_number') is-invalid @enderror"
-                                           wire:model.defer="office_number" placeholder="Ej.: 204">
+                                           wire:model="office_number" placeholder="Ej.: 204">
                                     @error('office_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label" for="consultorio-telefono">Teléfono</label>
-                                    <input id="consultorio-telefono" type="text" class="form-control @error('phone') is-invalid @enderror" wire:model.defer="phone">
+                                    <input id="consultorio-telefono" type="text" class="form-control @error('phone') is-invalid @enderror" wire:model="phone">
                                     @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label" for="consultorio-modalidad">Modalidad <span class="text-danger">*</span></label>
-                                    <select id="consultorio-modalidad" class="form-select @error('modalidad') is-invalid @enderror" wire:model.defer="modalidad">
+                                    <select id="consultorio-modalidad" class="form-select @error('modalidad') is-invalid @enderror" wire:model="modalidad">
                                         @foreach ($modalidades as $valor => $etiqueta)
                                             <option value="{{ $valor }}">{{ $etiqueta }}</option>
                                         @endforeach
@@ -138,7 +138,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label" for="consultorio-duracion">Duración de la cita (min)</label>
                                     <input id="consultorio-duracion" type="number" min="5" max="480" class="form-control @error('duracion_cita') is-invalid @enderror"
-                                           wire:model.defer="duracion_cita">
+                                           wire:model="duracion_cita">
                                     @error('duracion_cita') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             </div>

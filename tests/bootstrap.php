@@ -113,3 +113,9 @@ fwrite(STDOUT, "Base de tests lista: {$donde}".PHP_EOL);
 // todos los tests -los de `DatabaseTransactions` y los de `RefreshDatabase`- corren contra lo mismo y
 // con rollback.
 RefreshDatabaseState::$migrated = true;
+
+// La app que se armo aca solo sirvio para migrar: no es la app de ningun test. Laravel 11 registra
+// handlers de error/excepcion al bootear y PHPUnit 11 compara ese stack antes y despues de cada test;
+// si quedan los de esta app, todos los tests salen "risky" («removed error handlers other than its
+// own»). Se descartan para que el stack quede como lo dejo PHPUnit.
+\Illuminate\Foundation\Bootstrap\HandleExceptions::flushState();

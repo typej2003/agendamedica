@@ -10,11 +10,11 @@
                 <div class="col-md-5">
                     <label class="form-label" for="buscar-reportes">Buscar</label>
                     <input id="buscar-reportes" type="text" class="form-control" placeholder="Médico, equipo o mensaje"
-                           wire:model.debounce.400ms="buscar">
+                           wire:model.live.debounce.400ms="buscar">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label" for="tipo-reportes">Origen</label>
-                    <select id="tipo-reportes" class="form-select" wire:model="tipo">
+                    <select id="tipo-reportes" class="form-select" wire:model.live="tipo">
                         <option value="">Todos</option>
                         @foreach ($tipos as $clave => $etiqueta)
                             <option value="{{ $clave }}">{{ $etiqueta }}</option>

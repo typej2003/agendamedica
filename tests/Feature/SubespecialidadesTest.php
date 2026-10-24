@@ -308,18 +308,18 @@ class SubespecialidadesTest extends TestCase
         $admin->assignRole('Root');
         $this->actingAs($admin);
 
-        $html = Livewire::test(Especialidades::class)->call('abrirAsignar', $medicoPediatra->id)->lastRenderedDom;
+        $html = Livewire::test(Especialidades::class)->call('abrirAsignar', $medicoPediatra->id)->html();
         $especialidades = strpos($html, '>Especialidades</h6>');
         $subespecialidades = strpos($html, '>Subespecialidades</h6>');
         $this->assertNotFalse($especialidades);
         $this->assertNotFalse($subespecialidades);
         $this->assertLessThan($subespecialidades, $especialidades);
         $this->assertGreaterThan($subespecialidades, strpos($html, 'Nefrología pediátrica'));
-        $this->assertDoesNotMatchRegularExpression('/id="postgrado-\d+" wire:model.defer="postgrados"\s+disabled/', $html);
+        $this->assertDoesNotMatchRegularExpression('/id="postgrado-\d+" wire:model="postgrados"\s+disabled/', $html);
 
         // Sin pediatría, sus postgrados se ven deshabilitados.
-        $html = Livewire::test(Especialidades::class)->call('abrirAsignar', $medicoGineco->id)->lastRenderedDom;
+        $html = Livewire::test(Especialidades::class)->call('abrirAsignar', $medicoGineco->id)->html();
         $this->assertStringContainsString('Nefrología pediátrica', $html);
-        $this->assertMatchesRegularExpression('/id="postgrado-\d+" wire:model.defer="postgrados"\s+disabled/', $html);
+        $this->assertMatchesRegularExpression('/id="postgrado-\d+" wire:model="postgrados"\s+disabled/', $html);
     }
 }

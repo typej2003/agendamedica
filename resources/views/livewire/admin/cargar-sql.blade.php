@@ -16,7 +16,7 @@
                         {{-- Selección del Médico --}}
                         <div class="mb-3">
                             <label for="medico_id" class="form-label fw-bold">1. Seleccionar Médico en Sistema</label>
-                            <select id="medico_id" class="form-select @error('medico_id') is-invalid @enderror" wire:model="medico_id">
+                            <select id="medico_id" class="form-select @error('medico_id') is-invalid @enderror" wire:model.live="medico_id">
                                 <option value="">-- Seleccione un Médico --</option>
                                 @foreach($medicos as $medico)
                                     <option value="{{ $medico->id }}">

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
 use App\Clinica\Impresion\DocumentoImpreso;
@@ -168,9 +169,7 @@ class ImpresionDeLosSieteEcosWebTest extends TestCase
 
     // ==================================================================== Con datos: botón y hoja
 
-    /**
-     * @dataProvider ecos
-     */
+    #[DataProvider('ecos')]
     public function test_con_datos_cada_eco_ofrece_el_boton_y_su_hoja_responde_200(
         string $tipo,
         string $documento,
@@ -195,9 +194,7 @@ class ImpresionDeLosSieteEcosWebTest extends TestCase
 
     // =================================================================== Sin datos: no se ofrece
 
-    /**
-     * @dataProvider ecos
-     */
+    #[DataProvider('ecos')]
     public function test_sin_datos_cada_eco_no_ofrece_la_hoja_pero_si_el_boton_que_guarda_e_imprime(
         string $tipo,
         string $documento,
@@ -230,9 +227,7 @@ class ImpresionDeLosSieteEcosWebTest extends TestCase
 
     // ================================================================ La hoja completa (O-26)
 
-    /**
-     * @dataProvider ecos
-     */
+    #[DataProvider('ecos')]
     public function test_el_modo_de_la_hoja_de_cada_eco_es_completa_y_vertical(
         string $tipo,
         string $documento,

@@ -317,7 +317,7 @@ class MetodosPagoAdminTest extends TestCase
             ->assertSee('Última actualización de la tasa')
             ->assertSee('Forzar actualización')
             // El switch tiene que venir encendido desde el servidor (la preferencia está activa).
-            ->assertSeeHtml('wire:model="tasaAutomatica" checked');
+            ->assertSeeHtml('wire:model.live="tasaAutomatica" checked');
     }
 
     public function test_probar_conexion_trae_los_bancos_y_valida_las_credenciales(): void

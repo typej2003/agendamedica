@@ -165,7 +165,7 @@
                     <div class="col-lg-6 border-start">
                         <div class="text-muted small fw-semibold mb-2">Sincronización con el BCV</div>
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="tasa_automatica" wire:model="tasaAutomatica" {{ $tasaAutomatica ? 'checked' : '' }}>
+                            <input class="form-check-input" type="checkbox" id="tasa_automatica" wire:model.live="tasaAutomatica" {{ $tasaAutomatica ? 'checked' : '' }}>
                             <label class="form-check-label" for="tasa_automatica">Sincronizar automáticamente desde el BCV</label>
                         </div>
                         <p class="form-text mb-3">Cada 30 minutos, de 5:00 a 21:00 (hora de Caracas).</p>
@@ -276,7 +276,7 @@
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Pasarela <span class="text-danger">*</span></label>
-                                    <select class="form-select" wire:model="pasarela">
+                                    <select class="form-select" wire:model.live="pasarela">
                                         @foreach ($pasarelas as $clave => $etiqueta)
                                             <option value="{{ $clave }}">{{ $etiqueta }}</option>
                                         @endforeach
@@ -285,7 +285,7 @@
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Variante <span class="text-danger">*</span></label>
-                                    <select class="form-select" wire:model.defer="variante">
+                                    <select class="form-select" wire:model="variante">
                                         @foreach ($variantes as $clave => $etiqueta)
                                             <option value="{{ $clave }}">{{ $etiqueta }}</option>
                                         @endforeach
@@ -294,7 +294,7 @@
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Entorno</label>
-                                    <select class="form-select" wire:model.defer="entorno">
+                                    <select class="form-select" wire:model="entorno">
                                         <option value="produccion">Producción</option>
                                         <option value="pruebas">Pruebas</option>
                                     </select>
@@ -304,7 +304,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Nombre visible <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model.defer="nombre" maxlength="100" autocomplete="off">
+                                <input type="text" class="form-control" wire:model="nombre" maxlength="100" autocomplete="off">
                                 <div class="form-text">Es lo que ve el médico o el paciente al elegir cómo pagar.</div>
                                 @error('nombre') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
@@ -313,14 +313,14 @@
                                 <div class="row">
                                     <div class="col-md-8 mb-3">
                                         <label class="form-label">Host de SyPago</label>
-                                        <input type="url" class="form-control" wire:model.defer="host" autocomplete="off"
+                                        <input type="url" class="form-control" wire:model="host" autocomplete="off"
                                                placeholder="https://app.sypago.net:8086/api/v1/">
                                         <div class="form-text">Producción o certificación (<code>https://pruebas.api.sypago.net/api/v1/</code>).</div>
                                         @error('host') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Tipo de credencial</label>
-                                        <select class="form-select" wire:model="tipoCredencial">
+                                        <select class="form-select" wire:model.live="tipoCredencial">
                                             <option value="api_key">API Key dinámica</option>
                                             <option value="jwt">JWT fijo</option>
                                         </select>
@@ -333,13 +333,13 @@
                                     <div class="row">
                                         <div class="col-md-5 mb-3">
                                             <label class="form-label">Usuario SyPago (client_id) <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" wire:model.defer="clientId" autocomplete="off"
+                                            <input type="text" class="form-control" wire:model="clientId" autocomplete="off"
                                                    placeholder="ddrs">
                                             @error('clientId') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                         </div>
                                         <div class="col-md-7 mb-3">
                                             <label class="form-label">API Key (secret) <span class="text-danger">*</span></label>
-                                            <input type="password" class="form-control" wire:model.defer="secret" autocomplete="new-password"
+                                            <input type="password" class="form-control" wire:model="secret" autocomplete="new-password"
                                                    placeholder="{{ $metodoId ? 'Dejar vacío para conservar' : 'La API Key de SyPago' }}">
                                             @error('secret') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                         </div>
@@ -347,7 +347,7 @@
                                 @else
                                     <div class="mb-3">
                                         <label class="form-label">JWT fijo <span class="text-danger">*</span></label>
-                                        <input type="password" class="form-control" wire:model.defer="accessToken" autocomplete="new-password"
+                                        <input type="password" class="form-control" wire:model="accessToken" autocomplete="new-password"
                                                placeholder="{{ $metodoId ? 'Dejar vacío para conservar' : 'El token que ya es el Bearer' }}">
                                         <div class="form-text">Se guarda cifrado. Sólo si SyPago te entregó un token sin expiración.</div>
                                         @error('accessToken') <span class="text-danger small d-block">{{ $message }}</span> @enderror
@@ -360,12 +360,12 @@
                                     <span class="form-label d-block">Para qué se ofrece</span>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="ofrece-planes" value="planes"
-                                               wire:model.defer="disponiblePara">
+                                               wire:model="disponiblePara">
                                         <label class="form-check-label" for="ofrece-planes">Planes de médicos</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="ofrece-cobros" value="cobros"
-                                               wire:model.defer="disponiblePara">
+                                               wire:model="disponiblePara">
                                         <label class="form-check-label" for="ofrece-cobros">Cobros a pacientes</label>
                                     </div>
                                     @error('disponiblePara') <span class="text-danger small d-block">{{ $message }}</span> @enderror
@@ -373,12 +373,12 @@
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Comisión por prestar el método (%)</label>
                                     <input type="number" min="0" max="100" step="0.01" class="form-control"
-                                           wire:model.defer="comisionPorcentaje" placeholder="Global">
+                                           wire:model="comisionPorcentaje" placeholder="Global">
                                     @error('comisionPorcentaje') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Orden</label>
-                                    <input type="number" min="0" class="form-control" wire:model.defer="orden">
+                                    <input type="number" min="0" class="form-control" wire:model="orden">
                                     @error('orden') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -388,24 +388,24 @@
                             <div class="row">
                                 <div class="col-md-3 mb-3">
                                     <label class="form-label">Código del banco <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" wire:model.defer="bancoCodigo" maxlength="4" placeholder="0172" autocomplete="off">
+                                    <input type="text" class="form-control" wire:model="bancoCodigo" maxlength="4" placeholder="0172" autocomplete="off">
                                     @error('bancoCodigo') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-md-5 mb-3">
                                     <label class="form-label">Número de cuenta <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" wire:model.defer="cuentaNumero" maxlength="30" autocomplete="off">
+                                    <input type="text" class="form-control" wire:model="cuentaNumero" maxlength="30" autocomplete="off">
                                     @error('cuentaNumero') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Titular <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" wire:model.defer="cuentaTitular" maxlength="120" autocomplete="off">
+                                    <input type="text" class="form-control" wire:model="cuentaTitular" maxlength="120" autocomplete="off">
                                     @error('cuentaTitular') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-3 mb-3">
                                     <label class="form-label">Tipo de documento</label>
-                                    <select class="form-select" wire:model.defer="cuentaDocumentoTipo">
+                                    <select class="form-select" wire:model="cuentaDocumentoTipo">
                                         @foreach (\App\Models\CuentaBancaria::DOCUMENTOS as $tipo)
                                             <option value="{{ $tipo }}">{{ $tipo }}</option>
                                         @endforeach
@@ -413,12 +413,12 @@
                                 </div>
                                 <div class="col-md-5 mb-3">
                                     <label class="form-label">Documento del titular <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" wire:model.defer="cuentaDocumentoNumero" maxlength="20" autocomplete="off">
+                                    <input type="text" class="form-control" wire:model="cuentaDocumentoNumero" maxlength="20" autocomplete="off">
                                     @error('cuentaDocumentoNumero') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="col-md-4 pt-4">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="metodo-activo" wire:model.defer="activo">
+                                        <input class="form-check-input" type="checkbox" id="metodo-activo" wire:model="activo">
                                         <label class="form-check-label" for="metodo-activo">Activo</label>
                                     </div>
                                 </div>
@@ -447,7 +447,7 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label class="form-label">VES por 1 USD <span class="text-danger">*</span></label>
-                                <input type="number" min="0.000001" step="0.000001" class="form-control" wire:model.defer="tasa"
+                                <input type="number" min="0.000001" step="0.000001" class="form-control" wire:model="tasa"
                                        placeholder="36,5000">
                                 @error('tasa') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
