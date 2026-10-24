@@ -314,7 +314,7 @@
                         <div class="porque-lamina-marco">
                             <img src="{{ asset('img/landing/crecimiento.webp') }}"
                                  alt="Curvas de crecimiento pediátrico con los percentiles de Fundacredesa."
-                                 width="1100" height="1181" loading="lazy" decoding="async">
+                                 width="1016" height="1152" loading="lazy" decoding="async">
                         </div>
                         <figcaption>
                             <span>Pediatría</span>
