@@ -10,13 +10,13 @@ return [
     | Livewire 3 cambió el namespace por defecto a `App\Livewire` y el layout de
     | página a `components.layouts.app`. La app sigue con `App\Http\Livewire` y
     | `layouts.app`, así que se declaran acá. `inject_assets` va en false porque
-    | `layouts.app` ya carga `@livewireStyles` y `@livewireScripts`.
+    | los layouts cargan `@livewireStyles` y el parcial `layouts._livewire-scripts`.
     |
-    | Las URLs del script y del endpoint de actualización las arma Livewire 3
-    | desde la ruta y la URL base de la app; los `LIVEWIRE_ASSET_URL` y
-    | `LIVEWIRE_APP_URL` de Livewire 2 ya no existen. La subcarpeta de QA
-    | (`/medic-report`) hay que verificarla en el primer despliegue: si no
-    | resuelve, se fija con `Livewire::setUpdateRoute()` y `setScriptRoute()`.
+    | `@livewireScripts` arma el src y el `data-update-uri` relativos a la raíz
+    | (`/livewire/...`), que bajo la subcarpeta de QA (`/medic-report`) pegan en
+    | el dominio equivocado. Por eso el tag se arma en
+    | `layouts/_livewire-scripts.blade.php` con `url()`, que respeta la
+    | subcarpeta; no hacen falta `setUpdateRoute()` ni `setScriptRoute()`.
     |
     */
 
