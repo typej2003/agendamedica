@@ -46,10 +46,13 @@ class PulseWebTest extends TestCase
 
     public function test_root_entra_al_tablero(): void
     {
-        $this->actingAs($this->conRol('Root'))
-            ->get('/pulse')
-            ->assertOk()
-            ->assertSee('Laravel Pulse');
+        $respuesta = $this->actingAs($this->conRol('Root'))->get('/pulse');
+
+        $respuesta->assertOk()->assertSee('Laravel Pulse');
+
+        // La URI de Livewire del tablero tiene que ser **absoluta** (con `url()`): el layout del paquete la
+        // emite relativa a la raíz del dominio y en QA, que vive bajo `/medic-report`, el AJAX daba 404.
+        $respuesta->assertSee('data-update-uri="'.url('/livewire/update').'"', false);
     }
 
     public function test_medico_y_secretaria_reciben_403(): void
