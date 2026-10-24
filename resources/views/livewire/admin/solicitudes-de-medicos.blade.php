@@ -79,7 +79,7 @@
                                 <label for="reg_medico" class="form-label">reg_medico</label>
                                 <input type="text" id="reg_medico" maxlength="100"
                                        class="form-control @error('reg_medico') is-invalid @enderror"
-                                       wire:model.lazy="reg_medico">
+                                       wire:model.blur="reg_medico">
                                 @error('reg_medico')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -94,7 +94,7 @@
                             </div>
                             <div class="mb-3">
                                 <label for="specialty_id" class="form-label">Especialidad</label>
-                                <select id="specialty_id" class="form-select" wire:model.defer="specialty_id">
+                                <select id="specialty_id" class="form-select" wire:model="specialty_id">
                                     <option value="">Sin especialidad</option>
                                     @foreach ($especialidades as $especialidad)
                                         <option value="{{ $especialidad->id }}">{{ $especialidad->name }}</option>
@@ -112,7 +112,7 @@
                                 <label for="motivo" class="form-label">Motivo (le llega al médico por correo)</label>
                                 <textarea id="motivo" rows="4" maxlength="2000"
                                           class="form-control @error('motivo') is-invalid @enderror"
-                                          wire:model.defer="motivo"
+                                          wire:model="motivo"
                                           placeholder="Por ejemplo: el número del MPPS no coincide con la cédula."></textarea>
                                 @error('motivo')
                                     <div class="invalid-feedback">{{ $message }}</div>

@@ -86,7 +86,7 @@
                     <label for="respuesta" class="form-label">Respuesta (la ve el usuario en su pantalla)</label>
                     <textarea id="respuesta" rows="4" maxlength="2000"
                               class="form-control @error('respuesta') is-invalid @enderror"
-                              wire:model.defer="respuesta"
+                              wire:model="respuesta"
                               placeholder="Cuéntale qué pasó, qué hicimos, o qué va a pasar con esto."></textarea>
                     @error('respuesta')
                         <div class="invalid-feedback">{{ $message }}</div>

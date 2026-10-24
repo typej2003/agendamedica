@@ -18,14 +18,14 @@
 
                         <div class="mb-3">
                             <label class="form-label">Nombre del equipo <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" wire:model.defer="equipo" maxlength="60" autocomplete="off">
+                            <input type="text" class="form-control" wire:model="equipo" maxlength="60" autocomplete="off">
                             <div class="form-text">Para reconocerla después, por ejemplo <code>CONSULTORIO-1</code>.</div>
                             @error('equipo') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Vigencia</label>
-                            <select class="form-select" wire:model.defer="anios">
+                            <select class="form-select" wire:model="anios">
                                 <option value="1">1 año</option>
                                 <option value="2">2 años</option>
                                 <option value="3">3 años</option>
@@ -35,7 +35,7 @@
 
                         @if ($mostrarReemplazo)
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="reemplazar" wire:model.defer="reemplazar">
+                                <input class="form-check-input" type="checkbox" id="reemplazar" wire:model="reemplazar">
                                 <label class="form-check-label" for="reemplazar">
                                     Reemplazar: revocar la anterior de este equipo y emitir una nueva
                                 </label>

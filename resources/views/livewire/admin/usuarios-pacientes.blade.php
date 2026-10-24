@@ -9,11 +9,11 @@
         <div class="card-header bg-white py-3">
             <div class="row g-2">
                 <div class="col-md-5">
-                    <input type="text" wire:model.debounce.400ms="search" class="form-control"
+                    <input type="text" wire:model.live.debounce.400ms="search" class="form-control"
                            placeholder="Buscar por nombre, cédula, correo o teléfono..." aria-label="Buscar pacientes">
                 </div>
                 <div class="col-md-3">
-                    <select wire:model="estado" class="form-select" aria-label="Filtrar por estado">
+                    <select wire:model.live="estado" class="form-select" aria-label="Filtrar por estado">
                         <option value="todos">Todos</option>
                         <option value="activos">Activos</option>
                         <option value="bloqueados">Bloqueados</option>
@@ -132,7 +132,7 @@
                                     </ul>
                                 @endif
                                 <label class="form-label" for="motivo-bloqueo">Motivo (opcional)</label>
-                                <input id="motivo-bloqueo" type="text" class="form-control" wire:model.defer="motivo" maxlength="255" placeholder="Ej.: reservas falsas">
+                                <input id="motivo-bloqueo" type="text" class="form-control" wire:model="motivo" maxlength="255" placeholder="Ej.: reservas falsas">
                                 @error('motivo') <span class="text-danger small">{{ $message }}</span> @enderror
                             @else
                                 <p>El paciente volverá a poder iniciar sesión y reservar citas.</p>

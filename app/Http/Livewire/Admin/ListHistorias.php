@@ -81,7 +81,7 @@ class ListHistorias extends Component
     public function createHistoria()
     {
         $this->resetForm();
-        $this->dispatchBrowserEvent('open-modal-edit-centro');
+        $this->dispatch('open-modal-edit-centro');
     }
 
     public function editCentro($id)
@@ -108,7 +108,7 @@ class ListHistorias extends Component
             $this->selectedMedicoName = trim($historia->medico->name . ' ' . ($historia->medico->lastname ?? ''));
         }
 
-        $this->dispatchBrowserEvent('open-modal-edit-centro');
+        $this->dispatch('open-modal-edit-centro');
     }
 
     public function selectCentro($id, $name)
@@ -176,7 +176,7 @@ class ListHistorias extends Component
             session()->flash('message', 'Historia médica creada correctamente.');
         }
 
-        $this->dispatchBrowserEvent('close-modal-edit-centro');
+        $this->dispatch('close-modal-edit-centro');
         $this->resetForm();
     }
 
@@ -197,7 +197,7 @@ class ListHistorias extends Component
             ->where('reg_medico', $regMedico)
             ->get();
 
-        $this->dispatchBrowserEvent('open-modal-detail');
+        $this->dispatch('open-modal-detail');
     }
 
     // Modal para ver Historias asociadas a un Centro Médico
@@ -212,7 +212,7 @@ class ListHistorias extends Component
             ->where('medical_center_id', $centroId)
             ->get();
 
-        $this->dispatchBrowserEvent('open-modal-detail');
+        $this->dispatch('open-modal-detail');
     }
 
     // Modal para ver Pacientes asociados a ese reg_medico
@@ -228,7 +228,7 @@ class ListHistorias extends Component
 
         $this->pacientesDetalle = Paciente::whereIn('id', $pacienteIds)->get();
 
-        $this->dispatchBrowserEvent('open-modal-detail');
+        $this->dispatch('open-modal-detail');
     }
 
     // Modal para ver Detalle del Médico
@@ -238,7 +238,7 @@ class ListHistorias extends Component
         $this->selectedMedico = Medico::with('specialties')->find($medicoId);
         $this->detailTitle = "Detalle del Médico";
 
-        $this->dispatchBrowserEvent('open-modal-detail');
+        $this->dispatch('open-modal-detail');
     }
 
     public function render()

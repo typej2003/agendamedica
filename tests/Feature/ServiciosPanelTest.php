@@ -237,7 +237,7 @@ class ServiciosPanelTest extends TestCase
         $this->actingAs($this->admin());
 
         $panel = Livewire::test(Servicios::class)->set('search', $medico->reg_medico)->assertSee('Modificar')->assertSee('Historial');
-        $html = $panel->payload['effects']['html'];
+        $html = $panel->html();
 
         $this->assertLessThan(strpos($html, 'Reemplazar'), strpos($html, 'Renovar'));
         $this->assertLessThan(strpos($html, 'Quitar plan'), strpos($html, 'Reemplazar'));

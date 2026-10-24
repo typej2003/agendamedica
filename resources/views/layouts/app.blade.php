@@ -104,16 +104,9 @@
 
         document.addEventListener("DOMContentLoaded", initDropdowns);
 
-        // Soporte tanto para Livewire v2 como v3
-        document.addEventListener("livewire:load", function() {
-            if (window.livewire) {
-                window.livewire.hook('message.processed', () => initDropdowns());
-            }
-        });
-        document.addEventListener("livewire:initialized", function () {
-            if (typeof Livewire !== 'undefined') {
-                Livewire.hook('morph.updated', () => initDropdowns());
-            }
+        // Livewire 3: después de cada actualización del DOM, reinicializar los dropdowns de Bootstrap.
+        document.addEventListener("livewire:init", function () {
+            Livewire.hook('morph.updated', () => initDropdowns());
         });
 
         // Submenús del menú lateral (<details>): el estado abierto/cerrado se refleja en aria-expanded del <summary>.

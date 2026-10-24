@@ -10,7 +10,7 @@
     <x-ui.avisos />
 
     <div class="mb-3">
-        <input type="text" class="form-control" placeholder="Buscar por nombre, apellido o registro médico..." wire:model="search">
+        <input type="text" class="form-control" placeholder="Buscar por nombre, apellido o registro médico..." wire:model.live="search">
     </div>
 
     <div class="table-responsive">
@@ -78,7 +78,7 @@
                             <!-- Prefijo -->
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Prefijo</label>
-                                <input type="text" class="form-control" maxlength="20" placeholder="Dr" wire:model.defer="prefix">
+                                <input type="text" class="form-control" maxlength="20" placeholder="Dr" wire:model="prefix">
                                 <small class="text-muted">Texto libre (Dr, Dra, Ing, Lic…); el punto se agrega solo. Vacío: sin prefijo.</small>
                                 @error('prefix') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
@@ -86,49 +86,49 @@
                             <!-- Nombre -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Nombres <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model.defer="name">
+                                <input type="text" class="form-control" wire:model="name">
                                 @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
 
                             <!-- Apellidos -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Apellidos <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model.defer="lastname">
+                                <input type="text" class="form-control" wire:model="lastname">
                                 @error('lastname') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
 
                             <!-- Reg Médico -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Registro Médico <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model.defer="reg_medico">
+                                <input type="text" class="form-control" wire:model="reg_medico">
                                 @error('reg_medico') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
 
                             <!-- Nº Licencia -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Número de Licencia</label>
-                                <input type="text" class="form-control" wire:model.defer="license_number">
+                                <input type="text" class="form-control" wire:model="license_number">
                                 @error('license_number') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
 
                             <!-- Teléfono -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Teléfono</label>
-                                <input type="text" class="form-control" wire:model.defer="phone">
+                                <input type="text" class="form-control" wire:model="phone">
                                 @error('phone') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
 
                             <!-- Email -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Email</label>
-                                <input type="email" class="form-control" wire:model.defer="email">
+                                <input type="email" class="form-control" wire:model="email">
                                 @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
 
                             <!-- Estado Activo -->
                             <div class="col-md-12 mb-3">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="is_active_medico" wire:model.defer="is_active">
+                                    <input class="form-check-input" type="checkbox" id="is_active_medico" wire:model="is_active">
                                     <label class="form-check-label" for="is_active_medico">Estado Activo</label>
                                 </div>
                             </div>
@@ -179,12 +179,12 @@
                         cancelButtonText: 'Cancelar'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            Livewire.emit('confirmDeleteMedico', id);
+                            Livewire.dispatch('confirmDeleteMedico', { id: id });
                         }
                     });
                 } else {
                     if (confirm('¿Está seguro de eliminar este médico?')) {
-                        Livewire.emit('confirmDeleteMedico', id);
+                        Livewire.dispatch('confirmDeleteMedico', { id: id });
                     }
                 }
             });

@@ -34,7 +34,7 @@
                         </span>
                         <input type="text" class="form-control border-start-0 ps-0" 
                             placeholder="Buscar por cédula o nombre..." 
-                            wire:model="search">
+                            wire:model.live="search">
                     </div>
                 </div>
                 <div class="col-12 col-md-6 col-lg-4">
@@ -42,7 +42,7 @@
                         <span class="input-group-text bg-light border-end-0">
                             <i class="bi bi-hospital text-muted"></i>
                         </span>
-                        <select class="form-select border-start-0" wire:model="medical_center_id_filtro">
+                        <select class="form-select border-start-0" wire:model.live="medical_center_id_filtro">
                             <option value="">Seleccione un Centro / Consultorio</option>
                             @foreach($centrosSalud as $centro)
                                 <option value="{{ $centro->id }}">Centro: {{ $centro->name }}</option>
@@ -194,12 +194,12 @@
                         <div class="row g-2 mb-3">
                             <div class="col-12 col-md-4">
                                 <label class="form-label small fw-semibold">N° Historia <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-sm" wire:model="numhistoria" placeholder="Ej: H-1002">
+                                <input type="text" class="form-control form-control-sm" wire:model.live="numhistoria" placeholder="Ej: H-1002">
                                 @error('numhistoria') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-4 col-md-2">
                                 <label class="form-label small fw-semibold">Nac.</label>
-                                <select class="form-select form-select-sm" wire:model="nac">
+                                <select class="form-select form-select-sm" wire:model.live="nac">
                                     <option value="V">V</option>
                                     <option value="E">E</option>
                                     <option value="P">P</option>
@@ -207,7 +207,7 @@
                             </div>
                             <div class="col-8 col-md-6">
                                 <label class="form-label small fw-semibold">Cédula / Documento <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-sm" wire:model="cedula">
+                                <input type="text" class="form-control form-control-sm" wire:model.live="cedula">
                                 @error('cedula') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -219,17 +219,17 @@
                         <div class="row g-2 mb-3">
                             <div class="col-12 col-md-6">
                                 <label class="form-label small fw-semibold">Nombres <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-sm" wire:model="nombres">
+                                <input type="text" class="form-control form-control-sm" wire:model.live="nombres">
                                 @error('nombres') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label small fw-semibold">Apellidos <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-sm" wire:model="apellidos">
+                                <input type="text" class="form-control form-control-sm" wire:model.live="apellidos">
                                 @error('apellidos') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-6 col-md-4">
                                 <label class="form-label small fw-semibold">Sexo</label>
-                                <select class="form-select form-select-sm" wire:model="sexo">
+                                <select class="form-select form-select-sm" wire:model.live="sexo">
                                     <option value="">Seleccione...</option>
                                     <option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
@@ -237,11 +237,11 @@
                             </div>
                             <div class="col-6 col-md-4">
                                 <label class="form-label small fw-semibold">Fecha Nacimiento</label>
-                                <input type="date" class="form-control form-control-sm" wire:model="fnacimiento">
+                                <input type="date" class="form-control form-control-sm" wire:model.live="fnacimiento">
                             </div>
                             <div class="col-12 col-md-4">
                                 <label class="form-label small fw-semibold">Lugar Nacimiento</label>
-                                <input type="text" class="form-control form-control-sm" wire:model="lnacimiento">
+                                <input type="text" class="form-control form-control-sm" wire:model.live="lnacimiento">
                             </div>
                         </div>
 
@@ -252,11 +252,11 @@
                         <div class="row g-2 mb-2">
                             <div class="col-12 col-md-4">
                                 <label class="form-label small fw-semibold">Teléfono</label>
-                                <input type="text" class="form-control form-control-sm" wire:model="telefono" placeholder="0414-0000000">
+                                <input type="text" class="form-control form-control-sm" wire:model.live="telefono" placeholder="0414-0000000">
                             </div>
                             <div class="col-12 col-md-4">
                                 <label class="form-label small fw-semibold">Email</label>
-                                <input type="email" class="form-control form-control-sm" wire:model="email">
+                                <input type="email" class="form-control form-control-sm" wire:model.live="email">
                                 @error('email') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-12 col-md-4">
@@ -264,7 +264,7 @@
                                     Contraseña {{ $paciente_id ? '(Opcional)' : '' }}
                                 </label>
                                 <div class="input-group input-group-sm">
-                                    <input type="password" id="inputPasswordModal" class="form-control form-control-sm border-end-0" wire:model="password" placeholder="{{ $paciente_id ? 'Sin cambios' : 'Mín. 6 caracteres' }}">
+                                    <input type="password" id="inputPasswordModal" class="form-control form-control-sm border-end-0" wire:model.live="password" placeholder="{{ $paciente_id ? 'Sin cambios' : 'Mín. 6 caracteres' }}">
                                     <button class="btn btn-outline-secondary border-start-0" type="button" id="togglePasswordBtn">
                                         <i class="bi bi-eye" id="togglePasswordIcon"></i>
                                     </button>
@@ -273,19 +273,19 @@
                             </div>
                             <div class="col-4 col-md-4">
                                 <label class="form-label small fw-semibold">Escolaridad</label>
-                                <input type="text" class="form-control form-control-sm" wire:model="escolaridad">
+                                <input type="text" class="form-control form-control-sm" wire:model.live="escolaridad">
                             </div>
                             <div class="col-4 col-md-4">
                                 <label class="form-label small fw-semibold">Ocupación</label>
-                                <input type="text" class="form-control form-control-sm" wire:model="ocupacion">
+                                <input type="text" class="form-control form-control-sm" wire:model.live="ocupacion">
                             </div>
                             <div class="col-4 col-md-4">
                                 <label class="form-label small fw-semibold">Profesión</label>
-                                <input type="text" class="form-control form-control-sm" wire:model="profesion">
+                                <input type="text" class="form-control form-control-sm" wire:model.live="profesion">
                             </div>
                             <div class="col-12">
                                 <label class="form-label small fw-semibold">Dirección</label>
-                                <textarea class="form-control form-control-sm" rows="2" wire:model="direccion"></textarea>
+                                <textarea class="form-control form-control-sm" rows="2" wire:model.live="direccion"></textarea>
                             </div>
                         </div>
 
@@ -353,7 +353,7 @@
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        Livewire.emit('confirmDeletePaciente', event.detail.id);
+                        Livewire.dispatch('confirmDeletePaciente', { id: event.detail.id });
                     }
                 });
             });

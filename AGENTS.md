@@ -723,17 +723,19 @@ discontinuada** (Kotlin) — no la tomes como referencia de lo que este backend 
 un backend ya **desplegado** (`https://ddrsistemas.com/medic-report/api/`) que puede divergir de este código, y usa
 endpoints previos (`app/refresh-data`) en vez de `sync-app-data`.
 
-**Stack:** Laravel 10 (`laravel/framework ^10.0`; la subida sigue hasta 12.70), PHP `^8.0.2` (composer
+**Stack:** Laravel 10 (`laravel/framework ^10.0`; la subida sigue hasta 13), PHP `^8.0.2` (composer
 configurado con `platform 8.2.12`), MySQL (`DB_CONNECTION=mysql`), tokens con **Laravel Sanctum 3.3**,
-roles/permisos con **spatie/laravel-permission 6.25**, panel web con **Livewire 2.12** (llega hasta Laravel
-10; desde 11 va Livewire 3), CORS con el middleware del framework (`Illuminate\Http\Middleware\HandleCors`)
-y tests con **PHPUnit 10.5** + **paratest 7** (`minimum-stability: stable`).
+roles/permisos con **spatie/laravel-permission 6.25**, panel web con **Livewire 3.8**, CORS con el middleware
+del framework (`Illuminate\Http\Middleware\HandleCors`) y tests con **PHPUnit 10.5** + **paratest 7**
+(`minimum-stability: stable`).
 
-**Subida de Laravel en curso (2026-10-24):** 8 → 9 → 10 → 11 → 12.70, un escalón por rama. Laravel ≤ 11
-está EOL y **Composer 2.10 bloquea instalarlo** por avisos de seguridad (Symfony 6 y el bypass de
-`TokenGuard` de `< 12.68`), así que `composer.json` lleva **`config.policy.advisories.block = false`**
-mientras dure la subida: es **temporal**, se quita al llegar a 12.70 y **ningún escalón intermedio se sube
-a QA ni a producción**. Cada escalón corre la suite completa y el humo en Chrome. Ver la trampa 168.
+**Subida de Laravel en curso (2026-10-24):** 8 → 9 → 10 → **Livewire 3** → 11 → 12 → 13, un escalón por
+rama. Laravel ≤ 11 está EOL y **Composer 2.10 bloquea instalarlo** por avisos de seguridad (Symfony 6 y el
+bypass de `TokenGuard` de `< 12.68`), así que `composer.json` lleva **`config.policy.advisories.block =
+false`** mientras dure la subida: es **temporal**, se quita al llegar a la versión final (12.70 o 13.38) y
+**ningún escalón intermedio se sube a QA ni a producción**. Livewire 3 se migró sobre Laravel 10 (donde
+todavía corría Livewire 2) antes de seguir con 11. Laravel 13 pide PHP `^8.3`: el `php8.3` local necesita
+`php.ini` y Plesk lo cambia con un clic. Ver las trampas 168 y 169.
 
 Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 

@@ -35,7 +35,7 @@
             <div class="row">
                 <div class="col-md-5">
                     <label class="visually-hidden" for="buscar-especialidades">Buscar médico</label>
-                    <input type="text" id="buscar-especialidades" wire:model.debounce.400ms="search" class="form-control"
+                    <input type="text" id="buscar-especialidades" wire:model.live.debounce.400ms="search" class="form-control"
                            placeholder="Buscar por nombre, correo o registro...">
                 </div>
             </div>
@@ -128,7 +128,7 @@
                                                      seguidos se pisan (el segundo viaja antes de que vuelva el primero) y
                                                      se guarda sólo la última tildada — medido en Chrome, ver TRAMPAS 51. --}}
                                                 <input class="form-check-input" type="checkbox" value="{{ $especialidad->id }}"
-                                                       id="especialidad-{{ $especialidad->id }}" wire:model.defer="seleccionadas">
+                                                       id="especialidad-{{ $especialidad->id }}" wire:model="seleccionadas">
                                                 <label class="form-check-label" for="especialidad-{{ $especialidad->id }}">
                                                     {{ $especialidad->name }}
                                                     @if ($especialidad->codigo)
@@ -184,7 +184,7 @@
                                                     <div class="col-md-6" wire:key="postgrado-{{ $postgrado->id }}">
                                                         <div class="form-check mb-1">
                                                             <input class="form-check-input" type="checkbox" value="{{ $postgrado->id }}"
-                                                                   id="postgrado-{{ $postgrado->id }}" wire:model.defer="postgrados"
+                                                                   id="postgrado-{{ $postgrado->id }}" wire:model="postgrados"
                                                                    {{ $tieneEspecialidad ? '' : 'disabled' }}>
                                                             <label class="form-check-label" for="postgrado-{{ $postgrado->id }}">
                                                                 {{ $postgrado->nombre }}
