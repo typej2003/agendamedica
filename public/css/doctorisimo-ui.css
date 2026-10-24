@@ -3988,3 +3988,6 @@ body.panel .main-content { padding: 1rem 1.25rem 1.25rem; }
 .selector-buscable .selector-estado { padding: .6rem .85rem; color: var(--ds-texto-suave, #6c757d); font-size: .9rem; }
 .selector-buscable .selector-estado[hidden] { display: none; }
 .selector-buscable.tiene-error .selector-entrada { border-color: var(--ds-peligro); }
+
+/* Un campo cuyo rótulo repite el título del grupo (2026-10-23): el rótulo queda sólo para lectores de pantalla. */
+.campo.etiqueta-oculta > .form-label { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; padding: 0; margin: -1px; }

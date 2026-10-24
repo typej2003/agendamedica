@@ -5,8 +5,10 @@
      ocupa). `tipo` sale del mapa del dato (`App\Clinica\Consulta\EcoGinecologico`) y dice con qué control se
      pinta: `opciones` (un `<select>` con los códigos del legado), `numero`, `texto`, `area`, `fecha` y
      `fecha-tecleada`. La vista no decide: sólo obedece. --}}
+{{-- `$omitirEtiqueta` (2026-10-23): el campo único de un grupo que se llama igual que el grupo («Fondo de saco de Douglas» bajo el
+     título «Fondo de saco de Douglas») no repite el rótulo a la vista; queda oculto para los lectores de pantalla. --}}
 <x-ui.campo :etiqueta="$campo['etiqueta']" :for="$campo['columna']"
-            class="{{ $columnas }}">
+            class="{{ $columnas }}{{ ($omitirEtiqueta ?? false) ? ' etiqueta-oculta' : '' }}">
     @if ($campo['tipo'] === 'opciones')
         <select class="form-select" id="{{ $campo['columna'] }}" name="{{ $campo['columna'] }}">
             @foreach ($campo['opciones'] as $opcion)

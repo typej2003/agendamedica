@@ -1,4 +1,4 @@
-@props(['plantillas', 'destino', 'tipo' => null, 'tipos' => null, 'nombre' => 'texto', 'tituloDestino' => null])
+@props(['plantillas', 'destino', 'tipo' => null, 'tipos' => null, 'nombre' => 'texto', 'tituloDestino' => null, 'repartir' => null])
 
 {{-- Plantillas de texto de una sección: un **botón** de una línea arriba del campo («Plantillas (3)») y, al
      abrirlo, un **cajón lateral** con el buscador, la lista de las plantillas `formato_print` de ese tipo y
@@ -17,6 +17,10 @@
      esos tipos, con el primero elegido. Hoy cada estudio de la web tiene un solo tipo, así que el desplegable
      no se ve; queda para el estudio que en el escritorio comparta plantillas entre dos tipos.
      Se acepta `código => etiqueta` (y `código => código` si no hay etiqueta).
+
+     **`repartir`** (2026-10-23, Alexander: la plantilla «NORMAL» del escritorio llena todo a la vez): un selector del
+     formulario cuyos cuadros de texto se rellenan con lo que la plantilla trae por rótulo («GENERAL: …. TIROIDES: ….», el
+     mismo formato del resumen). Los rótulos que la plantilla no trae no se tocan.
 
      **«Administrar plantillas»** (lo que la médica no encontraba): al pie del cajón, un enlace al catálogo
      **filtrado por el tipo** de la sección (`/clinica/catalogos/plantillas-texto?filtro=<TIPO>`), para verlas,
@@ -47,7 +51,8 @@
          data-url-guardar="{{ route('clinica.plantillas.guardar') }}"
          data-url-administrar="{{ $urlAdministrar }}"
          data-boton="{{ $id }}-disparador"
-         @if ($tituloDestino) data-titulo-destino="{{ $tituloDestino }}" @endif>
+         @if ($tituloDestino) data-titulo-destino="{{ $tituloDestino }}" @endif
+         @if ($repartir) data-repartir="{{ $repartir }}" @endif>
 
         <label class="visually-hidden" for="{{ $id }}-buscar">Buscar plantilla</label>
         <input type="search" id="{{ $id }}-buscar" class="form-control form-control-sm mb-2" placeholder="Buscar:" autocomplete="off"
