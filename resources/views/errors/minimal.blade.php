@@ -9,6 +9,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') · Doctorísimo</title>
+    @include('layouts._favicon')
     <link rel="stylesheet" href="{{ asset('css/doctorisimo-ui.css') }}">
     <style>
         body {
