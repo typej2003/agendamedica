@@ -64,6 +64,15 @@ class Kernel extends ConsoleKernel
             ->timezone('America/Caracas')
             ->dailyAt('03:20')
             ->withoutOverlapping();
+
+        // Laravel Pulse (2026-10-24): `pulse:check --once` toma **una** foto del servidor (CPU, memoria,
+        // disco) para la tarjeta «Servers» y termina. No se programa el demonio (`pulse:check` sin
+        // `--once`): `schedule:run` lo esperaría para siempre. Si algún día se quiere muestreo continuo,
+        // el demonio va bajo Supervisor, no acá. Necesita el cron del servidor (`schedule:run`), como el
+        // resto de las tareas.
+        $schedule->command('pulse:check --once')
+            ->everyMinute()
+            ->withoutOverlapping();
     }
 
     /**
