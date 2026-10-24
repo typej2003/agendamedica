@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Consulta\EliminarSolicitudDeEstudios;
 use App\Actions\Consulta\GuardarSolicitudDeEstudios;
+use App\Clinica\Busquedas\BusquedaConCorrector;
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\EstudiosDeLaConsulta;
@@ -118,20 +119,30 @@ class ConsultaEstudiosController extends Controller
     }
 
     /** El buscador del catálogo de estudios: `?q=` (sin tildes); como mucho `MAX_RESULTADOS`, con el total de coincidencias. */
-    public function catalogo(Request $request, Consulta $consulta, CatalogoParaPedirExamenes $catalogo): JsonResponse
+    public function catalogo(Request $request, Consulta $consulta, CatalogoParaPedirExamenes $catalogo, BusquedaConCorrector $corrector): JsonResponse
     {
         $consulta = $this->delContexto($request, $consulta);
 
         $buscar = trim((string) $request->query('q', ''));
-        $coincidencias = $catalogo->buscar((string) $consulta->reg_medico, true, $buscar);
+
+        // Primero lo escrito; si no encontró nada, el término corregido (PecleSearch).
+        [$coincidencias, $correccion] = $corrector->con(
+            fn (string $termino) => $catalogo->buscar((string) $consulta->reg_medico, true, $termino),
+            'examenes',
+            $buscar,
+            $request->boolean('literal'),
+        );
 
         return response()->json([
-            'buscar' => $buscar,
+            'buscar' => $correccion->aplicado,
             'tipo' => '',
             'total' => $coincidencias->count(),
             'examenes' => $coincidencias->take(CatalogoParaPedirExamenes::MAX_RESULTADOS)
                 ->map(fn (array $examen) => ['codigo' => $examen['codigo'], 'nombre' => $examen['nombre'], 'tipo' => $examen['tipo']])
                 ->values()->all(),
+            'correccion' => $correccion->corregida()
+                ? ['escrito' => $correccion->escrito, 'aplicado' => $correccion->aplicado]
+                : null,
         ]);
     }
 

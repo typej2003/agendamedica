@@ -822,6 +822,16 @@ nadie y no se pidió `?literal=1`, recién ahí se resuelve el término y se bus
 vocabulario cuesta ~30 ms con 6.000 pacientes (y más con la base entera: es global), así que una búsqueda
 que ya encuentra no lo paga. Si la corrección tampoco encuentra, se queda lo escrito y no se avisa.
 
+**El mismo corrector en los catálogos de la consulta y de los récipes.** `App\Clinica\Busquedas\CorrectorDeCatalogo`
+y `BusquedaConCorrector` aplican el criterio de arriba a los buscadores de **vademécum, diagnósticos,
+antecedentes, motivos, exámenes y doctores** (`config/pecle_search.php` declara un índice por catálogo, con
+`numeric_index` porque sus ids son enteros). **La búsqueda de cada catálogo no cambia**: sigue siendo la suya,
+en PHP, con su normalización, su deduplicación y acotada al `reg_medico`; el índice es sólo el **vocabulario**
+del corrector. El JSON de cada buscador suma `correccion` (`{escrito, aplicado}` o `null`) y `buscar` pasa a
+ser el término aplicado, para que el «ya está» y el «agregar» miren lo que se buscó de verdad. `?literal=1`
+apaga la corrección. El `pecle-search:rebuild` nocturno ahora reconstruye **todos** los índices (antes sólo
+`pacientes`); en el despliegue se corre sin argumentos.
+
 **Comparar sin acentos.** En el camino de tokens la normalización la hace el `Normalizer` del paquete, el
 mismo con el que se construyó el índice (minúsculas, sin acentos, `[a-z0-9]`), así que la colación del motor
 no interviene. En el **respaldo** sí: en MySQL la columna se compara tal cual (`LIKE '%…%'`) porque la

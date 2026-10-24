@@ -6,6 +6,7 @@ use App\Actions\Catalogos\CamposDelMedicamento;
 use App\Actions\Catalogos\CrearMedicamentoEnElCatalogo;
 use App\Actions\Catalogos\EditarMedicamentoDelVademecum;
 use App\Actions\Catalogos\QuitarMedicamentoDelCatalogo;
+use App\Clinica\Busquedas\BusquedaConCorrector;
 use App\Clinica\Catalogos\MedicamentosDelCatalogo;
 use App\Clinica\Catalogos\Vistas\MedicamentosVista;
 use App\Clinica\Consulta\DosisPediatrica;
@@ -149,14 +150,25 @@ class MedicamentoCatalogoController extends Controller
      * El buscador del vademécum del médico, en JSON: lo usa el editor de tratamientos para agregar medicamentos.
      * Es la **misma** lectura que el buscador de la consulta (`RecipesDeLaConsulta::medicamentos`).
      */
-    public function buscar(Request $request, RecipesDeLaConsulta $lectura): JsonResponse
+    public function buscar(Request $request, RecipesDeLaConsulta $lectura, BusquedaConCorrector $corrector): JsonResponse
     {
         $contexto = $request->attributes->get('contexto_clinico');
         $buscar = trim((string) $request->query('q', ''));
 
+        // Primero lo escrito; si no encontró nada, el término corregido (PecleSearch).
+        [$encontrados, $correccion] = $corrector->con(
+            fn (string $termino) => $lectura->medicamentos((string) $contexto['reg_medico'], $termino),
+            'vademecum',
+            $buscar,
+            $request->boolean('literal'),
+        );
+
         return response()->json([
-            'buscar' => $buscar,
-            'medicamentos' => $lectura->medicamentos((string) $contexto['reg_medico'], $buscar)->values()->all(),
+            'buscar' => $correccion->aplicado,
+            'medicamentos' => $encontrados->values()->all(),
+            'correccion' => $correccion->corregida()
+                ? ['escrito' => $correccion->escrito, 'aplicado' => $correccion->aplicado]
+                : null,
         ]);
     }
 

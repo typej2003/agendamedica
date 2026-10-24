@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Clinica;
 use App\Actions\Consulta\AgregarDoctorAlCatalogo;
 use App\Actions\Consulta\EliminarReferenciaDeLaConsulta;
 use App\Actions\Consulta\GuardarReferenciaDeLaConsulta;
+use App\Clinica\Busquedas\BusquedaConCorrector;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DoctoresDelMedico;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
@@ -36,7 +37,7 @@ class ConsultaReferenciasController extends Controller
     }
 
     /** El buscador del catálogo, en JSON: lo que se escribió, los médicos que coinciden y cuáles ya están referidos. */
-    public function buscar(Request $request, Consulta $consulta): JsonResponse
+    public function buscar(Request $request, Consulta $consulta, BusquedaConCorrector $corrector): JsonResponse
     {
         [$consulta, $registros] = $this->delContexto($request, $consulta);
 
@@ -49,9 +50,17 @@ class ConsultaReferenciasController extends Controller
             ->map(fn ($cedula) => (int) $cedula)
             ->all();
 
+        // Primero lo escrito; si no encontró nada, el término corregido (PecleSearch).
+        [$medicos, $correccion] = $corrector->con(
+            fn (string $termino) => $this->doctores->buscar($registros, $termino),
+            'doctores',
+            $texto,
+            $request->boolean('literal'),
+        );
+
         return response()->json([
-            'buscar' => $texto,
-            'medicos' => $this->doctores->buscar($registros, $texto)->map(fn (object $medico) => [
+            'buscar' => $correccion->aplicado,
+            'medicos' => $medicos->map(fn (object $medico) => [
                 'cedula' => $medico->cedula,
                 'nombre' => $medico->nombre,
                 'especialidad' => $medico->especialidad,
@@ -59,6 +68,9 @@ class ConsultaReferenciasController extends Controller
                 'telefono' => $medico->telefono,
                 'yaEsta' => in_array($medico->cedula, $referidos, true),
             ])->values(),
+            'correccion' => $correccion->corregida()
+                ? ['escrito' => $correccion->escrito, 'aplicado' => $correccion->aplicado]
+                : null,
         ]);
     }
 
