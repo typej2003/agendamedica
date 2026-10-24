@@ -256,6 +256,10 @@ final class SeccionDeRecipesVista
             'fecha' => $fecha,
             'vigencia' => ($recipe->vigencia ?? RecipesDeLaConsulta::VIGENCIA_EN_DIAS) . ' días',
             'urlGuardar' => $this->esNuevo() ? $this->urls['guardarNuevo'] : ($this->urlGuardar)($this->numero()),
+            // Imprimir desde el propio editor (2026-10-23, Alexander: «debe estar más visible»): sólo un récipe ya guardado y con medicamentos.
+            'urlImprimir' => $recipe !== null && $this->puedeImprimir() && $recipe->items->isNotEmpty()
+                ? $this->urlImprimir($recipe->numero)
+                : '',
             'filas' => $this->filas($recipe),
         ];
     }

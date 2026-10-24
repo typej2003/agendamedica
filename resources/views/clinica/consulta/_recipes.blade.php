@@ -203,6 +203,13 @@
                 <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
                     {{-- La lista de la consulta (imprimir cada récipe y eliminar), que ya no es la entrada (O-28). --}}
                     <a class="btn btn-outline-secondary" href="{{ $seccion->urlLista() }}">Ir a la lista</a>
+                    {{-- Imprimir, a la vista (2026-10-23): abre el mismo diálogo de opciones que la lista. Imprime lo guardado. --}}
+                    @if ((($editor['urlImprimir'] ?? '')) !== '')
+                        <button type="button" class="btn btn-outline-primary" data-imprimir-recipe
+                                data-siguiente="{{ $editor['urlImprimir'] }}" data-titulo="{{ $editor['titulo'] }}">
+                            <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
+                        </button>
+                    @endif
                     {{-- La única acción primaria del editor: guardar el récipe entero. --}}
                     <button class="btn btn-primary">
                         <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar el récipe

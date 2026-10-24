@@ -188,6 +188,28 @@
         }
     });
 
+    // ---- El menú lateral muestra siempre la opción activa (2026-10-23): si la lista es más larga que el alto
+    // disponible, sube hasta ella en vez de dejarla escondida abajo.
+    (function () {
+        const activa = document.querySelector('#clinica-sidebar .nav-link.active');
+        if (activa && typeof activa.scrollIntoView === 'function') activa.scrollIntoView({ block: 'nearest' });
+    })();
+
+    // ---- Los paneles de plantillas (2026-10-23): un clic en el fondo, a la izquierda del cajón, lo cierra, igual que
+    // «Cerrar». Sólo si no hay nada a medias: un título de «Guardar como plantilla» a medio escribir lo mantiene abierto
+    // (el buscador no cuenta, no es trabajo del médico).
+    document.addEventListener('click', function (evento) {
+        const dialogo = evento.target;
+        if (!(dialogo instanceof HTMLDialogElement) || !dialogo.open || !dialogo.querySelector('[data-plantillas-panel]')) return;
+
+        const aMedias = Array.from(dialogo.querySelectorAll('input, textarea, select')).some(function (campo) {
+            if (campo.hasAttribute('data-plantillas-buscar') || campo.type === 'hidden' || campo.type === 'search') return false;
+            return campo.value !== campo.defaultValue;
+        });
+
+        if (!aMedias) dialogo.close();
+    });
+
     // ---- Menú de acciones (<details class="menu-acciones">): uno abierto a la vez, y se cierra afuera.
     const cerrarMenus = function (salvo) {
         document.querySelectorAll('details.menu-acciones[open]').forEach(function (abierto) {

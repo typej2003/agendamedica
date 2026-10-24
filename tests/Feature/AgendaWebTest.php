@@ -838,6 +838,7 @@ class AgendaWebTest extends TestCase
             ->post('/clinica/agenda', $this->datosDeCita($sede, [
                 'hora'            => '09:00',
                 'nuevo_cedula'    => '12345678',
+                'nuevo_fnacimiento' => '1990-01-15',
                 'nuevo_nombres'   => 'Nueva',
                 'nuevo_apellidos' => 'Paciente',
                 'nuevo_telefono'  => '0414-1234567',
@@ -858,6 +859,52 @@ class AgendaWebTest extends TestCase
         $this->assertNull($cita->paciente_sinhistoria_id);
     }
 
+    /** 2026-10-23 (Alexander): el alta rápida pide también nacimiento, nacionalidad, lugar y dirección. */
+    public function test_el_alta_rapida_guarda_nacimiento_nacionalidad_lugar_y_direccion(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'              => '09:00',
+                'nuevo_cedula'      => '31415926',
+                'nuevo_nombres'     => 'Con',
+                'nuevo_apellidos'   => 'Datos',
+                'nuevo_fnacimiento' => '1988-03-04',
+                'nuevo_nac'         => 'E',
+                'nuevo_lnacimiento' => 'Cúcuta',
+                'nuevo_direccion'   => 'Calle 5 con carrera 7',
+            ]))
+            ->assertRedirect($this->urlDeLaAgenda($sede));
+
+        $paciente = Paciente::where('cedula', '31415926')->firstOrFail();
+        $this->assertSame('1988-03-04', substr((string) $paciente->getRawOriginal('fnacimiento'), 0, 10));
+        $this->assertSame('E', $paciente->nac);
+        $this->assertSame('Cúcuta', $paciente->lnacimiento);
+        $this->assertSame('Calle 5 con carrera 7', $paciente->direccion);
+    }
+
+    public function test_el_alta_rapida_exige_la_fecha_de_nacimiento_y_no_acepta_una_futura(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $base = ['hora' => '09:00', 'nuevo_cedula' => '27182818', 'nuevo_nombres' => 'Sin', 'nuevo_apellidos' => 'Fecha'];
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, $base))
+            ->assertSessionHasErrors(['nuevo_fnacimiento']);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, $base + ['nuevo_fnacimiento' => '2999-01-01']))
+            ->assertSessionHasErrors(['nuevo_fnacimiento']);
+
+        $this->assertNull(Paciente::where('cedula', '27182818')->first());
+    }
+
     public function test_la_cedula_repetida_enlaza_la_ficha_y_no_pisa_sus_datos(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
@@ -876,6 +923,7 @@ class AgendaWebTest extends TestCase
             ->post('/clinica/agenda', $this->datosDeCita($sede, [
                 'hora'            => '09:00',
                 'nuevo_cedula'    => '99887766',
+                'nuevo_fnacimiento' => '1990-01-15',
                 'nuevo_nombres'   => 'Otro',
                 'nuevo_apellidos' => 'Nombre',
                 'nuevo_telefono'  => '0414-9999999',
@@ -1057,12 +1105,16 @@ class AgendaWebTest extends TestCase
                 'nuevo_telefono'  => str_repeat('9', 31),
                 'nuevo_email'     => 'no-es-un-correo',
                 'nuevo_sexo'      => 'Z',
+                'nuevo_fnacimiento' => '31/12/2020',
+                'nuevo_nac'       => 'X',
+                'nuevo_lnacimiento' => str_repeat('L', 101),
+                'nuevo_direccion' => str_repeat('D', 201),
                 'decision'        => 'quizas',
             ]);
 
         $errores = session('errors')->getBag('default')->toArray();
 
-        $this->assertCount(14, $errores, 'Cada campo mal escrito tiene que dar su propio aviso.');
+        $this->assertCount(18, $errores, 'Cada campo mal escrito tiene que dar su propio aviso.');
 
         foreach ($errores as $campo => $mensajes) {
             foreach ($mensajes as $mensaje) {
@@ -2079,6 +2131,7 @@ class AgendaWebTest extends TestCase
             ->post('/clinica/agenda', $this->datosDeCita($sede, [
                 'hora'            => '09:00',
                 'nuevo_cedula'    => '11223344',
+                'nuevo_fnacimiento' => '1990-01-15',
                 'nuevo_nombres'   => 'Nueva',
                 'nuevo_apellidos' => 'Paciente',
             ]))
@@ -2105,6 +2158,7 @@ class AgendaWebTest extends TestCase
                 ->post('/clinica/agenda', $this->datosDeCita($sede, [
                     'hora'            => '09:00',
                     'nuevo_cedula'    => (string) $cedula,
+                    'nuevo_fnacimiento' => '1990-01-15',
                     'nuevo_nombres'   => 'Otra',
                     'nuevo_apellidos' => $apellidos,
                 ]))
