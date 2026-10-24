@@ -153,18 +153,21 @@ class ImpresionDelInformePrenatalWebTest extends TestCase
         $respuesta->assertSee('FPP:')->assertSee('24/02/2027');
         $respuesta->assertSee('20 semanas y 6 días');
         $respuesta->assertSee('Tipiaje (madre):')->assertSee('O+');
-        // Los controles y el laboratorio, una línea por fecha con los datos que tienen algo.
-        $respuesta->assertSee('Control del 01/06/2026:');
-        $respuesta->assertSee('Peso: 65');
-        $respuesta->assertSee('Placenta: Fúndica');
-        $respuesta->assertSee('Laboratorio del 02/06/2026:');
-        $respuesta->assertSee('Hb. 11.5');
+        // Los controles y el laboratorio, en tablas (2026-10-23, como el escritorio): una fila por fecha y una columna
+        // por campo que tiene algo.
+        $respuesta->assertSee('Controles');
+        $respuesta->assertSee('01/06/2026');
+        $respuesta->assertSee('<th>Peso</th>', false)->assertSee('<td>65</td>', false);
+        $respuesta->assertSee('<th>Placenta</th>', false)->assertSee('<td>Fúndica</td>', false);
+        $respuesta->assertSee('Laboratorio');
+        $respuesta->assertSee('02/06/2026');
+        $respuesta->assertSee('<th>Hb.</th>', false)->assertSee('<td>11.5</td>', false);
         // Los reactivos guardados con su código salen con el rótulo que lee el médico.
-        $respuesta->assertSee('HIV: Negativo');
-        $respuesta->assertSee('VDRL: No reactivo');
-        // Las observaciones de la gesta, y el control sin datos no dejó su línea.
-        $respuesta->assertSee('Observaciones:')->assertSee('Embarazo en curso, sin particularidades.');
-        $respuesta->assertDontSee('Control del 15/06/2026');
+        $respuesta->assertSee('<th>HIV</th>', false)->assertSee('<td>Negativo</td>', false);
+        $respuesta->assertSee('<th>VDRL</th>', false)->assertSee('<td>No reactivo</td>', false);
+        // Las observaciones de la gesta, y el control sin datos no dejó su fila.
+        $respuesta->assertSee('Observaciones')->assertSee('Embarazo en curso, sin particularidades.');
+        $respuesta->assertDontSee('15/06/2026');
     }
 
     public function test_la_gesta_se_elige_con_el_parametro_de_la_url(): void
@@ -195,6 +198,6 @@ class ImpresionDelInformePrenatalWebTest extends TestCase
         preg_match('/FUR:.*?(\d{2}\/\d{2}\/\d{4})/s', $primera->getContent(), $coincidencia);
         $this->assertSame('20/05/2026', $coincidencia[1] ?? 'sin FUR en la hoja', 'La FUR que imprimió la hoja');
 
-        $primera->assertSee('Control del 01/06/2026:');
+        $primera->assertSee('01/06/2026');
     }
 }

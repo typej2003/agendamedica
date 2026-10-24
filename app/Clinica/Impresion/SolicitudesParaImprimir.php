@@ -1193,7 +1193,7 @@ final class SolicitudesParaImprimir
         $this->parrafosDeLasFechas($partes['laboratorios'], PrenaExamenB::campos(), 'Laboratorio del ', $parrafos);
         $this->sumarParrafo($parrafos, 'Observaciones:', $gesta->observaciones());
 
-        return new DocumentoImpreso(
+        $base = new DocumentoImpreso(
             DocumentoImpreso::CONTROL_DE_EMBARAZO,
             DocumentoImpreso::CONTROL_DE_EMBARAZO,
             DocumentoImpreso::TITULOS[DocumentoImpreso::CONTROL_DE_EMBARAZO][0],
@@ -1203,6 +1203,98 @@ final class SolicitudesParaImprimir
             $datos,
             $parrafos,
         );
+
+        // La hoja del escritorio (2026-10-23, Alexander): los datos de la gestante en la franja de arriba, una tabla con
+        // los controles por fecha, otra con los laboratorios y las observaciones al final, en una sola hoja A4.
+        $bloques = [];
+
+        foreach ($this->grillasDeLasFechas($partes['controles'], PreNatalDesarrolloFino::campos(), 'Controles') as $grilla) {
+            $bloques[] = $grilla;
+        }
+
+        foreach ($this->grillasDeLasFechas($partes['laboratorios'], PrenaExamenB::campos(), 'Laboratorio') as $grilla) {
+            $bloques[] = $grilla;
+        }
+
+        $observaciones = trim((string) $gesta->observaciones());
+
+        if ($observaciones !== '') {
+            $bloques[] = [
+                'titulo' => 'Observaciones',
+                'campos' => [['etiqueta' => '', 'tipo' => 'area', 'valor' => $observaciones, 'unidad' => null, 'opciones' => []]],
+                'grilla' => null,
+            ];
+        }
+
+        return $base->conInforme(new InformeDeEco(
+            array_map(fn (array $dato) => ['etiqueta' => $dato['etiqueta'], 'valor' => $dato['valor']], $datos),
+            $bloques,
+        ));
+    }
+
+    /** Las columnas de una tabla del informe del embarazo: más que esto no caben a lo ancho de la hoja. */
+    private const COLUMNAS_POR_TABLA = 12;
+
+    /**
+     * **Una tabla por fechas** (el control de embarazo del escritorio): una fila por fecha y una columna por campo que
+     * tenga algo en alguna de ellas. Si las columnas no caben en el ancho de la hoja, la tabla sigue en otra con las
+     * mismas filas. Sin ningún dato no hay tabla.
+     *
+     * @param  \Illuminate\Support\Collection  $filas
+     * @param  array<int,array<string,mixed>>  $campos
+     * @return array<int,array<string,mixed>>
+     */
+    private function grillasDeLasFechas($filas, array $campos, string $titulo): array
+    {
+        // Una fecha sin ningún dato no deja su fila (como antes no dejaba su línea).
+        $filas = $filas->filter(function ($fila) use ($campos) {
+            foreach ($campos as $campo) {
+                if ($this->valorDeLaFecha($fila, $campo) !== null) {
+                    return true;
+                }
+            }
+
+            return false;
+        })->values();
+
+        $usadas = [];
+
+        foreach ($campos as $campo) {
+            foreach ($filas as $fila) {
+                if ($this->valorDeLaFecha($fila, $campo) !== null) {
+                    $usadas[] = $campo;
+
+                    break;
+                }
+            }
+        }
+
+        $grillas = [];
+
+        foreach (array_chunk($usadas, self::COLUMNAS_POR_TABLA) as $n => $trozo) {
+            $grillas[] = [
+                'titulo' => $n === 0 ? $titulo : $titulo . ' (continúa)',
+                'campos' => [],
+                'grilla' => [
+                    'ejes' => array_map(fn (array $campo) => rtrim((string) $campo['etiqueta'], ': '), $trozo),
+                    'filas' => $filas->map(fn ($fila) => [
+                        'etiqueta' => FechaClinica::formato((string) $fila->fecha),
+                        'celdas' => array_map(fn (array $campo) => (string) ($this->valorDeLaFecha($fila, $campo) ?? ''), $trozo),
+                    ])->values()->all(),
+                ],
+            ];
+        }
+
+        return $grillas;
+    }
+
+    /** El valor de un campo de una fila por fecha, con el rótulo de los reactivos del laboratorio, o `null` si está vacío. */
+    private function valorDeLaFecha(object $fila, array $campo): ?string
+    {
+        $crudo = $fila->{$campo['columna']} ?? null;
+        $valor = PrenaExamenB::textoDe($campo['columna'], $crudo === null ? null : (string) $crudo);
+
+        return $valor === null || $valor === '' ? null : $valor;
     }
 
     /**
