@@ -4,6 +4,7 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Clinica\FechaDelConsultorio;
 use App\Models\AntecedenteMovimiento;
+use App\Support\HoraLocal;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
