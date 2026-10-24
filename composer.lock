@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9bbffaeb9c63fac0732eb339f305c2e7",
+    "content-hash": "625bdb9c1454add63ecbf64ba4bb5b32",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -550,11 +550,11 @@
         },
         {
             "name": "edyjen/pecle-search",
-            "version": "v0.3.0",
+            "version": "v0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://edyjen@github.com/edyjen/Pecle-Search.git",
-                "reference": "3fcad7fded4058b7ad5c4c08c6735b5cbd310f85"
+                "reference": "c874ac420a4442081262e3d2abae8a35369d208f"
             },
             "require": {
                 "illuminate/cache": "^11.0|^12.0|^13.0",
@@ -603,7 +603,7 @@
                 "spanish",
                 "typo"
             ],
-            "time": "2026-10-24T16:19:59+00:00"
+            "time": "2026-10-24T20:26:30+00:00"
         },
         {
             "name": "egulias/email-validator",
