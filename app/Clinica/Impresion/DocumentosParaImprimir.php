@@ -53,6 +53,7 @@ final class DocumentosParaImprimir
         DocumentoImpreso::ECO_ABDOMINAL => 'bi-clipboard2-data',
         DocumentoImpreso::COLPOSCOPIA => 'bi-search-heart',
         DocumentoImpreso::HISTEROSCOPIA => 'bi-camera',
+        DocumentoImpreso::CITOLOGIA => 'bi-clipboard2-pulse',
         // Los informes de las endoscopías digestivas (gastroenterología pediátrica, 2026-10-19).
         DocumentoImpreso::ENDOSCOPIA_SUPERIOR => 'bi-camera-reels',
         DocumentoImpreso::ENDOSCOPIA_INFERIOR => 'bi-camera-reels',

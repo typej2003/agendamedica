@@ -24,7 +24,8 @@ use App\Clinica\Impresion\DocumentoImpreso;
  *  - **Plantillas**: `formato_print` por `tipo` —`CO` la colposcopía (`dw_77`, `:3043`), `CI` la citología
  *    (`dw_78`, `:3046`), `RE` el resultado de exámenes (`dw_91`, `:4626`)—. La **histeroscopía no tiene**
  *    en el escritorio (su `tabpage_49` no hace `retrieve` de plantillas), pero la web las ofrece con el tipo `HI` (WEB-11.7).
- *  - **Informe**: la colposcopía (`d_colposcopia_1`/`_2`) y la histeroscopía (`d_histeroscopia`, cuyo título
+ *  - **Informe** (2026-10-23: la citología también lo imprime en la web, a pedido de Alexander; en el escritorio
+ *    no tenía hoja): la colposcopía (`d_colposcopia_1`/`_2`) y la histeroscopía (`d_histeroscopia`, cuyo título
  *    está en `:27` y su cuerpo es `consultas.cuello` —`column(band=detail ... name=consultas_cuello`, `:29`—
  *    con las fotos del subreporte). La citología y el resultado de exámenes **no tienen hoja**.
  *  - **Imágenes**: la histeroscopía tiene su grilla (`d_imagenes_consul_pac_histero`, la etiqueta `'H'` de
@@ -110,7 +111,7 @@ final class TextosDelExamen
             'columna' => 'faringe',
             'columna_espejo' => null,
             'plantillas' => 'CI',
-            'documento' => null,
+            'documento' => DocumentoImpreso::CITOLOGIA,
             'imagenes' => null,
             'marcador' => 'El resultado de la citología: la toma, la calidad de la muestra, el informe del laboratorio…',
             'ayuda' => '',
