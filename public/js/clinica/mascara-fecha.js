@@ -226,17 +226,26 @@
         validarTope();
 
         if (typeof document.createElement('input').showPicker === 'function' && !campo.readOnly) {
+            // El icono va **dentro** del campo, a la derecha, como el del calendario nativo (no gasta alto).
+            var envoltura = document.createElement('div');
+            envoltura.style.cssText = 'position:relative';
+            campo.parentNode.insertBefore(envoltura, campo);
+            envoltura.appendChild(campo);
+            campo.style.paddingRight = '2.5rem';
+
             var boton = document.createElement('button');
             boton.type = 'button';
-            boton.className = 'btn btn-outline-secondary btn-sm mt-1';
+            boton.className = 'btn btn-link p-0 border-0 text-body';
+            boton.style.cssText = 'position:absolute;top:50%;right:.75rem;transform:translateY(-50%);line-height:1';
             boton.setAttribute('aria-label', 'Elegir la fecha en el calendario');
-            boton.innerHTML = '<i class="bi bi-calendar3" aria-hidden="true"></i> Calendario';
+            boton.title = 'Elegir la fecha en el calendario';
+            boton.innerHTML = '<i class="bi bi-calendar3" aria-hidden="true"></i>';
 
             var selector = document.createElement('input');
             selector.type = 'date';
             selector.tabIndex = -1;
             selector.setAttribute('aria-hidden', 'true');
-            selector.style.cssText = 'position:absolute;opacity:0;pointer-events:none;width:1px;height:1px';
+            selector.style.cssText = 'position:absolute;right:0;bottom:0;opacity:0;pointer-events:none;width:1px;height:1px';
             if (tope) { selector.max = tope; }
 
             boton.addEventListener('click', function () {
@@ -255,8 +264,8 @@
                 }
             });
 
-            campo.insertAdjacentElement('afterend', boton);
-            boton.insertAdjacentElement('afterend', selector);
+            envoltura.appendChild(boton);
+            envoltura.appendChild(selector);
         }
 
         campo.addEventListener('paste', function (evento) {
