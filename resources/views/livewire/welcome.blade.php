@@ -295,6 +295,61 @@
                     </div>
                 </div>
             </article>
+
+            <!-- Galería: lo que produce el consultorio -->
+            <section class="porque-galeria" aria-labelledby="porque-galeria-titulo">
+                <header class="porque-galeria-encabezado">
+                    <span class="porque-etiqueta">
+                        <i class="bi bi-collection" aria-hidden="true"></i> Por dentro
+                    </span>
+                    <h3 id="porque-galeria-titulo">Lo que sale de Doctorísimo.App</h3>
+                    <p class="porque-galeria-intro">
+                        No es solo la agenda: son las curvas de crecimiento, los récipes y los informes que el
+                        consultorio produce todos los días, listos para imprimir o compartir.
+                    </p>
+                </header>
+
+                <div class="porque-galeria-grid">
+                    <figure class="porque-lamina">
+                        <div class="porque-lamina-marco">
+                            <img src="{{ asset('img/landing/crecimiento.webp') }}"
+                                 alt="Curvas de crecimiento pediátrico con los percentiles de Fundacredesa."
+                                 width="1100" height="1181" loading="lazy" decoding="async">
+                        </div>
+                        <figcaption>
+                            <span>Pediatría</span>
+                            <strong>Curvas de crecimiento</strong>
+                            <p>Percentiles de Fundacredesa en pantalla y en la hoja impresa, con la medición de cada control.</p>
+                        </figcaption>
+                    </figure>
+
+                    <figure class="porque-lamina">
+                        <div class="porque-lamina-marco">
+                            <img src="{{ asset('img/landing/recipe.webp') }}"
+                                 alt="Récipe impreso con el membrete del médico, dos medicamentos y el QR de verificación."
+                                 width="562" height="792" loading="lazy" decoding="async">
+                        </div>
+                        <figcaption>
+                            <span>Récipes</span>
+                            <strong>Récipes listos para imprimir</strong>
+                            <p>Con membrete, indicaciones y un QR para verificar que el récipe es auténtico.</p>
+                        </figcaption>
+                    </figure>
+
+                    <figure class="porque-lamina">
+                        <div class="porque-lamina-marco">
+                            <img src="{{ asset('img/landing/eco.webp') }}"
+                                 alt="Informe de ecografía obstétrica del segundo trimestre con biometría, anatomía y conclusión."
+                                 width="794" height="900" loading="lazy" decoding="async">
+                        </div>
+                        <figcaption>
+                            <span>Ecografía</span>
+                            <strong>Informes de ecografía</strong>
+                            <p>Biometría, anatomía y conclusión en la hoja del segundo trimestre, lista para entregar.</p>
+                        </figcaption>
+                    </figure>
+                </div>
+            </section>
         </div>
     </section>
 
@@ -341,7 +396,7 @@
                 </div>
                 <div class="col-lg-4">
                     <h6 class="fw-bold mb-3">Contacto</h6>
-                    <p class="small text-muted mb-1"><i class="bi bi-envelope me-2"></i>soporte@ginecoreport.com</p>
+                    <p class="small text-muted mb-1"><i class="bi bi-envelope me-2"></i><a href="mailto:soporte@ginecoreport.com">soporte@ginecoreport.com</a></p>
                 </div>
             </div>
             <hr class="my-4 border-secondary">
