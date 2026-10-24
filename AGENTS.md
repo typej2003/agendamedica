@@ -723,9 +723,16 @@ discontinuada** (Kotlin) — no la tomes como referencia de lo que este backend 
 un backend ya **desplegado** (`https://ddrsistemas.com/medic-report/api/`) que puede divergir de este código, y usa
 endpoints previos (`app/refresh-data`) en vez de `sync-app-data`.
 
-**Stack:** Laravel 8 (`laravel/framework ^8.0`), PHP `^8.0` (composer configurado con `platform 8.2.12`),
-MySQL (`DB_CONNECTION=mysql`), tokens con **Laravel Sanctum 2.15**, roles/permisos con
-**spatie/laravel-permission 6.25**, panel web con **Livewire 2.12**, CORS con `fruitcake/laravel-cors`.
+**Stack:** Laravel 9 (`laravel/framework ^9.0`; la subida sigue hasta 12.70), PHP `^8.0.2` (composer
+configurado con `platform 8.2.12`), MySQL (`DB_CONNECTION=mysql`), tokens con **Laravel Sanctum 3.3**,
+roles/permisos con **spatie/laravel-permission 6.25**, panel web con **Livewire 2.12** (llega hasta Laravel
+10; desde 11 va Livewire 3), CORS con el middleware del framework (`Illuminate\Http\Middleware\HandleCors`).
+
+**Subida de Laravel en curso (2026-10-24):** 8 → 9 → 10 → 11 → 12.70, un escalón por rama. Laravel ≤ 11
+está EOL y **Composer 2.10 bloquea instalarlo** por avisos de seguridad (Symfony 6 y el bypass de
+`TokenGuard` de `< 12.68`), así que `composer.json` lleva **`config.policy.advisories.block = false`**
+mientras dure la subida: es **temporal**, se quita al llegar a 12.70 y **ningún escalón intermedio se sube
+a QA ni a producción**. Cada escalón corre la suite completa y el humo en Chrome. Ver la trampa 168.
 
 Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 
