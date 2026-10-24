@@ -351,6 +351,7 @@ class ConsultaRecipesWebTest extends TestCase
             ->get($this->urlSeccion($consulta))->assertOk()->getContent();
 
         $this->assertStringContainsString('data-imprimir-recipe', $guardado, 'El editor del récipe guardado no ofrece imprimir.');
+        $this->assertStringContainsString('id="dialogo-imprimir-recipe"', $guardado, 'Sin el diálogo de impresión, el botón no hace nada.');
 
         $nuevo = $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get($this->urlSeccion($consulta, 'nuevo'))->assertOk()->getContent();
