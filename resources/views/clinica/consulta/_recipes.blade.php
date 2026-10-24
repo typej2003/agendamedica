@@ -227,6 +227,13 @@
          catálogo de tratamientos: viven en sus parciales. --}}
     @include('clinica.consulta._recipes-fila-plantilla')
     @include('clinica.consulta._recipes-alta-medicamento')
+
+    {{-- El diálogo «Imprimir récipe» también en el editor (2026-10-23): el botón «Imprimir» de aquí lo abre. Sin él el botón no hacía nada. --}}
+    @if ($seccion->puedeImprimir())
+        <x-ui.dialogo id="dialogo-imprimir-recipe" titulo="Imprimir récipe" lateral>
+            @include('clinica.imprimir._opciones', ['dialogo' => $seccion->dialogoDeImpresion()])
+        </x-ui.dialogo>
+    @endif
 @endif
 @endif
 </div>
