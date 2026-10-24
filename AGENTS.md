@@ -723,10 +723,11 @@ discontinuada** (Kotlin) — no la tomes como referencia de lo que este backend 
 un backend ya **desplegado** (`https://ddrsistemas.com/medic-report/api/`) que puede divergir de este código, y usa
 endpoints previos (`app/refresh-data`) en vez de `sync-app-data`.
 
-**Stack:** Laravel 9 (`laravel/framework ^9.0`; la subida sigue hasta 12.70), PHP `^8.0.2` (composer
+**Stack:** Laravel 10 (`laravel/framework ^10.0`; la subida sigue hasta 12.70), PHP `^8.0.2` (composer
 configurado con `platform 8.2.12`), MySQL (`DB_CONNECTION=mysql`), tokens con **Laravel Sanctum 3.3**,
 roles/permisos con **spatie/laravel-permission 6.25**, panel web con **Livewire 2.12** (llega hasta Laravel
-10; desde 11 va Livewire 3), CORS con el middleware del framework (`Illuminate\Http\Middleware\HandleCors`).
+10; desde 11 va Livewire 3), CORS con el middleware del framework (`Illuminate\Http\Middleware\HandleCors`)
+y tests con **PHPUnit 10.5** + **paratest 7** (`minimum-stability: stable`).
 
 **Subida de Laravel en curso (2026-10-24):** 8 → 9 → 10 → 11 → 12.70, un escalón por rama. Laravel ≤ 11
 está EOL y **Composer 2.10 bloquea instalarlo** por avisos de seguridad (Symfony 6 y el bypass de

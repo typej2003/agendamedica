@@ -13,11 +13,11 @@
             <directory suffix="Test.php">./tests/Feature</directory>
         </testsuite>
     </testsuites>
-    <coverage processUncoveredFiles="true">
+    <source>
         <include>
             <directory suffix=".php">./app</directory>
         </include>
-    </coverage>
+    </source>
     <php>
         <!-- La suite ya pasa de 1.300 tests y cada uno arranca la aplicacion con todas las rutas: con los 128 MB
              por defecto de PHP aborta por memoria antes de dar la linea final (medido en WEB-8.1a). -->
