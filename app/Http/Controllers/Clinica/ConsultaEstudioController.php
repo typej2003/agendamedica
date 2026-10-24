@@ -25,6 +25,7 @@ use App\Clinica\Consulta\Vistas\TiposDeEstudio;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
+use App\Clinica\FechaDelConsultorio;
 use App\Support\FechaDeFormulario;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
@@ -159,7 +160,8 @@ class ConsultaEstudioController extends Controller
         foreach ($this->camposDe($tipo) as $campo) {
             $reglas[$campo['columna']] = match ($campo['tipo'] ?? 'texto') {
                 // La columna es `date`: el formato se fija, no se acepta «lo que parezca una fecha».
-                'fecha', 'fecha-tecleada' => FechaDeFormulario::REGLA,
+                'fecha', 'fecha-tecleada' => FechaDeFormulario::REGLA
+                    . ($campo['columna'] === 'fur' ? '|before_or_equal:' . FechaDelConsultorio::hoyComoTexto() : ''),
                 // `entero` es el campo con máscara `###` del escritorio: el navegador ya no deja escribir
                 // decimales y el servidor lo vuelve a comprobar (`integer`, no `numeric`).
                 'numero' => ($campo['entero'] ?? false)
@@ -258,6 +260,7 @@ class ConsultaEstudioController extends Controller
 
         foreach ($camposDeFecha as $columna => $campo) {
             $mensajes[$columna . '.date_format'] = FechaDeFormulario::mensaje($campo['etiqueta'], $campo['tecleada']);
+            $mensajes[$columna . '.before_or_equal'] = 'La ' . $campo['etiqueta'] . ' no puede ser una fecha futura.';
         }
 
         return $mensajes;

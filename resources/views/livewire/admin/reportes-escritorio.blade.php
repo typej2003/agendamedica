@@ -37,7 +37,7 @@
             <div class="card-body">
                 <dl class="row mb-0">
                     <dt class="col-sm-3">Cuándo</dt>
-                    <dd class="col-sm-9">{{ $abierto->created_at->format('d/m/Y H:i') }}</dd>
+                    <dd class="col-sm-9">{{ \App\Support\HoraLocal::fechaHora($abierto->created_at) }}</dd>
 
                     <dt class="col-sm-3">Médico</dt>
                     <dd class="col-sm-9">{{ $abierto->reg_medico ?: '—' }}</dd>
@@ -90,7 +90,7 @@
                 <tbody>
                     @forelse ($reportes as $reporte)
                         <tr class="{{ (int) $seleccionado === $reporte->id ? 'table-active' : '' }}">
-                            <td class="text-nowrap">{{ $reporte->created_at->format('d/m/Y H:i') }}</td>
+                            <td class="text-nowrap">{{ \App\Support\HoraLocal::fechaHora($reporte->created_at) }}</td>
                             <td><span class="badge bg-secondary">{{ $reporte->etiquetaDelTipo() }}</span></td>
                             <td>{{ $reporte->reg_medico ?: '—' }}</td>
                             <td>{{ $reporte->equipo ?: '—' }}</td>
