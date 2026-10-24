@@ -797,22 +797,25 @@ dos cruzadas o una tecla vecina). Es una **prueba con pacientes**: el listado y 
 (por prefijo) o el n.º de historia (por contiene) del consultorio; esos dos números no están en el índice
 porque el consultorio ya acota las filas y son datos únicos. El `LIKE` sobre la tabla grande queda **sólo de
 respaldo** mientras el índice no esté construido (una instalación nueva, antes del `pecle-search:rebuild`). Lo
-que se midió contra el MariaDB local con 200.000 pacientes, 600.000 tokens y un consultorio de 5.000:
+que se midió contra el MariaDB local con 200.000 pacientes y un consultorio de 5.000:
 
-- **El `CAST` del id no es cosmético.** `search_tokens.entity_id` es texto y `pacientes.id` entero; sin
-  `CAST(pacientes.id AS CHAR)` el motor no usa el índice y la consulta se vuelve un producto cartesiano:
-  **>8 s en MariaDB y 15 s en SQLite**. Con el `CAST`, 0,5 ms para un apellido y 37 ms en el peor caso
-  (prefijo de dos letras que matchea todo el consultorio).
+- **El id de `pacientes` es numérico y el índice lo sabe.** La fuente declara `numeric_index` (PecleSearch
+  v0.4.0) y el índice vive en `numeric_search_tokens` (`entity_id BIGINT`): se compara entero con entero y el
+  motor usa la PK, así que un apellido único tarda **2,4 ms** —el caso normal—. Con la tabla de texto hay que
+  convertir la llave en cada fila; **sin** esa conversión la consulta se vuelve un producto cartesiano (15 s
+  en SQLite, >8 s en MariaDB) y con ella, 15 ms en el mismo caso.
 - **El consultorio tiene que mandar en el plan.** `PacientesDelConsultorio::deLosConsultorios()` lo mete
   como subconsulta derivada (`joinSub` con los `paciente_id` del tenant): con `whereExists` el motor
-  recorría los 200.000 (34 → 16 ms por consulta).
-- **El `or` del n.º de historia sólo va en las palabras con dígitos**: sumárselo a una palabra de letras
-  impide el semi-join del índice (16 → 34 ms). Una historia no numérica del legado (`S/H`) no se encuentra
-  por tokens; el respaldo `LIKE` sí.
+  recorría los 200.000. Y va con **`group by`, no `distinct`**: el `distinct` materializa y ordena (~30 ms)
+  y el `group by` lee por el índice único del pivote (~1 ms).
+- **El `or` de la cédula y del n.º de historia sólo va en las palabras con dígitos**: sumárselo a una de
+  letras impide el semi-join del índice. Por eso un apellido es 2,4 ms y una cédula/historia ~55 ms; un
+  prefijo amplio que matchea todo el consultorio tarda ~90 ms por el orden de la página, no por el índice.
 - **La semántica cambió**: ya no se encuentra por el medio de la palabra (`onzale` no trae a González) y la
   cédula se busca por su comienzo. Es el precio de no recorrer la tabla.
-- **No se usa el `whereIndexed` del paquete**: es el `EXISTS` correlacionado sin `CAST` que cae en el
-  producto cartesiano. Ni el autocompletado `suggest`, que leería nombres de otros consultorios.
+- **DDR no usa el `whereIndexed` del paquete** porque necesita el `or` de cédula/historia en la misma
+  palabra; del paquete usa la tabla y el tipo (`tokensTable`/`numericIndex`), que es lo que evita el `CAST`.
+  Tampoco el autocompletado `suggest`, que leería nombres de otros consultorios.
 
 **El corrector entra sólo cuando hace falta.** Primero se busca **lo escrito**; si eso no encuentra a
 nadie y no se pidió `?literal=1`, recién ahí se resuelve el término y se busca otra vez. Armar el trie del
@@ -852,7 +855,9 @@ recarga, paginación— sigue siendo la misma pantalla de siempre, con sus conte
 - **Red de seguridad**: `php artisan pecle-search:rebuild pacientes`, programado a las **03:20 de Caracas**
   en `Kernel::schedule()` (necesita el `schedule:run` del servidor, como las demás tareas), cubre lo que
   entre sin eventos de Eloquent (una importación, un `UPDATE` masivo). **En el despliegue hay que correrlo
-  una vez** después de `migrate --force`; sin índice el buscador funciona igual, sólo que sin corrección.
+  una vez** después de `migrate --force`: el índice nuevo (`numeric_search_tokens`, v0.4.0) arranca vacío y,
+  hasta que se reconstruya, `isBuilt` ve la marca apuntando a la tabla vieja y la búsqueda usa el `LIKE` de
+  respaldo (funciona, pero lento). Lo mismo después de cualquier cambio de `numeric_index` en la config.
 
 **Pruebas.** `Feature/BusquedaDePacientesCorregidaWebTest` (8: corrige y avisa, `literal`, cédula e
 historia intactas, no se escapa del consultorio, vuelve a lo escrito, JSON, indexado al instante y el

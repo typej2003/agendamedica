@@ -17,10 +17,11 @@ use Throwable;
  * (PecleSearch) ayuda a que una palabra escrita mal llegue a la que existe. La cédula y la historia no están
  * en el índice porque son números y el consultorio ya acota las filas: se buscan sobre el pivote.
  *
- * **El `CAST` del id no es cosmético.** `search_tokens.entity_id` es texto y `pacientes.id` es entero;
- * sin convertir el id a texto el motor no usa el índice y la consulta se vuelve un producto cartesiano
- * (medido con 200.000 pacientes: >8 s en MariaDB y 15 s en SQLite). Con el `CAST` son 0,5 ms para un
- * apellido y 37 ms en el peor caso (prefijo de dos letras en un consultorio de 5.000).
+ * **El id de `pacientes` es numérico y el índice lo sabe.** La fuente de `config/pecle_search.php` declara
+ * `numeric_index`, el índice vive en `numeric_search_tokens` y la búsqueda compara entero con entero: el
+ * motor usa la PK (medido con 200.000 pacientes: 1 ms contra 15 ms con la tabla de texto). Si un índice no
+ * usa la tabla numérica, el paquete convierte la llave a texto; sin esa conversión el motor no usa el índice
+ * y la consulta se vuelve un producto cartesiano (15 s en SQLite, >8 s en MariaDB).
  *
  * **El `LIKE` queda de respaldo** mientras el índice no esté construido (una instalación nueva, antes
  * del `pecle-search:rebuild`): funciona, pero recorre la tabla. En ese camino se mantiene la búsqueda
@@ -144,8 +145,9 @@ final class BusquedaDePacientes
     }
 
     /**
-     * La búsqueda de verdad: cada palabra contra `search_tokens` (comienzo de palabra indexada) o contra
-     * el n.º de historia del consultorio. Lo usan el listado, sus conteos y las sugerencias del alta.
+     * La búsqueda de verdad: cada palabra contra la tabla de tokens del índice (comienzo de palabra
+     * indexada) o contra el n.º de historia del consultorio. La usan el listado, sus conteos y las
+     * sugerencias del alta.
      *
      * @param  \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $consulta
      */
@@ -160,27 +162,35 @@ final class BusquedaDePacientes
             return $consulta->whereRaw('0 = 1');
         }
 
-        // Ver el docblock de la clase: sin este CAST el motor no entra por el índice de `search_tokens`.
-        $motor = $consulta->getConnection()->getDriverName();
-        $idComoTexto = $motor === 'mysql' ? 'CAST(pacientes.id AS CHAR)' : 'CAST(pacientes.id AS TEXT)';
+        // La tabla y la comparación las decide el paquete según `numeric_index` de la fuente: con el id
+        // numérico (el de `pacientes`) el índice vive en `numeric_search_tokens` y se compara entero con
+        // entero; con la tabla de texto y un id numérico hay que convertir la llave o el motor no usa la PK.
+        $buscador = app(PecleSearchManager::class);
+        $indice = CorrectorDeLaBusqueda::INDICE;
+        $tabla = $buscador->tokensTable($indice);
+        $comparacion = $buscador->numericIndex($indice)
+            ? 'pacientes.id'
+            : ($consulta->getConnection()->getDriverName() === 'mysql'
+                ? 'CAST(pacientes.id AS CHAR)'
+                : 'CAST(pacientes.id AS TEXT)');
 
         foreach ($tokens as $token) {
-            $consulta->where(function ($grupo) use ($token, $columnaHistoria, $idComoTexto) {
-                $grupo->whereExists(function ($sub) use ($token, $idComoTexto) {
+            $consulta->where(function ($grupo) use ($token, $columnaHistoria, $tabla, $comparacion) {
+                $grupo->whereExists(function ($sub) use ($token, $tabla, $comparacion) {
                     $sub->selectRaw('1')
-                        ->from('search_tokens')
-                        ->where('search_tokens.index_name', CorrectorDeLaBusqueda::INDICE)
-                        ->whereRaw("search_tokens.entity_id = {$idComoTexto}")
-                        ->where('search_tokens.token', 'like', $token . '%');
+                        ->from($tabla)
+                        ->where($tabla.'.index_name', CorrectorDeLaBusqueda::INDICE)
+                        ->whereRaw("{$tabla}.entity_id = {$comparacion}")
+                        ->where($tabla.'.token', 'like', $token . '%');
                 });
 
                 // El n.º de historia y la cédula sólo pueden ser la palabra buscada si tiene dígitos:
                 // sumarle un `or` con el pivote a una palabra de letras impide que el motor use el
                 // semi-join del índice (medido: 16 → 34 ms por consulta con 200.000 pacientes). La cédula
-                // se busca además por prefijo sobre las filas del consultorio: cubre los índices viejos
-                // (construidos antes de que la cédula entrara en el índice) y cuesta poco, porque el
-                // consultorio ya es la tabla que manda en el plan. Una historia no numérica del legado
-                // (`S/H`) no se encuentra por acá; el `LIKE` de respaldo sigue cubriéndola.
+                // se busca además por prefijo sobre las filas del consultorio: cubre un índice que no la
+                // tenga y cuesta poco, porque el consultorio ya es la tabla que manda en el plan. Una
+                // historia no numérica del legado (`S/H`) no se encuentra por acá; el `LIKE` de respaldo
+                // sigue cubriéndola.
                 if (preg_match('/[0-9]/', $token) === 1) {
                     $grupo->orWhereRaw("pacientes.cedula like ? escape '!'", [$token . '%']);
 

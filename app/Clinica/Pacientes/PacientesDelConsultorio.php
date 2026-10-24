@@ -347,7 +347,10 @@ class PacientesDelConsultorio
         $visibles = DB::table('medico_pacientes')
             ->select('paciente_id')
             ->whereIn('reg_medico', $registros)
-            ->distinct();
+            // `GROUP BY` y no `DISTINCT`: la clave única `(reg_medico, paciente_id)` ya viene ordenada y el
+            // motor lee la subconsulta por índice; con `DISTINCT` materializa con tabla temporal y ordena,
+            // y la consulta entera pasa de ~1 ms a ~30 ms (medido con 200.000 pacientes).
+            ->groupBy('paciente_id');
 
         return DB::table('pacientes')
             ->joinSub($visibles, 'visibles', 'visibles.paciente_id', '=', 'pacientes.id')
