@@ -3,30 +3,35 @@
 namespace App\Clinica\Pacientes;
 
 use Illuminate\Support\Facades\DB;
+use Pecle\Search\Core\Normalizer;
+use Pecle\Search\Laravel\PecleSearchManager;
+use Throwable;
 
 /**
- * La búsqueda de pacientes del listado y del buscador del alta de cita.
+ * La búsqueda de pacientes del listado, del buscador del alta de cita y de las sugerencias.
  *
- * Dos problemas reales del legado obligan a que no sea un `like "%texto%"` sobre una columna:
+ * **Busca por tokens, no con `LIKE` sobre `pacientes`.** Cada palabra que se escribe tiene que ser el
+ * comienzo de una palabra del índice (`search_tokens`: nombres y apellidos del paciente) o coincidir con la
+ * cédula (por prefijo) o el n.º de historia (por contiene) del consultorio. Así el costo no crece con la
+ * tabla —con millones de pacientes un `LIKE '%texto%'` es un full scan— y el corrector de errores de tecleo
+ * (PecleSearch) ayuda a que una palabra escrita mal llegue a la que existe. La cédula y la historia no están
+ * en el índice porque son números y el consultorio ya acota las filas: se buscan sobre el pivote.
  *
- * 1. **El nombre está partido en dos columnas** (`nombres` y `apellidos`). Buscar "Ana Alvarez" contra
- *    cada columna por separado no encuentra nada nunca. Acá se parte lo buscado en palabras y se exige
- *    que **cada palabra** aparezca en alguna de las columnas (nombre, apellido, cédula o historia), sin
- *    importar el orden.
- * 2. **Los acentos y las mayúsculas no se comportan igual en los dos motores.** `LIKE` de SQLite
- *    (desarrollo y tests) sólo pliega mayúsculas ASCII: `Jaquez` **no** encuentra `Jáquez`. MySQL, con
- *    su colación `_ci` (producción), sí. Para que la búsqueda sea la misma en los dos, la comparación
- *    se hace sobre una expresión que saca los acentos de la columna (`REPLACE`, que existe en los dos
- *    motores) y baja todo a minúsculas; la palabra buscada se normaliza igual en PHP. `REPLACE` y
- *    `LOWER` son estándar en SQLite y en MySQL, así que la promesa es la misma en los dos.
+ * **El `CAST` del id no es cosmético.** `search_tokens.entity_id` es texto y `pacientes.id` es entero;
+ * sin convertir el id a texto el motor no usa el índice y la consulta se vuelve un producto cartesiano
+ * (medido con 200.000 pacientes: >8 s en MariaDB y 15 s en SQLite). Con el `CAST` son 0,5 ms para un
+ * apellido y 37 ms en el peor caso (prefijo de dos letras en un consultorio de 5.000).
  *
- * El número de historia es **texto** en `medico_pacientes` y entero en `consultas`: el legado numera
- * `00001`, AppDDR numera `1`, y las dos formas tienen que encontrar al mismo paciente, así que cada
- * palabra numérica se busca tal cual **y** sin sus ceros a la izquierda.
+ * **El `LIKE` queda de respaldo** mientras el índice no esté construido (una instalación nueva, antes
+ * del `pecle-search:rebuild`): funciona, pero recorre la tabla. En ese camino se mantiene la búsqueda
+ * por cualquier parte de la palabra y la normalización de acentos según el motor.
+ *
+ * ⚠️ Las dos ramas suponen que la consulta exterior es `pacientes` (sin alias): el `CAST` y las
+ * columnas se escriben con ese nombre.
  */
 final class BusquedaDePacientes
 {
-    /** Más palabras que esto no acotan nada (y multiplican los `like` de la consulta). */
+    /** Más palabras que esto no acotan nada (y multiplican los `EXISTS` de la consulta). */
     private const MAX_PALABRAS = 5;
 
     /** Una palabra más larga que la columna más ancha del paciente no puede ser un nombre real. */
@@ -43,7 +48,8 @@ final class BusquedaDePacientes
     ];
 
     /**
-     * Las palabras de la búsqueda, sin repetidas y acotadas.
+     * Las palabras de la búsqueda, sin repetidas y acotadas. Es del camino de respaldo (`LIKE`); el de
+     * tokens usa el normalizador del paquete, que además corta los símbolos.
      *
      * @return array<int, string>
      */
@@ -62,13 +68,13 @@ final class BusquedaDePacientes
     }
 
     /**
-     * La expresión SQL que deja una columna comparable sin acentos ni mayúsculas (ver el porqué de la clase).
+     * La expresión SQL que deja una columna comparable sin acentos ni mayúsculas, para el respaldo.
      *
      * **En MySQL no hace falta la cadena de `REPLACE`**: las tablas del legado usan una colación `_ci`, que
      * compara sin acentos ni mayúsculas, y encadenar trece `REPLACE` por columna y por palabra multiplica el
-     * costo del listado sin cambiar el resultado (medido con 6.000 pacientes: 55 ms → 1,6 ms). SQLite
-     * —desarrollo y tests— sólo pliega mayúsculas ASCII, así que ahí la normalización explícita sigue siendo
-     * la que hace que `Jaquez` encuentre a `Jáquez`.
+     * costo sin cambiar el resultado (medido con 6.000 pacientes: 55 ms → 1,6 ms en SQLite; 6,8 → 2,5 ms en
+     * MariaDB). SQLite —desarrollo y tests— sólo pliega mayúsculas ASCII, así que ahí la normalización
+     * explícita sigue siendo la que hace que `Jaquez` encuentre a `Jáquez`.
      *
      * `$motor` se puede pasar para probar las dos ramas sin una conexión MySQL; por defecto, el de la
      * conexión.
@@ -120,20 +126,82 @@ final class BusquedaDePacientes
     }
 
     /**
-     * Agrega el grupo de búsqueda a la consulta: un `where` por palabra (se exigen todas), y dentro de
-     * cada uno un `or` entre las columnas del paciente. El grupo va anidado para que el `or` no se
-     * escape del filtro por `reg_medico`.
+     * Agrega la búsqueda a la consulta: un `where` por palabra (se exigen todas). El grupo va anidado para
+     * que el `or` de cada palabra no se escape del filtro por `reg_medico`.
      *
-     * `$columnaHistoria` es la columna del número: desde la Fase 2 del cambio de `reg_medico` el listado
-     * lee el pivote del **contexto** con el alias `vinculo` (`LEFT JOIN medico_pacientes as vinculo`), y
-     * el nombre pelado ya no existe en esa consulta. El valor por defecto es el de siempre.
+     * `$columnaHistoria` es la columna del número del consultorio: el listado lee el pivote del **contexto**
+     * con el alias `vinculo` (`LEFT JOIN medico_pacientes as vinculo`).
      *
      * @param  \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $consulta
      */
     public static function aplicar($consulta, string $buscar, string $columnaHistoria = 'medico_pacientes.numhistoria')
     {
-        // El motor de **la consulta que se está armando**, no el de la conexión por defecto: la expresión de
-        // la columna cambia según quién compara (ver `columnaNormalizada`).
+        if (self::elIndiceEstaConstruido()) {
+            return self::porTokens($consulta, $buscar, $columnaHistoria);
+        }
+
+        return self::porLike($consulta, $buscar, $columnaHistoria);
+    }
+
+    /**
+     * La búsqueda de verdad: cada palabra contra `search_tokens` (comienzo de palabra indexada) o contra
+     * el n.º de historia del consultorio. Lo usan el listado, sus conteos y las sugerencias del alta.
+     *
+     * @param  \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $consulta
+     */
+    public static function porTokens($consulta, string $buscar, string $columnaHistoria): mixed
+    {
+        // El mismo normalizador con el que se construyó el índice (minúsculas, sin acentos, [a-z0-9]):
+        // si acá se normalizara distinto, el token no coincidiría. `searchTokens` ya descarta los
+        // comodines de `LIKE` y los signos, así que el prefijo es seguro.
+        $tokens = array_slice(app(Normalizer::class)->searchTokens($buscar), 0, self::MAX_PALABRAS);
+
+        if ($tokens === []) {
+            return $consulta->whereRaw('0 = 1');
+        }
+
+        // Ver el docblock de la clase: sin este CAST el motor no entra por el índice de `search_tokens`.
+        $motor = $consulta->getConnection()->getDriverName();
+        $idComoTexto = $motor === 'mysql' ? 'CAST(pacientes.id AS CHAR)' : 'CAST(pacientes.id AS TEXT)';
+
+        foreach ($tokens as $token) {
+            $consulta->where(function ($grupo) use ($token, $columnaHistoria, $idComoTexto) {
+                $grupo->whereExists(function ($sub) use ($token, $idComoTexto) {
+                    $sub->selectRaw('1')
+                        ->from('search_tokens')
+                        ->where('search_tokens.index_name', CorrectorDeLaBusqueda::INDICE)
+                        ->whereRaw("search_tokens.entity_id = {$idComoTexto}")
+                        ->where('search_tokens.token', 'like', $token . '%');
+                });
+
+                // El n.º de historia y la cédula sólo pueden ser la palabra buscada si tiene dígitos:
+                // sumarle un `or` con el pivote a una palabra de letras impide que el motor use el
+                // semi-join del índice (medido: 16 → 34 ms por consulta con 200.000 pacientes). La cédula
+                // se busca además por prefijo sobre las filas del consultorio: cubre los índices viejos
+                // (construidos antes de que la cédula entrara en el índice) y cuesta poco, porque el
+                // consultorio ya es la tabla que manda en el plan. Una historia no numérica del legado
+                // (`S/H`) no se encuentra por acá; el `LIKE` de respaldo sigue cubriéndola.
+                if (preg_match('/[0-9]/', $token) === 1) {
+                    $grupo->orWhereRaw("pacientes.cedula like ? escape '!'", [$token . '%']);
+
+                    foreach (self::formasDeNumero($token) as $forma) {
+                        $grupo->orWhereRaw("{$columnaHistoria} like ? escape '!'", ['%' . self::escaparLike($forma) . '%']);
+                    }
+                }
+            });
+        }
+
+        return $consulta;
+    }
+
+    /**
+     * El respaldo mientras el índice no está construido: `LIKE` sobre las columnas del paciente, con la
+     * normalización de acentos según el motor. Encuentra por cualquier parte de la palabra.
+     *
+     * @param  \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $consulta
+     */
+    private static function porLike($consulta, string $buscar, string $columnaHistoria): mixed
+    {
         $motor = $consulta->getConnection()->getDriverName();
 
         foreach (self::palabras($buscar) as $palabra) {
@@ -151,5 +219,15 @@ final class BusquedaDePacientes
         }
 
         return $consulta;
+    }
+
+    /** ¿Hay índice construido para buscar por tokens? Sin tablas o sin aplicación: no. */
+    private static function elIndiceEstaConstruido(): bool
+    {
+        try {
+            return app(PecleSearchManager::class)->isBuilt(CorrectorDeLaBusqueda::INDICE);
+        } catch (Throwable) {
+            return false;
+        }
     }
 }
