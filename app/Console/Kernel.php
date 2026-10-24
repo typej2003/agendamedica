@@ -73,6 +73,20 @@ class Kernel extends ConsoleKernel
         $schedule->command('pulse:check --once')
             ->everyMinute()
             ->withoutOverlapping();
+
+        // **Worker de la cola** (2026-10-24). Desde que `QUEUE_CONNECTION=database`, los jobs se encolan en
+        // la tabla `jobs` y nadie los ejecuta si no hay un worker. En Plesk no hay Supervisor, así que el
+        // worker se despierta acá: `--stop-when-empty` lo hace salir apenas la cola queda vacía (con la cola
+        // al día tarda menos de un segundo, no demora al resto de las tareas) y `--max-time=50` lo corta
+        // antes de que entre el próximo `schedule:run`. Sin solapamiento por si una corrida se cuelga: a los
+        // 10 minutos vence el candado y la cola vuelve a moverse sola.
+        //
+        // ⚠️ Esto **depende del cron del servidor** (`schedule:run`), igual que el resto de las tareas. Si el
+        // cron no está, los jobs se acumulan en `jobs` y la última actividad web nunca se actualiza: en ese
+        // caso conviene dejar `QUEUE_CONNECTION=sync` hasta que el cron exista.
+        $schedule->command('queue:work --stop-when-empty --max-time=50 --tries=3 --sleep=1')
+            ->everyMinute()
+            ->withoutOverlapping(10);
     }
 
     /**
