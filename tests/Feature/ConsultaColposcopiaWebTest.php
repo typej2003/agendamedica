@@ -720,20 +720,39 @@ class ConsultaColposcopiaWebTest extends TestCase
         $this->assertStringContainsString('documento=histeroscopia', $html);
     }
 
-    public function test_las_solapas_sin_informe_no_ofrecen_imprimir(): void
+    public function test_la_solapa_sin_informe_no_ofrece_imprimir(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $consulta] = $this->pacienteYConsulta($medico);
 
-        foreach (['citologia', 'resultados'] as $clave) {
-            $consulta->setAttribute($clave === 'citologia' ? 'faringe' : 'oido', 'Un texto cargado.');
-            $consulta->save();
+        $consulta->setAttribute('oido', 'Un texto cargado.');
+        $consulta->save();
 
-            $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-                ->get($this->urlSolapa($consulta, $clave))->assertOk()->getContent();
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSolapa($consulta, 'resultados'))->assertOk()->getContent();
 
-            $this->assertStringNotContainsString('Imprimir el informe', $html, "La solapa {$clave} ofrece imprimir y no tiene hoja.");
-        }
+        $this->assertStringNotContainsString('Imprimir el informe', $html, 'La solapa resultados ofrece imprimir y no tiene hoja.');
+    }
+
+    /** 2026-10-23 (Alexander): la citología también imprime su informe, igual que la colposcopía. */
+    public function test_la_citologia_ofrece_imprimir_su_informe_si_tiene_texto(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSolapa($consulta, 'citologia'))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('documento=citologia', $html, 'Sin texto no hay nada que imprimir.');
+
+        $consulta->setAttribute('faringe', 'Muestra satisfactoria.');
+        $consulta->save();
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSolapa($consulta, 'citologia'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('Imprimir el informe', $html);
+        $this->assertStringContainsString('documento=citologia', $html);
     }
 
     public function test_una_solapa_que_no_existe_es_un_404(): void

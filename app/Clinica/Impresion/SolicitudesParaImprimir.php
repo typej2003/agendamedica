@@ -262,9 +262,9 @@ final class SolicitudesParaImprimir
             ];
         }
 
-        // Los informes de las solapas de texto del examen (WEB-6.5): la colposcopía y la histeroscopía. Cada
-        // una se ofrece si tiene texto —el escritorio **no** crea la fila al abrir la consulta: es una columna
-        // de `consultas`—, y las otras dos solapas de texto (citología y resultado de exámenes) no tienen hoja.
+        // Los informes de las solapas de texto del examen (WEB-6.5): la colposcopía, la citología y la
+        // histeroscopía. Cada una se ofrece si tiene texto —el escritorio **no** crea la fila al abrir la consulta:
+        // es una columna de `consultas`—; el resultado de exámenes no tiene hoja.
         foreach (TextosDelExamen::claves() as $solapa) {
             $documento = TextosDelExamen::documento($solapa);
 
