@@ -20,7 +20,7 @@
 <x-ui.tarjeta titulo="Examen físico" icono="bi-heart-pulse">
     <x-slot name="acciones">
         {{-- Las plantillas del resumen (`RF`) van arriba a la derecha, junto al estado (pedido del usuario, 2026-10-20). --}}
-        <x-ui.plantillas :plantillas="$seccion->plantillasFisico()" destino="#total_f" tipo="RF"
+        <x-ui.plantillas :plantillas="$seccion->plantillasFisico()" destino="#total_f" tipo="RF" repartir="#evaluacion-form"
                          nombre="resumen físico" />
         <span class="texto-tenue small me-2">{{ $seccion->cargados() }} de {{ $seccion->totalCampos() }} campos con dato</span>
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"

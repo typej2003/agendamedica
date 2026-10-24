@@ -63,9 +63,19 @@
     {{-- El alta del medicamento que falta: es el botón *Agregar* del escritorio (`w_nuevo_vademecum`). El aviso de
          conexión va acá, donde se decide crearlo: es lo único de la sección que no funciona sin red. --}}
     @if ($seccion->ofreceCrearMedicamento())
-        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="recipe-nuevo-medicamento">
-            <i class="bi bi-plus-lg" aria-hidden="true"></i> Crear un medicamento nuevo
-        </button>
+        <div class="d-flex flex-wrap gap-2 mt-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="recipe-nuevo-medicamento">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Crear un medicamento nuevo
+            </button>
+            {{-- El tratamiento se crea y se edita en su ventana del catálogo (2026-10-23): se abre en **otra pestaña** para no perder el
+                 récipe que se está armando; al volver, la búsqueda ya lo encuentra (es la misma tabla). --}}
+            @if ($seccion->ofreceTratamientos())
+                <a class="btn btn-outline-secondary btn-sm" href="{{ route('clinica.catalogos.tratamientos.nuevo') }}" target="_blank" rel="noopener">
+                    <i class="bi bi-collection" aria-hidden="true"></i> Crear un tratamiento nuevo
+                </a>
+                <a class="btn btn-link btn-sm" href="{{ route('clinica.catalogos.tratamientos') }}" target="_blank" rel="noopener">Administrar tratamientos</a>
+            @endif
+        </div>
         <p class="form-text mb-0 mt-1">
             <i class="bi bi-wifi" aria-hidden="true"></i> {{ $seccion->avisoDeConexion() }}
         </p>

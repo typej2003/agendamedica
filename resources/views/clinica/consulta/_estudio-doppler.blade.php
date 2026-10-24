@@ -17,6 +17,7 @@
 <div class="consulta-seccion" id="consulta-estudio-doppler">
     <x-ui.tarjeta :titulo="$vm->titulo()" :icono="$vm->icono()">
         <x-slot name="acciones">
+            @include('clinica.consulta._estudio-plantillas-cabecera')
             @include('clinica.consulta._estudio-formato-boton', ['formato' => $formato ?? null])
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
                          :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
@@ -42,8 +43,6 @@
                 <h3 class="h6 mt-4 mb-2">
                     <i class="bi {{ $grupo['icono'] }}" aria-hidden="true"></i> {{ $grupo['titulo'] }}
                 </h3>
-
-                @include('clinica.consulta._estudio-plantillas', ['grupo' => $grupo])
 
                 @if ($grupo['grilla'])
                     {{-- La grilla de cuatro vasos: una fila por arteria y una columna por índice, con los
@@ -90,6 +89,7 @@
                                 </div>
                             @else
                                 @include('clinica.consulta._estudio-campo', [
+                                    'omitirEtiqueta' => isset($grupo) && count($grupo['campos']) === 1 && mb_strtolower(trim($campo['etiqueta'])) === mb_strtolower(trim($grupo['titulo'])),
                                     'campo' => $campo,
                                     'columnas' => ($campo['tipo'] ?? 'texto') === 'area' ? 'col-12' : 'col-6 col-md-4',
                                 ])

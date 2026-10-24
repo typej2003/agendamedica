@@ -19,6 +19,7 @@
 <div class="consulta-seccion" id="consulta-estudio-obstetrico">
     <x-ui.tarjeta :titulo="$vm->titulo()" :icono="$vm->icono()">
         <x-slot name="acciones">
+            @include('clinica.consulta._estudio-plantillas-cabecera')
             @include('clinica.consulta._estudio-formato-boton', ['formato' => $formato ?? null])
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
                          :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
@@ -44,11 +45,10 @@
                     <i class="bi {{ $grupo['icono'] }}" aria-hidden="true"></i> {{ $grupo['titulo'] }}
                 </h3>
 
-                @include('clinica.consulta._estudio-plantillas', ['grupo' => $grupo])
-
                 <div class="row g-3">
                     @foreach ($grupo['campos'] as $campo)
                         @include('clinica.consulta._estudio-campo', [
+                            'omitirEtiqueta' => isset($grupo) && count($grupo['campos']) === 1 && mb_strtolower(trim($campo['etiqueta'])) === mb_strtolower(trim($grupo['titulo'])),
                             'campo' => $campo,
                             'columnas' => ($campo['tipo'] ?? 'texto') === 'area' ? 'col-12' : 'col-6 col-md-4',
                         ])
