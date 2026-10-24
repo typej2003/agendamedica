@@ -12,6 +12,7 @@ use App\Clinica\Consulta\ImagenDelExamen;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
 use App\Clinica\Consulta\TagDeImagen;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
+use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
@@ -234,11 +235,10 @@ class ConsultaImagenesController extends Controller
             return redirect()->route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipoDeEco]);
         }
 
-        $parametros = [
-            $consulta->id,
-            'seccion' => ConsultaShellVista::SECCION_EVALUACION,
-            'pestana' => $examen === null ? PestanasDelExamen::IMAGENES : $examen,
-        ];
+        // La galería general vuelve a su lugar, *Solicitudes → Imágenes* (2026-10-23); la imagen de una solapa de examen, a esa solapa.
+        $parametros = $examen === null
+            ? [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => PestanasDeSolicitudes::IMAGENES]
+            : [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => $examen];
 
         return redirect()->route('clinica.consulta', $parametros);
     }

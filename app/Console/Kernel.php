@@ -54,6 +54,15 @@ class Kernel extends ConsoleKernel
             ->timezone('America/Caracas')
             ->between('17:00', '21:00')
             ->withoutOverlapping();
+
+        // **Red de seguridad del índice del buscador de pacientes** (PecleSearch, 2026-10-24): los
+        // guardados sueltos se indexan al instante y las cargas masivas reconstruyen el índice al
+        // completarse; esto cubre lo que entre sin eventos de Eloquent (una importación, un `UPDATE`
+        // masivo). De madrugada, hora de Caracas, la de los consultorios.
+        $schedule->command('pecle-search:rebuild pacientes')
+            ->timezone('America/Caracas')
+            ->dailyAt('03:20')
+            ->withoutOverlapping();
     }
 
     /**

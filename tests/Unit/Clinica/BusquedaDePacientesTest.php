@@ -55,6 +55,14 @@ class BusquedaDePacientesTest extends TestCase
         $this->assertStringContainsString("'ñ', 'n'", $expresion);
     }
 
+    public function test_en_mysql_la_columna_se_compara_tal_cual_porque_la_colacion_pliega_acentos(): void
+    {
+        // La cadena de `REPLACE` es para SQLite. En MySQL la colación `_ci` del legado ya compara sin
+        // acentos ni mayúsculas, y encadenarla por columna y por palabra multiplica el costo del listado.
+        $this->assertSame('pacientes.apellidos', BusquedaDePacientes::columnaNormalizada('pacientes.apellidos', 'mysql'));
+        $this->assertStringContainsString('REPLACE', BusquedaDePacientes::columnaNormalizada('pacientes.apellidos', 'sqlite'));
+    }
+
     public function test_el_numero_de_historia_se_busca_con_y_sin_los_ceros_a_la_izquierda(): void
     {
         $this->assertSame(['01001', '1001'], BusquedaDePacientes::formasDeNumero('01001'));

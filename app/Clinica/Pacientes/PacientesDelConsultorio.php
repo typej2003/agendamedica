@@ -330,9 +330,11 @@ class PacientesDelConsultorio
      * La base de la lectura: los pacientes con vínculo en **alguno** de esos consultorios (una fila por
      * paciente) y el vínculo del **contexto** al lado, para leer el número que se muestra.
      *
-     * El `whereExists` es lo que hace que el paciente aparezca una sola vez aunque tenga vínculo en dos
-     * consultorios del doctor; el `LEFT JOIN` trae el número del contexto sin descartar a los que no lo
-     * tienen (son justamente los "sin historia en este consultorio").
+     * Los visibles entran como **subconsulta derivada** (los `paciente_id` de esos registros, sin
+     * repetir) y no como `whereExists`: así el motor arranca por el consultorio —unas pocas miles de
+     * filas— y no por `pacientes`. Con `whereExists` el plan elegía recorrer la tabla entera y, con
+     * millones de pacientes, la búsqueda por tokens dejaba de servir (medido: 34 → 16 ms por consulta
+     * con 200.000 pacientes y un consultorio de 5.000).
      *
      * @param  array<int,string>  $registros
      */
@@ -342,13 +344,16 @@ class PacientesDelConsultorio
             $registros = [$contextoRegistro];
         }
 
+        $visibles = DB::table('medico_pacientes')
+            ->select('paciente_id')
+            ->whereIn('reg_medico', $registros)
+            // `GROUP BY` y no `DISTINCT`: la clave única `(reg_medico, paciente_id)` ya viene ordenada y el
+            // motor lee la subconsulta por índice; con `DISTINCT` materializa con tabla temporal y ordena,
+            // y la consulta entera pasa de ~1 ms a ~30 ms (medido con 200.000 pacientes).
+            ->groupBy('paciente_id');
+
         return DB::table('pacientes')
-            ->whereExists(function ($consulta) use ($registros) {
-                $consulta->select(DB::raw('1'))
-                    ->from('medico_pacientes')
-                    ->whereColumn('medico_pacientes.paciente_id', 'pacientes.id')
-                    ->whereIn('medico_pacientes.reg_medico', $registros);
-            })
+            ->joinSub($visibles, 'visibles', 'visibles.paciente_id', '=', 'pacientes.id')
             ->leftJoin('medico_pacientes as vinculo', function ($union) use ($contextoRegistro) {
                 $union->on('vinculo.paciente_id', '=', 'pacientes.id')
                     ->where('vinculo.reg_medico', '=', $contextoRegistro);

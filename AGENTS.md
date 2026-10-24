@@ -779,7 +779,92 @@ Hay **dos superficies distintas** en el mismo Laravel, no las mezcles:
 | `config/` | Config Laravel estándar (`auth.php` define el guard `api` con driver **sanctum**; `services.php` las credenciales de WhatsApp). |
 | `tests/` | `bootstrap.php` arma sola la base de tests aislada (`database/database.testing.sqlite`). `Feature/`: tests reales con `DatabaseTransactions` (sync del legado, credenciales, configuración, citas, récipes…). `php artisan test` corre la suite completa. |
 
-## Pagos: cobro de planes con SyPago (en producción desde el 2026-10-21)
+## Buscador de pacientes con corrección de errores de tecleo (PecleSearch, 2026-10-24)
+
+**Qué hace.** Escribir «Gonzlez» en el buscador de pacientes encuentra a González: el término pasa por un
+corrector que cambia cada palabra desconocida por la que más se le parece (una letra de más, una de menos,
+dos cruzadas o una tecla vecina). Es una **prueba con pacientes**: el listado y el buscador JSON de
+«Nueva cita»; no toca la agenda, los catálogos ni el móvil.
+
+**Cómo está armado.** Es el paquete [`edyjen/pecle-search`](https://github.com/edyjen/Pecle-Search)
+(v0.3.0, con Laravel 13 agregado el mismo día): mantiene un **índice de palabras** en `search_tokens` +
+`search_indexes` (migración del paquete) y un corrector que se usa como **vocabulario**.
+`App\Clinica\Pacientes\CorrectorDeLaBusqueda` devuelve un `BusquedaCorregida` (lo escrito y lo aplicado) y
+`PacienteController` lo pasa a `PacientesDelConsultorio`.
+
+**La búsqueda es por tokens, no un `LIKE` sobre `pacientes`.** `BusquedaDePacientes::porTokens()` exige que
+**cada palabra** sea el comienzo de una palabra indexada (nombres y apellidos) o que coincida con la cédula
+(por prefijo) o el n.º de historia (por contiene) del consultorio; esos dos números no están en el índice
+porque el consultorio ya acota las filas y son datos únicos. El `LIKE` sobre la tabla grande queda **sólo de
+respaldo** mientras el índice no esté construido (una instalación nueva, antes del `pecle-search:rebuild`). Lo
+que se midió contra el MariaDB local con 200.000 pacientes y un consultorio de 5.000:
+
+- **El id de `pacientes` es numérico y el índice lo sabe.** La fuente declara `numeric_index` (PecleSearch
+  v0.4.0) y el índice vive en `numeric_search_tokens` (`entity_id BIGINT`): se compara entero con entero y el
+  motor usa la PK, así que un apellido único tarda **2,4 ms** —el caso normal—. Con la tabla de texto hay que
+  convertir la llave en cada fila; **sin** esa conversión la consulta se vuelve un producto cartesiano (15 s
+  en SQLite, >8 s en MariaDB) y con ella, 15 ms en el mismo caso.
+- **El consultorio tiene que mandar en el plan.** `PacientesDelConsultorio::deLosConsultorios()` lo mete
+  como subconsulta derivada (`joinSub` con los `paciente_id` del tenant): con `whereExists` el motor
+  recorría los 200.000. Y va con **`group by`, no `distinct`**: el `distinct` materializa y ordena (~30 ms)
+  y el `group by` lee por el índice único del pivote (~1 ms).
+- **El `or` de la cédula y del n.º de historia sólo va en las palabras con dígitos**: sumárselo a una de
+  letras impide el semi-join del índice. Por eso un apellido es 2,4 ms y una cédula/historia ~55 ms; un
+  prefijo amplio que matchea todo el consultorio tarda ~90 ms por el orden de la página, no por el índice.
+- **La semántica cambió**: ya no se encuentra por el medio de la palabra (`onzale` no trae a González) y la
+  cédula se busca por su comienzo. Es el precio de no recorrer la tabla.
+- **DDR no usa el `whereIndexed` del paquete** porque necesita el `or` de cédula/historia en la misma
+  palabra; del paquete usa la tabla y el tipo (`tokensTable`/`numericIndex`), que es lo que evita el `CAST`.
+  Tampoco el autocompletado `suggest`, que leería nombres de otros consultorios.
+
+**El corrector entra sólo cuando hace falta.** Primero se busca **lo escrito**; si eso no encuentra a
+nadie y no se pidió `?literal=1`, recién ahí se resuelve el término y se busca otra vez. Armar el trie del
+vocabulario cuesta ~30 ms con 6.000 pacientes (y más con la base entera: es global), así que una búsqueda
+que ya encuentra no lo paga. Si la corrección tampoco encuentra, se queda lo escrito y no se avisa.
+
+**Comparar sin acentos.** En el camino de tokens la normalización la hace el `Normalizer` del paquete, el
+mismo con el que se construyó el índice (minúsculas, sin acentos, `[a-z0-9]`), así que la colación del motor
+no interviene. En el **respaldo** sí: en MySQL la columna se compara tal cual (`LIKE '%…%'`) porque la
+colación `utf8mb4_unicode_ci` del legado ya pliega acentos y mayúsculas (verificado contra el MariaDB local
+con `GONZÁLEZ`), y la cadena de trece `REPLACE` por columna y por palabra encarecía el listado (6.000 filas:
+6,8 → 2,5 ms en MariaDB; 55 → 1,6 ms en SQLite). SQLite —desarrollo y tests— sólo pliega mayúsculas ASCII,
+así que ahí la normalización explícita sigue siendo la que hace que `Jaquez` encuentre a `Jáquez`.
+
+**Lo que ve el usuario.** El listado **avisa** («Se buscó «Gonzalez»…») y ofrece «Buscar tal cual»
+(`?literal=1`), porque el corrector puede equivocarse con un nombre que todavía no está en el índice. El
+JSON de «Nueva cita» conserva su forma (un arreglo de pacientes) y corrige en silencio.
+
+**La búsqueda en vivo pide el fragmento, no la pantalla.** `public/js/clinica/buscar-auto.js` pide la misma
+URL con `X-Requested-With` y reemplaza sólo `[data-buscar-resultados]`: el controlador devuelve
+`clinica/pacientes/_resultados.blade.php` (la región sola, sin armazón, menú, encabezado ni barra) y **no
+calcula los conteos del segmentado**, que quedan fuera de la región y en ese camino nadie muestra. Antes se
+renderizaba la pantalla entera por cada tecla y se tiraba la mitad: ~130 ms y 28 KB de menos en local
+(mediana 566 → 436 ms con el servidor de desarrollo, que tiene ~320 ms de piso). El listado completo —Enter,
+recarga, paginación— sigue siendo la misma pantalla de siempre, con sus conteos.
+
+**Mantenimiento del índice.** Hay tres caminos y conviene no mezclarlos:
+- **Guardado suelto** (la web, el móvil, la subida incremental del escritorio): la sincronización del
+  paquete reindexa ese paciente y refresca el vocabulario **en el acto** (~30 ms medidos con 6.000
+  pacientes; `sync.enabled` en `config/pecle_search.php`). Si el médico crea o corrige un paciente, el
+  corrector ya lo conoce.
+- **Cargas masivas** (la carga inicial del escritorio): `CargaInicialService::guardarPacientes` envuelve el
+  lote en `Paciente::withoutEvents()` para no pagar el vocabulario por cada una de las miles de filas; al
+  completarse la carga, el evento `CargaInicialCompletada` dispara `Jobs\ReconstruirIndiceDePacientes` con
+  `dispatchAfterResponse()`: el escritorio recibe su «carga completa» y el índice se rehace después de
+  responder, sin necesidad de un worker.
+- **Red de seguridad**: `php artisan pecle-search:rebuild pacientes`, programado a las **03:20 de Caracas**
+  en `Kernel::schedule()` (necesita el `schedule:run` del servidor, como las demás tareas), cubre lo que
+  entre sin eventos de Eloquent (una importación, un `UPDATE` masivo). **En el despliegue hay que correrlo
+  una vez** después de `migrate --force`: el índice nuevo (`numeric_search_tokens`, v0.4.0) arranca vacío y,
+  hasta que se reconstruya, `isBuilt` ve la marca apuntando a la tabla vieja y la búsqueda usa el `LIKE` de
+  respaldo (funciona, pero lento). Lo mismo después de cualquier cambio de `numeric_index` en la config.
+
+**Pruebas.** `Feature/BusquedaDePacientesCorregidaWebTest` (8: corrige y avisa, `literal`, cédula e
+historia intactas, no se escapa del consultorio, vuelve a lo escrito, JSON, indexado al instante y el
+trabajo de reconstrucción), una de `Feature/CargaInicialTest` (el aviso único al completar) y dos de
+`Unit/Clinica/PacientesVistasTest`. Verificador en Chrome: `../.agent-tools/verificar-busqueda-corregida-web.js`.
+
+
 
 **Alcance.** El médico paga **su plan** con SyPago desde `/clinica/plan`; al aprobarse, el servicio se renueva
 solo. El paciente **todavía no** paga consultas: el modelo ya lo prevé (`Pago::PAGABLE_CITA`,
