@@ -16,7 +16,7 @@
 
             <div class="row g-3">
                 <x-ui.campo etiqueta="Fecha de aplicación" for="dosis-fecha" error="fecha_ejecutada" class="col-md-6" :requerido="true">
-                    <input type="date" name="fecha_ejecutada" id="dosis-fecha" class="form-control" required
+                    <input type="date" name="fecha_ejecutada" id="dosis-fecha" class="form-control" max="{{ \App\Clinica\FechaDelConsultorio::hoyComoTexto() }}" required
                            value="{{ $vm->maxima() }}" max="{{ $vm->maxima() }}" @if ($vm->minima() !== '') min="{{ $vm->minima() }}" @endif>
                 </x-ui.campo>
                 <x-ui.campo etiqueta="Lote" for="dosis-lote" error="lote" class="col-md-6">

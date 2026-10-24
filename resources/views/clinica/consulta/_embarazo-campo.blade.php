@@ -16,7 +16,7 @@
              calculadas y **no viajan en el formulario** —no tienen `name`—. --}}
         <output class="form-control-plaintext fw-semibold" id="{{ $campo['columna'] }}">{{ $campo['valor'] }}</output>
     @elseif ($campo['tipo'] === 'fecha')
-        <input type="date" class="form-control" id="{{ $campo['columna'] }}" name="{{ $campo['columna'] }}"
+        <input type="date" @if ($campo['columna'] === 'fur') max="{{ \App\Clinica\FechaDelConsultorio::hoyComoTexto() }}" @endif class="form-control" id="{{ $campo['columna'] }}" name="{{ $campo['columna'] }}"
                value="{{ $campo['valor'] }}">
     @elseif ($campo['tipo'] === 'opciones')
         <select class="form-select" id="{{ $campo['columna'] }}" name="{{ $campo['columna'] }}">

@@ -97,7 +97,7 @@ class AvisoDeUrgenciaSinHorario
             Mail::to($destinos)->send(new AvisoDeUrgenciaParaSecretaria(
                 paciente: $paciente ? trim("{$paciente->nombres} {$paciente->apellidos}") : null,
                 telefono: $telefono,
-                hora: FechaDelConsultorio::ahora()->format('d/m/Y H:i'),
+                hora: \App\Support\HoraLocal::fechaHora(now()),
                 medico: $medico->nombre_mostrar,
             ));
         } catch (Throwable $e) {

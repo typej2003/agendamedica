@@ -36,7 +36,7 @@
         </tr>
         <tr>
             <td style="color: #55555f;">Fecha</td>
-            <td>{{ $pago->pagado_el?->format('d/m/Y H:i') }}</td>
+            <td>{{ \App\Support\HoraLocal::fechaHora($pago->pagado_el) }}</td>
         </tr>
     </table>
 

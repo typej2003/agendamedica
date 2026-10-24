@@ -211,6 +211,54 @@
             }
         });
 
+        // El calendario (2026-10-23): la máscara se conserva para teclear, y al lado va el botón del calendario del
+        // navegador. `data-max` (AAAA-MM-DD) es el último día permitido —hoy, en el caso de la FUR—: el calendario no
+        // deja elegir más allá, y lo tecleado que lo pase marca el campo como inválido (el servidor lo vuelve a comprobar).
+        var tope = campo.getAttribute('data-max') || '';
+
+        function validarTope() {
+            var d = leer(campo.value);
+            var iso = d.length === 8 ? d.slice(4, 8).join('') + '-' + d.slice(2, 4).join('') + '-' + d.slice(0, 2).join('') : '';
+            campo.setCustomValidity(tope && iso && iso > tope ? 'La fecha no puede ser futura.' : '');
+        }
+
+        campo.addEventListener('input', validarTope);
+        validarTope();
+
+        if (typeof document.createElement('input').showPicker === 'function' && !campo.readOnly) {
+            var boton = document.createElement('button');
+            boton.type = 'button';
+            boton.className = 'btn btn-outline-secondary btn-sm mt-1';
+            boton.setAttribute('aria-label', 'Elegir la fecha en el calendario');
+            boton.innerHTML = '<i class="bi bi-calendar3" aria-hidden="true"></i> Calendario';
+
+            var selector = document.createElement('input');
+            selector.type = 'date';
+            selector.tabIndex = -1;
+            selector.setAttribute('aria-hidden', 'true');
+            selector.style.cssText = 'position:absolute;opacity:0;pointer-events:none;width:1px;height:1px';
+            if (tope) { selector.max = tope; }
+
+            boton.addEventListener('click', function () {
+                var actual = leer(campo.value);
+                selector.value = actual.length === 8
+                    ? actual.slice(4, 8).join('') + '-' + actual.slice(2, 4).join('') + '-' + actual.slice(0, 2).join('')
+                    : '';
+                try { selector.showPicker(); } catch (e) { selector.focus(); }
+            });
+
+            selector.addEventListener('change', function () {
+                var fecha = deUnaFecha(selector.value);
+                if (fecha && fecha.length > 0) {
+                    digitos = fecha;
+                    aplicar();
+                }
+            });
+
+            campo.insertAdjacentElement('afterend', boton);
+            boton.insertAdjacentElement('afterend', selector);
+        }
+
         campo.addEventListener('paste', function (evento) {
             evento.preventDefault();
 

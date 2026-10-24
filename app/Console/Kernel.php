@@ -45,13 +45,14 @@ class Kernel extends ConsoleKernel
             ->everyMinute()
             ->withoutOverlapping();
 
-        // Tasa oficial del BCV (2026-10-21): cada media hora en la ventana en la que el Banco Central
-        // publica, y sólo guarda si cambió. Si `configuracion_pagos.tasa_automatica` está apagada, el
-        // comando no toca nada. Hora de Caracas: la app corre en UTC.
+        // Tasa oficial del BCV (2026-10-21): cada media hora, de 5 a 9 pm de Caracas, y sólo guarda si
+        // cambió. El Banco Central publica de 4 a 7 pm; las 2 horas de margen cubren los timeouts. Fuera de
+        // esa ventana la tasa no cambia, así que no corre (2026-10-23: antes arrancaba a las 5 am). Si
+        // `configuracion_pagos.tasa_automatica` está apagada, el comando no toca nada. La app corre en UTC.
         $schedule->command('tasas:bcv')
             ->everyThirtyMinutes()
             ->timezone('America/Caracas')
-            ->between('05:00', '21:00')
+            ->between('17:00', '21:00')
             ->withoutOverlapping();
     }
 
