@@ -56,6 +56,9 @@
     "prefer-stable": true,
     "scripts": {
         "test:rapido": "@php artisan test --parallel --processes=10",
+        "pre-autoload-dump": [
+            "@php scripts/limpiar-caches-del-despliegue.php"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
