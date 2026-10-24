@@ -210,6 +210,26 @@
                                     <option value="M" {{ $vm->valor('nuevo_sexo', $vm->sexoPorDefectoDelNuevoPaciente()) === 'M' ? 'selected' : '' }}>Masculino</option>
                                 </select>
                             </div>
+                            <div class="col-sm-6">
+                                <label class="form-label" for="nuevo_fnacimiento">Fecha de nacimiento *</label>
+                                <input type="date" name="nuevo_fnacimiento" id="nuevo_fnacimiento" class="form-control" max="{{ \App\Clinica\FechaDelConsultorio::hoyComoTexto() }}" value="{{ $vm->valor('nuevo_fnacimiento') }}">
+                                @error('nuevo_fnacimiento') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label" for="nuevo_nac">Nacionalidad</label>
+                                <select name="nuevo_nac" id="nuevo_nac" class="form-select">
+                                    <option value="V" {{ $vm->valor('nuevo_nac', 'V') === 'V' ? 'selected' : '' }}>Venezolano</option>
+                                    <option value="E" {{ $vm->valor('nuevo_nac', 'V') === 'E' ? 'selected' : '' }}>Extranjero</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label" for="nuevo_lnacimiento">Lugar de nacimiento</label>
+                                <input type="text" name="nuevo_lnacimiento" id="nuevo_lnacimiento" class="form-control" maxlength="100" value="{{ $vm->valor('nuevo_lnacimiento') }}">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label" for="nuevo_direccion">Dirección</label>
+                                <input type="text" name="nuevo_direccion" id="nuevo_direccion" class="form-control" maxlength="200" value="{{ $vm->valor('nuevo_direccion') }}">
+                            </div>
                         </div>
 
                         <p class="form-text mb-0 mt-2">

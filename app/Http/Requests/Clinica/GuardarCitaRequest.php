@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Clinica;
 
+use App\Clinica\FechaDelConsultorio;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -35,6 +36,12 @@ class GuardarCitaRequest extends FormRequest
             'nuevo_telefono'  => ['nullable', 'string', 'max:30'],
             'nuevo_email'     => ['nullable', 'email', 'max:120'],
             'nuevo_sexo'      => ['nullable', 'in:F,M'],
+            // El alta rápida pide lo mínimo de la ficha (2026-10-23, Alexander): fecha de nacimiento (obligatoria), nacionalidad,
+            // lugar de nacimiento y dirección; son las columnas `fnacimiento`, `nac`, `lnacimiento` y `direccion` de `pacientes`.
+            'nuevo_fnacimiento' => ['nullable', 'required_with:nuevo_cedula', 'date_format:Y-m-d', 'before_or_equal:' . FechaDelConsultorio::hoyComoTexto()],
+            'nuevo_nac'         => ['nullable', 'in:V,E'],
+            'nuevo_lnacimiento' => ['nullable', 'string', 'max:100'],
+            'nuevo_direccion'   => ['nullable', 'string', 'max:200'],
             'decision'        => ['nullable', 'in:mover,otra,cancelar'],
             // De qué consulta se vino con "Hacer cita" (WEB-5.2): sólo para volver a sus récipes al guardar.
             'volver_consulta' => ['nullable', 'integer'],
@@ -73,6 +80,12 @@ class GuardarCitaRequest extends FormRequest
             'nuevo_email.email'             => 'Revisa el correo: no tiene forma de correo.',
             'nuevo_email.max'               => 'El correo no puede pasar de 120 caracteres.',
             'nuevo_sexo.in'                 => 'El sexo del paciente nuevo debe ser femenino o masculino.',
+            'nuevo_fnacimiento.required_with'  => 'Falta la fecha de nacimiento del paciente nuevo.',
+            'nuevo_fnacimiento.date_format'    => 'La fecha de nacimiento no tiene un formato válido.',
+            'nuevo_fnacimiento.before_or_equal' => 'La fecha de nacimiento no puede ser futura.',
+            'nuevo_nac.in'                     => 'La nacionalidad debe ser venezolano o extranjero.',
+            'nuevo_lnacimiento.max'            => 'El lugar de nacimiento no puede pasar de 100 caracteres.',
+            'nuevo_direccion.max'              => 'La dirección no puede pasar de 200 caracteres.',
             'decision.in'                   => 'Elige una de las opciones que se ofrecen.',
             'volver_consulta.integer'       => 'No se sabe a qué consulta volver: ábrela de nuevo desde su lista.',
         ];

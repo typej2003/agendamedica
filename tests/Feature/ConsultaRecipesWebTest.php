@@ -339,6 +339,25 @@ class ConsultaRecipesWebTest extends TestCase
         $this->assertStringContainsString('lista=1', $contenido);
     }
 
+    /** 2026-10-23 (Alexander): imprimir tiene que estar a la vista en el propio editor, no sólo en la lista. */
+    public function test_el_editor_de_un_recipe_guardado_ofrece_imprimir_y_el_nuevo_no(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->vademecum($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $this->fila($medico, 1001, 1, '0001', null, ['orden' => 0]);
+
+        $guardado = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta))->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-imprimir-recipe', $guardado, 'El editor del récipe guardado no ofrece imprimir.');
+
+        $nuevo = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlSeccion($consulta, 'nuevo'))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('data-imprimir-recipe', $nuevo, 'Un récipe sin guardar no tiene qué imprimir.');
+    }
+
     public function test_mas_nuevo_abre_un_editor_vacio_sin_crear_y_guardar_crea_el_que_corresponde(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();

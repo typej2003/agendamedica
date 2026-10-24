@@ -1044,10 +1044,14 @@ class ConsultaColposcopiaWebTest extends TestCase
         $consulta->save();
         $web = $this->conContexto($user, $medico, $gineco)->actingAs($user);
 
-        // Sin dibujos, la hoja es la de siempre y no ofrece imágenes.
+        // Sin dibujos del médico, la hoja lleva igual los dos esquemas (A y B) sin marcas, como el escritorio
+        // (2026-10-23, Alexander): nulípara y multípara, sólo la imagen base.
         $sinDibujos = $web->get($this->urlInforme($consulta))->assertOk()->getContent();
-        $this->assertStringNotContainsString('data-incluir-imagenes', $sinDibujos);
-        $this->assertStringNotContainsString('data-hoja-imagenes', $sinDibujos);
+        $this->assertSame(2, substr_count($sinDibujos, '<figure class="informe-imagen informe-imagen-dibujo">'));
+        $this->assertStringContainsString('Cuello nulípara', $sinDibujos);
+        $this->assertStringContainsString('Cuello multípara', $sinDibujos);
+        $this->assertStringNotContainsString('informe-dibujo-trazo', $sinDibujos, 'Sin marcas no hay trazo encima.');
+        $this->assertStringContainsString('documento-imagenes', $sinDibujos, 'Las imágenes salen en la misma página del informe.');
 
         $web->post($this->urlLienzo($consulta, 'nulipara', 'guardar'), ['base' => 'escritorio', 'dibujo' => $this->png()])->assertOk();
         $web->post($this->urlLienzo($consulta, 'multipara', 'guardar'), ['base' => 'vector', 'dibujo' => $this->png()])->assertOk();
@@ -1301,8 +1305,9 @@ class ConsultaColposcopiaWebTest extends TestCase
 
         $html = $web->get($this->urlInforme($consulta))->assertOk()->getContent();
 
-        // Sale el esquema marcado y **no** la foto, aunque la foto exista.
-        $this->assertSame(1, substr_count($html, '<figure class="informe-imagen informe-imagen-dibujo">'));
+        // Salen los dos esquemas (el marcado con su trazo, el otro sólo con su base) y **no** la foto, aunque la foto exista.
+        $this->assertSame(2, substr_count($html, '<figure class="informe-imagen informe-imagen-dibujo">'));
+        $this->assertSame(1, substr_count($html, 'class="informe-dibujo-trazo"'), 'Sólo el esquema marcado lleva trazo.');
         $this->assertStringNotContainsString('informe-imagen-foto', $html);
         $this->assertStringContainsString('Cuello multípara (orificio redondo)', $html);
         $this->assertStringNotContainsString('Videocolposcopio', $html);

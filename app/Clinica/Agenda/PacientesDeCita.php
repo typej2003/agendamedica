@@ -103,6 +103,10 @@ class PacientesDeCita
             'telefono'  => $this->texto($valores['nuevo_telefono'] ?? null),
             'email'     => $this->texto($valores['nuevo_email'] ?? null),
             'sexo'      => $this->texto($valores['nuevo_sexo'] ?? null),
+            'fnacimiento' => $this->texto($valores['nuevo_fnacimiento'] ?? null),
+            'nac'         => $this->texto($valores['nuevo_nac'] ?? null),
+            'lnacimiento' => $this->texto($valores['nuevo_lnacimiento'] ?? null),
+            'direccion'   => $this->texto($valores['nuevo_direccion'] ?? null),
         ];
     }
 

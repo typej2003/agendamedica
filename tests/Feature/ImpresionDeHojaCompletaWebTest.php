@@ -171,8 +171,9 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
         $hoja->assertOk()
             ->assertSee('CONTROL DE EMBARAZO')
             ->assertSee('20/05/2026')
-            // Una página vertical entera para el documento; no la mitad izquierda del A4 horizontal.
-            ->assertSee('recipe-hoja-completa', false)
+            // Una página vertical entera para el documento (2026-10-23: el formulario del informe, con sus tablas); no la
+            // mitad izquierda del A4 horizontal.
+            ->assertSee('class="informe-hoja"', false)
             ->assertDontSee('recipe-mitad-vacia', false);
     }
 
@@ -210,15 +211,14 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
             ->assertSee('class="recipe-hoja ', false)
             // El informe del eco, en su página vertical con nombre (`page: informe`).
             ->assertSee('class="informe-hoja"', false)
-            // El control de embarazo, en la hoja completa del motor.
-            ->assertSee('recipe-hoja-completa', false)
             ->assertSee('KEFORAL')
             ->assertSee('CONTROL DE EMBARAZO');
 
-        // Una página por documento: las dos horizontales (el récipe y el control de embarazo) más la vertical del eco.
+        // Una página por documento: la horizontal del récipe y las dos verticales con nombre (el informe del eco y, desde
+        // 2026-10-23, el del control de embarazo, que es un formulario lleno con tablas).
         $html = $hojas->getContent();
-        $this->assertSame(2, substr_count($html, 'class="recipe-hoja '), 'las dos hojas horizontales y completas del motor');
-        $this->assertSame(1, substr_count($html, 'class="informe-hoja"'), 'la hoja vertical del informe del eco');
+        $this->assertSame(1, substr_count($html, 'class="recipe-hoja '), 'la hoja horizontal del récipe');
+        $this->assertSame(2, substr_count($html, 'class="informe-hoja"'), 'las hojas verticales del eco y del control de embarazo');
     }
 
     // ======================================================================= Los formatos en blanco
