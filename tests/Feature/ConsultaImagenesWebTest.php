@@ -283,7 +283,7 @@ class ConsultaImagenesWebTest extends TestCase
         $ajena = $this->pacienteYConsulta($otroMedico, 9003);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get(route('clinica.consulta', [$ajena->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes']))
+            ->get(route('clinica.consulta', [$ajena->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => 'imagenes']))
             ->assertNotFound();
     }
 
@@ -296,7 +296,7 @@ class ConsultaImagenesWebTest extends TestCase
 
         $respuesta = $this->subir($user, $medico, $gineco, $consulta);
 
-        $respuesta->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes']));
+        $respuesta->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => 'imagenes']));
         $respuesta->assertSessionHas('estado');
 
         $imagen = ImagenConsulta::where('reg_medico', $medico->reg_medico)->firstOrFail();
@@ -503,7 +503,7 @@ class ConsultaImagenesWebTest extends TestCase
         // La **misma** consulta ajena leída por el médico del contexto: tampoco (la vara es una sola para
         // la sección y para las acciones).
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get(route('clinica.consulta', [$ajena->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes']))
+            ->get(route('clinica.consulta', [$ajena->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => 'imagenes']))
             ->assertNotFound();
     }
 
@@ -563,7 +563,7 @@ class ConsultaImagenesWebTest extends TestCase
         $secretaria = $this->secretariaConAcceso($medico);
 
         $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
-            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes']))
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => 'imagenes']))
             ->assertForbidden();
 
         $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
@@ -607,7 +607,7 @@ class ConsultaImagenesWebTest extends TestCase
 
         // Y la sección la lista avisando de dónde salió el archivo, sin mostrar la ruta del sistema.
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes']));
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => 'imagenes']));
 
         $respuesta->assertOk();
         $respuesta->assertSee('20211025_121548.jpg');
@@ -631,7 +631,7 @@ class ConsultaImagenesWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->delete(route('clinica.consulta.examenes.quitar', [$consulta->id, $imagen->id]));
 
-        $respuesta->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes']));
+        $respuesta->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => 'imagenes']));
         $this->assertNull(ImagenConsulta::find($imagen->id));
         Storage::disk(ArchivosClinicos::DISCO)->assertMissing($ruta);
     }

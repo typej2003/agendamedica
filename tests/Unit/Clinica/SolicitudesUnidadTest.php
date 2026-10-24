@@ -287,21 +287,22 @@ class SolicitudesUnidadTest extends TestCase
 
     // ==================================================================================== Pestañas
 
-    public function test_las_pestanas_son_las_nueve_de_hoy_en_el_orden_del_escritorio_y_una_clave_desconocida_abre_la_constancia(): void
+    public function test_las_pestanas_son_las_diez_de_hoy_en_el_orden_del_escritorio_y_una_clave_desconocida_abre_la_constancia(): void
     {
         $pestanas = new PestanasDeSolicitudes(fn (string $clave) => '/c?solicitud=' . $clave);
         $opciones = $pestanas->opciones('reposo');
 
         // WEB-5.4: el escritorio tiene primero las pestañas de laboratorio y de estudios. La historia va después del
         // informe, como en el escritorio (2026-10-19).
-        $this->assertSame(['Laboratorio', 'Estudios', 'Constancia', 'Reposo', 'Referencia', 'Hospitalización', 'Informe médico', 'Historia clínica', 'Dieta / Recomendaciones'], array_column($opciones, 'texto'));
-        $this->assertSame([false, false, false, true, false, false, false, false, false], array_column($opciones, 'activa'));
+        $this->assertSame(['Laboratorio', 'Estudios', 'Constancia', 'Reposo', 'Referencia', 'Hospitalización', 'Informe médico', 'Historia clínica', 'Imágenes', 'Dieta / Recomendaciones'], array_column($opciones, 'texto'));
+        $this->assertSame([false, false, false, true, false, false, false, false, false, false], array_column($opciones, 'activa'));
         $this->assertSame('/c?solicitud=laboratorio', $opciones[0]['url']);
         $this->assertSame('/c?solicitud=estudios', $opciones[1]['url']);
         $this->assertSame('/c?solicitud=hospitalizacion', $opciones[5]['url']);
         $this->assertSame('/c?solicitud=informe', $opciones[6]['url']);
         $this->assertSame('/c?solicitud=historia', $opciones[7]['url']);
-        $this->assertSame('/c?solicitud=dieta', $opciones[8]['url']);
+        $this->assertSame('/c?solicitud=imagenes', $opciones[8]['url']);
+        $this->assertSame('/c?solicitud=dieta', $opciones[9]['url']);
 
         $this->assertSame('constancia', PestanasDeSolicitudes::normalizar(null));
         $this->assertSame('constancia', PestanasDeSolicitudes::normalizar('dietas'));
@@ -310,7 +311,7 @@ class SolicitudesUnidadTest extends TestCase
         $this->assertSame('historia', PestanasDeSolicitudes::normalizar('historia'));
         $this->assertSame('laboratorio', PestanasDeSolicitudes::normalizar('laboratorio'));
         $this->assertSame('estudios', PestanasDeSolicitudes::normalizar('estudios'));
-        $this->assertSame(['laboratorio', 'estudios', 'constancia', 'reposo', 'referencias', 'hospitalizacion', 'informe', 'historia', 'dieta'], PestanasDeSolicitudes::claves());
+        $this->assertSame(['laboratorio', 'estudios', 'constancia', 'reposo', 'referencias', 'hospitalizacion', 'informe', 'historia', 'imagenes', 'dieta'], PestanasDeSolicitudes::claves());
     }
 
     /** Las pestañas que la especialidad no ofrece: en pediatría, la dieta (es su ítem *Alimentación*). */
@@ -325,6 +326,6 @@ class SolicitudesUnidadTest extends TestCase
 
         $this->assertSame('constancia', PestanasDeSolicitudes::normalizar('dieta', ['dieta']));
         $this->assertNotContains('dieta', PestanasDeSolicitudes::claves(['dieta']));
-        $this->assertCount(8, PestanasDeSolicitudes::claves(['dieta']));
+        $this->assertCount(9, PestanasDeSolicitudes::claves(['dieta']));
     }
 }

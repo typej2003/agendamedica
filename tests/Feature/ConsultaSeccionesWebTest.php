@@ -768,7 +768,7 @@ class ConsultaSeccionesWebTest extends TestCase
      * navegador no quedan muertos: se redirige (302) a la galería, que ahora es la solapa *Imágenes* de
      * *Evaluación física*.
      */
-    public function test_la_seccion_de_examenes_redirige_a_la_galeria_de_evaluacion_fisica(): void
+    public function test_la_seccion_de_examenes_redirige_a_la_galeria_de_solicitudes(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [, $consulta] = $this->pacienteYConsulta($medico);
@@ -779,8 +779,8 @@ class ConsultaSeccionesWebTest extends TestCase
         $respuesta->assertStatus(302);
         $respuesta->assertRedirect(route('clinica.consulta', [
             $consulta->id,
-            'seccion' => ConsultaShellVista::SECCION_EVALUACION,
-            'pestana' => 'imagenes',
+            'seccion' => ConsultaShellVista::SECCION_SOLICITUDES,
+            'solicitud' => 'imagenes',
         ]));
     }
 

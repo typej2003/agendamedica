@@ -116,7 +116,7 @@ class ImagenesDeLaPcWebTest extends TestCase
     private function seccion(User $user, Medico $medico, Specialty $specialty, Consulta $consulta)
     {
         return $this->conContexto($medico, $specialty)->actingAs($user)
-            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_EVALUACION, 'pestana' => 'imagenes']));
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_SOLICITUDES, 'solicitud' => 'imagenes']));
     }
 
     public function test_una_imagen_migrada_se_ve_en_el_servidor_y_se_abre_por_la_ruta_autorizada(): void
@@ -183,7 +183,7 @@ class ImagenesDeLaPcWebTest extends TestCase
         // El HEIC no se pinta como imagen: la lista de la galería no tiene ningún `<img>` (el único de la
         // página es el logo de la especialidad del armazón).
         $html = $pagina->getContent();
-        $desde = strpos($html, 'id="evaluacion-imagenes-imagenes"');
+        $desde = strpos($html, 'id="solicitudes-imagenes-imagenes"');
         $this->assertNotFalse($desde, 'falta la lista de imágenes de la galería');
         $hasta = strpos($html, '</ul>', $desde);
         $this->assertStringNotContainsString('<img', substr($html, $desde, $hasta - $desde));

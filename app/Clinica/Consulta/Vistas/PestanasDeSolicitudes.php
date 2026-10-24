@@ -49,6 +49,13 @@ final class PestanasDeSolicitudes
      */
     public const HISTORIA = 'historia';
 
+    /**
+     * **Las imágenes de los estudios** (2026-10-23, Alexander): en el escritorio siempre estuvieron en *Solicitudes → Imágenes*
+     * (`tabpage` entre *Historia Ginecológica* y *Dietas / Recomendaciones*), no en la evaluación física. Es la galería «Esta
+     * consulta / Todas» con la subida; se ofrece en todas las especialidades.
+     */
+    public const IMAGENES = 'imagenes';
+
     public const HOSPITALIZACION = 'hospitalizacion';
 
     public const DIETA = 'dieta';
@@ -84,8 +91,9 @@ final class PestanasDeSolicitudes
         self::REFERENCIAS => ['texto' => 'Referencia', 'icono' => 'bi-person-up'],
         self::HOSPITALIZACION => ['texto' => 'Hospitalización', 'icono' => 'bi-hospital'],
         self::INFORME => ['texto' => 'Informe médico', 'icono' => 'bi-file-earmark-text'],
-        // La historia va después del informe, como en el escritorio (y antes de *Imágenes*, que la web no tiene acá).
+        // La historia va después del informe y las imágenes después de la historia, como en el escritorio.
         self::HISTORIA => ['texto' => 'Historia clínica', 'icono' => 'bi-journal-medical'],
+        self::IMAGENES => ['texto' => 'Imágenes', 'icono' => 'bi-images'],
         self::DIETA => ['texto' => 'Dieta / Recomendaciones', 'icono' => 'bi-egg-fried'],
     ];
 
