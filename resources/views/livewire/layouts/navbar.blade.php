@@ -33,6 +33,7 @@
                     {{-- Secciones del sitio público: no tienen nada que hacer dentro del panel. --}}
                     <li class="nav-item"><a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#inicio">Inicio</a></li>
                     <li class="nav-item"><a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#especialidades">Especialidades</a></li>
+                    <li class="nav-item"><a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#por-que">Por qué elegirnos</a></li>
                     <li class="nav-item"><a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#servicios">Servicios</a></li>
                     <li class="nav-item">
                         <a class="nav-link px-3 py-2 py-lg-1 fw-semibold" href="{{ route('reservas.catalogo') }}">

@@ -43,7 +43,7 @@
         </x-ui.campo>
 
         <x-ui.campo etiqueta="Fecha de nacimiento" for="fnacimiento" class="col-md-3">
-            <input type="date" name="fnacimiento" id="fnacimiento" class="form-control" value="{{ $vm->fecha('fnacimiento') }}">
+            <input type="date" name="fnacimiento" id="fnacimiento" class="form-control" max="{{ \App\Clinica\FechaDelConsultorio::hoyComoTexto() }}" value="{{ $vm->fecha('fnacimiento') }}">
         </x-ui.campo>
 
         <x-ui.campo etiqueta="Lugar de nacimiento" for="lnacimiento" class="col-md-4">

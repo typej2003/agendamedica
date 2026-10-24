@@ -93,8 +93,9 @@
     </div>
 
     {{-- El logo de la especialidad del consultorio —el mismo del escritorio de esa especialidad—, encima del
-         pie con el botón de plegar. Una especialidad que todavía no tiene logo no dibuja nada. --}}
-    @if ($logo = $armazon->logotipo())
+         pie con el botón de plegar. Una especialidad que todavía no tiene logo no dibuja nada. **Dentro de una consulta
+         no se dibuja** (2026-10-23): el menú de la consulta es largo y el logo le comía el lugar a las últimas opciones. --}}
+    @if (! request()->routeIs('clinica.consulta*') && ($logo = $armazon->logotipo()))
         <div class="app-sidebar-logo">
             <img src="{{ $logo['url'] }}" alt="{{ $logo['texto'] }}">
         </div>
@@ -243,7 +244,7 @@
     </x-ui.dialogo>
 @endif
 
-<script src="{{ asset('js/clinica/shell.js') }}"></script>
+<script src="{{ asset('js/clinica/shell.js') }}?v={{ @filemtime(public_path('js/clinica/shell.js')) }}"></script>
 <script src="{{ asset('js/clinica/buscar-auto.js') }}"></script>
 <script src="{{ asset('js/clinica/hora-ampm.js') }}"></script>
 <script src="{{ asset('js/clinica/chips.js') }}"></script>

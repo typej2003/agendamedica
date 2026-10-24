@@ -107,10 +107,19 @@
                 {{-- El contador vivo de medicamentos: `consulta-recipes.js` lo mantiene al agregar y quitar. --}}
                 <x-ui.estado id="recipe-contador" :tono="$contador['tono']" :icono="$contador['icono']">{{ $contador['texto'] }}</x-ui.estado>
 
-                {{-- La única acción primaria del editor: guardar el récipe de la pareja entero. --}}
-                <button class="btn btn-primary">
-                    <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar el récipe de la pareja
-                </button>
+                <div class="d-flex flex-wrap gap-2">
+                    {{-- Imprimir, a la vista junto a Guardar (2026-10-23): imprime lo guardado. --}}
+                    @if ($seccion->existe() && $seccion->puedeImprimir())
+                        <button type="button" class="btn btn-outline-primary" data-imprimir-recipe
+                                data-siguiente="{{ $seccion->urlImprimirPareja() }}" data-titulo="Récipe de la pareja">
+                            <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
+                        </button>
+                    @endif
+                    {{-- La única acción primaria del editor: guardar el récipe de la pareja entero. --}}
+                    <button class="btn btn-primary">
+                        <i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar el récipe de la pareja
+                    </button>
+                </div>
             </div>
         </form>
     </x-slot>

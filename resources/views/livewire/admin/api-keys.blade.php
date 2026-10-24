@@ -55,7 +55,7 @@
                                         <span class="text-muted">Nunca</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="fecha-celda">
                                     @if ($r['ultima_web'])
                                         <div>{{ \App\Support\HoraLocal::fechaHora($r['ultima_web']) }}</div>
                                         <small class="text-muted">{{ $r['ultima_web']->locale('es')->diffForHumans() }}</small>

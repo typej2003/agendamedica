@@ -15,6 +15,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Consulta;
 use App\Models\PreNatalDesarrolloFino;
 use App\Models\PrenaExamenB;
+use App\Clinica\FechaDelConsultorio;
 use App\Support\FechaDeFormulario;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
@@ -218,7 +219,7 @@ class ConsultaEmbarazoController extends Controller
     private function reglas(): array
     {
         return [
-            'fur' => 'required|' . FechaDeFormulario::FORMATO,
+            'fur' => 'required|' . FechaDeFormulario::FORMATO . '|before_or_equal:' . FechaDelConsultorio::hoyComoTexto(),
             'menarquia' => 'nullable|string|max:10',
             'gestas' => 'nullable|numeric|min:0|max:99',
             'partos' => 'nullable|numeric|min:0|max:99',
@@ -247,6 +248,7 @@ class ConsultaEmbarazoController extends Controller
         return [
             'fur.required' => 'La FUR es obligatoria: de ella salen la edad gestacional y la FPP.',
             'fur.date_format' => FechaDeFormulario::mensaje('FUR'),
+            'fur.before_or_equal' => 'La FUR no puede ser una fecha futura.',
         ];
     }
 

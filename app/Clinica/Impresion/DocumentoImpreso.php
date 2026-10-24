@@ -130,6 +130,12 @@ final class DocumentoImpreso
      */
     public const HISTEROSCOPIA = 'histeroscopia';
 
+    /**
+     * El **informe de citología** (2026-10-23, Alexander: «en colposcopia sí está el botón de imprimir, en citología
+     * no»). El escritorio no tenía hoja: la web la agrega con el texto de `consultas.faringe` y el mismo membrete.
+     */
+    public const CITOLOGIA = 'citologia';
+
     // Los paneles de **pediatría** (2026-10-19): las dos endoscopías digestivas, la evaluación pre-operatoria, los
     // indicadores incidentes y el eco renal. Se ofrecen como formato en blanco desde `FormatosEnBlanco`.
     public const ENDOSCOPIA_SUPERIOR = 'endoscopia-superior';
@@ -191,6 +197,8 @@ final class DocumentoImpreso
         self::COLPOSCOPIA => ['INFORME DE COLPOSCOPÍA', 'Colposcopía'],
         // El de histeroscopía, tal cual el DataWindow del escritorio (`d_histeroscopia.srd:27`).
         self::HISTEROSCOPIA => ['INFORME DE HISTEROSCOPÍA', 'Histeroscopía'],
+        // La citología no tiene DataWindow en el escritorio: título propio, en el mismo estilo.
+        self::CITOLOGIA => ['INFORME DE CITOLOGÍA', 'Citología'],
         // Los títulos de los paneles de pediatría (2026-10-19): el de las endoscopías es el de su DataWindow de
         // impresión (`d_endoscopia_superior_print_puro` / `d_endoscopia_inferiorl_print_puro`).
         self::ENDOSCOPIA_SUPERIOR => ['INFORME DE ENDOSCOPÍA DIGESTIVA SUPERIOR', 'Endoscopía digestiva superior'],

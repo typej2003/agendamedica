@@ -12,8 +12,9 @@ use App\Models\Consulta;
  *
  * Sale **sólo el modo que el médico eligió**, que es la decisión de O-09:
  *
- *  - **Imagen predeterminada** → el esquema con el trazo encima, uno por variante marcada (la base elegida es la misma
- *    que se ve en pantalla). Sin trazo no se imprime nada: un esquema en blanco no es un hallazgo.
+ *  - **Imagen predeterminada** → el esquema de **cada** variante (nulípara y multípara, A y B), con el trazo encima si el
+ *    médico marcó (la base elegida es la misma que se ve en pantalla). Sin trazo sale el esquema solo, como lo imprime el
+ *    escritorio (2026-10-23, Alexander: «las imágenes en la misma media hoja, tal como se muestra en la evidencia»).
  *  - **Videocolposcopio** → la **foto real** del estudio, a su tamaño (no estirada al marco de 520×400 del esquema) y con
  *    el trazo encima si lo tiene. La foto sola también se imprime: es el estudio. Lo **no** elegido no sale nunca.
  *
@@ -75,10 +76,10 @@ final class ImagenesDelExamenParaElInforme
     }
 
     /**
-     * El modo del esquema: una entrada por variante **con trazo**, compuesta como en pantalla (la base elegida + el trazo
-     * transparente encima).
+     * El modo del esquema: una entrada por variante, compuesta como en pantalla (la base elegida + el trazo transparente
+     * encima, si lo hay).
      *
-     * @return array<int,array{src:string, base:?string, descripcion:?string}>
+     * @return array<int,array{src:?string, base:?string, descripcion:?string}>
      */
     private function elEsquema(object $estado, string $examen): array
     {
@@ -87,16 +88,9 @@ final class ImagenesDelExamenParaElInforme
         foreach (ImagenDelExamen::variantes($examen) as $variante) {
             $trazo = $estado->esquema[$variante]['trazo'] ?? null;
 
-            if ($trazo === null) {
-                continue;
-            }
-
-            // El trazo va **tal cual** (PNG con transparencia): aplanarlo a JPEG taparía el esquema de abajo.
-            $src = $this->imagenes->dePngTransparente($trazo);
-
-            if ($src === null) {
-                continue;
-            }
+            // El trazo va **tal cual** (PNG con transparencia): aplanarlo a JPEG taparía el esquema de abajo. Sin trazo,
+            // la entrada lleva sólo la base.
+            $src = $trazo === null ? null : $this->imagenes->dePngTransparente($trazo);
 
             $salida[] = [
                 'src' => $src,

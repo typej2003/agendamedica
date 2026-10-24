@@ -31,7 +31,7 @@
                            value="{{ old('celu_madre', $familia->valor('celu_madre')) }}">
                 </x-ui.campo>
                 <x-ui.campo etiqueta="Nacimiento de la madre" for="familia-fecn_madre" error="fecn_madre" class="col-md-6">
-                    <input type="date" name="fecn_madre" id="familia-fecn_madre" class="form-control"
+                    <input type="date" name="fecn_madre" id="familia-fecn_madre" class="form-control" max="{{ \App\Clinica\FechaDelConsultorio::hoyComoTexto() }}"
                            value="{{ old('fecn_madre', $familia->valor('fecn_madre')) }}">
                 </x-ui.campo>
                 <x-ui.campo etiqueta="Ocupación de la madre" for="familia-ocupa_madre" error="ocupa_madre" class="col-md-6">
@@ -48,7 +48,7 @@
                            value="{{ old('cel_padre', $familia->valor('cel_padre')) }}">
                 </x-ui.campo>
                 <x-ui.campo etiqueta="Nacimiento del padre" for="familia-fecn_padre" error="fecn_padre" class="col-md-6">
-                    <input type="date" name="fecn_padre" id="familia-fecn_padre" class="form-control"
+                    <input type="date" name="fecn_padre" id="familia-fecn_padre" class="form-control" max="{{ \App\Clinica\FechaDelConsultorio::hoyComoTexto() }}"
                            value="{{ old('fecn_padre', $familia->valor('fecn_padre')) }}">
                 </x-ui.campo>
                 <x-ui.campo etiqueta="Ocupación del padre" for="familia-ocupa_padre" error="ocupa_padre" class="col-md-6">

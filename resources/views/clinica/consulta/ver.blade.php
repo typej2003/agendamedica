@@ -227,7 +227,8 @@
     <script src="{{ asset('js/clinica/consulta-barra.js') }}"></script>
     {{-- Las fechas que se teclean (O-18 y O-19): la máscara de la FUR pone las barras y no deja escribir un
          mes 13 ni un día 32. El dato viaja y se guarda en `AAAA-MM-DD`. --}}
-    <script src="{{ asset('js/clinica/mascara-fecha.js') }}"></script>
+    {{-- Con `?v=` (la fecha del archivo) el navegador no sirve la máscara vieja tras un despliegue: sin eso, el botón del calendario de la FUR no aparecía hasta vaciar la caché. --}}
+    <script src="{{ asset('js/clinica/mascara-fecha.js') }}?v={{ @filemtime(public_path('js/clinica/mascara-fecha.js')) }}"></script>
     {{-- El cajón con la historia y el resumen del paciente (O-30): lo abre el botón del encabezado y trae el
          resumen de la pantalla de la historia sin salir de la consulta. --}}
     <script src="{{ asset('js/clinica/resumen-panel.js') }}"></script>

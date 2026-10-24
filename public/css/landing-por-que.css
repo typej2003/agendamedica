@@ -1,0 +1,443 @@
+/* ==========================================================================
+   Landing — «¿Por qué usar Doctorísimo.App?»
+   ==========================================================================
+   Las dos caras de la plataforma: pacientes y médicos, cada una con su captura
+   real de la aplicación. La paleta sale de `gineco.css`: violeta de marca para
+   el lado del paciente y celeste para el lado del médico.
+   ========================================================================== */
+
+.porque {
+    position: relative;
+    padding: 5.5rem 0 6rem;
+    background:
+        radial-gradient(900px 420px at 100% 0%, rgba(120, 48, 128, .055), transparent 60%),
+        radial-gradient(760px 400px at 0% 100%, rgba(64, 176, 216, .07), transparent 60%),
+        #fff;
+    scroll-margin-top: 92px;
+}
+
+.porque-encabezado { max-width: 780px; margin: 0 auto 3rem; text-align: center; }
+
+.porque-etiqueta {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .38rem .9rem;
+    border: 1px solid var(--ds-violeta-200);
+    border-radius: 999px;
+    background: var(--ds-violeta-50);
+    color: var(--ds-violeta-800);
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.porque-titulo {
+    margin: 1.05rem 0 .9rem;
+    color: var(--ds-tinta);
+    font-size: clamp(2rem, 4vw, 2.9rem);
+    font-weight: 800;
+    letter-spacing: -.03em;
+    line-height: 1.08;
+}
+
+.porque-titulo span { color: var(--ds-violeta-700); }
+
+.porque-intro {
+    max-width: 660px;
+    margin: 0 auto;
+    color: var(--ds-texto-2);
+    font-size: 1.06rem;
+    line-height: 1.6;
+}
+
+/* —— Las dos filas: paciente y médico —— */
+.porque-fila {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: center;
+    padding: 3.5rem 0;
+}
+
+.porque-fila + .porque-fila { border-top: 1px solid var(--ds-borde); }
+.porque-fila-inversa .porque-visual { order: -1; }
+.porque-texto { max-width: 540px; }
+
+.porque-publico {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .38rem .85rem;
+    border-radius: 999px;
+    font-size: .8rem;
+    font-weight: 700;
+}
+
+.porque-publico-paciente { background: var(--ds-violeta-100); color: var(--ds-violeta-800); }
+
+.porque-publico-medico {
+    border: 1px solid var(--ds-celeste-200);
+    background: var(--ds-celeste-50);
+    color: var(--ds-celeste-700);
+}
+
+.porque-texto h3 {
+    margin: 1rem 0 .75rem;
+    color: var(--ds-tinta);
+    font-size: clamp(1.55rem, 2.7vw, 2.05rem);
+    font-weight: 800;
+    letter-spacing: -.025em;
+    line-height: 1.16;
+}
+
+.porque-bajada {
+    margin: 0 0 1.7rem;
+    color: var(--ds-texto-2);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.porque-lista {
+    display: grid;
+    gap: 1.15rem;
+    margin: 0 0 2rem;
+    padding: 0;
+    list-style: none;
+}
+
+.porque-lista li {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: .85rem;
+    align-items: start;
+}
+
+.porque-icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--ds-violeta-100);
+    border-radius: 11px;
+    background: var(--ds-violeta-50);
+    color: var(--ds-violeta-700);
+    font-size: 1.05rem;
+}
+
+.porque-fila-inversa .porque-icono {
+    border-color: var(--ds-celeste-200);
+    background: var(--ds-celeste-50);
+    color: var(--ds-celeste-700);
+}
+
+.porque-lista strong {
+    display: block;
+    color: var(--ds-tinta);
+    font-size: .98rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.porque-detalle {
+    display: block;
+    margin-top: .15rem;
+    color: var(--ds-texto-3);
+    font-size: .9rem;
+    line-height: 1.55;
+}
+
+.porque-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem; }
+
+.porque-enlace {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    color: var(--ds-violeta-700);
+    font-size: .95rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.porque-enlace:hover,
+.porque-enlace:focus-visible { color: var(--ds-violeta-800); text-decoration: underline; }
+
+.porque-nota {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    margin: 1.1rem 0 0;
+    color: var(--ds-texto-3);
+    font-size: .84rem;
+    line-height: 1.5;
+}
+
+.porque-nota i { margin-top: .1rem; color: var(--ds-violeta-600); }
+.porque-fila-inversa .porque-nota i { color: var(--ds-celeste-700); }
+
+/* —— Lienzo y marcos de las capturas —— */
+.porque-visual { display: flex; justify-content: center; min-width: 0; }
+
+.porque-lienzo {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid var(--ds-borde);
+    border-radius: 28px;
+}
+
+.porque-lienzo-paciente {
+    min-height: 548px;
+    padding: 2.25rem;
+    background:
+        radial-gradient(circle at 18% 12%, rgba(120, 48, 128, .13), transparent 48%),
+        linear-gradient(150deg, var(--ds-violeta-50), #fff 72%);
+}
+
+.porque-lienzo-paciente::before {
+    content: "";
+    position: absolute;
+    top: -72px;
+    right: -56px;
+    width: 210px;
+    height: 210px;
+    border: 1px dashed var(--ds-violeta-300);
+    border-radius: 50%;
+}
+
+.porque-lienzo-paciente::after {
+    content: "";
+    position: absolute;
+    bottom: -46px;
+    left: -38px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: rgba(64, 176, 216, .12);
+}
+
+.porque-lienzo-medico {
+    min-height: 430px;
+    padding: 2rem;
+    background:
+        radial-gradient(circle at 86% 12%, rgba(64, 176, 216, .16), transparent 46%),
+        linear-gradient(150deg, #f3f8fc, #fff 72%);
+}
+
+.porque-telefono {
+    position: relative;
+    z-index: 1;
+    width: min(236px, 64%);
+    padding: 8px;
+    border-radius: 38px;
+    background: var(--ds-tinta);
+    box-shadow: 0 28px 60px rgba(32, 16, 72, .28), 0 4px 12px rgba(32, 16, 72, .16);
+    transform: rotate(-2deg);
+    transition: transform .3s var(--ds-ease);
+}
+
+.porque-telefono:hover { transform: rotate(0deg); }
+
+.porque-telefono-estado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 30px 30px 0 0;
+    background: #fff;
+    color: var(--ds-tinta);
+    font-size: .66rem;
+    font-weight: 700;
+}
+
+.porque-telefono-iconos { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; }
+
+.porque-telefono::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    z-index: 2;
+    width: 72px;
+    height: 16px;
+    transform: translateX(-50%);
+    border-radius: 10px;
+    background: var(--ds-tinta);
+}
+
+.porque-telefono img { display: block; width: 100%; height: auto; border-radius: 0 0 30px 30px; }
+
+.porque-ventana {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid var(--ds-borde);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 26px 60px rgba(32, 16, 72, .18), 0 4px 10px rgba(32, 16, 72, .07);
+}
+
+.porque-ventana-barra {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--ds-borde);
+    background: #f3f1f7;
+}
+
+.porque-ventana-barra span { width: 9px; height: 9px; border-radius: 50%; background: #e3a8a2; }
+.porque-ventana-barra span:nth-child(2) { background: #e6d09f; }
+.porque-ventana-barra span:nth-child(3) { background: #afd6b2; }
+
+.porque-ventana-barra em {
+    margin-left: 10px;
+    overflow: hidden;
+    color: var(--ds-texto-3);
+    font-size: .72rem;
+    font-style: normal;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.porque-ventana img { display: block; width: 100%; height: auto; }
+
+.porque-telefono-app {
+    position: absolute;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 2;
+    width: min(152px, 27%);
+    padding: 5px;
+    border-radius: 26px;
+    background: var(--ds-tinta);
+    box-shadow: 0 20px 44px rgba(32, 16, 72, .28), 0 4px 10px rgba(32, 16, 72, .14);
+    transform: rotate(2deg);
+}
+
+.porque-telefono-app img { display: block; width: 100%; height: auto; border-radius: 21px; }
+
+/* —— Galería: lo que produce el consultorio —— */
+.porque-galeria {
+    margin-top: 2rem;
+    padding-top: 4rem;
+    border-top: 1px solid var(--ds-borde);
+}
+
+.porque-galeria-encabezado { max-width: 720px; margin: 0 auto 2.25rem; text-align: center; }
+
+.porque-galeria-encabezado h3 {
+    margin: 1rem 0 .7rem;
+    color: var(--ds-tinta);
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 800;
+    letter-spacing: -.025em;
+}
+
+.porque-galeria-intro {
+    max-width: 640px;
+    margin: 0 auto;
+    color: var(--ds-texto-2);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.porque-galeria-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.porque-lamina { display: flex; flex-direction: column; margin: 0; }
+
+.porque-lamina-marco {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 4 / 5;
+    padding: .65rem;
+    overflow: hidden;
+    border: 1px solid var(--ds-borde);
+    border-radius: 18px;
+    background: #f3f1f7;
+    box-shadow: var(--ds-sombra-1);
+}
+
+.porque-lamina-marco img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(32, 16, 72, .14);
+}
+
+.porque-lamina figcaption { padding: 1rem .2rem 0; }
+
+.porque-lamina figcaption > span {
+    display: block;
+    color: var(--ds-violeta-700);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.porque-lamina figcaption strong { display: block; margin: .3rem 0 .35rem; color: var(--ds-tinta); font-size: 1rem; }
+.porque-lamina figcaption p { margin: 0; color: var(--ds-texto-3); font-size: .88rem; line-height: 1.5; }
+
+@media (max-width: 1199.98px) {
+    .porque-lienzo-medico { min-height: 0; padding: 1.75rem 1.25rem; }
+    .porque-ventana { display: none; }
+    .porque-telefono-app { position: static; width: min(220px, 72%); margin: 0 auto; transform: none; }
+}
+
+@media (max-width: 991.98px) {
+    .porque { padding: 3.75rem 0 4rem; }
+    .porque-encabezado { margin-bottom: 2rem; }
+    .porque-fila { grid-template-columns: 1fr; gap: 2rem; padding: 2.75rem 0; }
+    .porque-fila-inversa .porque-visual { order: 0; }
+    .porque-texto { max-width: none; }
+    .porque-lienzo-paciente { min-height: 0; padding: 2rem 1.25rem; }
+    .porque-lienzo-medico { min-height: 0; padding: 1.75rem 1.25rem; }
+    .porque-ventana { display: none; }
+    .porque-telefono-app { position: static; width: min(220px, 68%); margin: 0 auto; transform: none; }
+    .porque-telefono { width: min(220px, 62%); }
+    .porque-galeria { margin-top: 1rem; padding-top: 3rem; }
+    .porque-galeria-grid {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        margin: 0 -.75rem;
+        padding: 0 .75rem 1rem;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+    .porque-lamina { flex: 0 0 min(78%, 300px); scroll-snap-align: start; }
+}
+
+@media (max-width: 575.98px) {
+    .porque-acciones { flex-direction: column; align-items: stretch; }
+    .porque-acciones .btn { width: 100%; }
+    .porque-enlace { justify-content: center; }
+    .porque-lienzo { border-radius: 20px; }
+    .porque-telefono { width: min(210px, 72%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .porque-telefono,
+    .porque-telefono:hover { transform: none; transition: none; }
+}

@@ -1,3 +1,7 @@
+@push('estilos')
+    <link rel="stylesheet" href="{{ asset('css/landing-por-que.css') }}">
+@endpush
+
 <div>
     <!-- Hero Section con Componente Livewire Integrado -->
     <section class="hero-section" id="inicio">
@@ -115,38 +119,237 @@
         </div>
     </section>
 
-    <!-- Características Rápidas -->
-    <section class="py-5 bg-white">
+    <!-- ¿Por qué usar Doctorísimo.App? -->
+    <section class="porque" id="por-que" aria-labelledby="porque-titulo">
         <div class="container">
-            <div class="row g-4 text-center">
-                <div class="col-md-4">
-                    <div class="p-3">
-                        <div class="service-icon mx-auto">
-                            <i class="bi bi-calendar-check"></i>
+            <header class="porque-encabezado">
+                <span class="porque-etiqueta">
+                    <i class="bi bi-stars" aria-hidden="true"></i> Una plataforma, dos lados del consultorio
+                </span>
+                <h2 class="porque-titulo" id="porque-titulo">¿Por qué usar <span>Doctorísimo.App</span>?</h2>
+                <p class="porque-intro">
+                    Porque reservar una cita no debería costar una llamada, y atender no debería costar media hora
+                    buscando una historia. Esto es lo que ganas, del lado que estés.
+                </p>
+            </header>
+
+            <!-- Para pacientes -->
+            <article class="porque-fila" aria-labelledby="porque-pacientes">
+                <div class="porque-texto">
+                    <span class="porque-publico porque-publico-paciente">
+                        <i class="bi bi-person-heart" aria-hidden="true"></i> Para pacientes
+                    </span>
+                    <h3 id="porque-pacientes">Encuentra a tu especialista y reserva sin llamadas.</h3>
+                    <p class="porque-bajada">
+                        Tu salud no tiene horario de oficina. Busca, elige y reserva cuando te convenga,
+                        desde tu celular.
+                    </p>
+                    <ul class="porque-lista">
+                        <li>
+                            <span class="porque-icono" aria-hidden="true"><i class="bi bi-search-heart"></i></span>
+                            <div>
+                                <strong>El especialista que necesitas</strong>
+                                <span class="porque-detalle">Explora el catálogo por especialidad y conoce a los médicos y sus consultorios antes de reservar.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="porque-icono" aria-hidden="true"><i class="bi bi-calendar2-check"></i></span>
+                            <div>
+                                <strong>Agenda en el horario que te convenga</strong>
+                                <span class="porque-detalle">Elige entre los cupos disponibles y confirma en minutos, sin llamar ni esperar.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="porque-icono" aria-hidden="true"><i class="bi bi-bell"></i></span>
+                            <div>
+                                <strong>Recordatorios a tiempo</strong>
+                                <span class="porque-detalle">Te avisamos antes de tu cita para que llegues a tiempo y no se te pase.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="porque-icono" aria-hidden="true"><i class="bi bi-credit-card-2-front"></i></span>
+                            <div>
+                                <strong>Paga en línea, sin efectivo</strong>
+                                <span class="porque-detalle">Cancela desde la plataforma y llega a tu consulta solo a atenderte.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="porque-icono" aria-hidden="true"><i class="bi bi-calendar2-week"></i></span>
+                            <div>
+                                <strong>Tus citas, en un solo lugar</strong>
+                                <span class="porque-detalle">Consulta, reprograma o cancela desde tu cuenta, cuando lo necesites.</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="porque-acciones">
+                        <a class="btn btn-primary btn-lg rounded-pill px-4" href="{{ route('reservas.catalogo') }}">
+                            <i class="bi bi-calendar2-check me-2" aria-hidden="true"></i>Buscar mi especialista
+                        </a>
+                        <a class="porque-enlace" href="{{ route('paciente.citas') }}">
+                            Ver mis citas <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                    <p class="porque-nota">
+                        <i class="bi bi-shield-check" aria-hidden="true"></i>
+                        Para reservar no necesitas crear una cuenta: confirmas con un código en tu teléfono.
+                    </p>
+                </div>
+
+                <div class="porque-visual">
+                    <div class="porque-lienzo porque-lienzo-paciente">
+                        <div class="porque-telefono">
+                            <div class="porque-telefono-estado" aria-hidden="true">
+                                <span>9:41</span>
+                                <span class="porque-telefono-iconos">
+                                    <i class="bi bi-reception-4"></i>
+                                    <i class="bi bi-wifi"></i>
+                                    <i class="bi bi-battery-full"></i>
+                                </span>
+                            </div>
+                            <img src="{{ asset('img/landing/catalogo-movil.webp') }}"
+                                 alt="Catálogo público de Doctorísimo.App en el celular: especialidades y médicos con agenda publicada."
+                                 width="780" height="1688" loading="lazy" decoding="async">
                         </div>
-                        <h5 class="fw-bold">Cita Directa</h5>
-                        <p class="text-muted small mb-0">Reserva turnos en tiempo real según la disponibilidad del especialista.</p>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="p-3">
-                        <div class="service-icon accent-icon mx-auto">
-                            <i class="bi bi-camera-video"></i>
+            </article>
+
+            <!-- Para médicos -->
+            <article class="porque-fila porque-fila-inversa" aria-labelledby="porque-medicos">
+                <div class="porque-texto">
+                    <span class="porque-publico porque-publico-medico">
+                        <i class="bi bi-clipboard2-pulse" aria-hidden="true"></i> Para médicos
+                    </span>
+                    <h3 id="porque-medicos">Tu consultorio en orden, en la nube y en el bolsillo.</h3>
+                    <p class="porque-bajada">
+                        Menos tiempo buscando papeles, más tiempo con tus pacientes. Y una agenda que también
+                        trabaja para ti.
+                    </p>
+                    <ul class="porque-lista">
+                        <li>
+                            <span class="porque-icono" aria-hidden="true"><i class="bi bi-journal-medical"></i></span>
+                            <div>
+                                <strong>Historia clínica digital</strong>
+                                <span class="porque-detalle">Toda la información de cada paciente, ordenada y disponible cuando la necesitas.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="porque-icono" aria-hidden="true"><i class="bi bi-phone"></i></span>
+                            <div>
+                                <strong>Tu consultorio en el celular</strong>
+                                <span class="porque-detalle">Accede a las historias y a los datos de tus pacientes desde el móvil, estés donde estés.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="porque-icono" aria-hidden="true"><i class="bi bi-file-earmark-medical"></i></span>
+                            <div>
+                                <strong>Récipes, informes y reportes en segundos</strong>
+                                <span class="porque-detalle">Genera los documentos de la consulta sin volver a escribir lo que ya está en la historia.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="porque-icono" aria-hidden="true"><i class="bi bi-lightning-charge"></i></span>
+                            <div>
+                                <strong>La historia de un paciente, en 1 clic</strong>
+                                <span class="porque-detalle">Encuentra lo que buscas al instante y dedica esos minutos a lo que importa: atender.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="porque-icono" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></span>
+                            <div>
+                                <strong>Más citas, sin perseguirlas</strong>
+                                <span class="porque-detalle">Publica tu agenda en el catálogo y recibe pacientes nuevos que reservan solos.</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="porque-acciones">
+                        <a class="btn btn-accent-gineco btn-lg rounded-pill px-4" href="{{ route('medico.registro') }}">
+                            <i class="bi bi-person-plus me-2" aria-hidden="true"></i>Sumar mi consultorio
+                        </a>
+                        <a class="porque-enlace" href="{{ route('login') }}">
+                            Ya tengo cuenta <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                    <p class="porque-nota">
+                        <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                        Registro con aprobación del equipo. Configura tu agenda y empieza a recibir citas.
+                    </p>
+                </div>
+
+                <div class="porque-visual">
+                    <div class="porque-lienzo porque-lienzo-medico">
+                        <div class="porque-ventana">
+                            <div class="porque-ventana-barra" aria-hidden="true">
+                                <span></span><span></span><span></span>
+                                <em>Consultorio · Doctorísimo.App</em>
+                            </div>
+                            <img src="{{ asset('img/landing/agenda-consultorio.webp') }}"
+                                 alt="Agenda del consultorio en Doctorísimo.App: citas del día, pacientes, estado y acciones."
+                                 width="1600" height="982" loading="lazy" decoding="async">
                         </div>
-                        <h5 class="fw-bold">Telemedicina</h5>
-                        <p class="text-muted small mb-0">Videollamadas en vivo y privadas con encriptación para tu seguridad.</p>
+                        <div class="porque-telefono-app">
+                            <img src="{{ asset('img/landing/agenda-movil.webp') }}"
+                                 alt="La misma agenda en la app móvil de Doctorísimo.App: citas del día con paciente, motivo y estado."
+                                 width="540" height="1140" loading="lazy" decoding="async">
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="p-3">
-                        <div class="service-icon mx-auto">
-                            <i class="bi bi-file-earmark-medical"></i>
+            </article>
+
+            <!-- Galería: lo que produce el consultorio -->
+            <section class="porque-galeria" aria-labelledby="porque-galeria-titulo">
+                <header class="porque-galeria-encabezado">
+                    <span class="porque-etiqueta">
+                        <i class="bi bi-collection" aria-hidden="true"></i> Por dentro
+                    </span>
+                    <h3 id="porque-galeria-titulo">Lo que sale de Doctorísimo.App</h3>
+                    <p class="porque-galeria-intro">
+                        No es solo la agenda: son las curvas de crecimiento, los récipes y los informes que el
+                        consultorio produce todos los días, listos para imprimir o compartir.
+                    </p>
+                </header>
+
+                <div class="porque-galeria-grid">
+                    <figure class="porque-lamina">
+                        <div class="porque-lamina-marco">
+                            <img src="{{ asset('img/landing/crecimiento.webp') }}"
+                                 alt="Curvas de crecimiento pediátrico con los percentiles de Fundacredesa."
+                                 width="1016" height="1152" loading="lazy" decoding="async">
                         </div>
-                        <h5 class="fw-bold">Historial Digital</h5>
-                        <p class="text-muted small mb-0">Accede a tus recetas y resultados médicos de forma instantánea.</p>
-                    </div>
+                        <figcaption>
+                            <span>Pediatría</span>
+                            <strong>Curvas de crecimiento</strong>
+                            <p>Percentiles de Fundacredesa en pantalla y en la hoja impresa, con la medición de cada control.</p>
+                        </figcaption>
+                    </figure>
+
+                    <figure class="porque-lamina">
+                        <div class="porque-lamina-marco">
+                            <img src="{{ asset('img/landing/recipe.webp') }}"
+                                 alt="Récipe impreso con el membrete del médico, dos medicamentos y el QR de verificación."
+                                 width="562" height="792" loading="lazy" decoding="async">
+                        </div>
+                        <figcaption>
+                            <span>Récipes</span>
+                            <strong>Récipes listos para imprimir</strong>
+                            <p>Con membrete, indicaciones y un QR para verificar que el récipe es auténtico.</p>
+                        </figcaption>
+                    </figure>
+
+                    <figure class="porque-lamina">
+                        <div class="porque-lamina-marco">
+                            <img src="{{ asset('img/landing/eco.webp') }}"
+                                 alt="Informe de ecografía obstétrica del segundo trimestre con biometría, anatomía y conclusión."
+                                 width="794" height="900" loading="lazy" decoding="async">
+                        </div>
+                        <figcaption>
+                            <span>Ecografía</span>
+                            <strong>Informes de ecografía</strong>
+                            <p>Biometría, anatomía y conclusión en la hoja del segundo trimestre, lista para entregar.</p>
+                        </figcaption>
+                    </figure>
                 </div>
-            </div>
+            </section>
         </div>
     </section>
 
@@ -168,12 +371,12 @@
         </div>
     </section>
 
-    <!-- Footer de GinecoReport -->
+    <!-- Footer del sitio público -->
     <footer class="footer-gineco py-5">
         <div class="container">
             <div class="row g-4">
                 <div class="col-lg-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-heart-pulse-fill me-2" style="color: #cfb0d4;"></i>DoctorisimoApp</h5>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-heart-pulse-fill me-2" style="color: #cfb0d4;"></i>Doctorísimo<span style="color: #cfb0d4;">.App</span></h5>
                     <p class="small text-muted mb-3">Plataforma integral para la gestión y reserva de citas médicas especializadas.</p>
                 </div>
                 <div class="col-lg-2 col-6">
@@ -181,23 +384,24 @@
                     <ul class="list-unstyled small">
                         <li class="mb-2"><a href="{{ url('/') }}#inicio">Inicio</a></li>
                         <li class="mb-2"><a href="{{ url('/') }}#especialidades">Especialidades</a></li>
+                        <li class="mb-2"><a href="{{ url('/') }}#por-que">Por qué Doctorísimo</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-2 col-6">
                     <h6 class="fw-bold mb-3">Para Médicos</h6>
                     <ul class="list-unstyled small">
-                        <li class="mb-2"><a href="#">Unirse como Doctor</a></li>
-                        <li class="mb-2"><a href="#">Gestión de Agenda</a></li>
+                        <li class="mb-2"><a href="{{ route('medico.registro') }}">Unirse como Doctor</a></li>
+                        <li class="mb-2"><a href="{{ url('/') }}#por-que">Conocer la plataforma</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-4">
                     <h6 class="fw-bold mb-3">Contacto</h6>
-                    <p class="small text-muted mb-1"><i class="bi bi-envelope me-2"></i>soporte@ginecoreport.com</p>
+                    <p class="small text-muted mb-1"><i class="bi bi-envelope me-2"></i><a href="mailto:soporte@ginecoreport.com">soporte@ginecoreport.com</a></p>
                 </div>
             </div>
             <hr class="my-4 border-secondary">
             <div class="text-center small text-muted">
-                <p class="mb-0">&copy; {{ date('Y') }} Doctorisimo.<span style="color: #cfb0d4;">App</span> Todos los derechos reservados.</p>
+                <p class="mb-0">&copy; {{ date('Y') }} Doctorísimo<span style="color: #cfb0d4;">.App</span> Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>

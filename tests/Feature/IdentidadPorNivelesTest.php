@@ -283,7 +283,7 @@ class IdentidadPorNivelesTest extends TestCase
 
         $alta = fn (string $hora) => [
             'sede' => $sede->id, 'fecha' => '2026-10-14', 'hora' => $hora,
-            'nuevo_cedula' => '20000080', 'nuevo_nombres' => 'Ana', 'nuevo_apellidos' => 'Cuenta', 'nuevo_telefono' => '0414-2000080',
+            'nuevo_cedula' => '20000080', 'nuevo_fnacimiento' => '1990-01-15', 'nuevo_nombres' => 'Ana', 'nuevo_apellidos' => 'Cuenta', 'nuevo_telefono' => '0414-2000080',
         ];
 
         $this->conContexto($medicoUser, $medico, $gineco)->actingAs($medicoUser)
@@ -296,7 +296,7 @@ class IdentidadPorNivelesTest extends TestCase
         $this->regla()->bloquear($otra, 'spam', $this->admin());
 
         $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
-            ->post(route('clinica.agenda.crear'), ['nuevo_cedula' => '20000081', 'nuevo_nombres' => 'Ana', 'nuevo_apellidos' => 'Cuenta', 'nuevo_telefono' => '0414-2000081', 'sede' => $sede->id, 'fecha' => '2026-10-14', 'hora' => '10:00'])
+            ->post(route('clinica.agenda.crear'), ['nuevo_cedula' => '20000081', 'nuevo_fnacimiento' => '1990-01-15', 'nuevo_nombres' => 'Ana', 'nuevo_apellidos' => 'Cuenta', 'nuevo_telefono' => '0414-2000081', 'sede' => $sede->id, 'fecha' => '2026-10-14', 'hora' => '10:00'])
             ->assertSessionHasNoErrors();
         $this->assertSame(2, Cola::where('reg_medico', $medico->reg_medico)->count(), 'La secretaría también.');
     }

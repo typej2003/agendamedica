@@ -4,6 +4,7 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Clinica\FechaDelConsultorio;
 use App\Models\AntecedenteMovimiento;
+use App\Support\HoraLocal;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -64,7 +65,7 @@ final class HistorialDeAntecedentesVista
         $detalle = trim((string) ($movimiento->detalles ?? ''));
 
         return [
-            'fecha' => $movimiento->ocurrido_en ? self::local($movimiento->ocurrido_en)->format('d/m/Y H:i') : 'Sin fecha',
+            'fecha' => $movimiento->ocurrido_en ? HoraLocal::fechaHora($movimiento->ocurrido_en) : 'Sin fecha',
             'operacion' => $operacion,
             'antecedente' => trim((string) ($movimiento->descripcion ?? '')) ?: trim((string) $movimiento->codeantecedente),
             'codigo' => trim((string) $movimiento->codeantecedente),
