@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Pacientes\Vistas;
 
+use App\Clinica\Pacientes\BusquedaCorregida;
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Clinica\Pacientes\FiltroDePacientes;
 use App\Support\FechaClinica;
@@ -9,15 +10,20 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
  * Lo que muestra el listado de pacientes (`/clinica/pacientes`): textos ya formateados, el estado de
- * cada historia, el filtro "Sin historia" (WEB-3.3) y el mensaje de "no hay nada". La vista solo lo
- * recorre.
+ * cada historia, el filtro "Sin historia" (WEB-3.3), el aviso de la corrección de errores de tecleo
+ * (PecleSearch) y el mensaje de "no hay nada". La vista solo lo recorre.
  *
  * Cada campo pasa por `CamposDePaciente`: el legado guarda la cédula ausente como `S.C.` y el número de
  * historia como texto que puede venir vacío, y la guía de UI pide `—`/"Sin cédula" cuando el dato no está.
  */
 final class ListadoDePacientesVista
 {
+    /** El término de la búsqueda tal como llegó, con la corrección aplicada si la hubo. */
+    private BusquedaCorregida $busqueda;
+
     /**
+     * @param  BusquedaCorregida|string  $buscar  el término de la búsqueda: el objeto cuando el controlador
+     *         ya lo corrigió, o el texto pelado (las pruebas y quien no corrija)
      * @param  array{todos:int, sinHistoria:int, conHistoria:int}  $conteos  los del segmentado, con la
      *         búsqueda ya aplicada: salen de `PacientesDelConsultorio::conteos()` y **no** se calculan acá
      * @param  string|null  $base  la URL del listado sin parámetros (`route('clinica.pacientes')`), que
@@ -25,21 +31,43 @@ final class ListadoDePacientesVista
      */
     public function __construct(
         private LengthAwarePaginator $pacientes,
-        private string $buscar = '',
+        BusquedaCorregida|string $buscar = '',
         private string $filtro = FiltroDePacientes::TODOS,
         private array $conteos = ['todos' => 0, 'sinHistoria' => 0, 'conHistoria' => 0],
         private ?string $base = null,
     ) {
+        $this->busqueda = is_string($buscar) ? BusquedaCorregida::sinCorreccion($buscar) : $buscar;
     }
 
     public function buscar(): string
     {
-        return $this->buscar;
+        return $this->busqueda->escrito;
     }
 
     public function hayBusqueda(): bool
     {
-        return $this->buscar !== '';
+        return $this->busqueda->escrito !== '';
+    }
+
+    /**
+     * ¿La búsqueda salió con un término corregido? ("Gonzlez" → "gonzalez"). Es lo que muestra el aviso
+     * con la salida «buscar tal cual»: la corrección se avisa y se puede deshacer, nunca se impone.
+     */
+    public function hayCorreccion(): bool
+    {
+        return $this->busqueda->corregida();
+    }
+
+    /** El término con el que se buscó de verdad, ya corregido, para contarlo en el aviso. */
+    public function terminoBuscado(): string
+    {
+        return $this->busqueda->aplicado;
+    }
+
+    /** La misma pantalla buscando **lo escrito**, sin corrección (`?literal=1`). */
+    public function urlBuscarLoEscrito(): string
+    {
+        return $this->url(['literal' => '1']);
     }
 
     /** El valor del filtro con el que se está mirando el listado (`todos`, `sin-historia`, `con-historia`). */
@@ -131,9 +159,10 @@ final class ListadoDePacientesVista
         $partes = [];
 
         if ($this->hayBusqueda()) {
+            // El subtítulo dice lo que se escribió: la corrección se cuenta en el aviso, no acá.
             $partes[] = $total === 0
-                ? 'Sin resultados para «' . $this->buscar . '»'
-                : $total . ($total === 1 ? ' resultado' : ' resultados') . ' para «' . $this->buscar . '»';
+                ? 'Sin resultados para «' . $this->busqueda->escrito . '»'
+                : $total . ($total === 1 ? ' resultado' : ' resultados') . ' para «' . $this->busqueda->escrito . '»';
         } else {
             $partes[] = $total . ($total === 1 ? ' paciente' : ' pacientes')
                 . ($this->viendoSinHistoria() ? ' sin número de historia' : '');
@@ -219,18 +248,20 @@ final class ListadoDePacientesVista
      * La URL del listado con lo que hay que conservar: la búsqueda que ya estaba escrita y el filtro
      * actual, con lo que pida `$query` encima.
      *
-     * `$query` decide **por presencia** y no por valor (`array_key_exists`), porque sus dos usos
-     * necesitan distinguir "dejar lo que hay" de "sacarlo": `historia => null` es "volver a Todos" y
+     * `$query` decide **por presencia** y no por valor (`array_key_exists`), porque sus usos
+     * necesitan distinguir "dejar lo que hay" de "sacarlo": `historia => null` es "volver a Todos",
      * `buscar => ''` es "Limpiar la búsqueda" —que es justo lo que `http_build_query` no puede expresar
-     * con un valor—. Las claves nulas o vacías no llegan a la barra del navegador.
+     * con un valor— y `literal => '1'` es "buscar lo escrito, sin corrección". Las claves nulas o vacías
+     * no llegan a la barra del navegador.
      *
-     * @param  array{buscar?:?string, historia?:?string}  $query
+     * @param  array{buscar?:?string, historia?:?string, literal?:?string}  $query
      */
     private function url(array $query): string
     {
         $parametros = array_filter([
-            'buscar'   => array_key_exists('buscar', $query) ? $query['buscar'] : $this->buscar,
+            'buscar'   => array_key_exists('buscar', $query) ? $query['buscar'] : $this->busqueda->escrito,
             'historia' => array_key_exists('historia', $query) ? $query['historia'] : $this->filtro,
+            'literal'  => array_key_exists('literal', $query) ? $query['literal'] : null,
         ], fn ($valor) => $valor !== null && $valor !== '' && $valor !== FiltroDePacientes::TODOS);
 
         $consulta = http_build_query($parametros);

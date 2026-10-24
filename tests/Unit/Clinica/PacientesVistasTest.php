@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Clinica;
 
+use App\Clinica\Pacientes\BusquedaCorregida;
 use App\Clinica\Pacientes\FiltroDePacientes;
 use App\Clinica\Pacientes\Vistas\FichaDePacienteVista;
 use App\Clinica\Pacientes\Vistas\ListadoDePacientesVista;
@@ -358,5 +359,38 @@ class PacientesVistasTest extends TestCase
         $this->assertSame('M', Iniciales::de('Madonna'));
         $this->assertSame('?', Iniciales::de('  '));
         $this->assertSame(Iniciales::tono('Pérez, Ana'), Iniciales::tono('  pérez, ana '));
+    }
+
+    public function test_el_listado_avisa_cuando_busco_un_termino_corregido(): void
+    {
+        $vista = new ListadoDePacientesVista(
+            $this->paginador([$this->paciente()], 1),
+            new BusquedaCorregida('Gonzlez', 'Gonzalez'),
+            FiltroDePacientes::SIN_HISTORIA,
+            ['todos' => 1, 'sinHistoria' => 1, 'conHistoria' => 0],
+            '/clinica/pacientes',
+        );
+
+        // Lo escrito se conserva (el campo del buscador y el subtítulo); lo corregido es lo que se avisa.
+        $this->assertSame('Gonzlez', $vista->buscar());
+        $this->assertSame('Gonzalez', $vista->terminoBuscado());
+        $this->assertTrue($vista->hayCorreccion());
+        $this->assertSame(
+            '1 resultado para «Gonzlez»: hay que asignarles el número antes de atenderlos.',
+            $vista->subtitulo(),
+        );
+
+        // La salida busca lo escrito sin perder el segmento de historia.
+        $this->assertSame(
+            '/clinica/pacientes?buscar=Gonzlez&historia=sin-historia&literal=1',
+            $vista->urlBuscarLoEscrito(),
+        );
+    }
+
+    public function test_sin_correccion_no_hay_aviso(): void
+    {
+        $this->assertFalse($this->listado([], 0, 'Gonzalez')->hayCorreccion());
+        $this->assertFalse($this->listado([], 0)->hayCorreccion());
+        $this->assertSame('', $this->listado([], 0)->terminoBuscado());
     }
 }

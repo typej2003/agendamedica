@@ -12,9 +12,11 @@ use App\Clinica\ContextoTrabajo;
 use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\AtencionInmediata;
 use App\Clinica\Consulta\PacienteDeLaCita;
+use App\Clinica\Pacientes\BusquedaCorregida;
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Clinica\Pacientes\CatalogoDeParentescos;
 use App\Clinica\Pacientes\CatalogoDeSeguros;
+use App\Clinica\Pacientes\CorrectorDeLaBusqueda;
 use App\Clinica\Pacientes\FamiliaDelPaciente;
 use App\Clinica\Pacientes\FiltroDePacientes;
 use App\Clinica\Pacientes\PacientesDelConsultorio;
@@ -75,13 +77,22 @@ class PacienteController extends Controller
         private CatalogoDeSeguros $seguros,
         private FamiliaDelPaciente $familias,
         private RepresentantePorCedula $representantesPorCedula,
+        private CorrectorDeLaBusqueda $corrector,
     ) {
     }
 
     public function index(Request $request)
     {
         $contexto = $request->attributes->get('contexto_clinico');
-        $buscar = trim((string) $request->query('buscar', ''));
+        $escrito = trim((string) $request->query('buscar', ''));
+
+        // **La corrección de errores de tecleo** (PecleSearch): "Gonzlez" se busca como "gonzalez". No
+        // reemplaza la búsqueda de `PacientesDelConsultorio`, sólo le cambia el término; `?literal=1` la
+        // apaga y busca lo escrito tal cual, que es la salida que ofrece el aviso del listado.
+        $busqueda = $request->boolean('literal')
+            ? BusquedaCorregida::sinCorreccion($escrito)
+            : $this->corrector->corregir($escrito);
+
         // Un `?historia=` que no sea uno de los valores válidos vuelve a "Todos" en vez de mostrar una
         // lista mezclada: la pantalla no le hace caso a lo que no entiende.
         $filtro = FiltroDePacientes::normalizar($request->query('historia'));
@@ -91,7 +102,15 @@ class PacienteController extends Controller
         // recibe sólo el registro del centro, porque el `medico` de su contexto es la fila del centro.
         $registros = $this->registrosDelContexto($request);
 
-        $listado = $this->pacientes->listar($registros, $contexto['reg_medico'], $buscar, $filtro);
+        $listado = $this->pacientes->listar($registros, $contexto['reg_medico'], $busqueda->aplicado, $filtro);
+
+        // Corregir es una mejora, nunca una condición para buscar: si con el término corregido no hay
+        // nada, se busca lo escrito. Pasa con un nombre que todavía no está en el índice (un paciente
+        // nuevo, desde la última reconstrucción) al que el corrector le cambió una letra.
+        if ($listado->total() === 0 && $busqueda->corregida()) {
+            $busqueda = $busqueda->sinCorregir();
+            $listado = $this->pacientes->listar($registros, $contexto['reg_medico'], $busqueda->aplicado, $filtro);
+        }
 
         // Una página que ya no existe (`?page=999`, o se borró gente) mostraba la tabla vacía y un
         // "Mostrando – de 1033": se lleva a la **última**, con la búsqueda y el filtro que traía. Sin
@@ -106,9 +125,9 @@ class PacienteController extends Controller
         return view('clinica.pacientes.index', [
             'vm' => new ListadoDePacientesVista(
                 $listado,
-                $buscar,
+                $busqueda,
                 $filtro,
-                $this->pacientes->conteos($registros, $contexto['reg_medico'], $buscar),
+                $this->pacientes->conteos($registros, $contexto['reg_medico'], $busqueda->aplicado),
                 // La URL base la resuelve el controlador: el ViewModel no llama a `route()` (se prueba
                 // sin contenedor) y el segmentado arma sus enlaces sobre esto.
                 route('clinica.pacientes'),
@@ -120,13 +139,26 @@ class PacienteController extends Controller
     public function buscar(Request $request)
     {
         $contexto = $request->attributes->get('contexto_clinico');
+        $busqueda = $this->corrector->corregir(trim((string) $request->query('q', '')));
 
-        return response()->json($this->pacientes->sugerencias(
+        $sugerencias = $this->pacientes->sugerencias(
             $this->registrosDelContexto($request),
-            trim((string) $request->query('q', '')),
+            $busqueda->aplicado,
             10,
             $contexto['reg_medico'],
-        ));
+        );
+
+        // Igual que el listado: si la corrección no encontró a nadie, se prueba con lo escrito.
+        if ($sugerencias === [] && $busqueda->corregida()) {
+            $sugerencias = $this->pacientes->sugerencias(
+                $this->registrosDelContexto($request),
+                $busqueda->escrito,
+                10,
+                $contexto['reg_medico'],
+            );
+        }
+
+        return response()->json($sugerencias);
     }
 
     /**

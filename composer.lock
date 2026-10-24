@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "159951cdae74c004abf48f7844eef3e5",
+    "content-hash": "9bbffaeb9c63fac0732eb339f305c2e7",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -547,6 +547,63 @@
                 }
             ],
             "time": "2026-10-19T17:53:57+00:00"
+        },
+        {
+            "name": "edyjen/pecle-search",
+            "version": "v0.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://edyjen@github.com/edyjen/Pecle-Search.git",
+                "reference": "3fcad7fded4058b7ad5c4c08c6735b5cbd310f85"
+            },
+            "require": {
+                "illuminate/cache": "^11.0|^12.0|^13.0",
+                "illuminate/console": "^11.0|^12.0|^13.0",
+                "illuminate/database": "^11.0|^12.0|^13.0",
+                "illuminate/queue": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^9.0|^10.0|^11.0",
+                "pestphp/pest": "^3.0|^4.0",
+                "pestphp/pest-plugin-laravel": "^3.0|^4.1"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Pecle\\Search\\Laravel\\PecleSearchServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Pecle\\Search\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Pecle\\Search\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "vendor/bin/pest"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Buscador por palabras para Laravel con corrección silenciosa de errores de tecleo y autocompletado.",
+            "keywords": [
+                "autocomplete",
+                "laravel",
+                "search",
+                "spanish",
+                "typo"
+            ],
+            "time": "2026-10-24T16:19:59+00:00"
         },
         {
             "name": "egulias/email-validator",
