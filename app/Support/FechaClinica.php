@@ -90,7 +90,8 @@ final class FechaClinica
             return null;
         }
 
-        return $fecha->diffInYears(\App\Clinica\FechaDelConsultorio::hoyComoFecha());
+        // Carbon 3 devuelve `float` en `diffInYears`; la edad se muestra y compara como entero.
+        return (int) $fecha->diffInYears(\App\Clinica\FechaDelConsultorio::hoyComoFecha());
     }
 
     /**

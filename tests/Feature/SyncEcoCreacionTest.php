@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use App\Clinica\Consulta\EcoGinecologico;
 use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoSegundo;
@@ -168,7 +169,7 @@ class SyncEcoCreacionTest extends TestCase
         ];
     }
 
-    /** @dataProvider estudios */
+    #[DataProvider('estudios')]
     public function test_crear_un_estudio_deja_la_fila_en_su_tabla_con_la_clave_del_legado(
         string $tabla,
         string $modelo,
@@ -492,7 +493,7 @@ class SyncEcoCreacionTest extends TestCase
         ];
     }
 
-    /** @dataProvider soloLaFichaDelEmbarazo */
+    #[DataProvider('soloLaFichaDelEmbarazo')]
     public function test_crear_un_eco_obstetrico_con_solo_la_fur_o_la_gesta_se_acepta(string $columna, string $valor): void
     {
         $medico = $this->medico();

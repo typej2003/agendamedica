@@ -146,6 +146,6 @@ final class PacienteImpreso
             return null;
         }
 
-        return $nacimiento->greaterThan($al) ? null : $nacimiento->diffInYears($al);
+        return $nacimiento->greaterThan($al) ? null : (int) $nacimiento->diffInYears($al);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\FormatosEnBlanco;
 use App\Models\Evolucion;
@@ -82,14 +83,14 @@ class FormatosEnBlancoWebTest extends TestCase
     }
 
     /** @return array<int,array{0:string}> */
-    public function formatos(): array
+    public static function formatos(): array
     {
         return array_map(fn (string $clave) => [$clave], FormatosEnBlanco::claves());
     }
 
     // ------------------------------------------------------------------------------------ Quién entra
 
-    /** @dataProvider formatos */
+    #[DataProvider('formatos')]
     public function test_cada_formato_responde_200_al_medico_con_su_membrete_y_sin_datos_de_paciente(string $formato): void
     {
         [$user, $medico, $gineco] = $this->medicoConFormato();
@@ -132,7 +133,7 @@ class FormatosEnBlancoWebTest extends TestCase
         $this->assertStringContainsString('css/clinica-en-blanco.css', $html);
     }
 
-    /** @dataProvider formatos */
+    #[DataProvider('formatos')]
     public function test_la_secretaria_recibe_403(string $formato): void
     {
         [, $medico, $gineco] = $this->medicoConFormato();

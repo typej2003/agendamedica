@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use App\Models\Consulta;
 use App\Models\Historia;
 use App\Models\Medico;
@@ -104,7 +105,7 @@ class BuscadorAutomaticoWebTest extends TestCase
         ];
     }
 
-    /** @dataProvider catalogos */
+    #[DataProvider('catalogos')]
     public function test_los_catalogos_buscan_solos_y_ofrecen_agregar(string $ruta, string $dialogo, string $campo): void
     {
         foreach ([route($ruta), route($ruta, ['buscar' => 'zzz-no-existe'])] as $url) {
