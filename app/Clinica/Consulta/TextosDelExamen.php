@@ -80,7 +80,8 @@ final class TextosDelExamen
      *
      * `columna` es la de `consultas` que se lee y se escribe; `columna_espejo`, la copia en otra tabla (o
      * `null`); `plantillas`, el `tipo` de `formato_print` (o `null` si no tiene); `documento`, la hoja del motor
-     * de impresión (o `null`); `imagenes`, la clave de la solapa en `TagDeImagen` (o `null` si no anexa fotos).
+     * de impresión (o `null`); `imagenes`, la clave de la solapa en `TagDeImagen` (o `null` si no anexa fotos);
+     * `escanear`, si ofrece leer la hoja del laboratorio (WEB-13.15).
      *
      * @var array<string,array<string,mixed>>
      */
@@ -161,6 +162,7 @@ final class TextosDelExamen
             'plantillas' => 'RE',
             'documento' => null,
             'imagenes' => null,
+            'escanear' => true,
             'marcador' => 'El resultado de los exámenes pedidos: lo que informó el laboratorio o el estudio…',
             'ayuda' => 'La nota del médico sobre los resultados. Los exámenes pedidos y el resultado de cada uno '
                 . '—los `examen_paciente` de la consulta— se cargan en la solapa de laboratorio y estudios.',
@@ -180,6 +182,7 @@ final class TextosDelExamen
             'plantillas' => 'EX',
             'documento' => null,
             'imagenes' => null,
+            'escanear' => true,
             'marcador' => 'Los exámenes del niño: lo que se pidió, lo que informó el laboratorio…',
             'ayuda' => 'Los exámenes de esta consulta, en texto libre o a partir de las plantillas del médico. '
                 . 'Los exámenes pedidos, con su resultado, van en Solicitudes → Laboratorio y Estudios.',
@@ -297,6 +300,21 @@ final class TextosDelExamen
         }
 
         return null;
+    }
+
+    /**
+     * ¿La solapa ofrece **escanear la hoja** (WEB-13.15)? Las que reciben lo que informó el laboratorio: *Resultado de
+     * exámenes* de ginecología y *Exámenes* de pediatría. La lectura propone el texto en el campo; no guarda.
+     */
+    public static function escaneable(string $clave): bool
+    {
+        return (bool) (self::TEXTOS[$clave]['escanear'] ?? false);
+    }
+
+    /** Las claves de las solapas que se escanean (la ruta de lectura las acepta y ninguna más). */
+    public static function clavesEscaneables(): array
+    {
+        return array_keys(array_filter(self::TEXTOS, fn (array $texto) => ! empty($texto['escanear'])));
     }
 
     public static function marcador(string $clave): string

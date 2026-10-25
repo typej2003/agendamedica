@@ -117,6 +117,7 @@ use App\Clinica\Embarazo\Vistas\PestanasDelEmbarazo;
 use App\Clinica\Embarazo\Vistas\PrenatalVista;
 use App\Clinica\Embarazo\Vistas\ReporteVista;
 use App\Clinica\Embarazo\Vistas\SeccionDeEmbarazoVista;
+use App\Clinica\Escaneo\LectorDeHojas;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\MedicoQueFirma;
@@ -383,6 +384,19 @@ class ConsultaController extends Controller
     }
 
     /** Qué partes de la consulta aplican a la especialidad del contexto (WEB-12.1). */
+    /**
+     * La lectura de la hoja escaneada de una solapa (WEB-13.15), o `''` si la solapa no la ofrece o el servidor no
+     * tiene con qué leer (sin clave del proveedor el botón no aparece).
+     */
+    private function urlEscanear(Consulta $consulta, string $solapa): string
+    {
+        if (! TextosDelExamen::escaneable($solapa) || ! app(LectorDeHojas::class)->disponible()) {
+            return '';
+        }
+
+        return route('clinica.consulta.examen.escanear', [$consulta->id, $solapa]);
+    }
+
     private function alcance(): AlcanceDeLaEspecialidad
     {
         return AlcanceDeLaEspecialidad::de(request()->attributes->get('contexto_clinico')['specialty']?->slug);
@@ -670,6 +684,7 @@ class ConsultaController extends Controller
                         (array) old(),
                         // O-22: la lista de exámenes informados sólo en *Resultado de exámenes*.
                         $informados,
+                        $this->urlEscanear($consulta, $pestana),
                     )
                     : new EvaluacionFisicaVista(
                         $examen->de($consulta),
@@ -1339,6 +1354,8 @@ class ConsultaController extends Controller
                     $url($activa),
                     '',
                     (array) old(),
+                    null,
+                    $this->urlEscanear($consulta, $activa),
                 ),
             );
         }

@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Clinica\Escaneo\LectorDeHojas;
+use App\Clinica\Escaneo\LectorDeHojasConClaude;
+use App\Clinica\Escaneo\LectorDeHojasConGemini;
 use App\Http\View\Composers\ArmazonClinicaComposer;
 use App\Http\View\Composers\TourDeLaPantallaComposer;
 use App\Models\User;
@@ -24,6 +27,12 @@ class AppServiceProvider extends ServiceProvider
         // La regionalización de quien mira (WEB-13.5). `scoped`: un job o un request no hereda la del anterior;
         // el middleware `AplicarRegionalizacion` la reemplaza por la del dispositivo.
         $this->app->scoped(\App\Support\Regionalizacion::class, fn () => \App\Support\Regionalizacion::porDefecto());
+
+        // La lectura de hojas escaneadas (WEB-13.15): Gemini por defecto, Claude con `OCR_PROVEEDOR=anthropic`. Los tests
+        // la reemplazan con `instance()`.
+        $this->app->bind(LectorDeHojas::class, fn () => config('services.ocr.proveedor') === 'anthropic'
+            ? new LectorDeHojasConClaude()
+            : new LectorDeHojasConGemini());
     }
 
     /**
