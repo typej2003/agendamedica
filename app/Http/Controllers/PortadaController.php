@@ -28,7 +28,8 @@ class PortadaController extends Controller
             // Los mismos planes que el médico ve en `/clinica/plan`: si no hay ninguno visible, la sección no sale.
             'planes' => Plan::where('activo', true)->where('visible', true)->orderBy('orden')->orderBy('id')->get(),
             'mesesDePrueba' => max(0, (int) config('servicios.prueba_meses')),
-            // Sólo las especialidades con médicos activos: un enlace a una lista vacía no ayuda a nadie.
+            // Sólo las especialidades con médicos **con agenda publicada** (las mismas del catálogo de reservas):
+            // un enlace a una lista vacía no ayuda a nadie.
             'especialidades' => $catalogo->especialidades(),
         ]);
     }

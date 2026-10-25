@@ -15,6 +15,9 @@ use Illuminate\Support\Collection;
  */
 final class CatalogoDeMedicos
 {
+    /** Memo del filtro de especialidades: se arma de los médicos con agenda y `medicos()` no es gratis. */
+    private ?Collection $especialidadesConAgenda = null;
+
     public function __construct(private DisponibilidadPublica $disponibilidad)
     {
     }
@@ -49,14 +52,20 @@ final class CatalogoDeMedicos
             ->values();
     }
 
-    /** @return Collection<int,Specialty> */
+    /**
+     * Las especialidades del filtro: **sólo las que llevan a algún resultado**, o sea las de los médicos que hoy
+     * se muestran en el catálogo (activos y con agenda publicada). Antes se ofrecía toda especialidad que tuviera
+     * algún médico activo, aunque ninguno tuviera horarios, y el filtro llevaba a una lista vacía (2026-10-24).
+     *
+     * @return Collection<int,Specialty>
+     */
     public function especialidades(): Collection
     {
-        return Specialty::query()
-            ->where('activo', true)
-            ->whereHas('medicos', fn ($q) => $q->where('is_active', true))
-            ->orderBy('name')
-            ->get();
+        return $this->especialidadesConAgenda ??= $this->medicos()
+            ->flatMap(fn (Medico $medico) => $medico->specialties)
+            ->unique('id')
+            ->sortBy('name')
+            ->values();
     }
 
     /** Las sedes con horario del médico, para mostrarlas en su ficha pública. */
