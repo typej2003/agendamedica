@@ -62,9 +62,15 @@ return [
 
     /*
      * **Lectura de hojas escaneadas** (WEB-13.15): la solapa *Resultado de exámenes* manda la foto o el PDF de la
-     * hoja del laboratorio a Claude y recibe el texto transcrito, que el médico revisa y edita antes de guardar
-     * (`App\Clinica\Escaneo\LectorDeHojasConClaude`). Sin `ANTHROPIC_API_KEY` el botón no se ofrece.
+     * hoja del laboratorio a un modelo y recibe el texto transcrito, que el médico revisa y edita antes de guardar.
+     * `proveedor` elige el lector: `gemini` (por defecto, con la clave del chatbot) o `anthropic` (la alternativa).
+     * Sin la clave del proveedor elegido el botón no se ofrece.
      */
+    'ocr' => [
+        'proveedor' => env('OCR_PROVEEDOR', 'gemini'),
+    ],
+
+    // Claude, la alternativa para la lectura de hojas (`OCR_PROVEEDOR=anthropic`, `LectorDeHojasConClaude`).
     'anthropic' => [
         'api_key' => env('ANTHROPIC_API_KEY'),
         'modelo_ocr' => env('ANTHROPIC_MODELO_OCR', 'claude-opus-5-5'),
@@ -74,6 +80,9 @@ return [
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
         'model' => env('GEMINI_MODEL', 'gemini-3.8-flash'),
+        // La lectura de hojas escaneadas (WEB-13.15, `LectorDeHojasConGemini`); sin `GEMINI_MODELO_OCR`, el del chatbot.
+        'modelo_ocr' => env('GEMINI_MODELO_OCR', env('GEMINI_MODEL', 'gemini-3.8-flash')),
+        'timeout_ocr' => (int) env('GEMINI_TIMEOUT_OCR', 90),
     ],
 
     /*

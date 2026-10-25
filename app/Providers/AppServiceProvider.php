@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Clinica\Escaneo\LectorDeHojas;
 use App\Clinica\Escaneo\LectorDeHojasConClaude;
+use App\Clinica\Escaneo\LectorDeHojasConGemini;
 use App\Http\View\Composers\ArmazonClinicaComposer;
 use App\Http\View\Composers\TourDeLaPantallaComposer;
 use App\Models\User;
@@ -23,8 +24,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        // La lectura de hojas escaneadas (WEB-13.15); los tests la reemplazan con `instance()`.
-        $this->app->bind(LectorDeHojas::class, LectorDeHojasConClaude::class);
+        // La lectura de hojas escaneadas (WEB-13.15): Gemini por defecto, Claude con `OCR_PROVEEDOR=anthropic`. Los tests
+        // la reemplazan con `instance()`.
+        $this->app->bind(LectorDeHojas::class, fn () => config('services.ocr.proveedor') === 'anthropic'
+            ? new LectorDeHojasConClaude()
+            : new LectorDeHojasConGemini());
     }
 
     /**

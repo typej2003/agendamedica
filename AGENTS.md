@@ -89,16 +89,20 @@ su propia sección. Es el «PLAN DE TRATAMIENTO» del resumen médico. Tests: `C
 
 📷 **Escanear la hoja de resultados** (WEB-13.15, 2026-10-25): la solapa *Resultado de exámenes* (`consultas.oido`, ginecología) y
 *Exámenes* de pediatría (`consultas.nariz`) ofrecen **«Escanear hoja»**: foto (en el teléfono, el selector ofrece la cámara) o PDF →
-`POST /clinica/consulta/{consulta}/examen/{solapa}/escanear` (`ConsultaEscaneoController`, `throttle:20,1`) → **Claude** transcribe la hoja
-(`App\Clinica\Escaneo\LectorDeHojasConClaude`, SDK oficial `anthropic-ai/sdk`, modelo `ANTHROPIC_MODELO_OCR` = `claude-opus-5-5`, salida
-`json_schema` con `es_resultado`, `fallbacks: "default"`) → `escanear-hoja.js` pone el texto en el campo (**agrega al final, nunca
-reemplaza**) y dispara `input`. **La lectura no escribe nada** (ni la consulta, ni el archivo, ni `sync_changes`): el médico revisa y
-guarda con el guardado de la solapa —la regla de O-12, «la lectura propone, el médico confirma»—. El tipo sale del contenido
+`POST /clinica/consulta/{consulta}/examen/{solapa}/escanear` (`ConsultaEscaneoController`, `throttle:20,1`) → un modelo transcribe la hoja
+→ `escanear-hoja.js` pone el texto en el campo (**agrega al final, nunca reemplaza**) y dispara `input`. **La lectura no escribe nada**
+(ni la consulta, ni el archivo, ni `sync_changes`): el médico revisa y guarda con el guardado de la solapa —la regla de O-12, «la lectura
+propone, el médico confirma»—. **Proveedor** (`App\Clinica\Escaneo\LectorDeHojas`, elegido por `OCR_PROVEEDOR`):
+**`gemini`** por defecto (`LectorDeHojasConGemini`, HTTP a `generateContent` con la misma `GEMINI_API_KEY` del chatbot; modelo
+`GEMINI_MODELO_OCR`, o el de `GEMINI_MODEL`) y **`anthropic`** como alternativa (`LectorDeHojasConClaude`, SDK `anthropic-ai/sdk`,
+`ANTHROPIC_API_KEY`, `ANTHROPIC_MODELO_OCR` = `claude-opus-5-5`, `fallbacks: "default"`). Las instrucciones, el esquema
+(`es_resultado` + `texto`) y la lectura de la respuesta son **los mismos para los dos** (`Transcripcion`). El tipo sale del contenido
 (`HojaEscaneada::tipo()`: JPG/PNG/WEBP/GIF/PDF, 10 MB; HEIC no) y la foto grande viaja reducida a 2400 px y enderezada por su EXIF
-(`HojaEscaneada::paraLeer()`, GD). Qué solapas: `'escanear' => true` en `TextosDelExamen`. **Sin
-`ANTHROPIC_API_KEY` el botón no aparece** (variable nueva del despliegue). La hoja viaja al proveedor; el log guarda que hubo lectura
-(consulta, usuario, tipo), nunca su contenido. Tests: `Feature/ConsultaEscaneoWebTest` (9) y `Unit/Clinica/LectorDeHojasConClaudeTest`
-(7, HTTP simulado).
+(`HojaEscaneada::paraLeer()`, GD). Qué solapas: `'escanear' => true` en `TextosDelExamen`. **Sin la clave del proveedor elegido el botón
+no aparece.** ⚠️ La clave de Gemini tiene que ser de un **proyecto con facturación**: en el nivel gratuito Google puede usar lo enviado, y
+viajan hojas de pacientes. El log guarda que hubo lectura (consulta, usuario, tipo), nunca su contenido. Tests:
+`Feature/ConsultaEscaneoWebTest` (9), `Unit/Clinica/LectorDeHojasConGeminiTest` (10) y `Unit/Clinica/LectorDeHojasConClaudeTest` (7), con el
+HTTP simulado.
 
 📋 **Listados clínicos entre fechas** (WEB-6.8, `/clinica/listados`, sólo `role:Root|Medico`): una pantalla parametrizada por
 `?listado=` (catálogo en `App\Clinica\Listados\ListadosDisponibles`, selector en `index`), con los tres del alcance hechos
