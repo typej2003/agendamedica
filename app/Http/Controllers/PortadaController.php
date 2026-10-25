@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Plan;
+use App\Reservas\CatalogoDeMedicos;
+use Illuminate\Http\Request;
+
+/**
+ * La portada pública (`/`). **Le habla primero al médico** —cobramos por médico, así que la conversión que
+ * importa es el registro (`medico.registro`)— y deja al paciente un bloque secundario que lleva al portal de
+ * reservas.
+ *
+ * Reemplaza al componente Livewire `Welcome`: la portada no tiene estado y cada clic de aquél era un viaje al
+ * servidor sólo para redirigir. Como página Blade normal tiene su `<title>` y su descripción.
+ */
+class PortadaController extends Controller
+{
+    public function __invoke(Request $request, CatalogoDeMedicos $catalogo)
+    {
+        // La portada vieja filtraba médicos con `/?especialidad=<slug>`: esos enlaces van al portal de reservas.
+        $especialidad = trim((string) $request->query('especialidad', ''));
+        if ($especialidad !== '') {
+            return redirect()->route('reservas.catalogo', ['especialidad' => $especialidad]);
+        }
+
+        return view('portada', [
+            // Los mismos planes que el médico ve en `/clinica/plan`: si no hay ninguno visible, la sección no sale.
+            'planes' => Plan::where('activo', true)->where('visible', true)->orderBy('orden')->orderBy('id')->get(),
+            'mesesDePrueba' => max(0, (int) config('servicios.prueba_meses')),
+            // Sólo las especialidades con médicos activos: un enlace a una lista vacía no ayuda a nadie.
+            'especialidades' => $catalogo->especialidades(),
+        ]);
+    }
+}

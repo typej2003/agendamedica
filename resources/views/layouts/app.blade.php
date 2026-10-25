@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @include('layouts._favicon')
     <title>@yield('title', 'Doctorísimo')</title>
+    @stack('meta')
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -30,8 +31,11 @@
             overflow-x: hidden;
         }
 
-        /* La barra superior del sitio público (sin sesión) es más alta: tiene el menú de secciones. */
-        body.sitio-publico { --navbar-height: 76px; }
+        /* La barra superior del sitio público (sin sesión) mide 57 px (53 px con el menú plegado, en celular).
+           Con los 76 px de antes quedaba una franja del fondo entre la barra y el héroe de la portada o de
+           las reservas. */
+        body.sitio-publico { --navbar-height: 57px; }
+        @media (max-width: 991.98px) { body.sitio-publico { --navbar-height: 53px; } }
 
         #wrapper { display: flex; min-height: calc(100vh - var(--navbar-height)); }
 
