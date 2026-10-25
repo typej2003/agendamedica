@@ -69,7 +69,15 @@ final class SolicitarCodigoDeRegistroDeMedico
             return ['reenviado' => false];
         }
 
-        $this->enviar(array_merge($limpios, $archivo));
+        try {
+            $this->enviar(array_merge($limpios, $archivo));
+        } catch (\Throwable $e) {
+            // Sin correo no hay código y el trámite no se guarda: la foto recién subida quedaría huérfana en
+            // el disco, y con el SMTP caído se junta una por intento.
+            $this->carnet->borrar($archivo['carnet_ruta'] ?? null);
+
+            throw $e;
+        }
 
         return ['reenviado' => true];
     }
@@ -102,7 +110,7 @@ final class SolicitarCodigoDeRegistroDeMedico
         if (! $this->correos->codigo((string) $datos['email'], (string) $datos['nombres'], $codigo)
             && ! app()->environment(['local', 'testing'])) {
             throw ValidationException::withMessages([
-                'email' => 'No pudimos enviarte el correo con el código. Revisa la dirección o intenta de nuevo en un momento.',
+                'email' => 'No pudimos enviarte el correo con el código. Vuelve a intentarlo en un momento.',
             ]);
         }
 

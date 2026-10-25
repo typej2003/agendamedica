@@ -34,9 +34,48 @@ final class CarnetDeLaSolicitud
         return ArchivosClinicos::textosAceptados(self::PERFIL);
     }
 
+    /**
+     * El tope **efectivo** de la foto, en KB: el de la política (5 MB) o el que impone PHP, **el menor**.
+     *
+     * `upload_max_filesize` y `post_max_size` vienen de fábrica en 2M y 8M, y son **menores** que el tope de la
+     * política: una foto de celular (3-8 MB) la descarta PHP **antes** de que el código la vea y el navegador
+     * sólo recibe el «No se pudo subir el campo carnet» del framework. Con esto el formulario y sus mensajes
+     * anuncian el tope real del servidor (2026-10-24; ver la trampa 86).
+     */
+    public static function maximoKb(): int
+    {
+        $politica = ArchivosClinicos::maximoKb(self::PERFIL);
+
+        $delServidor = array_filter([
+            self::limiteEnKb((string) ini_get('upload_max_filesize')),
+            self::limiteEnKb((string) ini_get('post_max_size')),
+        ], static fn (?int $kb): bool => $kb !== null);
+
+        return $delServidor === [] ? $politica : min($politica, min($delServidor));
+    }
+
     public static function textoMaximo(): string
     {
-        return ArchivosClinicos::textoMaximo(self::PERFIL);
+        return round(self::maximoKb() / 1024) . ' MB';
+    }
+
+    /** «2M», «512K», «1G» → KB. `null` si no hay tope (vacío, `0` o `-1`). */
+    private static function limiteEnKb(string $valor): ?int
+    {
+        $valor = trim($valor);
+
+        if ($valor === '' || (int) $valor <= 0) {
+            return null;
+        }
+
+        $numero = (int) $valor;
+
+        return match (strtoupper(substr($valor, -1))) {
+            'G' => $numero * 1048576,
+            'M' => $numero * 1024,
+            'K' => $numero,
+            default => (int) round($numero / 1024),
+        };
     }
 
     /**

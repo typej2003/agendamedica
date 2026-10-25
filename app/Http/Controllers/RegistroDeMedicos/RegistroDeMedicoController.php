@@ -26,6 +26,8 @@ class RegistroDeMedicoController extends Controller
             'especialidades' => EspecialidadesDelRegistro::lista(),
             'carnetAceptado' => CarnetDeLaSolicitud::textosAceptados(),
             'carnetMaximo' => CarnetDeLaSolicitud::textoMaximo(),
+            // En bytes: el navegador avisa antes de mandar el formulario si la foto no entra.
+            'carnetMaximoBytes' => CarnetDeLaSolicitud::maximoKb() * 1024,
         ]);
     }
 
@@ -128,6 +130,11 @@ class RegistroDeMedicoController extends Controller
             'email.required' => 'Escribe tu correo: ahí te llegan el código y la respuesta.',
             'email.email' => 'Revisa el correo: no tiene forma de correo.',
             'mensaje.max' => 'El mensaje es muy largo (hasta 1000 caracteres).',
+            // El mensaje del framework («No se pudo subir el campo carnet») no dice nada: el fallo casi siempre
+            // es que la foto pasa el tope del servidor y PHP la descarta antes de llegar acá.
+            'carnet.uploaded' => 'La foto no se pudo subir: el servidor acepta imágenes de hasta '
+                . CarnetDeLaSolicitud::textoMaximo() . '. Elige una más liviana o tómala con menos resolución.',
+            'carnet.max' => 'La foto pesa más de ' . CarnetDeLaSolicitud::textoMaximo() . '. Elige una más liviana.',
         ];
     }
 }
