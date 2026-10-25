@@ -1,7 +1,7 @@
 <div>
     @php
         $nombre = $medico->nombre_mostrar;
-        $fecha = fn ($f, $formato = 'd/m/Y H:i') => $f ? \Illuminate\Support\Carbon::parse($f)->format($formato) : null;
+        $fecha = fn ($f, $conHora = true) => $f ? ($conHora ? \App\Support\HoraLocal::fechaHora($f) : \Illuminate\Support\Carbon::parse($f)->format(\App\Support\Regionalizacion::formatoActual())) : null;
     @endphp
 
     @include('livewire.admin.sedes._migas', ['migas' => [
@@ -138,7 +138,7 @@
                     @endif
                     <tr wire:key="credencial-{{ $credencial->id }}">
                         <td>{{ $credencial->machine_label }}</td>
-                        <td>{{ $fecha($credencial->expires_at, 'd/m/Y') ?? '—' }}</td>
+                        <td>{{ $fecha($credencial->expires_at, false) ?? '—' }}</td>
                         <td>{{ $fecha($credencial->last_used_at) ?? 'Nunca' }}</td>
                         <td>
                             @if ($credencial->revoked_at) <x-ui.estado tono="neutro">Revocada</x-ui.estado>
@@ -178,8 +178,8 @@
                             @endphp
                             <x-ui.estado :tono="$tonos[$estado['estado']] ?? 'neutro'">{{ ucfirst(str_replace('_', ' ', $estado['estado'])) }}</x-ui.estado>
                         </x-ui.dato>
-                        <x-ui.dato etiqueta="Inicio" :valor="$estado['inicia_el'] ? \Illuminate\Support\Carbon::parse($estado['inicia_el'])->format('d/m/Y') : null" />
-                        <x-ui.dato etiqueta="Vence" :valor="$estado['vence_el'] ? \Illuminate\Support\Carbon::parse($estado['vence_el'])->format('d/m/Y') : null" />
+                        <x-ui.dato etiqueta="Inicio" :valor="$estado['inicia_el'] ? \Illuminate\Support\Carbon::parse($estado['inicia_el'])->format(\App\Support\Regionalizacion::formatoActual()) : null" />
+                        <x-ui.dato etiqueta="Vence" :valor="$estado['vence_el'] ? \Illuminate\Support\Carbon::parse($estado['vence_el'])->format(\App\Support\Regionalizacion::formatoActual()) : null" />
                         <x-ui.dato etiqueta="Días restantes" :valor="$estado['dias_restantes'] !== null ? (string) $estado['dias_restantes'] : null" />
                     </dl>
                 @empty
@@ -195,8 +195,8 @@
                                 <tr wire:key="servicio-{{ $servicio->id }}">
                                     <td>{{ $servicio->plan_nombre }}</td>
                                     <td>{{ ucfirst($servicio->origen) }}</td>
-                                    <td>{{ $fecha($servicio->inicia_el, 'd/m/Y') }}</td>
-                                    <td>{{ $fecha($servicio->vence_el, 'd/m/Y') }}</td>
+                                    <td>{{ $fecha($servicio->inicia_el, false) }}</td>
+                                    <td>{{ $fecha($servicio->vence_el, false) }}</td>
                                     <td>{{ ucfirst($servicio->estado) }}</td>
                                 </tr>
                             @endforeach

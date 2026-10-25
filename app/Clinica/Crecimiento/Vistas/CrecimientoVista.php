@@ -342,6 +342,6 @@ final class CrecimientoVista
 
     private static function fecha(?string $fecha): string
     {
-        return $fecha === null ? '—' : Carbon::parse($fecha)->format('d/m/Y');
+        return $fecha === null ? '—' : Carbon::parse($fecha)->format(\App\Support\Regionalizacion::formatoActual());
     }
 }

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" {!! \App\Support\Regionalizacion::actual()->atributosHtml() !!}>
 <head>
+    @include('layouts._regionalizacion')
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Iniciar sesión · Doctorísimo</title>
@@ -12,7 +13,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Paleta + sistema de la aplicación (mismo aspecto que el panel y el consultorio) -->
     <link rel="stylesheet" href="{{ asset('css/gineco.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/doctorisimo-ui.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/doctorisimo-ui.css') }}?v={{ @filemtime(public_path('css/doctorisimo-ui.css')) }}">
 
 </head>
 <body class="auth-pagina">

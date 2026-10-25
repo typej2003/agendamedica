@@ -34,8 +34,14 @@ final class FechaDeFormulario
     /** El formato de la columna `date` de la base: es lo que se guarda. */
     public const FORMATO_BASE = 'Y-m-d';
 
-    /** El formato de la pantalla: es lo que se teclea. */
+    /**
+     * El formato de la pantalla por defecto. Lo que se teclea va en el orden del dispositivo (WEB-13.5,
+     * `Regionalizacion`): `dd/mm/aaaa` o `mm/dd/aaaa`.
+     */
     public const FORMATO_PANTALLA = 'd/m/Y';
+
+    /** El campo oculto que la máscara agrega al formulario con el orden en que se tecleó (`dmy`/`mdy`). */
+    public const CAMPO_ORDEN = '_fecha_orden';
 
     /** La regla del formato: lo que se guarda en una columna `date` es `AAAA-MM-DD` y nada más. */
     public const FORMATO = 'date_format:Y-m-d';
@@ -50,7 +56,7 @@ final class FechaDeFormulario
      * dígitos en el día y el mes) y el de la base (`AAAA-MM-DD`, el del `<input type="date">`, las
      * plantillas y el sync). El día y el mes se validan contra el calendario: `31/02/2026` no es una fecha.
      */
-    public static function aBase($valor): ?string
+    public static function aBase($valor, ?string $orden = null): ?string
     {
         if (! is_string($valor) && ! is_int($valor) && ! is_float($valor)) {
             return null;
@@ -67,9 +73,12 @@ final class FechaDeFormulario
             return self::armar((int) $partes[1], (int) $partes[2], (int) $partes[3]);
         }
 
-        // El formato de la pantalla: `dd/mm/aaaa` (y `dd-mm-aaaa`, que es como el legado guardó algunas).
-        if (preg_match('/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/', $texto, $partes)) {
-            return self::armar((int) $partes[3], (int) $partes[2], (int) $partes[1]);
+        // El formato de la pantalla: `dd/mm/aaaa` (y `dd-mm-aaaa`, que es como el legado guardó algunas), o
+        // `mm/dd/aaaa` si se tecleó con un dispositivo mes-día.
+        if (preg_match('/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/', $texto, $partes)) {
+            return self::ordenDe($orden) === Regionalizacion::MDY
+                ? self::armar((int) $partes[3], (int) $partes[1], (int) $partes[2])
+                : self::armar((int) $partes[3], (int) $partes[2], (int) $partes[1]);
         }
 
         return null;
@@ -96,7 +105,8 @@ final class FechaDeFormulario
 
         [$anio, $mes, $dia] = explode('-', $base);
 
-        return $dia . '/' . $mes . '/' . $anio;
+        return \Illuminate\Support\Carbon::createFromDate((int) $anio, (int) $mes, (int) $dia)
+            ->format(Regionalizacion::formatoActual());
     }
 
     /**
@@ -127,12 +137,15 @@ final class FechaDeFormulario
      */
     public static function normalizar(array $datos, array $columnas): array
     {
+        // El orden en que se tecleó, si la máscara lo mandó; si no, el del dispositivo de este request.
+        $orden = is_string($datos[self::CAMPO_ORDEN] ?? null) ? $datos[self::CAMPO_ORDEN] : null;
+
         foreach ($columnas as $columna) {
             if (! array_key_exists($columna, $datos)) {
                 continue;
             }
 
-            $base = self::aBase($datos[$columna]);
+            $base = self::aBase($datos[$columna], $orden);
 
             if ($base !== null) {
                 $datos[$columna] = $base;
@@ -154,8 +167,20 @@ final class FechaDeFormulario
      */
     public static function mensaje(string $etiqueta, bool $tecleada = false): string
     {
+        $region = Regionalizacion::actual();
+
         return '«' . $etiqueta . '» no es una fecha válida. Escríbela '
-            . ($tecleada ? 'como dd/mm/aaaa, por ejemplo 09/05/2026.' : 'como aaaa-mm-dd, por ejemplo 2026-05-09.');
+            . ($tecleada
+                ? 'como ' . $region->patronDeTecleo() . ', por ejemplo ' . $region->ejemploDeTecleo() . '.'
+                : 'como aaaa-mm-dd, por ejemplo 2026-05-09.');
+    }
+
+    /** `dmy`/`mdy`: el que se pidió si es uno de los dos, o el del dispositivo. */
+    private static function ordenDe(?string $orden): string
+    {
+        return in_array($orden, [Regionalizacion::DMY, Regionalizacion::MDY], true)
+            ? $orden
+            : Regionalizacion::actual()->orden;
     }
 
     /** `null`, `''` y el literal `none` del legado son el mismo «sin dato». */

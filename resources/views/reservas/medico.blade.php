@@ -89,7 +89,7 @@
                                        {{ old('horario') === $opcion->clave() ? 'checked' : '' }} required>
                                 <span class="reservas-opcion-contenido">
                                     <span class="reservas-opcion-dia">{{ $opcion->dia() }}</span>
-                                    <span class="reservas-opcion-hora">{{ $opcion->hora12() }}</span>
+                                    <span class="reservas-opcion-hora">{{ $opcion->horaLegible() }}</span>
                                     <span class="reservas-opcion-sede">
                                         <i class="bi bi-geo-alt" aria-hidden="true"></i>
                                         {{ $opcion->sede }}{{ $opcion->direccion ? ' — ' . $opcion->direccion : '' }}

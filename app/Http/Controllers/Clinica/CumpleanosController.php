@@ -106,7 +106,7 @@ class CumpleanosController extends Controller
         return redirect()
             ->route('clinica.cumpleanos')
             ->with('estado', $activo
-                ? 'Listo: el saludo de cumpleaños sale solo todos los días a las ' . HoraLocal::hora12($datos['hora']) . ' por ' . Canal::etiqueta($datos['canal']) . '.'
+                ? 'Listo: el saludo de cumpleaños sale solo todos los días a las ' . HoraLocal::reloj($datos['hora']) . ' por ' . Canal::etiqueta($datos['canal']) . '.'
                 : 'Listo: se guardó la configuración, pero el envío automático queda apagado.');
     }
 

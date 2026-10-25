@@ -73,7 +73,7 @@ final class CarnetDeVacunacionVista
         $filas = [
             ['rotulo' => 'Paciente', 'valor' => $this->nombre()],
             ['rotulo' => 'Historia', 'valor' => 'H. ' . ($this->paciente->numhistoria ?? '—')],
-            ['rotulo' => 'Nacimiento', 'valor' => $nacimiento?->format('d/m/Y') ?? '—'],
+            ['rotulo' => 'Nacimiento', 'valor' => $nacimiento?->format(\App\Support\Regionalizacion::formatoActual()) ?? '—'],
             ['rotulo' => 'Sexo', 'valor' => match (strtoupper((string) ($this->paciente->sexo ?? ''))) { 'M' => 'Masculino', 'F' => 'Femenino', default => '—' }],
             ['rotulo' => 'Edad', 'valor' => \App\Clinica\Crecimiento\EdadEnTexto::entre($nacimiento?->toDateString(), $this->hoy) ?? '—'],
         ];
@@ -82,7 +82,7 @@ final class CarnetDeVacunacionVista
             $filas[] = ['rotulo' => 'Padres', 'valor' => $this->padres];
         }
 
-        $filas[] = ['rotulo' => 'Fecha', 'valor' => Carbon::parse($this->hoy)->format('d/m/Y')];
+        $filas[] = ['rotulo' => 'Fecha', 'valor' => Carbon::parse($this->hoy)->format(\App\Support\Regionalizacion::formatoActual())];
 
         return $filas;
     }
@@ -107,11 +107,11 @@ final class CarnetDeVacunacionVista
         return array_map(fn ($f) => [
             'vacuna' => $nombres[(string) $f->codi_vacuna] ?? (CamposDePaciente::texto($f->descripcion ?? null) ?? 'Vacuna ' . $f->codi_vacuna),
             'dosis' => CamposDePaciente::texto($f->dosis ?? null) ?? '—',
-            'fecha' => Carbon::parse($f->fecha_ejecutada)->format('d/m/Y'),
+            'fecha' => Carbon::parse($f->fecha_ejecutada)->format(\App\Support\Regionalizacion::formatoActual()),
             'edad' => ($f->edad_aplicada ?? null) === null ? '—' : self::meses((float) $f->edad_aplicada),
             'lote' => CamposDePaciente::texto($f->lote ?? null) ?? '—',
             'via' => implode(' · ', array_filter([CamposDePaciente::texto($f->via ?? null), CamposDePaciente::texto($f->zona ?? null)])) ?: '—',
-            'proxima' => empty($f->fecha_proxima_dosis) ? '—' : Carbon::parse($f->fecha_proxima_dosis)->format('d/m/Y'),
+            'proxima' => empty($f->fecha_proxima_dosis) ? '—' : Carbon::parse($f->fecha_proxima_dosis)->format(\App\Support\Regionalizacion::formatoActual()),
         ], $filas);
     }
 
@@ -136,7 +136,7 @@ final class CarnetDeVacunacionVista
                     'orden' => (string) $d['planeada'],
                     'vacuna' => $vacuna['vacuna'],
                     'dosis' => $d['rotulo'],
-                    'toca' => Carbon::parse($d['planeada'])->format('d/m/Y'),
+                    'toca' => Carbon::parse($d['planeada'])->format(\App\Support\Regionalizacion::formatoActual()),
                     'estado' => CalendarioDeVacunas::rotulo($d['estado']),
                     'atrasada' => $d['estado'] === CalendarioDeVacunas::ATRASADA,
                 ];

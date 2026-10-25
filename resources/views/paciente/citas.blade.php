@@ -48,7 +48,7 @@
                     </div>
 
                     <div class="paciente-cita-lado">
-                        <span class="paciente-cita-hora">{{ $cita->hora12() }}</span>
+                        <span class="paciente-cita-hora">{{ $cita->horaLegible() }}</span>
                         <span class="paciente-estado {{ $cita->estadoClase() }}">{{ $cita->estado() }}</span>
 
                         @if ($cita->puedeGestionarse())
@@ -83,7 +83,7 @@
                     <div class="paciente-cita-cuerpo">
                         <h3 class="paciente-cita-medico">{{ $cita->medico->nombre_mostrar }}</h3>
                         <p class="paciente-cita-especialidad">{{ $cita->especialidades() }}</p>
-                        <p class="paciente-cita-dato"><i class="bi bi-calendar-event" aria-hidden="true"></i> {{ $cita->dia() }} · {{ $cita->hora12() }}</p>
+                        <p class="paciente-cita-dato"><i class="bi bi-calendar-event" aria-hidden="true"></i> {{ $cita->dia() }} · {{ $cita->horaLegible() }}</p>
                         <p class="paciente-cita-dato"><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ $cita->sede() }}</p>
                     </div>
 

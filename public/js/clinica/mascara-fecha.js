@@ -7,7 +7,7 @@
  *
  * Mismo criterio que la máscara de la talla y la tensión (O-08): **la máscara es de la pantalla**; el dato
  * que viaja y se guarda conserva su formato. Acá ese formato es `AAAA-MM-DD`, y la conversión
- * `dd/mm/aaaa` → `AAAA-MM-DD` la hace el servidor en un solo lugar (`App\Support\FechaDeFormulario`), no
+ * tecleado (`dd/mm/aaaa`, o `mm/dd/aaaa` con un dispositivo mes-día, WEB-13.5) → `AAAA-MM-DD` la hace el servidor en un solo lugar (`App\Support\FechaDeFormulario`), no
  * este archivo: el campo manda lo que el médico ve.
  *
  * Se declara en la vista con `data-mascara="fecha"` y no necesita ninguna librería:
@@ -28,6 +28,14 @@
 
     var SELECTOR = '[data-mascara="fecha"]';
 
+    /**
+     * El orden de la fecha (WEB-13.5): el que el servidor dejó en el `<html>` (`data-fecha-orden`, `dmy` o `mdy`),
+     * que es con el que pinta lo guardado y con el que lee lo que llega. Los dígitos se guardan **en ese orden**.
+     */
+    var REGION = window.Regionalizacion ? window.Regionalizacion.deLaPagina() : { orden: 'dmy', separador: '/' };
+    var GRUPOS = REGION.orden === 'mdy' ? ['mes', 'dia'] : ['dia', 'mes'];
+    var TOPE = { dia: 31, mes: 12 };
+
     /** Los dígitos de una fecha, de adelante hacia atrás, descartando los que no pueden existir. */
     function agregar(digitos, caracter) {
         if (!/^\d$/.test(caracter) || digitos.length >= 8) {
@@ -36,38 +44,23 @@
 
         var cuantos = digitos.length;
 
-        if (cuantos === 0) {
-            // Decena del día: `4`… `9` sólo pueden ser 04… 09, así que se completan y se pasa al mes.
-            if (caracter > '3') {
-                digitos.push('0', caracter);
-            } else {
-                digitos.push(caracter);
-            }
-            return true;
-        }
+        if (cuantos < 4) {
+            var grupo = GRUPOS[cuantos < 2 ? 0 : 1];
+            var tope = TOPE[grupo];
 
-        if (cuantos === 1) {
-            var dia = Number(digitos[0] + caracter);
-            if (dia < 1 || dia > 31) {
-                return false;
+            if (cuantos % 2 === 0) {
+                // La decena: un dígito que ya no puede tener otro detrás (`4`… `9` en el día, `2`… `9` en el
+                // mes) se completa con su cero y se pasa al grupo siguiente.
+                if (Number(caracter) > Math.floor(tope / 10)) {
+                    digitos.push('0', caracter);
+                } else {
+                    digitos.push(caracter);
+                }
+                return true;
             }
-            digitos.push(caracter);
-            return true;
-        }
 
-        if (cuantos === 2) {
-            // Decena del mes: `2`… `9` sólo pueden ser 02… 09.
-            if (caracter > '1') {
-                digitos.push('0', caracter);
-            } else {
-                digitos.push(caracter);
-            }
-            return true;
-        }
-
-        if (cuantos === 3) {
-            var mes = Number(digitos[2] + caracter);
-            if (mes < 1 || mes > 12) {
+            var numero = Number(digitos[cuantos - 1] + caracter);
+            if (numero < 1 || numero > tope) {
                 return false;
             }
             digitos.push(caracter);
@@ -101,23 +94,42 @@
         var salida = texto.slice(0, 2);
 
         if (texto.length > 2) {
-            salida += '/' + texto.slice(2, 4);
+            salida += REGION.separador + texto.slice(2, 4);
         }
 
         if (texto.length > 4) {
-            salida += '/' + texto.slice(4, 8);
+            salida += REGION.separador + texto.slice(4, 8);
         }
 
         return salida;
     }
 
-    /** Una fecha pegada entera, si lo es: `dd/mm/aaaa`, `d/m/aaaa` o `aaaa-mm-dd`. */
+    /** Los dígitos de un día, un mes y un año, en el orden de la pantalla. */
+    function enOrden(dia, mes, anio) {
+        var d = ('0' + dia).slice(-2);
+        var m = ('0' + mes).slice(-2);
+        return leer((REGION.orden === 'mdy' ? m + d : d + m) + anio);
+    }
+
+    /** `AAAA-MM-DD` de los ocho dígitos, o cadena vacía si todavía no están. */
+    function aIso(d) {
+        if (d.length !== 8) {
+            return '';
+        }
+        var primero = d.slice(0, 2).join('');
+        var segundo = d.slice(2, 4).join('');
+        var dia = REGION.orden === 'mdy' ? segundo : primero;
+        var mes = REGION.orden === 'mdy' ? primero : segundo;
+        return d.slice(4, 8).join('') + '-' + mes + '-' + dia;
+    }
+
+    /** Una fecha pegada entera, si lo es: tecleada en el orden de la pantalla o `aaaa-mm-dd`. */
     function deUnaFecha(texto) {
         var limpio = String(texto == null ? '' : texto).trim();
-        var partes = limpio.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+        var partes = limpio.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);
 
         if (partes) {
-            return leer(partes[1] + partes[2] + partes[3]);
+            return leer(('0' + partes[1]).slice(-2) + ('0' + partes[2]).slice(-2) + partes[3]);
         }
 
         partes = limpio.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
@@ -130,15 +142,23 @@
                 return null;
             }
 
-            return leer(
-                ('0' + dia).slice(-2) + ('0' + mes).slice(-2) + partes[1],
-            );
+            return enOrden(dia, mes, partes[1]);
         }
 
         return null;
     }
 
     document.querySelectorAll(SELECTOR).forEach(function (campo) {
+        // El formulario dice en qué orden se tecleó (`FechaDeFormulario::normalizar` lo lee): si la cookie cambia
+        // entre que se pintó la pantalla y se envía, el servidor no lee al revés un 05/09.
+        if (campo.form && !campo.form.querySelector('input[name="_fecha_orden"]')) {
+            var orden = document.createElement('input');
+            orden.type = 'hidden';
+            orden.name = '_fecha_orden';
+            orden.value = REGION.orden;
+            campo.form.appendChild(orden);
+        }
+
         var digitos = leer(campo.value);
         var dibujado = dibujar(digitos);
         // El último valor que escribió el script: sirve para distinguir sus propios `input` de los de afuera.
@@ -217,8 +237,7 @@
         var tope = campo.getAttribute('data-max') || '';
 
         function validarTope() {
-            var d = leer(campo.value);
-            var iso = d.length === 8 ? d.slice(4, 8).join('') + '-' + d.slice(2, 4).join('') + '-' + d.slice(0, 2).join('') : '';
+            var iso = aIso(leer(campo.value));
             campo.setCustomValidity(tope && iso && iso > tope ? 'La fecha no puede ser futura.' : '');
         }
 
@@ -235,11 +254,12 @@
 
             var boton = document.createElement('button');
             boton.type = 'button';
-            boton.className = 'btn btn-link p-0 border-0 text-body';
-            boton.style.cssText = 'position:absolute;top:50%;right:.75rem;transform:translateY(-50%);line-height:1';
+            // El dibujo, el tamaño y el color son los del icono nativo de los `type="date"` (`doctorisimo-ui.css`,
+            // WEB-13.16): un `bi-calendar3` acá se veía más chico y más claro que el de al lado.
+            boton.className = 'campo-fecha-boton';
             boton.setAttribute('aria-label', 'Elegir la fecha en el calendario');
             boton.title = 'Elegir la fecha en el calendario';
-            boton.innerHTML = '<i class="bi bi-calendar3" aria-hidden="true"></i>';
+            boton.innerHTML = '<span class="campo-fecha-icono" aria-hidden="true"></span>';
 
             var selector = document.createElement('input');
             selector.type = 'date';
@@ -249,10 +269,7 @@
             if (tope) { selector.max = tope; }
 
             boton.addEventListener('click', function () {
-                var actual = leer(campo.value);
-                selector.value = actual.length === 8
-                    ? actual.slice(4, 8).join('') + '-' + actual.slice(2, 4).join('') + '-' + actual.slice(0, 2).join('')
-                    : '';
+                selector.value = aIso(leer(campo.value));
                 try { selector.showPicker(); } catch (e) { selector.focus(); }
             });
 

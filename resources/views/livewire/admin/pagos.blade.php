@@ -111,7 +111,7 @@
                             @php $medico = $nombres[$pago->reg_medico] ?? null; @endphp
                             <tr wire:key="pago-{{ $pago->id }}">
                                 <td class="text-nowrap">
-                                    <div>{{ \App\Support\HoraLocal::instante($pago->created_at)?->format('d/m/Y') }}</div>
+                                    <div>{{ \App\Support\HoraLocal::instante($pago->created_at)?->format(\App\Support\Regionalizacion::formatoActual()) }}</div>
                                     <small class="text-muted">{{ \App\Support\HoraLocal::hora($pago->created_at) }}</small>
                                 </td>
                                 <td>

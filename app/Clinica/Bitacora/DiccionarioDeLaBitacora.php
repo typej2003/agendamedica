@@ -229,11 +229,11 @@ final class DiccionarioDeLaBitacora
         }
 
         if ($columna === 'fecha' && preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $valor, $m) === 1) {
-            return $m[3] . '/' . $m[2] . '/' . $m[1];
+            return \Illuminate\Support\Carbon::create((int) $m[1], (int) $m[2], (int) $m[3])->format(\App\Support\Regionalizacion::formatoActual());
         }
 
         if (in_array($columna, ['hora_ini', 'hora_fin'], true) && preg_match('/^(\d{2}:\d{2})/', $valor, $m) === 1) {
-            return HoraLocal::hora12($m[1]);
+            return HoraLocal::reloj($m[1]);
         }
 
         if (is_numeric($valor) && in_array($columna, ['monto', 'monto_pagado', 'precio'], true)) {

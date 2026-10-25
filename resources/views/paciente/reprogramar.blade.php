@@ -12,7 +12,7 @@
         <p class="paciente-bajada">Elige otro de los próximos horarios del médico, con al menos 24 horas de anticipación. La cita sigue siendo la misma.</p>
 
         <div class="paciente-resumen">
-            <p><strong>Ahora:</strong> {{ $cita->dia() }} · {{ $cita->hora12() }}</p>
+            <p><strong>Ahora:</strong> {{ $cita->dia() }} · {{ $cita->horaLegible() }}</p>
             <p><strong>{{ $cita->medico->nombre_mostrar }}</strong> · {{ $cita->especialidades() }}</p>
             <p>{{ $cita->sede() }} — Referencia #{{ $cita->id() }}</p>
         </div>
@@ -46,7 +46,7 @@
                                 <input type="radio" name="horario" value="{{ $opcion->clave() }}"
                                        {{ old('horario') === $opcion->clave() ? 'checked' : '' }} required>
                                 <span class="paciente-opcion-dia">{{ $opcion->dia() }}</span>
-                                <span class="paciente-opcion-hora">{{ $opcion->hora12() }}</span>
+                                <span class="paciente-opcion-hora">{{ $opcion->horaLegible() }}</span>
                                 <span class="paciente-opcion-sede">
                                     <i class="bi bi-geo-alt" aria-hidden="true"></i>
                                     {{ $opcion->sede }}{{ $opcion->direccion ? ' — ' . $opcion->direccion : '' }}

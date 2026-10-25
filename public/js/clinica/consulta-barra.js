@@ -31,8 +31,9 @@
 
     function hora() {
         var ahora = new Date();
-        // La hora del navegador, en 12 h con AM/PM («Guardado 1:05 PM»).
+        // La hora del navegador, en el reloj de la página («Guardado 1:05 PM» o «Guardado 13:05», WEB-13.5).
         var h = ahora.getHours();
+        if (window.Regionalizacion) { return window.Regionalizacion.hora(h, ahora.getMinutes()); }
         return (h % 12 === 0 ? 12 : h % 12) + ':' + ('0' + ahora.getMinutes()).slice(-2) + ' ' + (h >= 12 ? 'PM' : 'AM');
     }
 

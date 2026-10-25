@@ -496,6 +496,59 @@ textarea.form-control { min-height: calc(var(--ds-control-alto) * 2); }
     box-shadow: var(--ds-foco);
 }
 
+/* El icono del calendario (WEB-13.16): **uno solo** para el nativo de los `type="date"` y el botón que
+   `mascara-fecha.js` pone dentro de la FUR tecleada. El de Chrome era más grande y más oscuro que el
+   `bi-calendar3`; los dos son ahora el mismo dibujo (el `bi-calendar3`, como máscara) con el mismo tamaño y el
+   color del token, así que también siguen el tema. Firefox no expone el icono nativo: queda el suyo. */
+:root {
+    --ds-calendario-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2M1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857z'/%3E%3Cpath d='M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2'/%3E%3C/svg%3E");
+    --ds-calendario-icono-tam: .875rem;
+    --ds-calendario-icono-color: var(--ds-texto-2);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.campo-fecha-icono {
+    width: var(--ds-calendario-icono-tam);
+    height: var(--ds-calendario-icono-tam);
+    padding: 0;
+    margin: 0;
+    background: var(--ds-calendario-icono-color);
+    -webkit-mask: var(--ds-calendario-icono) center / contain no-repeat;
+    mask: var(--ds-calendario-icono) center / contain no-repeat;
+    opacity: 1;
+    cursor: pointer;
+}
+
+/* La misma distancia al borde que el botón de la FUR (`right: .75rem`): sin esto, el nativo queda a merced del
+   relleno que traiga el campo y en algunos se pegaba al borde. */
+input[type="date"].form-control,
+input[type="datetime-local"].form-control {
+    padding-right: .75rem;
+}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    margin-left: .5rem;
+}
+
+input[type="date"]:disabled::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]:disabled::-webkit-calendar-picker-indicator { cursor: default; opacity: .5; }
+
+/* El botón de la FUR: sólo posición y foco; el dibujo es el `span.campo-fecha-icono` de adentro. */
+.campo-fecha-boton {
+    position: absolute;
+    top: 50%;
+    right: .75rem;
+    transform: translateY(-50%);
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    background: none;
+    line-height: 1;
+}
+.campo-fecha-boton:hover .campo-fecha-icono { background: var(--ds-texto); }
+.campo-fecha-boton:focus-visible { outline: 0; box-shadow: var(--ds-foco); border-radius: 2px; }
+
 .form-label {
     color: var(--ds-texto-2);
     font-weight: 600;

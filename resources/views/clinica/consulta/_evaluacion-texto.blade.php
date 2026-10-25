@@ -18,6 +18,19 @@
             <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#{{ $seccion->campo() }}"
                              :tipo="$seccion->tipoDePlantillas()" :nombre="mb_strtolower($seccion->titulo())" />
         @endif
+        {{-- **Escanear la hoja** (WEB-13.15): foto o PDF → texto en el campo, editable. `escanear-hoja.js` lo resuelve
+             desde los `data-*`; el archivo no tiene `name` y queda fuera del formulario, así que el autoguardado no lo
+             manda. La lectura no guarda: el texto se guarda con el botón (o el autoguardado) de la solapa. --}}
+        @if ($seccion->ofreceEscanear())
+            <span class="escanear-hoja" data-escanear-hoja data-url="{{ $seccion->urlEscanear() }}"
+                  data-destino="#{{ $seccion->campo() }}" data-estado="#{{ $clave }}-escaneo">
+                <input type="file" id="{{ $clave }}-escanear" accept="{{ $seccion->aceptaEscaneo() }}" hidden data-escanear-archivo>
+                <label class="btn btn-sm btn-outline-primary mb-0" for="{{ $clave }}-escanear"
+                       title="Toma una foto de la hoja del laboratorio (o elige un PDF de hasta {{ $seccion->maximoDelEscaneo() }}) y el texto aparece en el campo para que lo revises">
+                    <i class="bi bi-upc-scan" aria-hidden="true"></i> Escanear hoja
+                </label>
+            </span>
+        @endif
         {{-- «Anterior» (WEB-11.4): sólo el tratamiento la tiene (`$vm->anterior()` es `null` en las solapas del examen). --}}
         <x-ui.anterior :anterior="$vm->anterior()" destino="#{{ $seccion->campo() }}" />
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']"
@@ -27,6 +40,11 @@
     <form method="POST" action="{{ $seccion->urlGuardar() }}" id="{{ $clave }}-form"
           data-consulta-plantillas data-autoguardar data-aviso="{{ $seccion->avisoSinGuardar() }}">
         @csrf
+
+        @if ($seccion->ofreceEscanear())
+            {{-- El estado de la lectura: «Leyendo la hoja…», el aviso de revisar o el error. Lo llena `escanear-hoja.js`. --}}
+            <p class="alert py-2 d-flex align-items-center gap-2 mb-3" id="{{ $clave }}-escaneo" role="status" aria-live="polite" hidden></p>
+        @endif
 
         <label class="etiqueta visually-hidden" for="{{ $seccion->campo() }}">{{ $seccion->titulo() }}</label>
         <textarea name="{{ $seccion->campo() }}" id="{{ $seccion->campo() }}" class="form-control" rows="12"

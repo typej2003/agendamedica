@@ -96,7 +96,7 @@ final class CalendarioDeVacunasVista
         $partes = ['Historia H. ' . ($this->paciente->numhistoria ?? '—')];
 
         if (! empty($this->paciente->fnacimiento)) {
-            $partes[] = 'Nació el ' . Carbon::parse($this->paciente->fnacimiento)->format('d/m/Y');
+            $partes[] = 'Nació el ' . Carbon::parse($this->paciente->fnacimiento)->format(\App\Support\Regionalizacion::formatoActual());
         }
 
         return implode(' · ', $partes);
@@ -218,6 +218,6 @@ final class CalendarioDeVacunasVista
 
     private static function fecha(?string $fecha): ?string
     {
-        return $fecha === null ? null : Carbon::parse($fecha)->format('d/m/Y');
+        return $fecha === null ? null : Carbon::parse($fecha)->format(\App\Support\Regionalizacion::formatoActual());
     }
 }

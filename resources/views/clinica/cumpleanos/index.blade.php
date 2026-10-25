@@ -11,7 +11,7 @@
         <x-slot name="acciones">
             <x-ui.estado :tono="$vm->envioActivo() ? 'exito' : 'neutro'"
                          :icono="$vm->envioActivo() ? 'bi-send-check' : 'bi-send-slash'">
-                {{ $vm->envioActivo() ? 'Envío automático a las ' . $vm->hora12() : 'Envío automático apagado' }}
+                {{ $vm->envioActivo() ? 'Envío automático a las ' . $vm->horaLegible() : 'Envío automático apagado' }}
             </x-ui.estado>
         </x-slot>
     </x-ui.page-head>

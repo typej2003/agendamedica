@@ -181,7 +181,7 @@ final class FichaDePacienteVista
             return '';
         }
 
-        return 'Confirmada el ' . $this->confirmacionDeCedula['cuando']->format('d/m/Y')
+        return 'Confirmada el ' . $this->confirmacionDeCedula['cuando']->format(\App\Support\Regionalizacion::formatoActual())
             . ($this->confirmacionDeCedula['por'] ? ' por ' . $this->confirmacionDeCedula['por'] : '') . '.';
     }
 

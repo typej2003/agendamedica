@@ -168,7 +168,7 @@ class EcoObstetricoVista
     private function furVigente(): ?string
     {
         if (array_key_exists('fur', $this->old)) {
-            return FechaDeFormulario::aBase($this->old['fur']);
+            return FechaDeFormulario::aBase($this->old['fur'], $this->old[FechaDeFormulario::CAMPO_ORDEN] ?? null);
         }
 
         return $this->estudio->fur() ?? $this->furSugerida;

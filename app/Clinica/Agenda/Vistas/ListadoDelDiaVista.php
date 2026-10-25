@@ -25,7 +25,7 @@ final class ListadoDelDiaVista
 
     public function fecha(): string
     {
-        return $this->fecha->format('d/m/Y');
+        return $this->fecha->format(\App\Support\Regionalizacion::formatoActual());
     }
 
     /** "Dr. Pérez · San José (C1) · 05/10/2026". */

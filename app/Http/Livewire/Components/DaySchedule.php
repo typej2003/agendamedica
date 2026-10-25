@@ -191,7 +191,7 @@ class DaySchedule extends Component
 
         while ($inicio < $fin) {
             $horaStr = $inicio->format('H:i:s');
-            $horaDisplay = \App\Support\HoraLocal::hora12($inicio->format('H:i'));
+            $horaDisplay = \App\Support\HoraLocal::reloj($inicio->format('H:i'));
 
             $cita = $citasPorHora->get($horaStr);
             $ocupada = !is_null($cita);

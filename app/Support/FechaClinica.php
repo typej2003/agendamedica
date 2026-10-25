@@ -24,8 +24,14 @@ final class FechaClinica
         return in_array($texto, self::NULAS, true) || str_starts_with($texto, '0000-00');
     }
 
-    public static function formato($valor, string $formato = 'd/m/Y'): string
+    /**
+     * Una fecha del legado para la pantalla. Sin `$formato`, la fecha corta en el orden del dispositivo
+     * (`Regionalizacion`, WEB-13.5); un formato explícito se respeta (los mensajes al paciente fijan `d/m/Y`).
+     */
+    public static function formato($valor, ?string $formato = null): string
     {
+        $formato ??= Regionalizacion::actual()->formatoDeFecha();
+
         $texto = trim((string) $valor);
 
         if (self::esNula($texto)) {
@@ -146,7 +152,7 @@ final class FechaClinica
     {
         $dia = Carbon::parse($fecha);
 
-        return self::diaSemana($dia) . ' ' . $dia->format('d/m/Y');
+        return self::diaSemana($dia) . ' ' . $dia->format(\App\Support\Regionalizacion::formatoActual());
     }
 
     /** `octubre 2026`: el título de la vista de mes. */

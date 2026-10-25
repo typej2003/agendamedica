@@ -67,9 +67,9 @@
                                         <span class="badge bg-success">Activo</span>
                                     @endif
                                 </td>
-                                <td class="text-nowrap">{{ $fila->created_at?->format('d/m/Y') ?? '—' }}</td>
+                                <td class="text-nowrap">{{ $fila->created_at?->format(\App\Support\Regionalizacion::formatoActual()) ?? '—' }}</td>
                                 <td class="text-end">{{ $resumen['total'] ?? 0 }}</td>
-                                <td class="text-nowrap">{{ ! empty($resumen['ultima']) ? \Illuminate\Support\Carbon::parse($resumen['ultima'])->format('d/m/Y') : '—' }}</td>
+                                <td class="text-nowrap">{{ ! empty($resumen['ultima']) ? \Illuminate\Support\Carbon::parse($resumen['ultima'])->format(\App\Support\Regionalizacion::formatoActual()) : '—' }}</td>
                                 <td class="text-end text-nowrap">
                                     @if ($bloqueado)
                                         <button type="button" wire:click="abrir('desbloquear', {{ $fila->id }})" class="btn btn-sm btn-outline-success">

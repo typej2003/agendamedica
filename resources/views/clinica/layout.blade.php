@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" {!! \App\Support\Regionalizacion::actual()->atributosHtml() !!}>
 <head>
+    @include('layouts._regionalizacion')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -16,7 +17,7 @@
     {{-- La paleta vive en `gineco.css`; el sistema de la aplicación (Bootstrap recoloreado + armazón) en
          `doctorisimo-ui.css`. Ese orden importa: el sistema va después de Bootstrap. --}}
     <link rel="stylesheet" href="{{ asset('css/gineco.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/doctorisimo-ui.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/doctorisimo-ui.css') }}?v={{ @filemtime(public_path('css/doctorisimo-ui.css')) }}">
     @yield('estilos')
 </head>
 <body>
