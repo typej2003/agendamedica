@@ -276,6 +276,55 @@ class CuentaService
         return ['user' => $user, 'clave' => $clave];
     }
 
+    /**
+     * **Le habilita el área médica a una cuenta que ya existe** (2026-10-24): el paciente, el administrador o la
+     * secretaría que se registra como médico sigue entrando con **su misma cuenta y su misma clave**; el login le
+     * empieza a preguntar en qué área quiere trabajar (`User::panelesDisponibles()`).
+     *
+     * Crea su ficha de médico —si ya existiera, `AprobarSolicitudDeMedico` la enlaza con `darAccesoAMedico`— y le
+     * copia a la ficha la clave que ya tiene, sin tocarla. No se genera clave temporal.
+     *
+     * @param  array{name:string, lastname:string, prefix?:?string, phone?:?string, license_number?:?string, reg_medico:string}  $datos
+     * @return array{user: User, medico: Medico}
+     *
+     * @throws ValidationException
+     */
+    public function darRolDeMedico(User $user, array $datos): array
+    {
+        $regMedico = trim((string) $datos['reg_medico']);
+
+        if ($regMedico === '') {
+            throw ValidationException::withMessages(['reg_medico' => 'Falta el registro del médico (reg_medico).']);
+        }
+
+        $this->exigirRegMedicoLibre($regMedico);
+
+        return DB::transaction(function () use ($user, $datos, $regMedico) {
+            $user->assignRole($this->rol('Medico'));
+
+            // El registro del consultorio es el de la ficha; en `users` sólo se completa si estaba vacío.
+            if (trim((string) $user->reg_medico) === '') {
+                $user->forceFill(['reg_medico' => $regMedico])->save();
+            }
+
+            $medico = Medico::create([
+                'user_id'        => $user->id,
+                'name'           => trim($datos['name']),
+                'lastname'       => trim($datos['lastname']),
+                'prefix'         => $datos['prefix'] ?? null,
+                'email'          => $user->email,
+                'password'       => $user->password,
+                'phone'          => $datos['phone'] ?? null,
+                'license_number' => $datos['license_number'] ?? null,
+                'reg_medico'     => $regMedico,
+                'is_active'      => true,
+            ]);
+            MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $regMedico]);
+
+            return ['user' => $user, 'medico' => $medico];
+        });
+    }
+
     /* ------------------------------------------------------------------ */
     /* Claves                                                              */
     /* ------------------------------------------------------------------ */

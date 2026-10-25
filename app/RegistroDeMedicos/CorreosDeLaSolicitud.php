@@ -41,7 +41,11 @@ final class CorreosDeLaSolicitud
             ->each(fn (string $email) => $this->mandar($email, new NuevaSolicitudDeMedico($solicitud)));
     }
 
-    public function aprobada(SolicitudMedico $solicitud, string $clave): bool
+    /**
+     * Al médico aprobado: si la cuenta es nueva, la clave temporal; si ya existía (paciente, administración,
+     * secretaría), el aviso de que su área médica quedó habilitada y que entra con su clave de siempre.
+     */
+    public function aprobada(SolicitudMedico $solicitud, ?string $clave = null): bool
     {
         return $this->mandar($solicitud->email, new SolicitudDeMedicoAprobada($solicitud, $clave));
     }

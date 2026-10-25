@@ -75,16 +75,37 @@ class RegistroDeMedicoWebTest extends TestCase
 
     private function administrador(): User
     {
-        $admin = User::create([
-            'name' => 'Admin Solicitudes',
-            'email' => 'admin-' . uniqid() . '@example.com',
-            'password' => Hash::make('Secreto123'),
+        return $this->cuenta('Administrador');
+    }
+
+    /** Una cuenta de `users` con ese rol (paciente, administración, secretaría…). */
+    private function cuenta(string $rol, string $clave = 'Secreto123'): User
+    {
+        $user = User::create([
+            'name' => 'Cuenta ' . $rol,
+            'email' => mb_strtolower($rol) . '-' . uniqid() . '@example.com',
+            'password' => Hash::make($clave),
             'is_active' => true,
             'must_change_password' => false,
         ]);
-        $admin->assignRole(Role::firstOrCreate(['name' => 'Administrador', 'guard_name' => 'web']));
+        $user->assignRole(Role::firstOrCreate(['name' => $rol, 'guard_name' => 'web']));
 
-        return $admin;
+        return $user;
+    }
+
+    /** Una ficha de médico **con** cuenta: ese correo ya no puede registrarse otra vez. */
+    private function medicoConCuenta(): Medico
+    {
+        $user = $this->cuenta('Medico');
+
+        return Medico::create([
+            'user_id' => $user->id,
+            'name' => 'Doc',
+            'lastname' => 'Prueba',
+            'email' => $user->email,
+            'reg_medico' => 'M' . random_int(100000, 999999),
+            'is_active' => true,
+        ]);
     }
 
     public function test_el_formulario_es_publico_y_el_login_lo_enlaza(): void
@@ -177,14 +198,61 @@ class RegistroDeMedicoWebTest extends TestCase
         $this->assertDatabaseMissing('solicitudes_medico', ['email' => $datos['email']]);
     }
 
-    public function test_un_correo_con_cuenta_no_puede_solicitar(): void
+    public function test_un_correo_que_ya_es_de_medico_no_puede_solicitar(): void
     {
-        $admin = $this->administrador();
+        $medico = $this->medicoConCuenta();
 
-        $this->post(route('medico.registro.codigo.enviar'), $this->datos(['email' => strtoupper($admin->email)]))
+        $this->post(route('medico.registro.codigo.enviar'), $this->datos(['email' => strtoupper($medico->email)]))
             ->assertSessionHasErrors('email');
 
         Mail::assertNotSent(CodigoDeRegistroDeMedico::class);
+    }
+
+    public function test_una_cuenta_que_no_es_de_medico_si_puede_registrarse(): void
+    {
+        // El mismo correo de un paciente (o de administración, o de la secretaría) puede pedir el área médica:
+        // es lo que hacía imposible que un paciente se volviera médico (2026-10-24).
+        foreach (['Paciente', 'Administrador', 'Secretaria'] as $rol) {
+            $cuenta = $this->cuenta($rol);
+
+            $this->post(route('medico.registro.codigo.enviar'), $this->datos(['email' => $cuenta->email]))
+                ->assertRedirect(route('medico.registro.codigo'));
+        }
+    }
+
+    public function test_aprobar_una_cuenta_existente_le_habilita_el_area_medica_sin_tocarle_la_clave(): void
+    {
+        $paciente = $this->cuenta('Paciente');
+        $solicitud = $this->solicitar(['email' => $paciente->email]);
+        $reg = 'MPPS-' . $solicitud->mpps;
+
+        $this->actingAs($this->administrador());
+        Livewire::test(SolicitudesDeMedicos::class)
+            ->call('abrir', $solicitud->id)
+            ->set('reg_medico', $reg)
+            ->call('aprobar')
+            ->assertHasNoErrors()
+            ->assertSet('claveGenerada.clave', null)
+            ->assertSet('claveGenerada.correoEnviado', true)
+            ->assertSee('se habilitó su área médica');
+
+        $paciente->refresh();
+
+        $this->assertSame(1, User::where('email', $paciente->email)->count());
+        $this->assertTrue($paciente->hasRole('Paciente'));
+        $this->assertTrue($paciente->hasRole('Medico'));
+        $this->assertSame($reg, $paciente->medico->reg_medico);
+        $this->assertFalse((bool) $paciente->must_change_password);
+        $this->assertTrue(Hash::check('Secreto123', $paciente->password));
+
+        // Con dos áreas, el login le pregunta dónde entrar.
+        $this->assertSame('elegir-panel', $paciente->rutaDeEntrada());
+
+        // El correo de la aprobación sale sin clave temporal.
+        Mail::assertSent(
+            SolicitudDeMedicoAprobada::class,
+            fn ($m) => $m->hasTo($paciente->email) && $m->clave === null
+        );
     }
 
     public function test_la_cedula_de_una_solicitud_en_revision_no_se_repite_con_otro_correo(): void
