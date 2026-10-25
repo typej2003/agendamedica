@@ -218,7 +218,12 @@
                     </div>
                     <div class="modal-body">
                         <div class="alert {{ $claveGenerada['correoEnviado'] ? 'alert-info' : 'alert-warning' }} small">
-                            @if ($claveGenerada['correoEnviado'])
+                            @if (! $claveGenerada['clave'])
+                                Ya tenía cuenta: le habilitamos el área médica y entra con <strong>su contraseña de siempre</strong>, no le cambiamos ninguna clave.
+                                @if (! $claveGenerada['correoEnviado'])
+                                    <strong>El correo no salió:</strong> avísale por otro medio.
+                                @endif
+                            @elseif ($claveGenerada['correoEnviado'])
                                 Le mandamos estos datos por correo. Por si no le llega, la contraseña se muestra solo esta vez.
                             @else
                                 <strong>El correo no salió.</strong> Copia estos datos ahora y pásaselos al médico: la contraseña no se vuelve a mostrar.
@@ -228,15 +233,19 @@
                         <dl class="row mb-0">
                             <dt class="col-sm-4">Correo</dt>
                             <dd class="col-sm-8"><code>{{ $claveGenerada['correo'] }}</code></dd>
-                            <dt class="col-sm-4">Contraseña temporal</dt>
-                            <dd class="col-sm-8"><code class="fs-5">{{ $claveGenerada['clave'] }}</code></dd>
+                            @if ($claveGenerada['clave'])
+                                <dt class="col-sm-4">Contraseña temporal</dt>
+                                <dd class="col-sm-8"><code class="fs-5">{{ $claveGenerada['clave'] }}</code></dd>
+                            @endif
                         </dl>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-primary"
-                                onclick="navigator.clipboard.writeText({{ json_encode($claveGenerada['clave']) }}); this.textContent = 'Copiada';">
-                            <i class="bi bi-clipboard me-1"></i> Copiar contraseña
-                        </button>
+                        @if ($claveGenerada['clave'])
+                            <button type="button" class="btn btn-outline-primary"
+                                    onclick="navigator.clipboard.writeText({{ json_encode($claveGenerada['clave']) }}); this.textContent = 'Copiada';">
+                                <i class="bi bi-clipboard me-1"></i> Copiar contraseña
+                            </button>
+                        @endif
                         <button type="button" class="btn btn-primary" wire:click="cerrarClave">Listo</button>
                     </div>
                 </div>

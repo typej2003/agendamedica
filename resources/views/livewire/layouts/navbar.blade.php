@@ -30,14 +30,13 @@
         <div class="collapse navbar-collapse" id="navbarContent">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
                 @guest
-                    {{-- Secciones del sitio público: no tienen nada que hacer dentro del panel. --}}
-                    <li class="nav-item"><a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#inicio">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#especialidades">Especialidades</a></li>
-                    <li class="nav-item"><a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#por-que">Por qué elegirnos</a></li>
-                    <li class="nav-item"><a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#servicios">Servicios</a></li>
+                    {{-- Secciones de la portada: no tienen nada que hacer dentro del panel. Primero lo del médico
+                         (la portada le habla a él); el paciente tiene su enlace a la reserva. --}}
+                    <li class="nav-item"><a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#funciones">Funciones</a></li>
+                    <li class="nav-item"><a class="nav-link px-3 py-2 py-lg-1" href="{{ url('/') }}#como-funciona">Cómo funciona</a></li>
                     <li class="nav-item">
-                        <a class="nav-link px-3 py-2 py-lg-1 fw-semibold" href="{{ route('reservas.catalogo') }}">
-                            <i class="bi bi-calendar2-check me-1" aria-hidden="true"></i>Reservar cita
+                        <a class="nav-link px-3 py-2 py-lg-1" href="{{ route('reservas.catalogo') }}">
+                            <i class="bi bi-calendar2-check me-1" aria-hidden="true"></i>Soy paciente
                         </a>
                     </li>
                 @endguest
@@ -50,6 +49,17 @@
                             </a>
                         </li>
                     @endif
+
+                    {{-- El tablero de Laravel Pulse (`/pulse`): sólo lo ve quien puede entrar (Root). --}}
+                    @can('viewPulse')
+                        <li class="nav-item me-lg-2 mt-3 mt-lg-0">
+                            <a class="btn btn-outline-primary d-inline-flex align-items-center justify-content-center"
+                               href="{{ route('pulse') }}" title="Pulse: rendimiento de la aplicación"
+                               aria-label="Abrir el tablero de Pulse">
+                                <i class="bi bi-activity fs-5" aria-hidden="true"></i>
+                            </a>
+                        </li>
+                    @endcan
                 @endauth
 
                 <li class="nav-item ms-lg-2 mt-3 mt-lg-0">
@@ -100,9 +110,10 @@
                             </div>
                         @else
                             <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2">
-                                <a href="{{ route('login') }}" class="btn btn-outline-secondary w-100 w-lg-auto">Ingresar</a>
-                                @if (Route::has('register'))
-                                    <a href="{{ route('register') }}" class="btn btn-primary w-100 w-lg-auto">Registrarse</a>
+                                <a href="{{ route('login') }}" class="btn btn-outline-secondary text-nowrap w-100 w-lg-auto">Ingresar</a>
+                                {{-- El alta pública es la del médico (con aprobación); `register` está apagado. --}}
+                                @if (Route::has('medico.registro') && ! request()->routeIs('medico.registro*'))
+                                    <a href="{{ route('medico.registro') }}" class="btn btn-primary text-nowrap w-100 w-lg-auto">{{ config('servicios.prueba_meses') > 0 ? 'Prueba gratis' : 'Soy médico' }}</a>
                                 @endif
                             </div>
                         @endauth

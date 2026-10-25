@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Clinica;
 use App\Actions\Pacientes\AgregarAntecedenteAlCatalogo;
 use App\Actions\Pacientes\GuardarAntecedentes;
 use App\Actions\Pacientes\ResultadoDeAntecedentes;
+use App\Clinica\Busquedas\BusquedaConCorrector;
 use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
@@ -220,7 +221,7 @@ class ConsultaAntecedentesController extends Controller
      * El buscador en vivo del catálogo (`Accept: application/json`): filtra sin distinguir tildes ni
      * mayúsculas, un antecedente por nombre, y dice cuáles ya tiene el paciente.
      */
-    public function buscar(Request $request, Consulta $consulta, AntecedentesDelPaciente $antecedentes)
+    public function buscar(Request $request, Consulta $consulta, AntecedentesDelPaciente $antecedentes, BusquedaConCorrector $corrector)
     {
         $contexto = $request->attributes->get('contexto_clinico');
         $consulta = $this->delContexto($request, $consulta);
@@ -231,7 +232,15 @@ class ConsultaAntecedentesController extends Controller
         $delPaciente = $antecedentes->delPaciente($contexto['reg_medico'], (string) $consulta->numhistoria);
         $codigos = $delPaciente->pluck('codigo')->all();
 
-        $resultados = $antecedentes->catalogo($contexto['reg_medico'], $buscar, $tipo)
+        // Primero lo escrito; si no encontró nada, el término corregido (PecleSearch).
+        [$encontrados, $correccion] = $corrector->con(
+            fn (string $termino) => $antecedentes->catalogo($contexto['reg_medico'], $termino, $tipo),
+            'antecedentes',
+            $buscar,
+            $request->boolean('literal'),
+        );
+
+        $resultados = $encontrados
             ->map(fn ($antecedente) => [
                 'codigo' => (string) $antecedente->codigo,
                 'descripcion' => (string) $antecedente->nombre,
@@ -242,8 +251,11 @@ class ConsultaAntecedentesController extends Controller
 
         return response()->json([
             'antecedentes' => $resultados,
-            'existe' => $buscar !== '' && $antecedentes->existeEnElCatalogo($contexto['reg_medico'], $buscar),
-            'buscar' => $buscar,
+            'existe' => $buscar !== '' && $antecedentes->existeEnElCatalogo($contexto['reg_medico'], $correccion->aplicado),
+            'buscar' => $correccion->aplicado,
+            'correccion' => $correccion->corregida()
+                ? ['escrito' => $correccion->escrito, 'aplicado' => $correccion->aplicado]
+                : null,
         ]);
     }
 

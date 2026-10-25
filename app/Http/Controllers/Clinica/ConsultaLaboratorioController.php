@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Consulta\EliminarOrdenDeLaboratorio;
 use App\Actions\Consulta\GuardarOrdenDeLaboratorio;
+use App\Clinica\Busquedas\BusquedaConCorrector;
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\LaboratorioDeLaConsulta;
@@ -155,19 +156,29 @@ class ConsultaLaboratorioController extends Controller
     }
 
     /** El buscador del catálogo: `?q=` (sin tildes) y `?tipo=`; como mucho `MAX_RESULTADOS`, con el total de coincidencias. */
-    public function catalogo(Request $request, Consulta $consulta, CatalogoParaPedirExamenes $catalogo): JsonResponse
+    public function catalogo(Request $request, Consulta $consulta, CatalogoParaPedirExamenes $catalogo, BusquedaConCorrector $corrector): JsonResponse
     {
         $consulta = $this->delContexto($request, $consulta);
 
         $buscar = trim((string) $request->query('q', ''));
         $tipo = trim((string) $request->query('tipo', ''));
-        $coincidencias = $catalogo->buscar((string) $consulta->reg_medico, false, $buscar, $tipo);
+
+        // Primero lo escrito; si no encontró nada, el término corregido (PecleSearch).
+        [$coincidencias, $correccion] = $corrector->con(
+            fn (string $termino) => $catalogo->buscar((string) $consulta->reg_medico, false, $termino, $tipo),
+            'examenes',
+            $buscar,
+            $request->boolean('literal'),
+        );
 
         return response()->json([
-            'buscar' => $buscar,
+            'buscar' => $correccion->aplicado,
             'tipo' => $tipo,
             'total' => $coincidencias->count(),
             'examenes' => $coincidencias->take(CatalogoParaPedirExamenes::MAX_RESULTADOS)->map(fn (array $examen) => $this->paraElJson($examen))->values()->all(),
+            'correccion' => $correccion->corregida()
+                ? ['escrito' => $correccion->escrito, 'aplicado' => $correccion->aplicado]
+                : null,
         ]);
     }
 

@@ -6,6 +6,7 @@ use App\Actions\Consulta\AgregarMedicamentoAlVademecum;
 use App\Actions\Consulta\EliminarRecipe;
 use App\Actions\Consulta\GuardarRecipe;
 use App\Actions\Consulta\ResultadoDeRecipe;
+use App\Clinica\Busquedas\BusquedaConCorrector;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DosisPediatrica;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
@@ -86,7 +87,7 @@ class ConsultaRecipesController extends Controller
      * El buscador de medicamentos del vademécum del médico: por nombre comercial o genérico, sin
      * distinguir tildes. Es JSON porque filtra mientras se escribe y no escribe nada.
      */
-    public function medicamentos(Request $request, Consulta $consulta, RecipesDeLaConsulta $lectura, DosisPediatrica $dosis): JsonResponse
+    public function medicamentos(Request $request, Consulta $consulta, RecipesDeLaConsulta $lectura, DosisPediatrica $dosis, BusquedaConCorrector $corrector): JsonResponse
     {
         $consulta = $this->delContexto($request, $consulta);
 
@@ -97,9 +98,17 @@ class ConsultaRecipesController extends Controller
         // El médico las puede corregir: se cargan en su campo, no se guardan solas.
         $peso = $consulta->peso;
 
+        // Primero lo escrito; si no encontró nada, el término corregido (PecleSearch).
+        [$encontrados, $correccion] = $corrector->con(
+            fn (string $termino) => $lectura->medicamentos((string) $consulta->reg_medico, $termino),
+            'vademecum',
+            $buscar,
+            $request->boolean('literal'),
+        );
+
         return response()->json([
-            'buscar' => $buscar,
-            'medicamentos' => $lectura->medicamentos((string) $consulta->reg_medico, $buscar)
+            'buscar' => $correccion->aplicado,
+            'medicamentos' => $encontrados
                 ->map(function (object $medicamento) use ($dosis, $peso) {
                     $calculo = $dosis->calcular($medicamento, $peso);
 
@@ -109,6 +118,9 @@ class ConsultaRecipesController extends Controller
                     ];
                 })
                 ->values()->all(),
+            'correccion' => $correccion->corregida()
+                ? ['escrito' => $correccion->escrito, 'aplicado' => $correccion->aplicado]
+                : null,
         ]);
     }
 

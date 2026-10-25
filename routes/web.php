@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Livewire\Welcome;
 use App\Http\Livewire\Components\ListSearch;
 use App\Http\Livewire\Components\ViewCalendar;
 use App\Http\Livewire\Components\DaySchedule;
@@ -10,6 +9,7 @@ use App\Http\Controllers\Auth\CustomLoginController;
 use App\Http\Controllers\Auth\CambiarPasswordWebController;
 use App\Http\Controllers\Auth\ElegirPanelController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PortadaController;
 
 
 /*
@@ -18,7 +18,8 @@ use App\Http\Controllers\DashboardController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', Welcome::class)->name('welcome');
+// La portada le habla al médico (el registro es la conversión) y deja un bloque al paciente: ver `PortadaController`.
+Route::get('/', PortadaController::class)->name('welcome');
 
 // 1. Deshabilitamos las rutas de login por defecto de Auth::routes()
 //    El alta de cuentas también: el registro de médicos (con aprobación) y el de pacientes son las

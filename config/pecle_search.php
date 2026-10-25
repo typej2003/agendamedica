@@ -35,6 +35,33 @@ return [
                 'numeric_index' => true,
             ],
         ],
+
+        // Catálogos de la consulta y de los récipes: acá el índice es el **vocabulario** del corrector
+        // (la búsqueda de cada catálogo sigue siendo la suya, en PHP, y está acotada al `reg_medico` del
+        // consultorio). Los ids son `id` autoincremental, así que van a `numeric_search_tokens`.
+        // `pecle-search:rebuild` sin argumentos reconstruye todos.
+        'vademecum' => [
+            [
+                'model' => App\Models\Vademecum::class,
+                'columns' => ['nombrecomercial', 'nombregenerico', 'presentacion', 'nombrecomercial1', 'nombrecomercial2', 'nombrecomercial3'],
+                'numeric_index' => true,
+            ],
+        ],
+        'diagnosticos' => [
+            ['model' => App\Models\Diagnostico::class, 'columns' => ['descripcion'], 'numeric_index' => true],
+        ],
+        'antecedentes' => [
+            ['model' => App\Models\Antecedente::class, 'columns' => ['descripcion'], 'numeric_index' => true],
+        ],
+        'motivos' => [
+            ['model' => App\Models\MotivoConsulta::class, 'columns' => ['descripcion'], 'numeric_index' => true],
+        ],
+        'examenes' => [
+            ['model' => App\Models\Examen::class, 'columns' => ['examen'], 'numeric_index' => true],
+        ],
+        'doctores' => [
+            ['model' => App\Models\Doctor::class, 'columns' => ['nombres', 'apellidos'], 'numeric_index' => true],
+        ],
     ],
 
     // **Encendida.** Un guardado suelto —la web, el móvil, la subida incremental del escritorio— reindexa

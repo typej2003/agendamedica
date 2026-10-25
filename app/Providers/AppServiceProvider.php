@@ -4,7 +4,11 @@ namespace App\Providers;
 
 use App\Http\View\Composers\ArmazonClinicaComposer;
 use App\Http\View\Composers\TourDeLaPantallaComposer;
+use App\Models\User;
+use App\View\Components\PulseLayout;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,6 +31,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // Tablero de Laravel Pulse (`/pulse`, 2026-10-24). Pulse define su propio gate `viewPulse`, que
+        // deja entrar sólo en `local`; acá se pisa para que la regla sea la del proyecto y valga en
+        // cualquier entorno: **únicamente el rol Root**. El resto de las cuentas recibe 403, sin listas
+        // de correos. Se admite un usuario nulo porque el middleware de Pulse autoriza antes del login.
+        Gate::define('viewPulse', function (?User $user = null) {
+            return $user !== null && $user->hasRole('Root');
+        });
+
+        // El armazón del tablero de Pulse con la URI de Livewire absoluta: el del paquete emite
+        // `/livewire/update` contra la **raíz del dominio** y en QA (bajo `/medic-report`) todo el AJAX del
+        // tablero daba 404. El alias de clase pisa al componente anónimo del paquete y el layout agrega el
+        // `data-update-uri` con `url()`, que respeta la subcarpeta. Ver `App\View\Components\PulseLayout`.
+        Blade::component('pulse', PulseLayout::class);
+
         // La paginación por defecto de Laravel es la de Tailwind. En las pantallas que **no** son Livewire
         // (por ejemplo la lista de pacientes del consultorio) eso deja los SVG de las flechas sin tamaño:
         // se estiraban a ~1600px y la página terminaba en un bloque gigante. Los componentes Livewire ya

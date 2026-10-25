@@ -4,7 +4,6 @@ namespace App\RegistroDeMedicos;
 
 use App\Models\Medico;
 use App\Models\SolicitudMedico;
-use App\Models\Specialty;
 use App\Models\User;
 use App\Notificaciones\Telefono;
 use App\Reservas\CodigoDeVerificacion;
@@ -40,7 +39,7 @@ final class SolicitarCodigoDeRegistroDeMedico
      *
      * @throws ValidationException
      */
-    public function ejecutar(array $datos, ?UploadedFile $carnet = null): array
+    public function ejecutar(array $datos): array
     {
         $limpios = $this->limpiar($datos);
         $this->exigirLibres($limpios['email'], $limpios['cedula']);
@@ -51,17 +50,9 @@ final class SolicitarCodigoDeRegistroDeMedico
             && ($anterior['expira'] ?? 0) > now()->timestamp
             && (int) ($anterior['intentos'] ?? 0) < 5;
 
-        // La foto nueva reemplaza la anterior; si no mandó otra, se conserva la que ya había subido en este
-        // mismo trámite. La de un trámite abandonado (otro correo, o vencido) se borra: no queda huérfana.
-        $archivo = $carnet !== null ? $this->carnet->guardar($carnet) : null;
-        if ($anterior !== null && ($archivo !== null || ! $mismoTramite)) {
-            $this->carnet->borrar($anterior['carnet_ruta'] ?? null);
-        }
-        if ($archivo === null) {
-            $archivo = $mismoTramite
-                ? array_intersect_key($anterior, array_flip(['carnet_ruta', 'carnet_tipo', 'carnet_nombre']))
-                : [];
-        }
+        // La foto que llegó en el formulario ya está guardada y recordada (la guarda `recordarCarnet`, antes de
+        // validar el resto): acá sólo se decide con cuál viaja la solicitud.
+        $archivo = $this->archivoDelTramite($limpios['email']);
 
         if ($mismoTramite) {
             // Mismo correo: se reaprovecha el código y sólo se actualizan los datos, sin mandar otro correo.
@@ -70,9 +61,56 @@ final class SolicitarCodigoDeRegistroDeMedico
             return ['reenviado' => false];
         }
 
+        // El correo puede fallar: la foto **no** se borra, el trámite está a medio hacer y se retoma.
         $this->enviar(array_merge($limpios, $archivo));
 
         return ['reenviado' => true];
+    }
+
+    /**
+     * Guarda la foto que llegó en el formulario y la recuerda en la sesión, aparte del trámite.
+     *
+     * La llama el controlador **antes** de validar el resto de los campos: así un teléfono mal escrito, una
+     * especialidad rechazada o un correo que no sale no obligan al médico a elegir la foto otra vez.
+     *
+     * @throws \InvalidArgumentException si el archivo no es de un tipo aceptado (el controlador ya lo validó)
+     */
+    public function recordarCarnet(UploadedFile $archivo, string $email): void
+    {
+        $anterior = $this->enCurso->carnet();
+        $nuevo = $this->carnet->guardar($archivo);
+
+        if ($anterior !== null) {
+            $this->carnet->borrar($anterior['carnet_ruta'] ?? null);
+        }
+
+        $this->enCurso->recordarCarnet($nuevo + ['email' => $this->correoNormalizado($email)]);
+    }
+
+    /**
+     * La foto que viaja con la solicitud: la recordada de **este** correo, o nada.
+     *
+     * La de un trámite de otro correo (se empezó de nuevo con otra dirección) se borra: no queda huérfana ni
+     * se le adjunta a otra persona.
+     *
+     * @return array<string,mixed>
+     */
+    private function archivoDelTramite(string $email): array
+    {
+        $recordada = $this->enCurso->carnet();
+
+        if ($recordada === null) {
+            return [];
+        }
+
+        if (($recordada['email'] ?? null) !== $email) {
+            $this->carnet->borrar($recordada['carnet_ruta'] ?? null);
+            $this->enCurso->olvidarCarnet();
+
+            return [];
+        }
+
+        return array_intersect_key($recordada, array_flip(['carnet_ruta', 'carnet_tipo', 'carnet_nombre']));
     }
 
     /**
@@ -103,7 +141,7 @@ final class SolicitarCodigoDeRegistroDeMedico
         if (! $this->correos->codigo((string) $datos['email'], (string) $datos['nombres'], $codigo)
             && ! app()->environment(['local', 'testing'])) {
             throw ValidationException::withMessages([
-                'email' => 'No pudimos enviarte el correo con el código. Revisa la dirección o intenta de nuevo en un momento.',
+                'email' => 'No pudimos enviarte el correo con el código. Vuelve a intentarlo en un momento.',
             ]);
         }
 
@@ -141,7 +179,7 @@ final class SolicitarCodigoDeRegistroDeMedico
         }
 
         $especialidad = (int) ($datos['specialty_id'] ?? 0);
-        if ($especialidad !== 0 && ! Specialty::whereKey($especialidad)->where('activo', true)->exists()) {
+        if ($especialidad !== 0 && ! EspecialidadesDelRegistro::admite($especialidad)) {
             throw ValidationException::withMessages(['specialty_id' => 'Elige una especialidad de la lista.']);
         }
 
@@ -154,34 +192,49 @@ final class SolicitarCodigoDeRegistroDeMedico
             'colegio' => $this->textoONull($datos['colegio'] ?? null),
             'specialty_id' => $especialidad ?: null,
             'telefono' => $telefono,
-            'email' => mb_strtolower(trim((string) $datos['email'])),
+            'email' => $this->correoNormalizado((string) $datos['email']),
             'ciudad' => $this->textoONull($datos['ciudad'] ?? null),
             'mensaje' => $this->textoONull($datos['mensaje'] ?? null),
         ];
     }
 
     /**
-     * El correo no puede tener ya una cuenta ni una ficha de médico; ni el correo ni la cédula, otra solicitud
-     * en revisión. Una solicitud **rechazada** no impide volver a intentarlo.
+     * El correo no puede ser el de una **cuenta de médico** (una `User` con el rol o una ficha con cuenta): ese
+     * ya está registrado y entra a trabajar.
+     *
+     * Una cuenta **que no es de médico** —paciente, administración, secretaría— **sí** puede registrarse: al
+     * aprobar se le habilita el área médica en su misma cuenta (misma clave) y el login le pregunta en cuál
+     * quiere entrar (2026-10-24). Una **ficha del escritorio sin cuenta** tampoco bloquea: el administrador le
+     * da acceso a esa ficha al aprobar. La cédula sí bloquea si está en una solicitud de otro correo.
      */
     private function exigirLibres(string $email, string $cedula): void
     {
-        if (User::whereRaw('LOWER(email) = ?', [$email])->exists()
-            || Medico::whereRaw('LOWER(email) = ?', [$email])->exists()) {
+        $cuenta = User::whereRaw('LOWER(email) = ?', [$email])->first();
+
+        $yaEsMedico = ($cuenta !== null && ($cuenta->hasRole('Medico') || $cuenta->medico()->exists()))
+            || Medico::whereRaw('LOWER(email) = ?', [$email])->whereNotNull('user_id')->exists();
+
+        if ($yaEsMedico) {
             throw ValidationException::withMessages([
-                'email' => 'Ese correo ya tiene una cuenta. Inicia sesión o usa otro correo.',
+                'email' => 'Ese correo ya es de una cuenta de médico. Inicia sesión; si no recuerdas la contraseña, recupérala desde el inicio de sesión.',
             ]);
         }
 
-        $enRevision = SolicitudMedico::where('estado', SolicitudMedico::PENDIENTE)
-            ->where(fn ($q) => $q->whereRaw('LOWER(email) = ?', [$email])->orWhere('cedula', $cedula))
+        $cedulaDeOtra = SolicitudMedico::where('estado', SolicitudMedico::PENDIENTE)
+            ->where('cedula', $cedula)
+            ->whereRaw('LOWER(email) <> ?', [$email])
             ->exists();
 
-        if ($enRevision) {
+        if ($cedulaDeOtra) {
             throw ValidationException::withMessages([
-                'email' => 'Ya tienes una solicitud en revisión. Te avisaremos por correo cuando la revisemos.',
+                'cedula' => 'Esa cédula ya tiene una solicitud en revisión con otro correo.',
             ]);
         }
+    }
+
+    private function correoNormalizado(string $email): string
+    {
+        return mb_strtolower(trim($email));
     }
 
     private function textoONull($valor): ?string

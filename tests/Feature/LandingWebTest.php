@@ -2,68 +2,129 @@
 
 namespace Tests\Feature;
 
+use App\Models\Plan;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 /**
- * La landing pública explica **por qué usar Doctorísimo.App** a los dos públicos y lleva a cada uno a
- * su puerta de entrada: el catálogo de reservas para el paciente y el registro de médicos para el doctor.
+ * La **portada pública** (`/`, `PortadaController`): le habla al médico —el registro es la conversión— y deja
+ * un bloque al paciente que lleva al portal de reservas.
  *
- * Las capturas de la sección son de la aplicación real con data sintética (`FakeClinicalDataSeeder`),
- * así que el test también comprueba que los archivos publicados existan.
+ * Las capturas son de la aplicación real con data sintética (`FakeClinicalDataSeeder`), así que el test también
+ * comprueba que los archivos publicados existan. `DatabaseTransactions` por la razón de siempre (ver
+ * MedicAPI/AGENTS.md).
  */
 class LandingWebTest extends TestCase
 {
-    public function test_la_landing_explica_los_beneficios_para_pacientes_y_medicos(): void
-    {
-        $respuesta = $this->get('/');
+    use DatabaseTransactions;
 
-        $respuesta->assertOk();
-        $respuesta->assertSee('¿Por qué usar', false);
-        $respuesta->assertSee('Para pacientes');
-        $respuesta->assertSee('Para médicos');
-        $respuesta->assertSee('Encuentra a tu especialista y reserva sin llamadas.');
-        $respuesta->assertSee('Tu consultorio en orden, en la nube y en el bolsillo.');
-        $respuesta->assertSee('La historia de un paciente, en 1 clic');
-        $respuesta->assertSee('Paga en línea, sin efectivo');
-        $respuesta->assertSee('Lo que sale de Doctorísimo.App');
-        $respuesta->assertSee('Curvas de crecimiento');
-        $respuesta->assertSee('Récipes listos para imprimir');
-        $respuesta->assertSee('Informes de ecografía');
+    private const CAPTURAS = [
+        'agenda-consultorio' => 'Agenda del consultorio en Doctorísimo.App',
+        'agenda-movil' => 'La misma agenda en la app móvil de Doctorísimo.App',
+        'crecimiento' => 'Percentiles de Fundacredesa',
+        'recipe' => 'QR de verificación',
+        'eco' => 'Informe de ecografía obstétrica del segundo trimestre',
+        'catalogo-movil' => 'Catálogo público de Doctorísimo.App en el celular',
+    ];
+
+    public function test_la_portada_le_habla_al_medico_y_lo_lleva_al_registro(): void
+    {
+        config(['servicios.prueba_meses' => 1]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('<title>Doctorísimo · Agenda, historia clínica y récipes para tu consultorio</title>', false)
+            ->assertSee('<meta name="description"', false)
+            ->assertSee('Del papeleo nos encargamos nosotros.')
+            ->assertSee('Prueba gratis 1 mes')
+            ->assertSee('La historia de un paciente, en 1 clic')
+            ->assertSee('Más citas, sin perseguirlas')
+            ->assertSee('Lo que sale de Doctorísimo.App')
+            ->assertSee('un año de cortesía', false)
+            ->assertSee('href="' . route('medico.registro') . '"', false)
+            ->assertSee('href="' . route('login') . '"', false)
+            // Lo que no existe no se promete.
+            ->assertDontSee('Telemedicina')
+            ->assertDontSee('Iniciar Consulta')
+            ->assertDontSee('24/7');
     }
 
-    public function test_la_landing_lleva_a_cada_publico_a_su_puerta_de_entrada(): void
+    public function test_el_paciente_tiene_su_bloque_hacia_la_reserva(): void
     {
-        $respuesta = $this->get('/');
-
-        $respuesta->assertSee(route('reservas.catalogo'), false);
-        $respuesta->assertSee(route('medico.registro'), false);
-        $respuesta->assertSee(route('paciente.citas'), false);
-        $respuesta->assertSee(route('login'), false);
-        $respuesta->assertSee('mailto:soporte@ginecoreport.com', false);
+        $this->get('/')
+            ->assertSee('¿Buscas médico?')
+            ->assertSee('Paga en línea, sin efectivo')
+            ->assertSee('href="' . route('reservas.catalogo') . '"', false)
+            ->assertSee('href="' . route('paciente.citas') . '"', false)
+            ->assertSee('mailto:' . config('app.contacto'), false)
+            ->assertSee(config('app.contacto'))
+            // El correo viejo del producto anterior no se publica.
+            ->assertDontSee('ginecoreport.com');
     }
 
-    public function test_las_capturas_de_la_seccion_existen_y_tienen_texto_alternativo(): void
+    public function test_las_capturas_existen_y_tienen_texto_alternativo(): void
     {
         $respuesta = $this->get('/');
 
-        $respuesta->assertSee('img/landing/catalogo-movil.webp', false);
-        $respuesta->assertSee('img/landing/agenda-consultorio.webp', false);
-        $respuesta->assertSee('img/landing/agenda-movil.webp', false);
-        $respuesta->assertSee('img/landing/crecimiento.webp', false);
-        $respuesta->assertSee('img/landing/recipe.webp', false);
-        $respuesta->assertSee('img/landing/eco.webp', false);
-        $respuesta->assertSee('Catálogo público de Doctorísimo.App en el celular', false);
-        $respuesta->assertSee('Agenda del consultorio en Doctorísimo.App', false);
-        $respuesta->assertSee('La misma agenda en la app móvil de Doctorísimo.App', false);
-        $respuesta->assertSee('Percentiles de Fundacredesa', false);
-        $respuesta->assertSee('QR de verificación', false);
-        $respuesta->assertSee('Informe de ecografía obstétrica del segundo trimestre', false);
+        foreach (self::CAPTURAS as $archivo => $alternativo) {
+            $respuesta->assertSee('img/landing/' . $archivo . '.webp', false);
+            $respuesta->assertSee($alternativo, false);
+            $this->assertFileExists(public_path('img/landing/' . $archivo . '.webp'));
+        }
+    }
 
-        $this->assertFileExists(public_path('img/landing/catalogo-movil.webp'));
-        $this->assertFileExists(public_path('img/landing/agenda-consultorio.webp'));
-        $this->assertFileExists(public_path('img/landing/agenda-movil.webp'));
-        $this->assertFileExists(public_path('img/landing/crecimiento.webp'));
-        $this->assertFileExists(public_path('img/landing/recipe.webp'));
-        $this->assertFileExists(public_path('img/landing/eco.webp'));
+    public function test_sin_prueba_configurada_no_promete_meses_gratis(): void
+    {
+        config(['servicios.prueba_meses' => 0]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertDontSee('Prueba gratis')
+            ->assertSee('Solicita tu cuenta');
+    }
+
+    public function test_muestra_solo_los_planes_activos_y_visibles(): void
+    {
+        $sufijo = substr(uniqid(), -6);
+        $this->plan('portada-visible-' . $sufijo, 'Plan Portada Visible', ['precio_usd' => 25, 'precio_tachado_usd' => 30]);
+        $this->plan('portada-oculto-' . $sufijo, 'Plan Portada Oculto', ['visible' => false]);
+        $this->plan('portada-inactivo-' . $sufijo, 'Plan Portada Inactivo', ['activo' => false]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('id="planes"', false)
+            ->assertSee('Plan Portada Visible')
+            ->assertSee('$25')
+            ->assertSee('Ahorras $5')
+            ->assertDontSee('Plan Portada Oculto')
+            ->assertDontSee('Plan Portada Inactivo');
+    }
+
+    public function test_sin_planes_visibles_no_sale_la_seccion(): void
+    {
+        Plan::query()->update(['visible' => false]);
+
+        $this->get('/')->assertOk()->assertDontSee('id="planes"', false);
+    }
+
+    public function test_el_filtro_viejo_por_especialidad_va_al_portal_de_reservas(): void
+    {
+        $this->get('/?especialidad=ginecologia')
+            ->assertRedirect(route('reservas.catalogo', ['especialidad' => 'ginecologia']));
+    }
+
+    private function plan(string $codigo, string $nombre, array $datos = []): Plan
+    {
+        return Plan::create(array_merge([
+            'codigo' => $codigo,
+            'nombre' => $nombre,
+            'frecuencia' => Plan::MENSUAL,
+            'precio_usd' => 20,
+            'restricciones' => null,
+            'es_default' => false,
+            'visible' => true,
+            'activo' => true,
+            'orden' => 1,
+        ], $datos));
     }
 }
