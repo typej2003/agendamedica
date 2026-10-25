@@ -88,6 +88,12 @@ final class PlanVista
         return Centavos::formatear(Centavos::deDecimal((string) $plan->precio_usd), 'USD');
     }
 
+    /** El precio anterior, el que se muestra tachado cuando el plan tiene descuento. */
+    public function precioTachadoUsdTexto(Plan $plan): string
+    {
+        return Centavos::formatear(Centavos::deDecimal((string) $plan->precio_tachado_usd), 'USD');
+    }
+
     public function ahorroTexto(Plan $plan): string
     {
         return Centavos::formatear(Centavos::deDecimal((string) $plan->ahorroUsd()), 'USD');

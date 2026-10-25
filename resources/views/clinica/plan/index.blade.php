@@ -76,7 +76,7 @@
                                     @endif
                                     @if ($plan->precio_tachado_usd && (float) $plan->precio_tachado_usd > (float) $plan->precio_usd)
                                         <div class="small">
-                                            <del class="text-muted">{{ $vm->precioUsdTexto($plan) }}</del>
+                                            <del class="text-muted">{{ $vm->precioTachadoUsdTexto($plan) }}</del>
                                             <span class="text-success ms-1">ahorras {{ $vm->ahorroTexto($plan) }}</span>
                                         </div>
                                     @endif

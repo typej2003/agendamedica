@@ -174,6 +174,21 @@ class PlanPagoWebTest extends TestCase
             ->assertSee(route('clinica.plan.elegir', $plan), false);
     }
 
+    public function test_el_plan_con_descuento_tacha_el_precio_anterior_y_no_el_actual(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoDePrueba();
+        $plan = $this->planDePrueba('tachado-' . substr(uniqid(), -5));
+        $plan->update(['precio_usd' => 25, 'precio_tachado_usd' => 30]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.plan'))
+            ->assertOk()
+            ->assertSee('<del class="text-muted">USD 30,00</del>', false)
+            ->assertDontSee('<del class="text-muted">USD 25,00</del>', false)
+            ->assertSee('ahorras USD 5,00')
+            ->assertSee('USD 25,00');
+    }
+
     public function test_al_elegir_un_plan_se_ve_el_monto_en_bolivares_y_el_metodo(): void
     {
         [$user, $medico, $gineco] = $this->medicoDePrueba();
