@@ -125,10 +125,11 @@ class User extends Authenticatable
     /**
      * Las áreas a las que esta cuenta puede entrar, tal como las ofrece el login.
      *
-     * Una cuenta con **un solo** área entra directo, como siempre. Con **más de una** (el caso real: un
-     * médico que además administra) el login no puede adivinar cuál quiere, así que se le pregunta en
-     * `/elegir-panel` (ver `rutaDeEntrada()`). La clave es estable porque el test y la vista la usan; el
-     * rótulo y la descripción son los que ve la persona.
+     * Una cuenta con **un solo** área entra directo, como siempre. Con **más de una** (los casos reales: un
+     * médico que además administra, o un paciente o un administrador al que se le habilita el área médica —
+     * 2026-10-24) el login no puede adivinar cuál quiere, así que se le pregunta en `/elegir-panel` (ver
+     * `rutaDeEntrada()`). La clave es estable porque el test y la vista la usan; el rótulo y la descripción son
+     * los que ve la persona.
      *
      * @return array<int, array{clave: string, titulo: string, descripcion: string, icono: string, ruta: string}>
      */
@@ -153,6 +154,16 @@ class User extends Authenticatable
                 'descripcion' => 'Agenda, pacientes, consulta y documentos.',
                 'icono'       => 'bi-clipboard2-pulse',
                 'ruta'        => 'clinica.inicio',
+            ];
+        }
+
+        if ($this->hasRole('Paciente')) {
+            $paneles[] = [
+                'clave'       => 'paciente',
+                'titulo'      => 'Mis citas',
+                'descripcion' => 'Tus citas con los doctores: cancelar o reprogramar.',
+                'icono'       => 'bi-calendar-heart',
+                'ruta'        => 'paciente.citas',
             ];
         }
 

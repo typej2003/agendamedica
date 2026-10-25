@@ -199,20 +199,24 @@ final class SolicitarCodigoDeRegistroDeMedico
     }
 
     /**
-     * El correo no puede tener ya una **cuenta** (una `User` o una ficha con cuenta): si la tiene, inicia sesión
-     * o recupera la contraseña. Una **ficha del escritorio sin cuenta** no bloquea —al aprobar, el administrador
-     * le da acceso a esa misma ficha (`AprobarSolicitudDeMedico`)— y una **solicitud pendiente del mismo
-     * correo** tampoco: se retoma y se corrige (2026-10-24). La cédula sí bloquea si está en una solicitud de
-     * otro correo.
+     * El correo no puede ser el de una **cuenta de médico** (una `User` con el rol o una ficha con cuenta): ese
+     * ya está registrado y entra a trabajar.
+     *
+     * Una cuenta **que no es de médico** —paciente, administración, secretaría— **sí** puede registrarse: al
+     * aprobar se le habilita el área médica en su misma cuenta (misma clave) y el login le pregunta en cuál
+     * quiere entrar (2026-10-24). Una **ficha del escritorio sin cuenta** tampoco bloquea: el administrador le
+     * da acceso a esa ficha al aprobar. La cédula sí bloquea si está en una solicitud de otro correo.
      */
     private function exigirLibres(string $email, string $cedula): void
     {
-        $conCuenta = User::whereRaw('LOWER(email) = ?', [$email])->exists()
+        $cuenta = User::whereRaw('LOWER(email) = ?', [$email])->first();
+
+        $yaEsMedico = ($cuenta !== null && ($cuenta->hasRole('Medico') || $cuenta->medico()->exists()))
             || Medico::whereRaw('LOWER(email) = ?', [$email])->whereNotNull('user_id')->exists();
 
-        if ($conCuenta) {
+        if ($yaEsMedico) {
             throw ValidationException::withMessages([
-                'email' => 'Ese correo ya tiene una cuenta. Inicia sesión; si no recuerdas la contraseña, recupérala desde el inicio de sesión.',
+                'email' => 'Ese correo ya es de una cuenta de médico. Inicia sesión; si no recuerdas la contraseña, recupérala desde el inicio de sesión.',
             ]);
         }
 

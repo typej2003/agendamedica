@@ -9,6 +9,7 @@ use App\Models\MedicoRegistro;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
 use App\Models\Paciente;
+use App\Models\Specialty;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
@@ -134,6 +135,33 @@ class ReservasPublicasWebTest extends TestCase
         $this->get(route('reservas.medico', $sinAgenda))
             ->assertOk()
             ->assertSee('no tiene horarios publicados');
+    }
+
+    public function test_el_filtro_solo_ofrece_especialidades_con_medicos_con_agenda(): void
+    {
+        // Especialidades propias (no las del catálogo): los datos de prueba reparten especialidades al azar y
+        // un dermatólogo sembrado con agenda haría pasar —o fallar— el test por casualidad.
+        $conAgenda = Specialty::create(['name' => 'Con agenda ' . substr(uniqid(), -6), 'activo' => true]);
+        $sinAgenda = Specialty::create(['name' => 'Sin agenda ' . substr(uniqid(), -6), 'activo' => true]);
+
+        // El médico con horarios: su especialidad sí lleva a un resultado.
+        $this->medico->specialties()->attach($conAgenda);
+
+        // Un médico activo pero **sin** horarios: su especialidad no se ofrece en el filtro.
+        $otro = Medico::create([
+            'name' => 'Sin',
+            'lastname' => 'Horarios',
+            'email' => 'sin-agenda-' . substr(uniqid(), -6) . '@example.com',
+            'reg_medico' => 'test-sin-' . substr(uniqid(), -6),
+            'is_active' => true,
+        ]);
+        $otro->specialties()->attach($sinAgenda);
+
+        $this->get(route('reservas.catalogo'))
+            ->assertOk()
+            ->assertSee($conAgenda->name)
+            ->assertSee('especialidad=' . $conAgenda->slug, false)
+            ->assertDontSee($sinAgenda->name);
     }
 
     public function test_la_reserva_completa_crea_la_cita_sin_historia_y_confirmada(): void

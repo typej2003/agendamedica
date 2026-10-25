@@ -100,7 +100,11 @@ class SolicitudesDeMedicos extends Component
         }
 
         $this->claveGenerada = [
-            'titulo' => $r['enlazada'] ? 'Aprobada: acceso a la ficha existente' : 'Aprobada: médico creado',
+            'titulo' => match (true) {
+                $r['clave'] === null => 'Aprobada: se habilitó su área médica',
+                $r['enlazada'] => 'Aprobada: acceso a la ficha existente',
+                default => 'Aprobada: médico creado',
+            },
             'correo' => $r['medico']->email,
             'clave' => $r['clave'],
             'correoEnviado' => $r['correoEnviado'],

@@ -112,6 +112,25 @@ class DestinoTrasLoginTest extends TestCase
         $this->get('/dashboard')->assertRedirect(route('clinica.inicio'));
     }
 
+    public function test_una_cuenta_de_paciente_y_medico_pregunta_donde_entrar(): void
+    {
+        // Al paciente que se registró como médico se le habilita el área en su misma cuenta: el login ya no
+        // puede adivinar y le ofrece las dos (2026-10-24).
+        $user = $this->usuario('Paciente');
+        $user->assignRole('Medico');
+
+        $this->assertSame('elegir-panel', $user->fresh()->rutaDeEntrada());
+
+        $this->post('/login', [
+            'email' => $user->email, 'password' => 'secreto123',
+        ])->assertRedirect(route('elegir-panel'));
+
+        $this->get(route('elegir-panel'))
+            ->assertOk()
+            ->assertSee('Consultorio')
+            ->assertSee('Mis citas');
+    }
+
     public function test_el_login_respeta_la_pagina_que_se_habia_pedido(): void
     {
         $medico = $this->medico();
