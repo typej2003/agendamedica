@@ -235,11 +235,12 @@
 
             var boton = document.createElement('button');
             boton.type = 'button';
-            boton.className = 'btn btn-link p-0 border-0 text-body';
-            boton.style.cssText = 'position:absolute;top:50%;right:.75rem;transform:translateY(-50%);line-height:1';
+            // El dibujo, el tamaño y el color son los del icono nativo de los `type="date"` (`doctorisimo-ui.css`,
+            // WEB-13.16): un `bi-calendar3` acá se veía más chico y más claro que el de al lado.
+            boton.className = 'campo-fecha-boton';
             boton.setAttribute('aria-label', 'Elegir la fecha en el calendario');
             boton.title = 'Elegir la fecha en el calendario';
-            boton.innerHTML = '<i class="bi bi-calendar3" aria-hidden="true"></i>';
+            boton.innerHTML = '<span class="campo-fecha-icono" aria-hidden="true"></span>';
 
             var selector = document.createElement('input');
             selector.type = 'date';
