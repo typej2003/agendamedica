@@ -107,14 +107,17 @@
                         <div class="col-12">
                             <label for="carnet" class="form-label">Foto del carnet <span class="text-muted">(opcional)</span></label>
                             <input type="file" class="form-control @error('carnet') is-invalid @enderror" id="carnet" name="carnet"
-                                   accept="image/png,image/jpeg,image/webp">
-                            <div class="form-text">
+                                   accept="image/png,image/jpeg,image/webp"
+                                   data-carnet-maximo="{{ $carnetMaximoBytes }}" aria-describedby="carnet-ayuda carnet-aviso">
+                            <div class="form-text" id="carnet-ayuda">
                                 @if (! empty($previo['carnet_ruta']))
-                                    Ya adjuntaste una foto; elige otra solo si quieres reemplazarla.
+                                    Ya adjuntaste una foto{{ ! empty($previo['carnet_nombre']) ? ' (' . $previo['carnet_nombre'] . ')' : '' }};
+                                    elige otra solo si quieres reemplazarla.
                                 @else
                                     Carnet del MPPS o del Colegio. {{ $carnetAceptado }}, hasta {{ $carnetMaximo }}. Acelera la revisión.
                                 @endif
                             </div>
+                            <div class="form-text" id="carnet-aviso" hidden></div>
                         </div>
 
                         <div class="col-12">
@@ -137,3 +140,7 @@
         </div>
     </div>
 @endsection
+
+@push('js')
+    <script src="{{ asset('js/registro-medico-carnet.js') }}"></script>
+@endpush

@@ -55,6 +55,10 @@ final class AprobarSolicitudDeMedico
 
             $ficha = Medico::where('reg_medico', $regMedico)->first();
 
+            if ($ficha === null) {
+                $this->exigirQueNoSeaUnaFichaDelEscritorio($solicitud);
+            }
+
             if ($ficha !== null) {
                 $r = $this->darAccesoALaFicha($ficha, $solicitud);
                 $enlazada = true;
@@ -99,6 +103,35 @@ final class AprobarSolicitudDeMedico
             'enlazada' => $resultado['enlazada'],
             'correoEnviado' => $correoEnviado,
         ];
+    }
+
+    /**
+     * Una ficha del escritorio con el mismo correo y **sin cuenta** es la misma persona: el administrador tiene
+     * que confirmar **su** `reg_medico` para darle acceso a su historia, en vez de crear una ficha nueva (que
+     * `CuentaService::crearMedico` rechazaría por el correo repetido, con un error sin salida).
+     *
+     * @throws ValidationException
+     */
+    private function exigirQueNoSeaUnaFichaDelEscritorio(SolicitudMedico $solicitud): void
+    {
+        $email = mb_strtolower(trim((string) $solicitud->email));
+
+        if ($email === '') {
+            return;
+        }
+
+        $ficha = Medico::whereRaw('LOWER(email) = ?', [$email])
+            ->whereNull('user_id')
+            ->whereNotNull('reg_medico')
+            ->where('reg_medico', '!=', '')
+            ->first();
+
+        if ($ficha !== null) {
+            throw ValidationException::withMessages([
+                'reg_medico' => 'Ese correo ya es de la ficha del escritorio con reg_medico «' . $ficha->reg_medico
+                    . '». Confirma ese reg_medico para darle acceso a su historia.',
+            ]);
+        }
     }
 
     /** @return array{user: User, clave: string} */

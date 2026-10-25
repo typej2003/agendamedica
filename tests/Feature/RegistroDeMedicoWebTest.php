@@ -97,6 +97,38 @@ class RegistroDeMedicoWebTest extends TestCase
         $this->get(route('login'))->assertSee(route('medico.registro'));
     }
 
+    public function test_el_formulario_solo_ofrece_las_especialidades_soportadas(): void
+    {
+        // El desplegable ofrece las que AppDDR ya atiende (las que tienen manifiesto); el resto del catálogo
+        // todavía no se ofrece al registrarse.
+        $this->get(route('medico.registro'))
+            ->assertOk()
+            ->assertSee('Ginecología y Obstetricia')
+            ->assertSee('Pediatría')
+            ->assertDontSee('Cardiología')
+            ->assertDontSee('Dermatología')
+            ->assertDontSee('Medicina General');
+    }
+
+    public function test_una_especialidad_que_todavia_no_se_ofrece_se_rechaza(): void
+    {
+        $cardiologia = Specialty::where('name', 'Cardiología')->firstOrFail();
+
+        $this->post(route('medico.registro.codigo.enviar'), $this->datos(['specialty_id' => $cardiologia->id]))
+            ->assertSessionHasErrors('specialty_id');
+
+        Mail::assertNotSent(CodigoDeRegistroDeMedico::class);
+    }
+
+    public function test_una_especialidad_soportada_se_guarda_en_la_solicitud(): void
+    {
+        $pediatria = Specialty::where('name', 'Pediatría')->firstOrFail();
+
+        $solicitud = $this->solicitar(['specialty_id' => $pediatria->id]);
+
+        $this->assertSame($pediatria->id, (int) $solicitud->specialty_id);
+    }
+
     public function test_el_codigo_va_al_correo_y_la_solicitud_nace_pendiente_sin_cuenta(): void
     {
         $datos = $this->datos();
@@ -155,17 +187,79 @@ class RegistroDeMedicoWebTest extends TestCase
         Mail::assertNotSent(CodigoDeRegistroDeMedico::class);
     }
 
-    public function test_no_se_duplica_una_solicitud_en_revision_pero_si_tras_un_rechazo(): void
+    public function test_la_cedula_de_una_solicitud_en_revision_no_se_repite_con_otro_correo(): void
     {
         $primera = $this->solicitar();
 
         $this->post(route('medico.registro.codigo.enviar'), $this->datos(['cedula' => $primera->cedula]))
-            ->assertSessionHasErrors('email');
+            ->assertSessionHasErrors('cedula');
 
         $primera->update(['estado' => SolicitudMedico::RECHAZADA, 'motivo_rechazo' => 'Datos incompletos']);
 
         $this->post(route('medico.registro.codigo.enviar'), $this->datos(['cedula' => $primera->cedula]))
             ->assertRedirect(route('medico.registro.codigo'));
+    }
+
+    public function test_una_solicitud_pendiente_se_retoma_y_se_corrige_en_vez_de_bloquear(): void
+    {
+        $primera = $this->solicitar();
+
+        // El mismo correo vuelve a verificar su dirección y corrige sus datos: no se le niega el código ni se
+        // crea una segunda solicitud (antes quedaba atado a la primera y no podía hacer nada).
+        $this->post(route('medico.registro.codigo.enviar'), $this->datos([
+            'email' => $primera->email,
+            'cedula' => $primera->cedula,
+            'nombres' => 'Corregido',
+        ]))->assertRedirect(route('medico.registro.codigo'));
+
+        $this->post(route('medico.registro.confirmar'), ['codigo' => $this->codigo()])
+            ->assertRedirect(route('medico.registro.recibida'));
+
+        $this->assertSame(1, SolicitudMedico::where('email', $primera->email)->count());
+        $this->assertSame('Corregido', $primera->fresh()->nombres);
+    }
+
+    public function test_una_ficha_del_escritorio_sin_cuenta_no_bloquea_el_registro(): void
+    {
+        $email = 'ficha-' . uniqid() . '@example.com';
+        Medico::create([
+            'name' => 'Ana',
+            'lastname' => 'Ficha',
+            'reg_medico' => 'F' . random_int(100000, 999999),
+            'email' => $email,
+            'is_active' => true,
+        ]);
+
+        // La cuenta no existe todavía: al aprobar, el administrador le da acceso a esa misma ficha.
+        $this->post(route('medico.registro.codigo.enviar'), $this->datos(['email' => $email]))
+            ->assertRedirect(route('medico.registro.codigo'));
+    }
+
+    public function test_la_foto_del_carnet_sobrevive_a_un_campo_con_error(): void
+    {
+        $datos = $this->datos(['telefono' => '']);
+
+        // Falla el teléfono, pero la foto ya quedó guardada.
+        $this->post(route('medico.registro.codigo.enviar'), array_merge($datos, [
+            'carnet' => UploadedFile::fake()->image('carnet.png', 400, 250),
+        ]))->assertSessionHasErrors('telefono');
+
+        $ruta = session('registro_medico.carnet.carnet_ruta');
+        $this->assertNotNull($ruta);
+        Storage::disk(CarnetDeLaSolicitud::DISCO)->assertExists($ruta);
+
+        // Al corregir y reenviar sin volver a elegirla, la solicitud viaja con la misma foto.
+        $this->post(route('medico.registro.codigo.enviar'), $this->datos([
+            'email' => $datos['email'],
+            'cedula' => $datos['cedula'],
+        ]))->assertRedirect(route('medico.registro.codigo'));
+
+        $this->post(route('medico.registro.confirmar'), ['codigo' => $this->codigo()])
+            ->assertRedirect(route('medico.registro.recibida'));
+
+        $solicitud = SolicitudMedico::where('email', $datos['email'])->firstOrFail();
+        $this->assertSame($ruta, $solicitud->carnet_ruta);
+        Storage::disk(CarnetDeLaSolicitud::DISCO)->assertExists($solicitud->carnet_ruta);
     }
 
     public function test_la_foto_del_carnet_se_guarda_en_el_disco_privado(): void
@@ -184,7 +278,7 @@ class RegistroDeMedicoWebTest extends TestCase
 
     public function test_aprobar_crea_la_cuenta_con_especialidad_y_prueba_y_avisa(): void
     {
-        $especialidad = Specialty::where('activo', true)->first() ?? Specialty::create(['name' => 'Especialidad de prueba', 'activo' => true]);
+        $especialidad = Specialty::where('slug', 'pediatria')->firstOrFail();
         $solicitud = $this->solicitar(['specialty_id' => $especialidad->id]);
         $admin = $this->administrador();
         $reg = 'MPPS-' . $solicitud->mpps;
@@ -219,6 +313,31 @@ class RegistroDeMedicoWebTest extends TestCase
         if (\App\Models\Plan::porDefecto()) {
             $this->assertTrue(RegMedicoServicio::where('reg_medico', $reg)->exists());
         }
+    }
+
+    public function test_aprobar_avisa_si_el_correo_es_de_una_ficha_sin_cuenta_con_otro_reg_medico(): void
+    {
+        $email = 'ficha-' . uniqid() . '@example.com';
+        $regFicha = 'F' . random_int(100000, 999999);
+        Medico::create([
+            'name' => 'Ana',
+            'lastname' => 'Ficha',
+            'reg_medico' => $regFicha,
+            'email' => $email,
+            'is_active' => true,
+        ]);
+
+        $solicitud = $this->solicitar(['email' => $email]);
+
+        // El administrador confirma un reg_medico nuevo: se le dice cuál es el de la ficha, en vez de dejarlo
+        // con el «Ya existe una cuenta con ese correo» de `crearMedico`.
+        $this->actingAs($this->administrador());
+        Livewire::test(SolicitudesDeMedicos::class)
+            ->call('abrir', $solicitud->id)
+            ->call('aprobar')
+            ->assertHasErrors('reg_medico');
+
+        $this->assertSame(SolicitudMedico::PENDIENTE, $solicitud->fresh()->estado);
     }
 
     public function test_aprobar_con_el_reg_medico_de_una_ficha_sin_cuenta_le_da_acceso_a_esa_ficha(): void

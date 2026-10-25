@@ -11,8 +11,9 @@ use Illuminate\Validation\ValidationException;
  * Segundo paso del **registro de médicos**: comprobar el código del correo y **guardar la solicitud**, que
  * queda pendiente hasta que un administrador la revise. No crea cuenta: el médico no puede entrar todavía.
  *
- * Revalida que no haya otra en revisión con el mismo correo o cédula (dos pestañas pueden llegar juntas) y,
- * guardada, avisa al médico y a los administradores.
+ * Revalida que la cédula no esté en otra solicitud (dos pestañas pueden llegar juntas) y, guardada, avisa al
+ * médico y a los administradores. Si el correo ya tenía una solicitud **pendiente**, se **actualiza** (la misma
+ * persona corrigiendo sus datos) en vez de crear otra.
  */
 final class ConfirmarSolicitudDeMedico
 {
@@ -61,21 +62,38 @@ final class ConfirmarSolicitudDeMedico
         }
 
         $solicitud = DB::transaction(function () use ($datos) {
-            $enRevision = SolicitudMedico::where('estado', SolicitudMedico::PENDIENTE)
-                ->where(fn ($q) => $q->whereRaw('LOWER(email) = ?', [$datos['email']])->orWhere('cedula', $datos['cedula']))
+            $campos = array_intersect_key($datos, array_flip(self::CAMPOS));
+
+            $pendiente = SolicitudMedico::where('estado', SolicitudMedico::PENDIENTE)
+                ->whereRaw('LOWER(email) = ?', [$datos['email']])
                 ->lockForUpdate()
+                ->first();
+
+            $cedulaDeOtra = SolicitudMedico::where('estado', SolicitudMedico::PENDIENTE)
+                ->where('cedula', $datos['cedula'])
+                ->when($pendiente !== null, fn ($query) => $query->where('id', '!=', $pendiente->id))
                 ->exists();
 
-            if ($enRevision) {
+            if ($cedulaDeOtra) {
                 throw ValidationException::withMessages([
-                    'codigo' => 'Ya tienes una solicitud en revisión. Te avisaremos por correo cuando la revisemos.',
+                    'codigo' => 'Esa cédula ya tiene una solicitud en revisión con otro correo.',
                 ]);
             }
 
-            return SolicitudMedico::create(array_merge(
-                array_intersect_key($datos, array_flip(self::CAMPOS)),
-                ['estado' => SolicitudMedico::PENDIENTE],
-            ));
+            if ($pendiente !== null) {
+                // Retomar: es la misma persona (verificó el mismo correo) y está corrigiendo su solicitud. Se
+                // actualiza la que ya estaba pendiente en vez de crear una segunda, que la bandeja del
+                // administrador mostraría duplicada (2026-10-24). La foto anterior se conserva si no subió otra.
+                if (empty($campos['carnet_ruta'])) {
+                    unset($campos['carnet_ruta'], $campos['carnet_tipo'], $campos['carnet_nombre']);
+                }
+
+                $pendiente->update($campos);
+
+                return $pendiente;
+            }
+
+            return SolicitudMedico::create(array_merge($campos, ['estado' => SolicitudMedico::PENDIENTE]));
         });
 
         $this->enCurso->olvidar();

@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\RegistroDeMedicos;
 
 use App\Http\Controllers\Controller;
-use App\Models\Specialty;
 use App\RegistroDeMedicos\CarnetDeLaSolicitud;
 use App\RegistroDeMedicos\ConfirmarSolicitudDeMedico;
+use App\RegistroDeMedicos\EspecialidadesDelRegistro;
 use App\RegistroDeMedicos\SolicitarCodigoDeRegistroDeMedico;
 use App\RegistroDeMedicos\SolicitudEnCurso;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Validation\ValidationException;
 
 /**
  * **Registro de médicos con aprobación** (ROADMAP §10.4, fase 2): formulario, código de 6 dígitos al correo y
@@ -19,17 +21,40 @@ class RegistroDeMedicoController extends Controller
 {
     public function formulario(SolicitudEnCurso $enCurso)
     {
+        // Si vuelve atrás desde el código, el formulario aparece con lo que ya había escrito.
+        $previo = $enCurso->datos() ?? [];
+
+        // La foto ya subida se muestra como adjunta aunque el trámite no se haya guardado (el correo falló).
+        if (($carnet = $enCurso->carnet()) !== null) {
+            $previo = array_merge($carnet, $previo);
+        }
+
         return view('registro-medico.formulario', [
-            // Si vuelve atrás desde el código, el formulario aparece con lo que ya había escrito.
-            'previo' => $enCurso->datos() ?? [],
-            'especialidades' => Specialty::where('activo', true)->orderBy('name')->get(['id', 'name']),
+            'previo' => $previo,
+            // Sólo las especialidades que AppDDR ya atiende: el resto del catálogo todavía no se ofrece.
+            'especialidades' => EspecialidadesDelRegistro::lista(),
             'carnetAceptado' => CarnetDeLaSolicitud::textosAceptados(),
             'carnetMaximo' => CarnetDeLaSolicitud::textoMaximo(),
+            // En bytes: el navegador avisa antes de mandar el formulario si la foto no entra.
+            'carnetMaximoBytes' => CarnetDeLaSolicitud::maximoKb() * 1024,
         ]);
     }
 
     public function enviarCodigo(Request $request, SolicitarCodigoDeRegistroDeMedico $accion)
     {
+        // La foto va primero y aparte, y se guarda aunque después falle otro campo: el navegador vacía el campo
+        // de archivo cuando el formulario vuelve con errores, así que si se validara junto al resto el médico
+        // tendría que elegirla de nuevo (2026-10-24).
+        $archivo = $request->file('carnet');
+
+        if ($archivo !== null && $archivo->getError() !== UPLOAD_ERR_NO_FILE) {
+            $this->exigirFotoRecibida($archivo);
+
+            $request->validate(['carnet' => CarnetDeLaSolicitud::reglas()], $this->mensajes());
+
+            $accion->recordarCarnet($archivo, (string) $request->input('email'));
+        }
+
         $datos = $request->validate([
             'prefijo'      => ['nullable', 'string', 'max:20'],
             'nombres'      => ['required', 'string', 'max:100'],
@@ -42,10 +67,9 @@ class RegistroDeMedicoController extends Controller
             'email'        => ['required', 'email', 'max:120'],
             'ciudad'       => ['nullable', 'string', 'max:100'],
             'mensaje'      => ['nullable', 'string', 'max:1000'],
-            'carnet'       => array_merge(['nullable'], CarnetDeLaSolicitud::reglas()),
         ], $this->mensajes());
 
-        $resultado = $accion->ejecutar($datos, $request->file('carnet'));
+        $resultado = $accion->ejecutar($datos);
 
         return redirect()
             ->route('medico.registro.codigo')
@@ -115,6 +139,30 @@ class RegistroDeMedicoController extends Controller
         return view('registro-medico.recibida', ['email' => $email]);
     }
 
+    /**
+     * ¿La foto llegó entera? PHP distingue los motivos y el del formulario no: el tamaño se pasa del
+     * `upload_max_filesize`, la carpeta temporal no existe o no deja escribir… Cada uno tiene su mensaje, y así
+     * «la foto es muy grande» sólo se dice cuando de verdad lo es (2026-10-24).
+     *
+     * @throws ValidationException
+     */
+    private function exigirFotoRecibida(UploadedFile $archivo): void
+    {
+        if ($archivo->isValid()) {
+            return;
+        }
+
+        $mensaje = match ($archivo->getError()) {
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'La foto pesa más de lo que acepta el servidor (máximo '
+                . CarnetDeLaSolicitud::textoMaximo() . '). Elige una más liviana o tómala con menos resolución.',
+            UPLOAD_ERR_PARTIAL => 'La foto no terminó de subir. Intenta de nuevo.',
+            default => 'El servidor no pudo recibir la foto. Vuelve a intentarlo; si sigue igual, envía la '
+                . 'solicitud sin la foto y adjúntala después.',
+        };
+
+        throw ValidationException::withMessages(['carnet' => $mensaje]);
+    }
+
     /** @return array<string,string> */
     private function mensajes(): array
     {
@@ -127,6 +175,9 @@ class RegistroDeMedicoController extends Controller
             'email.required' => 'Escribe tu correo: ahí te llegan el código y la respuesta.',
             'email.email' => 'Revisa el correo: no tiene forma de correo.',
             'mensaje.max' => 'El mensaje es muy largo (hasta 1000 caracteres).',
+            // Respaldo: el caso normal lo explica `exigirFotoRecibida()`, que mira el código de error de PHP.
+            'carnet.uploaded' => 'No pudimos recibir la foto. Vuelve a intentarlo o elige otra imagen.',
+            'carnet.max' => 'La foto pesa más de ' . CarnetDeLaSolicitud::textoMaximo() . '. Elige una más liviana.',
         ];
     }
 }
