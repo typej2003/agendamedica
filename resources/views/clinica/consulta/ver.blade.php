@@ -221,6 +221,8 @@
     <script src="{{ asset('js/clinica/mamas-lienzo.js') }}"></script>
     <script src="{{ asset('js/clinica/imagen-del-examen.js') }}"></script>
     <script src="{{ asset('js/clinica/consulta-visualizar.js') }}"></script>
+    {{-- «Escanear hoja» de *Resultado de exámenes* (WEB-13.15): lee la foto o el PDF y pone el texto en el campo. --}}
+    <script src="{{ asset('js/clinica/escanear-hoja.js') }}?v={{ @filemtime(public_path('js/clinica/escanear-hoja.js')) }}"></script>
     {{-- La casilla «Anterior» (WEB-11.4) de motivos, diagnósticos, enfermedad actual y tratamiento (la de récipes va en su script). --}}
     <script src="{{ asset('js/clinica/anterior.js') }}"></script>
     {{-- La fila del encabezado (A-11): Guardar, el autoguardado y el aviso al cambiar de sección o de consulta. --}}

@@ -60,6 +60,17 @@ return [
         'key' => env('OPENAI_API_KEY'),
     ],
 
+    /*
+     * **Lectura de hojas escaneadas** (WEB-13.15): la solapa *Resultado de exámenes* manda la foto o el PDF de la
+     * hoja del laboratorio a Claude y recibe el texto transcrito, que el médico revisa y edita antes de guardar
+     * (`App\Clinica\Escaneo\LectorDeHojasConClaude`). Sin `ANTHROPIC_API_KEY` el botón no se ofrece.
+     */
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+        'modelo_ocr' => env('ANTHROPIC_MODELO_OCR', 'claude-opus-5-5'),
+        'timeout_ocr' => (float) env('ANTHROPIC_TIMEOUT_OCR', 90),
+    ],
+
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
         'model' => env('GEMINI_MODEL', 'gemini-3.8-flash'),

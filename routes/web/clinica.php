@@ -35,6 +35,7 @@ use App\Http\Controllers\Clinica\ConsultaReferenciasController;
 use App\Http\Controllers\Clinica\ConsultaReposoController;
 use App\Http\Controllers\Clinica\ImpresionDeDocumentosController;
 use App\Http\Controllers\Clinica\ConsultaCerrarController;
+use App\Http\Controllers\Clinica\ConsultaEscaneoController;
 use App\Http\Controllers\Clinica\ConsultaTextoDelExamenController;
 use App\Http\Controllers\Clinica\ConsultaAnteriorController;
 use App\Http\Controllers\Clinica\PlantillaDeTextoController;
@@ -332,6 +333,13 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // solapa viaja en la dirección y el `whereIn` del catálogo hace que una que no existe sea un
                 // **404** antes de llegar al controlador. La única que además tiene una copia en otra tabla es
                 // la colposcopía (`examen_fisico_nuevo.colposcopia`), y eso lo sabe la Action.
+                // Escanear la hoja de resultados (WEB-13.15): lee la foto o el PDF y devuelve el texto en JSON, sin guardar.
+                // Va antes del guardado del texto y con su propio límite por usuario: cada lectura le cuesta al servidor.
+                Route::post('/consulta/{consulta}/examen/{solapa}/escanear', [ConsultaEscaneoController::class, 'leer'])
+                    ->where('solapa', implode('|', TextosDelExamen::clavesEscaneables()))
+                    ->middleware('throttle:20,1,escaneo-de-hojas')
+                    ->name('consulta.examen.escanear');
+
                 Route::post('/consulta/{consulta}/examen/{solapa}', [ConsultaTextoDelExamenController::class, 'guardar'])
                     ->where('solapa', implode('|', TextosDelExamen::claves(true)))
                     ->name('consulta.examen.texto.guardar');

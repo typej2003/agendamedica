@@ -87,6 +87,19 @@ cuenta entre las solapas del examen; la ruta de guardado, que es la misma, usa `
 (`TextoDelExamenVista`) y el mismo parcial (`_evaluacion-texto`, vía `_tratamiento`), y `ConsultaTextoDelExamenController` vuelve a
 su propia sección. Es el «PLAN DE TRATAMIENTO» del resumen médico. Tests: `ConsultaTratamientoWebTest`.
 
+📷 **Escanear la hoja de resultados** (WEB-13.15, 2026-10-25): la solapa *Resultado de exámenes* (`consultas.oido`, ginecología) y
+*Exámenes* de pediatría (`consultas.nariz`) ofrecen **«Escanear hoja»**: foto (en el teléfono, el selector ofrece la cámara) o PDF →
+`POST /clinica/consulta/{consulta}/examen/{solapa}/escanear` (`ConsultaEscaneoController`, `throttle:20,1`) → **Claude** transcribe la hoja
+(`App\Clinica\Escaneo\LectorDeHojasConClaude`, SDK oficial `anthropic-ai/sdk`, modelo `ANTHROPIC_MODELO_OCR` = `claude-opus-5-5`, salida
+`json_schema` con `es_resultado`, `fallbacks: "default"`) → `escanear-hoja.js` pone el texto en el campo (**agrega al final, nunca
+reemplaza**) y dispara `input`. **La lectura no escribe nada** (ni la consulta, ni el archivo, ni `sync_changes`): el médico revisa y
+guarda con el guardado de la solapa —la regla de O-12, «la lectura propone, el médico confirma»—. El tipo sale del contenido
+(`HojaEscaneada::tipo()`: JPG/PNG/WEBP/GIF/PDF, 10 MB; HEIC no) y la foto grande viaja reducida a 2400 px y enderezada por su EXIF
+(`HojaEscaneada::paraLeer()`, GD). Qué solapas: `'escanear' => true` en `TextosDelExamen`. **Sin
+`ANTHROPIC_API_KEY` el botón no aparece** (variable nueva del despliegue). La hoja viaja al proveedor; el log guarda que hubo lectura
+(consulta, usuario, tipo), nunca su contenido. Tests: `Feature/ConsultaEscaneoWebTest` (9) y `Unit/Clinica/LectorDeHojasConClaudeTest`
+(7, HTTP simulado).
+
 📋 **Listados clínicos entre fechas** (WEB-6.8, `/clinica/listados`, sólo `role:Root|Medico`): una pantalla parametrizada por
 `?listado=` (catálogo en `App\Clinica\Listados\ListadosDisponibles`, selector en `index`), con los tres del alcance hechos
 (2026-10-14): **embarazos y partos**, **pacientes por rango** y **consultas por rango**. Cada listado suma su filtro, su lectura

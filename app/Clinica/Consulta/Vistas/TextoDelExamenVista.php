@@ -4,6 +4,7 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Clinica\Consulta\QueEsUnDocumento;
 use App\Clinica\Consulta\TextosDelExamen;
+use App\Clinica\Escaneo\HojaEscaneada;
 use Illuminate\Support\Collection;
 
 /**
@@ -37,6 +38,8 @@ final class TextoDelExamenVista
      * @param  array<string,mixed>  $old  el `old()` del formulario (`[]` en la primera carga)
      * @param  SeccionDeExamenesVista|null  $informados  los exámenes informados por el laboratorio, que desde O-22
      *                              (2026-10-17) se leen dentro de la solapa *Resultado de exámenes*; `null` en las otras
+     * @param  string  $urlEscanear  la lectura de la hoja escaneada (WEB-13.15), o `''` si la solapa no la ofrece o el
+     *                              servidor no tiene con qué leer
      */
     public function __construct(
         private string $clave,
@@ -47,6 +50,7 @@ final class TextoDelExamenVista
         private string $urlImprimir = '',
         private array $old = [],
         private ?SeccionDeExamenesVista $informados = null,
+        private string $urlEscanear = '',
     ) {
     }
 
@@ -57,6 +61,32 @@ final class TextoDelExamenVista
     public function informados(): ?SeccionDeExamenesVista
     {
         return $this->informados;
+    }
+
+    /**
+     * ¿Se ofrece **escanear la hoja** (WEB-13.15)? El texto leído entra al campo, editable, y se guarda con el
+     * guardado de la solapa: la lectura no escribe nada.
+     */
+    public function ofreceEscanear(): bool
+    {
+        return $this->urlEscanear !== '';
+    }
+
+    public function urlEscanear(): string
+    {
+        return $this->urlEscanear;
+    }
+
+    /** Lo que acepta el selector de archivos (la regla real es `HojaEscaneada::tipo()`, en el servidor). */
+    public function aceptaEscaneo(): string
+    {
+        return HojaEscaneada::ACEPTA;
+    }
+
+    /** El tope del archivo, dicho para el médico. */
+    public function maximoDelEscaneo(): string
+    {
+        return (int) (HojaEscaneada::MAXIMO_KB / 1024) . ' MB';
     }
 
     /** La clave de la solapa: es también el `name` del campo y el prefijo de los ids del DOM. */
