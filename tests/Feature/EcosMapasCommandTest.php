@@ -229,9 +229,9 @@ class EcosMapasCommandTest extends TestCase
     {
         $segundo = $this->porClave($this->exportar())['segundo'];
 
-        // WEB-11.14: el 2.º comparte el mapa con el 3.º (55 campos en 6 bloques) pero vive en su tabla.
-        $this->assertCount(55, $segundo['columnas']);
-        $this->assertCount(6, $segundo['grupos']);
+        // WEB-11.14: el 2.º comparte el mapa con el 3.º (50 campos en 5 bloques, sin el perfil biofísico) pero vive en su tabla.
+        $this->assertCount(50, $segundo['columnas']);
+        $this->assertCount(5, $segundo['grupos']);
         $this->assertSame('eco_obstetrico_tercer_2', $segundo['tabla']);
         $this->assertSame('historia', $segundo['columna_historia']);
         $this->assertSame('consulta', $segundo['columna_consulta']);

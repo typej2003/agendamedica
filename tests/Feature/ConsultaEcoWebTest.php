@@ -820,7 +820,7 @@ class ConsultaEcoWebTest extends TestCase
         $pantalla->assertOk()
             ->assertSee('Eco obstétrico (3.er trimestre)')
             ->assertSee('Datos biométricos')->assertSee('Datos anatómicos')
-            ->assertSee('Placenta y líquido')->assertSee('El feto')
+            ->assertSee('Placenta y líquido')
             ->assertSee('Peso F.')->assertSee('ILA (Phelan)');
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
@@ -854,6 +854,45 @@ class ConsultaEcoWebTest extends TestCase
             ->assertSee('Datos biométricos')
             ->assertSee('Peso F.:')->assertSee('3200')
             ->assertSee('Conclusiones:')->assertSee('Embarazo a término.');
+    }
+
+    public function test_el_perfil_biofisico_no_se_ofrece_ni_se_pisa_en_el_segundo_ni_en_el_tercero(): void
+    {
+        // Alexander, 2026-10-25: movimientos respiratorios, tono fetal y el bloque «El feto» ya no se usan.
+        $biofisico = ['fun_dp_movimientos_respiratorios', 'fun_dp_tono_fetal', 'movimientos_feto', 'reactividad_cardiaca', 'liquido_amniotico'];
+        $this->assertSame([], array_values(array_intersect($biofisico, \App\Clinica\Consulta\EcoObstetricoTercero::columnas())));
+
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        foreach (['segundo', 'tercero'] as $tipo) {
+            $this->conContexto($user, $medico, $gineco)->actingAs($user)
+                ->get($this->urlSeccion($consulta, $tipo))
+                ->assertOk()->assertSee('Placenta y líquido')
+                ->assertDontSee('Movimientos respiratorios')->assertDontSee('Tono fetal')
+                ->assertDontSee('Movimientos del feto')->assertDontSee('Actividad cardíaca');
+        }
+
+        // Lo que trajo el escritorio en esas columnas queda como estaba al guardar desde la web.
+        \App\Models\EcoObstetricoTercer::create([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'consulta' => 1,
+            'fun_dp_tono_fetal' => '2', 'movimientos_feto' => '2', 'bio_peso_fetal' => 3000,
+        ]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($this->urlGuardar($consulta, 'tercero'), ['bio_peso_fetal' => '3200', 'conclusion' => 'Normal.'])
+            ->assertSessionHas('estado');
+
+        $fila = \App\Models\EcoObstetricoTercer::where('reg_medico', $medico->reg_medico)->where('consulta', 1)->first();
+        $this->assertSame('3200', (string) $fila->bio_peso_fetal);
+        $this->assertSame('2', (string) $fila->fun_dp_tono_fetal);
+        $this->assertSame('2', (string) $fila->movimientos_feto);
+
+        // Y la hoja impresa no los lista.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(route(
+            'clinica.consulta.documentos.imprimir',
+            [$consulta->id, 'documento' => \App\Clinica\Impresion\DocumentoImpreso::ECO_OBSTETRICO_TERCERO],
+        ))->assertOk()->assertSee('3200')->assertDontSee('Tono fetal')->assertDontSee('Movimientos del feto');
     }
 
     // ------------------------------------------------------- O-13: la fecha del estudio abre con hoy

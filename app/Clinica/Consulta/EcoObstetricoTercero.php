@@ -58,9 +58,12 @@ class EcoObstetricoTercero
      * *DATOS ANATÓMICOS*, *PLACENTA* y *DATOS FUNCIONALES*).
      *
      * Las escalas del escritorio van con sus textos y sus códigos: los `ana_*` de normalidad son
-     * *Normal*→`N` / *Anormal*→`A` (salvo los que tienen su propio par), y las cinco escalas clínicas
-     * (*movimientos del feto*, *actividad cardíaca*, *líquido amniótico*, *movimientos respiratorios* y
-     * *tono fetal*) van de `0` a `2` como las guarda el escritorio.
+     * *Normal*→`N` / *Anormal*→`A` (salvo los que tienen su propio par).
+     *
+     * El perfil biofísico del escritorio (*movimientos respiratorios*, *tono fetal* y el bloque del feto:
+     * `fun_dp_movimientos_respiratorios`, `fun_dp_tono_fetal`, `movimientos_feto`, `reactividad_cardiaca` y
+     * `liquido_amniotico`) **ya no se usa** (Alexander, 2026-10-25): no se muestra, no se guarda ni se imprime.
+     * Las columnas siguen en la tabla y lo que trajo el escritorio queda intacto.
      *
      * @return array<int,array{titulo:string, icono:string, campos:array<int,array<string,mixed>>}>
      */
@@ -132,14 +135,6 @@ class EcoObstetricoTercero
                 self::numero('fun_dp_grosor', 'Grosor', 'El grosor de la placenta (mm).'),
                 self::lista('fun_dp_cordon_umbilical', 'Cordón umbilical',
                     ['Visible con sus 3 elementos vasculares' => 'N', 'Anormal' => 'A']),
-                self::lista('fun_dp_movimientos_respiratorios', 'Movimientos respiratorios', ['0' => 'O', '2' => '2']),
-                self::lista('fun_dp_tono_fetal', 'Tono fetal', ['0' => '0', '2' => '2']),
-            ]],
-
-            ['titulo' => 'El feto', 'icono' => 'bi-activity', 'campos' => [
-                self::lista('movimientos_feto', 'Movimientos del feto', ['0' => '0', '2' => '2']),
-                self::lista('reactividad_cardiaca', 'Actividad cardíaca', ['0' => '0', '2' => '2']),
-                self::lista('liquido_amniotico', 'Líquido amniótico', ['0' => '0', '2' => '2']),
             ]],
 
             ['titulo' => 'La conclusión', 'icono' => 'bi-file-earmark-text', 'campos' => [
