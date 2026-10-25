@@ -4,7 +4,6 @@ namespace App\RegistroDeMedicos;
 
 use App\Models\Medico;
 use App\Models\SolicitudMedico;
-use App\Models\Specialty;
 use App\Models\User;
 use App\Notificaciones\Telefono;
 use App\Reservas\CodigoDeVerificacion;
@@ -141,7 +140,7 @@ final class SolicitarCodigoDeRegistroDeMedico
         }
 
         $especialidad = (int) ($datos['specialty_id'] ?? 0);
-        if ($especialidad !== 0 && ! Specialty::whereKey($especialidad)->where('activo', true)->exists()) {
+        if ($especialidad !== 0 && ! EspecialidadesDelRegistro::admite($especialidad)) {
             throw ValidationException::withMessages(['specialty_id' => 'Elige una especialidad de la lista.']);
         }
 

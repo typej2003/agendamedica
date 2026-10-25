@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\RegistroDeMedicos;
 
 use App\Http\Controllers\Controller;
-use App\Models\Specialty;
 use App\RegistroDeMedicos\CarnetDeLaSolicitud;
 use App\RegistroDeMedicos\ConfirmarSolicitudDeMedico;
+use App\RegistroDeMedicos\EspecialidadesDelRegistro;
 use App\RegistroDeMedicos\SolicitarCodigoDeRegistroDeMedico;
 use App\RegistroDeMedicos\SolicitudEnCurso;
 use Illuminate\Http\Request;
@@ -22,7 +22,8 @@ class RegistroDeMedicoController extends Controller
         return view('registro-medico.formulario', [
             // Si vuelve atrás desde el código, el formulario aparece con lo que ya había escrito.
             'previo' => $enCurso->datos() ?? [],
-            'especialidades' => Specialty::where('activo', true)->orderBy('name')->get(['id', 'name']),
+            // Sólo las especialidades que AppDDR ya atiende: el resto del catálogo todavía no se ofrece.
+            'especialidades' => EspecialidadesDelRegistro::lista(),
             'carnetAceptado' => CarnetDeLaSolicitud::textosAceptados(),
             'carnetMaximo' => CarnetDeLaSolicitud::textoMaximo(),
         ]);

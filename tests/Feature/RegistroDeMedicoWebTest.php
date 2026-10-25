@@ -97,6 +97,38 @@ class RegistroDeMedicoWebTest extends TestCase
         $this->get(route('login'))->assertSee(route('medico.registro'));
     }
 
+    public function test_el_formulario_solo_ofrece_las_especialidades_soportadas(): void
+    {
+        // El desplegable ofrece las que AppDDR ya atiende (las que tienen manifiesto); el resto del catálogo
+        // todavía no se ofrece al registrarse.
+        $this->get(route('medico.registro'))
+            ->assertOk()
+            ->assertSee('Ginecología y Obstetricia')
+            ->assertSee('Pediatría')
+            ->assertDontSee('Cardiología')
+            ->assertDontSee('Dermatología')
+            ->assertDontSee('Medicina General');
+    }
+
+    public function test_una_especialidad_que_todavia_no_se_ofrece_se_rechaza(): void
+    {
+        $cardiologia = Specialty::where('name', 'Cardiología')->firstOrFail();
+
+        $this->post(route('medico.registro.codigo.enviar'), $this->datos(['specialty_id' => $cardiologia->id]))
+            ->assertSessionHasErrors('specialty_id');
+
+        Mail::assertNotSent(CodigoDeRegistroDeMedico::class);
+    }
+
+    public function test_una_especialidad_soportada_se_guarda_en_la_solicitud(): void
+    {
+        $pediatria = Specialty::where('name', 'Pediatría')->firstOrFail();
+
+        $solicitud = $this->solicitar(['specialty_id' => $pediatria->id]);
+
+        $this->assertSame($pediatria->id, (int) $solicitud->specialty_id);
+    }
+
     public function test_el_codigo_va_al_correo_y_la_solicitud_nace_pendiente_sin_cuenta(): void
     {
         $datos = $this->datos();
@@ -184,7 +216,7 @@ class RegistroDeMedicoWebTest extends TestCase
 
     public function test_aprobar_crea_la_cuenta_con_especialidad_y_prueba_y_avisa(): void
     {
-        $especialidad = Specialty::where('activo', true)->first() ?? Specialty::create(['name' => 'Especialidad de prueba', 'activo' => true]);
+        $especialidad = Specialty::where('slug', 'pediatria')->firstOrFail();
         $solicitud = $this->solicitar(['specialty_id' => $especialidad->id]);
         $admin = $this->administrador();
         $reg = 'MPPS-' . $solicitud->mpps;
