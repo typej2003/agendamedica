@@ -56,7 +56,10 @@ class LandingWebTest extends TestCase
             ->assertSee('Paga en línea, sin efectivo')
             ->assertSee('href="' . route('reservas.catalogo') . '"', false)
             ->assertSee('href="' . route('paciente.citas') . '"', false)
-            ->assertSee('mailto:soporte@ginecoreport.com', false);
+            ->assertSee('mailto:' . config('app.contacto'), false)
+            ->assertSee(config('app.contacto'))
+            // El correo viejo del producto anterior no se publica.
+            ->assertDontSee('ginecoreport.com');
     }
 
     public function test_las_capturas_existen_y_tienen_texto_alternativo(): void
