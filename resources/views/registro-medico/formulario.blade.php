@@ -111,7 +111,8 @@
                                    data-carnet-maximo="{{ $carnetMaximoBytes }}" aria-describedby="carnet-ayuda carnet-aviso">
                             <div class="form-text" id="carnet-ayuda">
                                 @if (! empty($previo['carnet_ruta']))
-                                    Ya adjuntaste una foto; elige otra solo si quieres reemplazarla.
+                                    Ya adjuntaste una foto{{ ! empty($previo['carnet_nombre']) ? ' (' . $previo['carnet_nombre'] . ')' : '' }};
+                                    elige otra solo si quieres reemplazarla.
                                 @else
                                     Carnet del MPPS o del Colegio. {{ $carnetAceptado }}, hasta {{ $carnetMaximo }}. Acelera la revisión.
                                 @endif
