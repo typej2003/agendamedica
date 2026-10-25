@@ -77,7 +77,7 @@ class SyncAppDataRequest extends FormRequest
 
     /**
      * Los **mapas del dato** de los estudios ecográficos, por tabla (EC-A3 de PLAN-MOVIL.md): 34 columnas el
-     * pélvico, 38 el obstétrico del 1.er trimestre y 55 cada uno de los del 2.º y 3.º.
+     * pélvico, 38 el obstétrico del 1.er trimestre y 50 cada uno de los del 2.º y 3.º (sin el perfil biofísico).
      *
      * @var array<string,class-string>
      */
