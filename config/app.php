@@ -29,6 +29,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Correo de contacto
+    |--------------------------------------------------------------------------
+    |
+    | Es la dirección que se publica en la portada (pie, bloque «Contacto»). NO es el
+    | remitente de los correos automáticos: ese sale de `mail.from.address` y es
+    | `no-reply@doctorisimo.app`. Este tiene que ser un buzón real o un alias del
+    | dominio, porque es el que usa quien escribe desde el landing; si no existe,
+    | el enlace rebota.
+    |
+    */
+
+    'contacto' => env('CONTACTO_EMAIL', 'contacto@doctorisimo.app'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Clave estática de sincronización del escritorio (PowerBuilder)
     |--------------------------------------------------------------------------
     |

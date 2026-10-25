@@ -368,7 +368,7 @@
                         <li class="mb-2"><a href="{{ route('paciente.citas') }}">Mis citas</a></li>
                     </ul>
                     <h3 class="h6 fw-bold mb-2 mt-4">Contacto</h3>
-                    <p class="small mb-0"><i class="bi bi-envelope me-2" aria-hidden="true"></i><a href="mailto:soporte@ginecoreport.com">soporte@ginecoreport.com</a></p>
+                    <p class="small mb-0"><i class="bi bi-envelope me-2" aria-hidden="true"></i><a href="mailto:{{ config('app.contacto') }}">{{ config('app.contacto') }}</a></p>
                 </div>
             </div>
             <hr class="my-4 border-secondary">
