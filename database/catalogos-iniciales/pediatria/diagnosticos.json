@@ -4,16 +4,16 @@
   "descripcion": "LINFEDEMA PIERNA DERECHA"
  },
  {
-  "codigo_origen": "0517",
-  "descripcion": "RD MALROTADO"
+  "codigo_origen": "0528",
+  "descripcion": "MICROHEMATURIA"
  },
  {
-  "codigo_origen": "0523",
-  "descripcion": "VEJIGA INMADURA"
+  "codigo_origen": "0537",
+  "descripcion": "ANTECEDENTE DE HIPOSPADIA"
  },
  {
-  "codigo_origen": "0046",
-  "descripcion": "EN ESTUDIO"
+  "codigo_origen": "0632",
+  "descripcion": "DERMATITIS ATOPICA"
  },
  {
   "codigo_origen": "0048",
@@ -24,60 +24,120 @@
   "descripcion": "HERNIA UMBILICAL"
  },
  {
-  "codigo_origen": "0530",
-  "descripcion": "REFLUJO VESICO URETERAL IZQ A DESCARTAR"
+  "codigo_origen": "0633",
+  "descripcion": "BRONCONEUMONIA"
  },
  {
-  "codigo_origen": "0547",
-  "descripcion": "SINDROME NEFROTICO EN DEBUT"
+  "codigo_origen": "0555",
+  "descripcion": "CEFALOHEMATOMA PARIETO TEMPORAL DERECHO"
  },
  {
-  "codigo_origen": "0556",
-  "descripcion": "DOBLE SISTEMA IZQ"
+  "codigo_origen": "0572",
+  "descripcion": "SIND COQUELUCHOIDE"
  },
  {
   "codigo_origen": "0058",
   "descripcion": "OBESIDAD"
  },
  {
-  "codigo_origen": "0565",
-  "descripcion": "REFLUJO VESICO URETERAL BILATERAL  YA CORREGIDO"
+  "codigo_origen": "0580",
+  "descripcion": "ESTENOSIS VALVULAR PULMONAR SEVERA"
  },
  {
-  "codigo_origen": "0578",
-  "descripcion": "DIABETES MELLITUS TIPO1"
+  "codigo_origen": "0635",
+  "descripcion": "PITIRIASIS VERSICOLOR"
  },
  {
-  "codigo_origen": "0589",
-  "descripcion": "PIELONEFRITIS AGUDA"
+  "codigo_origen": "0604",
+  "descripcion": "ANTECEDENTE DE CEFALOHEMATOMA DERECHO"
  },
  {
-  "codigo_origen": "0599",
-  "descripcion": "ANEMIA DREPANOCITICA"
+  "codigo_origen": "0617",
+  "descripcion": "VULVOVAGINITIS"
  },
  {
-  "codigo_origen": "0607",
-  "descripcion": "REFLUJO VESICO URETERAL BILATERAL"
+  "codigo_origen": "0645",
+  "descripcion": "RINOFARINGITIS VIRAL"
  },
  {
-  "codigo_origen": "0070",
-  "descripcion": "HERNIA DISCAL"
+  "codigo_origen": "0658",
+  "descripcion": "CONSTIPACION: MEGACOLON CONGENITO?"
+ },
+ {
+  "codigo_origen": "0671",
+  "descripcion": "CONJUNTIVITIS BACTERIANA"
  },
  {
   "codigo_origen": "0016",
   "descripcion": "ENFERMEDAD DE CHAGAS"
  },
  {
-  "codigo_origen": "0018",
-  "descripcion": "TBC"
+  "codigo_origen": "0682",
+  "descripcion": "MICOSIS GENITAL"
  },
  {
-  "codigo_origen": "0026",
-  "descripcion": "INSUFICIENCIA PULMONAR"
+  "codigo_origen": "0688",
+  "descripcion": "ONFALITIS"
  },
  {
-  "codigo_origen": "0422",
-  "descripcion": "CRISIS HIPERTENSIVA"
+  "codigo_origen": "0694",
+  "descripcion": "HIPERCAROTINEMIA"
+ },
+ {
+  "codigo_origen": "0704",
+  "descripcion": "CEFALE VASCULAR"
+ },
+ {
+  "codigo_origen": "0714",
+  "descripcion": "DERMATITIS GENITAL"
+ },
+ {
+  "codigo_origen": "0721",
+  "descripcion": "DIARREA SIMPLE"
+ },
+ {
+  "codigo_origen": "0727",
+  "descripcion": "AMIGDALITIS AFTOSA"
+ },
+ {
+  "codigo_origen": "0737",
+  "descripcion": "NODULOS SUBCUTONEOS EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0747",
+  "descripcion": "RINOFARINGITIS BACTERIANA"
+ },
+ {
+  "codigo_origen": "0752",
+  "descripcion": "HEPATOBLASTOMA"
+ },
+ {
+  "codigo_origen": "0767",
+  "descripcion": "DEARREA CRONICA"
+ },
+ {
+  "codigo_origen": "0849",
+  "descripcion": "ESTRES"
+ },
+ {
+  "codigo_origen": "0881",
+  "descripcion": "POLIPARASITOSIS INTESTINAL: ASCARIL, TRICOCEFALO"
+ },
+ {
+  "codigo_origen": "0884",
+  "descripcion": "AFTAS BUCALES"
+ },
+ {
+  "codigo_origen": "0910",
+  "descripcion": "FIMOSIS"
+ },
+ {
+  "codigo_origen": "0785",
+  "descripcion": "HEMARTROSIS RODILLA IZQ"
+ },
+ {
+  "codigo_origen": "0790",
+  "descripcion": "RINITIS INFECCIOSA"
  },
  {
   "codigo_origen": "0423",
@@ -88,20 +148,200 @@
   "descripcion": "SINDROME MULTINFARTO CEREBRAL"
  },
  {
+  "codigo_origen": "0792",
+  "descripcion": "ALERGIA ALIMENTARIA"
+ },
+ {
   "codigo_origen": "0045",
   "descripcion": "ANEMIA"
+ },
+ {
+  "codigo_origen": "0794",
+  "descripcion": "LEUCOSITOSIS EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0796",
+  "descripcion": "HIPERTROFIA DE CORNETES INF BILATERAL"
+ },
+ {
+  "codigo_origen": "0804",
+  "descripcion": "NEUMONIA EN VIAS DE RESOLUCION"
+ },
+ {
+  "codigo_origen": "0806",
+  "descripcion": "RN MACROSOMICO"
+ },
+ {
+  "codigo_origen": "0807",
+  "descripcion": "CRISIS HIPERTENSIVA"
+ },
+ {
+  "codigo_origen": "0809",
+  "descripcion": "EPISTAXIS ANTERIOR"
+ },
+ {
+  "codigo_origen": "0810",
+  "descripcion": "CEFALEA VASCULAR"
+ },
+ {
+  "codigo_origen": "0812",
+  "descripcion": "ENFERMEDAD INFLAMATORIA PELVICA"
+ },
+ {
+  "codigo_origen": "0813",
+  "descripcion": "DIARREA AGUDA  MAS EMESIS Y DESHIDRATACION"
+ },
+ {
+  "codigo_origen": "0814",
+  "descripcion": "FRENILLO SUBLINGUAL"
+ },
+ {
+  "codigo_origen": "0815",
+  "descripcion": "DERMATITIS CEBORREICA CUERO CABELLUDO"
+ },
+ {
+  "codigo_origen": "0817",
+  "descripcion": "DIARREA AGUDA FEBRIL CON DESHIDRAT"
+ },
+ {
+  "codigo_origen": "0818",
+  "descripcion": "RETRASO PSICOMOTOR"
+ },
+ {
+  "codigo_origen": "0820",
+  "descripcion": "ANTECEDENTE DE PREMATURIDAD"
+ },
+ {
+  "codigo_origen": "0821",
+  "descripcion": "TRASTORNO DEL LENGUEJE"
+ },
+ {
+  "codigo_origen": "0822",
+  "descripcion": "HEMATOMA RODILLA IZQUR POST TRAUMATICA"
+ },
+ {
+  "codigo_origen": "0824",
+  "descripcion": "CELULITIS DEDO ANULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0825",
+  "descripcion": "CELULITIS LABIA SUPERIOR Y NARIS"
+ },
+ {
+  "codigo_origen": "0827",
+  "descripcion": "LARVA MIGRANS CUTANEA"
+ },
+ {
+  "codigo_origen": "0830",
+  "descripcion": "GINGIVOESTOMATITIS AFTOSA"
  },
  {
   "codigo_origen": "0025",
   "descripcion": "GASTRITIS"
  },
  {
-  "codigo_origen": "0035",
-  "descripcion": "PARO SINUSAL MODERADO"
+  "codigo_origen": "0805",
+  "descripcion": "SINDROME LOBULO MEDIO"
  },
  {
-  "codigo_origen": "0460",
-  "descripcion": "GIARDIASIS"
+  "codigo_origen": "0808",
+  "descripcion": "INTOXICACION POR ORGANOS FOSFORADFOS EN RESOLUCION"
+ },
+ {
+  "codigo_origen": "0811",
+  "descripcion": "CUERPO EXTRAÑO EN CONDUC AUD EXT  IZQ"
+ },
+ {
+  "codigo_origen": "0816",
+  "descripcion": "CONJUNTIVITIS ALERGICA"
+ },
+ {
+  "codigo_origen": "0819",
+  "descripcion": "DESPRENDIMIENTO DE RETINA BILATERAL"
+ },
+ {
+  "codigo_origen": "0826",
+  "descripcion": "AUTISMO / ASPERHEL"
+ },
+ {
+  "codigo_origen": "0828",
+  "descripcion": "QUISTE DERMOIDE PARPADO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0829",
+  "descripcion": "RINOCONJUNTIVITIS BACTERIANA"
+ },
+ {
+  "codigo_origen": "0831",
+  "descripcion": "DERMATITIS PABELLON AURICULAR"
+ },
+ {
+  "codigo_origen": "0832",
+  "descripcion": "CELULITIS PIERNA IZQUIERDA, POST PICADURA DE INSEC"
+ },
+ {
+  "codigo_origen": "0833",
+  "descripcion": "MAMELON PREAURICULAR"
+ },
+ {
+  "codigo_origen": "0834",
+  "descripcion": "GIARDIASIS INTESTINAL"
+ },
+ {
+  "codigo_origen": "0835",
+  "descripcion": "SINDROME VERTIGINOSO"
+ },
+ {
+  "codigo_origen": "0836",
+  "descripcion": "SINDROME DEPRESIVO"
+ },
+ {
+  "codigo_origen": "0837",
+  "descripcion": "TRASTORNO INMUNOLOGICO"
+ },
+ {
+  "codigo_origen": "0838",
+  "descripcion": "HIPOSPADIA"
+ },
+ {
+  "codigo_origen": "0839",
+  "descripcion": "CELULITIS ABSCEDADA LOBULO DE LA NARIZ"
+ },
+ {
+  "codigo_origen": "0840",
+  "descripcion": "NEURITIS INTERCOSTAL IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0841",
+  "descripcion": "PURPURA IDIOPATICA"
+ },
+ {
+  "codigo_origen": "0842",
+  "descripcion": "ACNE JUVENIL"
+ },
+ {
+  "codigo_origen": "0843",
+  "descripcion": "NEUMONIA ATIPICA"
+ },
+ {
+  "codigo_origen": "0844",
+  "descripcion": "COLICO ABDOMINAL"
+ },
+ {
+  "codigo_origen": "0845",
+  "descripcion": "ENFERMEDAD FIBROQUISTICA DE MAMAS"
+ },
+ {
+  "codigo_origen": "0846",
+  "descripcion": "ANTEPIE VARO, BILATERAL"
+ },
+ {
+  "codigo_origen": "0859",
+  "descripcion": "EPILEPSIA"
+ },
+ {
+  "codigo_origen": "0631",
+  "descripcion": "SINDROME GRIPAL"
  },
  {
   "codigo_origen": "0003",
@@ -109,51 +349,51 @@
  },
  {
   "codigo_origen": "0472",
-  "descripcion": "HIPERURICOSURIA"
+  "descripcion": "ANO IMPERFORADO"
  },
  {
-  "codigo_origen": "0479",
-  "descripcion": "HIPERFOSFATURIA"
+  "codigo_origen": "0481",
+  "descripcion": "FALLA DE MEDRO"
  },
  {
-  "codigo_origen": "0488",
-  "descripcion": "PROTEINURIA EN ESTUDIO"
+  "codigo_origen": "0490",
+  "descripcion": "ANTECEDENTE DE RVU"
  },
  {
-  "codigo_origen": "0496",
-  "descripcion": "REFLUJO VESICO URETERAL DERECHO CORREGIDO"
+  "codigo_origen": "0499",
+  "descripcion": "OXIUROS"
  },
  {
-  "codigo_origen": "0509",
-  "descripcion": "MAL ROTACION ANTERIOR DE RD"
+  "codigo_origen": "0505",
+  "descripcion": "DESNUTRICION P/C"
  },
  {
-  "codigo_origen": "0522",
-  "descripcion": "HIPOTIROIDISMO"
+  "codigo_origen": "0638",
+  "descripcion": "ROSEOLA INFANTIL"
  },
  {
-  "codigo_origen": "0529",
-  "descripcion": "MACROHEMATURIA"
+  "codigo_origen": "0521",
+  "descripcion": "SIND DOWN"
  },
  {
-  "codigo_origen": "0537",
-  "descripcion": "HIPOSPADIA CORREGIDA"
+  "codigo_origen": "0530",
+  "descripcion": "COALESCENCIA DE LABIOS"
  },
  {
-  "codigo_origen": "0545",
-  "descripcion": "RIÑON DERECHO HIPOTROFICO"
+  "codigo_origen": "0540",
+  "descripcion": "LIPOMENINGOCELE"
  },
  {
-  "codigo_origen": "0558",
-  "descripcion": "DISLIPIDEMIA"
+  "codigo_origen": "0548",
+  "descripcion": "UROPATIA OBSTRUCTIVA SUPERADA"
  },
  {
-  "codigo_origen": "0566",
-  "descripcion": "ENFEMEDAD RENAL CRONICA. EST 1-2"
+  "codigo_origen": "0647",
+  "descripcion": "NEUMONIA ?"
  },
  {
-  "codigo_origen": "0577",
-  "descripcion": "SINDROME HEMOLITICO UREMICO"
+  "codigo_origen": "0564",
+  "descripcion": "FOSFATURIA LEVE"
  },
  {
   "codigo_origen": "0171",
@@ -164,160 +404,300 @@
   "descripcion": "INSUFICIENCIA VENOSA"
  },
  {
-  "codigo_origen": "0586",
-  "descripcion": "REFLUJO VESICO URETERAL IZQ GRADO 2-3"
+  "codigo_origen": "0655",
+  "descripcion": "HIPOGLICEMIA"
  },
  {
-  "codigo_origen": "0600",
-  "descripcion": "SINDROME GENETICO A/D"
+  "codigo_origen": "0585",
+  "descripcion": "HIPERTROFIA DE ADENOIDES"
+ },
+ {
+  "codigo_origen": "0596",
+  "descripcion": "PUBERTAD PRECOZ"
+ },
+ {
+  "codigo_origen": "0664",
+  "descripcion": "FRACTURA DE CLAVICULA"
+ },
+ {
+  "codigo_origen": "0616",
+  "descripcion": "HEMATURIA GLOMERULAR"
+ },
+ {
+  "codigo_origen": "0669",
+  "descripcion": "INFECCION DIFUSA VIAS AEREAS INFERIORES"
+ },
+ {
+  "codigo_origen": "0687",
+  "descripcion": "ASCARIDIASIS INTESTINAL"
+ },
+ {
+  "codigo_origen": "0701",
+  "descripcion": "TORCH"
+ },
+ {
+  "codigo_origen": "0703",
+  "descripcion": "MILIARIA"
+ },
+ {
+  "codigo_origen": "0709",
+  "descripcion": "HIMEN IMPERFORADO  ?"
+ },
+ {
+  "codigo_origen": "0717",
+  "descripcion": "NEUMONIA LOBULO MEDIO"
+ },
+ {
+  "codigo_origen": "0728",
+  "descripcion": "OTITIS MIXTA INTERNA Y EXT, IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0746",
+  "descripcion": "NEURITIS INTERCOSTAL DERECHA"
+ },
+ {
+  "codigo_origen": "0754",
+  "descripcion": "SANGRAMIENTO UMBILICAL"
+ },
+ {
+  "codigo_origen": "0764",
+  "descripcion": "TORAX EN QUILLA"
+ },
+ {
+  "codigo_origen": "0776",
+  "descripcion": "EOSINOFILIA"
  },
  {
   "codigo_origen": "0446",
   "descripcion": "CRISIS ASMATICA"
  },
  {
-  "codigo_origen": "0453",
-  "descripcion": "BRONQUIOLITIS"
+  "codigo_origen": "0637",
+  "descripcion": "EXANTEMA SUBITO"
  },
  {
   "codigo_origen": "0458",
   "descripcion": "ABDOMEN AGUDO"
  },
  {
-  "codigo_origen": "0001",
-  "descripcion": "NIÑO SANO"
+  "codigo_origen": "0646",
+  "descripcion": "RN AT AEG"
  },
  {
-  "codigo_origen": "0470",
-  "descripcion": "MICROLITIASIS RENAL"
+  "codigo_origen": "0469",
+  "descripcion": "ITU"
  },
  {
-  "codigo_origen": "0480",
-  "descripcion": "DEFICIT PONDERAL"
+  "codigo_origen": "0476",
+  "descripcion": "TALLA NORMAL BAJA"
  },
  {
-  "codigo_origen": "0485",
-  "descripcion": "DOBLE SISTEMA EXCRETOR BILATERAL"
+  "codigo_origen": "0486",
+  "descripcion": "ESTREÑIMIENTO"
  },
  {
   "codigo_origen": "0196",
   "descripcion": "TU PIE IZQUIERDO"
  },
  {
-  "codigo_origen": "0497",
-  "descripcion": "DOBLE SIST DERECHO"
+  "codigo_origen": "0495",
+  "descripcion": "COLICO NEFRITICO"
  },
  {
-  "codigo_origen": "0506",
-  "descripcion": "ENURESIS NOCTURNA SECUNDARIA"
+  "codigo_origen": "0503",
+  "descripcion": "BACTERIURIA ASINTOMATICA"
  },
  {
-  "codigo_origen": "0520",
-  "descripcion": "DILATACION PIELOCALICIAL DERECHA"
- },
- {
-  "codigo_origen": "0536",
-  "descripcion": "DIARREA BACTERIANA"
- },
- {
-  "codigo_origen": "0542",
-  "descripcion": "PESO ESTACIONARIO"
- },
- {
-  "codigo_origen": "0552",
-  "descripcion": "HIPERTENSION ARTERIAL ESENCIAL"
- },
- {
-  "codigo_origen": "0563",
-  "descripcion": "VEJIGA INESTABLE"
- },
- {
-  "codigo_origen": "0571",
-  "descripcion": "OVARIOS POLIQUISTICOS"
- },
- {
-  "codigo_origen": "0580",
-  "descripcion": "URETER DERECHO ECTOPICO"
- },
- {
-  "codigo_origen": "0591",
-  "descripcion": "CRIPTORQUIDEA IZQ"
- },
- {
-  "codigo_origen": "0601",
-  "descripcion": "HEPATITIS VIRAL"
- },
- {
-  "codigo_origen": "0608",
-  "descripcion": "GLOMERULO NEFRITIS AGUDA"
- },
- {
-  "codigo_origen": "0456",
-  "descripcion": "LARINGOTRAQUEITIS"
- },
- {
-  "codigo_origen": "0468",
-  "descripcion": "DISFUNCION TUBULAR RENAL"
- },
- {
-  "codigo_origen": "0475",
-  "descripcion": "ANEMIA FERROPENICA"
- },
- {
-  "codigo_origen": "0484",
+  "codigo_origen": "0515",
   "descripcion": "LITIASIS RENAL"
  },
  {
-  "codigo_origen": "0490",
-  "descripcion": "DILATACION PEILOCALCIAL IZQ"
+  "codigo_origen": "0523",
+  "descripcion": "NEFROCALCINOSIS."
  },
  {
-  "codigo_origen": "0501",
-  "descripcion": "MEGAVEJIGA"
+  "codigo_origen": "0536",
+  "descripcion": "HIPERCOLESTEROLEMIA"
  },
  {
-  "codigo_origen": "0505",
-  "descripcion": "RIÑONES HIPOTROFICOS"
+  "codigo_origen": "0545",
+  "descripcion": "MACROVEJIGA"
  },
  {
-  "codigo_origen": "0516",
-  "descripcion": "ESTRECHEZ URETRAL A DESCARTAR"
+  "codigo_origen": "0556",
+  "descripcion": "ICTERICIA POR HIPERBILUBINEMIA"
  },
  {
-  "codigo_origen": "0527",
-  "descripcion": "TALLA BAJA"
+  "codigo_origen": "0570",
+  "descripcion": "HTA"
  },
  {
-  "codigo_origen": "0535",
-  "descripcion": "DESCARTAR SINDROME NEFROTICO"
+  "codigo_origen": "0573",
+  "descripcion": "GIARDIASIS"
  },
  {
-  "codigo_origen": "0549",
-  "descripcion": "RIÑON IZQ AFUNCIONAL."
+  "codigo_origen": "0654",
+  "descripcion": "CONSTIPACION"
  },
  {
-  "codigo_origen": "0553",
-  "descripcion": "HIDRONEFROSIS DERECHA"
+  "codigo_origen": "0593",
+  "descripcion": "DISPLASIA MULTIQUISTICA IZQUIERDA"
  },
  {
-  "codigo_origen": "0562",
-  "descripcion": "REFLUJO VESICO URETERAL IZQ YA SUPERADO"
+  "codigo_origen": "0607",
+  "descripcion": "URETEROPIELOCALIECTASIA DERECHA"
  },
  {
-  "codigo_origen": "0581",
-  "descripcion": "QUISTE RENAL IZQ"
+  "codigo_origen": "0660",
+  "descripcion": "TRANSGRECION ALIMENTICIA"
  },
  {
-  "codigo_origen": "0588",
-  "descripcion": "SINDROME DE TURNER"
+  "codigo_origen": "0670",
+  "descripcion": "HIPER-REACTOR BRONQUIAL"
  },
  {
-  "codigo_origen": "0594",
-  "descripcion": "RIÑON IZQUIERDO ECTOPICO"
+  "codigo_origen": "0681",
+  "descripcion": "INFECCION VIRAL NO ESPECIFICA"
  },
  {
-  "codigo_origen": "0603",
-  "descripcion": "RIÑON DERECHO MALROTADO"
+  "codigo_origen": "0695",
+  "descripcion": "VOMITOS DEL LACTANTE"
+ },
+ {
+  "codigo_origen": "0705",
+  "descripcion": "ESFINTER ANAL ESTRECHO"
+ },
+ {
+  "codigo_origen": "0715",
+  "descripcion": "PROLAPSO RECTAL VS POLIPO RECTAL ???"
+ },
+ {
+  "codigo_origen": "0726",
+  "descripcion": "CITOMEGALOVIRUS"
+ },
+ {
+  "codigo_origen": "0738",
+  "descripcion": "LARINGOTRAQUEITIS"
+ },
+ {
+  "codigo_origen": "0744",
+  "descripcion": "FOTOSENCIBILIDA SOLAR"
+ },
+ {
+  "codigo_origen": "0755",
+  "descripcion": "BACTEREMIA OCULTA"
+ },
+ {
+  "codigo_origen": "0761",
+  "descripcion": "CEFALOHEMATOMO PARIETAL, BILATERAL"
+ },
+ {
+  "codigo_origen": "0643",
+  "descripcion": "DERMATITIS POR PAÑAL"
+ },
+ {
+  "codigo_origen": "0470",
+  "descripcion": "PIELECTASIA LEVE DERECHA"
+ },
+ {
+  "codigo_origen": "0477",
+  "descripcion": "CRISTALURIA"
+ },
+ {
+  "codigo_origen": "0483",
+  "descripcion": "HIPERURICOSURIA"
+ },
+ {
+  "codigo_origen": "0494",
+  "descripcion": "DOLOR ABDOMINAL RECURRENTE"
+ },
+ {
+  "codigo_origen": "0506",
+  "descripcion": "ATR SUPERADA"
+ },
+ {
+  "codigo_origen": "0513",
+  "descripcion": "AMIGDALITIS PULTACEA"
+ },
+ {
+  "codigo_origen": "0522",
+  "descripcion": "HEMATURIA FLIAR"
+ },
+ {
+  "codigo_origen": "0533",
+  "descripcion": "RIÑON POLIQUISTICO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0546",
+  "descripcion": "PIELO NEFRITIS"
+ },
+ {
+  "codigo_origen": "0557",
+  "descripcion": "ECTASIA CALICEAL IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0565",
+  "descripcion": "URETEROPIELOCALIECTASIA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0657",
+  "descripcion": "ADHERENCIAS BALANOPREPUCIALES"
+ },
+ {
+  "codigo_origen": "0589",
+  "descripcion": "HIPOPLASIA RENAL"
+ },
+ {
+  "codigo_origen": "0599",
+  "descripcion": "CISTITIS  DE ETIOLOGIA VIRAL"
+ },
+ {
+  "codigo_origen": "0610",
+  "descripcion": "HIDRONEFROSIS BILATERAL"
+ },
+ {
+  "codigo_origen": "0668",
+  "descripcion": "AMIGDALITIS  ESTREPTOCOCCICA"
+ },
+ {
+  "codigo_origen": "0679",
+  "descripcion": "DIARREA POST ANTIBIOTICA"
+ },
+ {
+  "codigo_origen": "0690",
+  "descripcion": "DESHIDRATACION MODERADA POR FALTA DE INGESTAS"
+ },
+ {
+  "codigo_origen": "0706",
+  "descripcion": "INTOXICACION ALIMENTARIA"
+ },
+ {
+  "codigo_origen": "0718",
+  "descripcion": "LUXACION CONGENITA DE CADERA"
+ },
+ {
+  "codigo_origen": "0729",
+  "descripcion": "BCG - ITIS"
+ },
+ {
+  "codigo_origen": "0734",
+  "descripcion": "HIPERRREACTOR BRONQUIAL"
+ },
+ {
+  "codigo_origen": "0743",
+  "descripcion": "PIE PLANO + GENU VALGO"
+ },
+ {
+  "codigo_origen": "0753",
+  "descripcion": "MICOSIS SUPERFICIAL"
+ },
+ {
+  "codigo_origen": "0762",
+  "descripcion": "RN DE ALTO RIESGO"
+ },
+ {
+  "codigo_origen": "0770",
+  "descripcion": "FARINGITIS VIRAL"
  },
  {
   "codigo_origen": "0245",
@@ -337,131 +717,227 @@
  },
  {
   "codigo_origen": "0473",
-  "descripcion": "TALLA NORMAL BAJA"
+  "descripcion": "COLOSTOMIA IZQUIERDA 2 BOCAS"
  },
  {
-  "codigo_origen": "0483",
-  "descripcion": "ANTECEDENTE INFECCION URINARIA"
+  "codigo_origen": "0489",
+  "descripcion": "COLICO INFANTIL"
  },
  {
-  "codigo_origen": "0494",
-  "descripcion": "POLIURIA EN ESTUDIO"
+  "codigo_origen": "0496",
+  "descripcion": "HIDRONEFROSIS  IZQUIERDA"
  },
  {
-  "codigo_origen": "0502",
-  "descripcion": "ANTECEDENTE DE GMNA"
+  "codigo_origen": "0623",
+  "descripcion": "SIND RINISUSAL"
  },
  {
-  "codigo_origen": "0510",
-  "descripcion": "HIPOCALCEMIA ASINTOMATICA"
+  "codigo_origen": "0627",
+  "descripcion": "HEPATITIS A"
  },
  {
-  "codigo_origen": "0521",
-  "descripcion": "UROPATIA OBSTRUCTIVA IZQ"
+  "codigo_origen": "0527",
+  "descripcion": "PREMATURIDAD"
  },
  {
-  "codigo_origen": "0531",
-  "descripcion": "ESTREÑIMIENTO"
+  "codigo_origen": "0534",
+  "descripcion": "SENO DERMAL"
  },
  {
-  "codigo_origen": "0540",
-  "descripcion": "HIDRONEFROSIS BILATERAL"
+  "codigo_origen": "0542",
+  "descripcion": "ATR DISTAL INCOMPLETA"
  },
  {
-  "codigo_origen": "0551",
-  "descripcion": "ESPINA BIFIDA EN L5"
+  "codigo_origen": "0553",
+  "descripcion": "ANTECEDENTE DE PIELECTASIA BILATERAL"
  },
  {
-  "codigo_origen": "0559",
-  "descripcion": "DESCARTAR ACIDOSIS TUBULAR RENAL"
+  "codigo_origen": "0568",
+  "descripcion": "MONORRENO DERECHO ADQUIRIDO"
  },
  {
-  "codigo_origen": "0572",
-  "descripcion": "SINDROME METABOLICO A DESCARTAR"
+  "codigo_origen": "0629",
+  "descripcion": "GINGIVOESTOMATITIS"
  },
  {
-  "codigo_origen": "0579",
-  "descripcion": "URETEROHIDRONEFROSIS BILATERAL"
+  "codigo_origen": "0594",
+  "descripcion": "HTA?"
  },
  {
-  "codigo_origen": "0595",
-  "descripcion": "URETEROCELE IZQ"
+  "codigo_origen": "0598",
+  "descripcion": "ESCARLATINA"
  },
  {
-  "codigo_origen": "0604",
-  "descripcion": "HIPERPLASIA SUPRARENAL CONGENITA"
+  "codigo_origen": "0605",
+  "descripcion": "ICTERICIA NEONATAL SUPERADA"
  },
  {
-  "codigo_origen": "0274",
-  "descripcion": "SINUSITIS"
+  "codigo_origen": "0639",
+  "descripcion": "SEXTA ENFERMEDAD"
  },
  {
-  "codigo_origen": "0002",
-  "descripcion": "CORIZA COMUN"
+  "codigo_origen": "0648",
+  "descripcion": "ENTEROCOLITIS AMIBIANA"
+ },
+ {
+  "codigo_origen": "0661",
+  "descripcion": "LARINGOTRAQUEOBRONQUITIS"
+ },
+ {
+  "codigo_origen": "0672",
+  "descripcion": "REACCION POST-VACUNAL"
+ },
+ {
+  "codigo_origen": "0680",
+  "descripcion": "OTITIS MEDIA BILATERAL"
+ },
+ {
+  "codigo_origen": "0691",
+  "descripcion": "HIPERLIPIDEMIA"
+ },
+ {
+  "codigo_origen": "0699",
+  "descripcion": "TRAUMATISMO PUBICO"
+ },
+ {
+  "codigo_origen": "0708",
+  "descripcion": "DIARREA PROLONGADA"
+ },
+ {
+  "codigo_origen": "0719",
+  "descripcion": "DERMATITIS CEBORREICA PARPADOS"
+ },
+ {
+  "codigo_origen": "0730",
+  "descripcion": "TUMORACION AXILAR D"
+ },
+ {
+  "codigo_origen": "0739",
+  "descripcion": "NEUMONIA PARAHILIAR BILATERAL"
+ },
+ {
+  "codigo_origen": "0751",
+  "descripcion": "CONSTIPACION: CONST MATERNA"
+ },
+ {
+  "codigo_origen": "0763",
+  "descripcion": "CONVALESCIENTE"
+ },
+ {
+  "codigo_origen": "0772",
+  "descripcion": "PRE-ESCOLAR SANO"
+ },
+ {
+  "codigo_origen": "0644",
+  "descripcion": "LACTANTE SANO"
  },
  {
   "codigo_origen": "0004",
   "descripcion": "CRISIS MODERADA A SEVERA DE ASMA BRONQUIAL"
  },
  {
-  "codigo_origen": "0474",
-  "descripcion": "DESCARTAR DISFUNCION TUBULAR RENAL"
+  "codigo_origen": "0650",
+  "descripcion": "RINITIS ALERGICA PERSISTENTE"
  },
  {
-  "codigo_origen": "0486",
-  "descripcion": "CCA"
+  "codigo_origen": "0482",
+  "descripcion": "HIPERCALCIURIA"
  },
  {
-  "codigo_origen": "0492",
-  "descripcion": "ENF. RENAL CRONICA EST 3"
+  "codigo_origen": "0493",
+  "descripcion": "MICROLITIASIS"
  },
  {
-  "codigo_origen": "0500",
-  "descripcion": "DIVERTICULO VESICAL DERECHO"
+  "codigo_origen": "0498",
+  "descripcion": "HIPOCLORURIA"
  },
  {
-  "codigo_origen": "0511",
-  "descripcion": "HABITO RETENTOR"
+  "codigo_origen": "0507",
+  "descripcion": "OLIGURIA FUNCIONAL"
  },
  {
-  "codigo_origen": "0519",
-  "descripcion": "RIÑON DERECHO HIPOTROFICO"
+  "codigo_origen": "0518",
+  "descripcion": "NIÑO SANO"
  },
  {
-  "codigo_origen": "0532",
-  "descripcion": "SINDROME NEFROTICO CORTICODEPENDIENTE"
+  "codigo_origen": "0524",
+  "descripcion": "GNA"
  },
  {
-  "codigo_origen": "0544",
-  "descripcion": "ESPINA BIFIDA EN S1"
+  "codigo_origen": "0666",
+  "descripcion": "SINDROME DE DWON"
  },
  {
-  "codigo_origen": "0554",
-  "descripcion": "DESCARTAR LITIASIS OBSTRUCTIVA"
+  "codigo_origen": "0538",
+  "descripcion": "ATR TRANSITORIA"
  },
  {
-  "codigo_origen": "0564",
-  "descripcion": "ANTECEDENTE DE HIPOSPADIA"
+  "codigo_origen": "0547",
+  "descripcion": "UROPATIA OBSTRUCTIVA"
  },
  {
-  "codigo_origen": "0573",
-  "descripcion": "RIÑON IZQ MAL ROTADO"
+  "codigo_origen": "0558",
+  "descripcion": "ICTERICIA FISIOLOGICA"
  },
  {
-  "codigo_origen": "0582",
-  "descripcion": "DENGUE CLASICO"
+  "codigo_origen": "0566",
+  "descripcion": "NATRIURESIS"
  },
  {
-  "codigo_origen": "0592",
-  "descripcion": "RETENCION AGUDA DE ORINA"
+  "codigo_origen": "0676",
+  "descripcion": "RINITIS INFECCIOSA COMPLICADA"
  },
  {
-  "codigo_origen": "0602",
-  "descripcion": "RIÑON DERECHO AFUNCIONAL"
+  "codigo_origen": "0579",
+  "descripcion": "CARDIOPATIA CONGENITA ACIANOGENA"
+ },
+ {
+  "codigo_origen": "0591",
+  "descripcion": "SINDROME EDEMATOSO"
+ },
+ {
+  "codigo_origen": "0600",
+  "descripcion": "PILELECTASIA BILATERAL"
+ },
+ {
+  "codigo_origen": "0612",
+  "descripcion": "HIPERTRIGLICERIDEMIA"
+ },
+ {
+  "codigo_origen": "0619",
+  "descripcion": "ANTECEDENTE DE ITU"
+ },
+ {
+  "codigo_origen": "0684",
+  "descripcion": "ALERGIA A PICADURA DE INSECTOS"
  },
  {
   "codigo_origen": "0297",
   "descripcion": "CERVICITIS"
+ },
+ {
+  "codigo_origen": "0696",
+  "descripcion": "FIEBRE SIN SIGNOS DE FOCALIZACION"
+ },
+ {
+  "codigo_origen": "0710",
+  "descripcion": "CRISIS DE ASMA LEVE PERSISTENTE"
+ },
+ {
+  "codigo_origen": "0722",
+  "descripcion": "GASTRITIS MEDICAMENTOSA"
+ },
+ {
+  "codigo_origen": "0735",
+  "descripcion": "OBSTRUCCION PARCIAL CONDUCTO NASOLAGRIMAL"
+ },
+ {
+  "codigo_origen": "0748",
+  "descripcion": "NEUMONIA DERECHA"
+ },
+ {
+  "codigo_origen": "0757",
+  "descripcion": "HEMANGIOMA CONGENITO: LABIO SUPERIOR( EN RESOLUCIO"
  },
  {
   "codigo_origen": "0448",
@@ -473,7 +949,7 @@
  },
  {
   "codigo_origen": "0467",
-  "descripcion": "INFECCION URINARIA"
+  "descripcion": "DENGUE"
  },
  {
   "codigo_origen": "0463",
@@ -484,60 +960,112 @@
   "descripcion": "ESCABIOSIS"
  },
  {
-  "codigo_origen": "0477",
-  "descripcion": "ACIDOSIS TUBULAR RENAL"
+  "codigo_origen": "0630",
+  "descripcion": "SINDROME VIRAL"
  },
  {
-  "codigo_origen": "0487",
-  "descripcion": "LITIASIS VESICAL A DESCARTAR"
+  "codigo_origen": "0484",
+  "descripcion": "RIÑON UNICO"
  },
  {
-  "codigo_origen": "0495",
-  "descripcion": "SINDROME NEFROTICO"
+  "codigo_origen": "0492",
+  "descripcion": "ECTASIA CALICEAL"
  },
  {
   "codigo_origen": "0312",
   "descripcion": "FIEBRE REUMATICA"
  },
  {
-  "codigo_origen": "0504",
-  "descripcion": "DESCARTAR UROPATIA"
+  "codigo_origen": "0640",
+  "descripcion": "SINDROME EMETICO"
  },
  {
-  "codigo_origen": "0513",
-  "descripcion": "NEFRITIS LUPICA"
+  "codigo_origen": "0509",
+  "descripcion": "HIPOCITRATURIA"
  },
  {
-  "codigo_origen": "0526",
-  "descripcion": "COLICO NEFRITICO"
+  "codigo_origen": "0651",
+  "descripcion": "VARICELA"
  },
  {
-  "codigo_origen": "0533",
-  "descripcion": "SINDROME EDEMATOSO EN ESTUDIO"
+  "codigo_origen": "0532",
+  "descripcion": "LARINGO TRAQUEITIS"
  },
  {
-  "codigo_origen": "0546",
-  "descripcion": "DESCARTAR INFECCION URINARIA"
+  "codigo_origen": "0541",
+  "descripcion": "SUBSECRECION  DE AMONIO"
  },
  {
-  "codigo_origen": "0555",
-  "descripcion": "INCONTINENCIA DIURNA"
+  "codigo_origen": "0659",
+  "descripcion": "HERNIA INGUINAL IZQUIERDA, REDUCTIBLE Y COHERCIBLE"
  },
  {
-  "codigo_origen": "0567",
-  "descripcion": "LITIASIS OBSTRUCTIVA EN 1/3 DISTAL DE URETER IZQ"
+  "codigo_origen": "0560",
+  "descripcion": "HEMATURIA"
  },
  {
-  "codigo_origen": "0583",
-  "descripcion": "CICATRICES RENALES"
+  "codigo_origen": "0675",
+  "descripcion": "TOSFERINA"
  },
  {
-  "codigo_origen": "0590",
-  "descripcion": "HIPERTENSION ARTERIAL SECUNDARIA"
+  "codigo_origen": "0577",
+  "descripcion": "RVU DERECHO GRADO II"
  },
  {
-  "codigo_origen": "0605",
-  "descripcion": "COALESCENCIA DE LABIOS MENORES"
+  "codigo_origen": "0587",
+  "descripcion": "HIDRONEFROSIS DERECHA GRADO IV"
+ },
+ {
+  "codigo_origen": "0601",
+  "descripcion": "RIÑON EN ESPONJA?"
+ },
+ {
+  "codigo_origen": "0608",
+  "descripcion": "SIND VIRAL"
+ },
+ {
+  "codigo_origen": "0615",
+  "descripcion": "ENFERMEDAD POLIQUISTICA RENAL BILATERAL."
+ },
+ {
+  "codigo_origen": "0683",
+  "descripcion": "REFLUJO GASTRO ESOFAGICO"
+ },
+ {
+  "codigo_origen": "0692",
+  "descripcion": "PIE PLANO"
+ },
+ {
+  "codigo_origen": "0700",
+  "descripcion": "ENFERMEDAD PSICOSOMATICA  ?"
+ },
+ {
+  "codigo_origen": "0711",
+  "descripcion": "ASMA NOCTURNA"
+ },
+ {
+  "codigo_origen": "0720",
+  "descripcion": "QUISTE CONJUNTIVA OCULAR INF IZQ"
+ },
+ {
+  "codigo_origen": "0731",
+  "descripcion": "HIPERTROFIA  ADENOAMIGDALAR"
+ },
+ {
+  "codigo_origen": "0742",
+  "descripcion": "TIÑA EN MS IF"
+ },
+ {
+  "codigo_origen": "0749",
+  "descripcion": "MICOPLASMA PNEUMONIE"
+ },
+ {
+  "codigo_origen": "0759",
+  "descripcion": "DERMATITIS ATOPICA FACIAL"
+ },
+ {
+  "codigo_origen": "0774",
+  "descripcion": "RETRAZO PSICOMOTOR"
  },
  {
   "codigo_origen": "0447",
@@ -560,76 +1088,116 @@
   "descripcion": "AMIBIASIS INTESTINAL"
  },
  {
-  "codigo_origen": "0469",
-  "descripcion": "SOBREPESO"
+  "codigo_origen": "0468",
+  "descripcion": "FOLICULITIS"
  },
  {
-  "codigo_origen": "0478",
-  "descripcion": "CISTITIS"
+  "codigo_origen": "0628",
+  "descripcion": "DENGUE HEMORRAGICO"
  },
  {
-  "codigo_origen": "0482",
-  "descripcion": "CRISTALURIA EN ESTUDIO"
+  "codigo_origen": "0488",
+  "descripcion": "INTOLERANCIA A LA LACTOSA"
  },
  {
-  "codigo_origen": "0493",
-  "descripcion": "ENURESIS NOCTURNA"
+  "codigo_origen": "0641",
+  "descripcion": "SINDROME COQUELUCHOIDE"
  },
  {
-  "codigo_origen": "0498",
-  "descripcion": "HIDRONEFROSIS IZQ"
+  "codigo_origen": "0512",
+  "descripcion": "MONONUCLEOSIS INFECCIOSA"
  },
  {
-  "codigo_origen": "0507",
-  "descripcion": "INMADUREZ VESICAL"
+  "codigo_origen": "0525",
+  "descripcion": "RCIU"
  },
  {
-  "codigo_origen": "0515",
-  "descripcion": "PIELOECTASIA DERECHA LEVE"
+  "codigo_origen": "0531",
+  "descripcion": "ANEMIA HIPOCROMICA"
  },
  {
-  "codigo_origen": "0528",
-  "descripcion": "RIÑON UNICO IZQ"
+  "codigo_origen": "0543",
+  "descripcion": "FIMOSIS PARCIAL"
  },
  {
-  "codigo_origen": "0538",
-  "descripcion": "UROPATIA OBSTRUCTIVA CORREGIDA"
+  "codigo_origen": "0551",
+  "descripcion": "ECTASIA CALICEAL BILATERAL"
  },
  {
-  "codigo_origen": "0548",
-  "descripcion": "RIÑON IZQ HIPOTROFICO"
+  "codigo_origen": "0563",
+  "descripcion": "CIV"
  },
  {
-  "codigo_origen": "0560",
-  "descripcion": "LITIASIS VESICAL"
+  "codigo_origen": "0569",
+  "descripcion": "REFLUJO VESICOURETERAL BILATERAL  GRADO III"
  },
  {
-  "codigo_origen": "0568",
-  "descripcion": "PELVIS EXTRARENAL IZQ"
+  "codigo_origen": "0586",
+  "descripcion": "ANEMIA DREPANOCITICA"
  },
  {
-  "codigo_origen": "0574",
-  "descripcion": "TAQUICARDIA SINUSAL"
+  "codigo_origen": "0649",
+  "descripcion": "BRONQUITIS ASMATIFORME"
  },
  {
-  "codigo_origen": "0585",
-  "descripcion": "SINDROME DE CUSHING"
+  "codigo_origen": "0609",
+  "descripcion": "TELARQUIA PRECOZ"
  },
  {
-  "codigo_origen": "0596",
-  "descripcion": "URETEROHIDRONEFROSIS IZQ."
+  "codigo_origen": "0662",
+  "descripcion": "PSORIASIS"
  },
  {
-  "codigo_origen": "0606",
-  "descripcion": "RIÑON DERECHO POLIQUISTICO"
+  "codigo_origen": "0667",
+  "descripcion": "RINITIS CON GOTEO POST NASAL"
+ },
+ {
+  "codigo_origen": "0678",
+  "descripcion": "DESNUTRIDO INUTERO"
+ },
+ {
+  "codigo_origen": "0689",
+  "descripcion": "ADENITIS SUBMAXILAR"
+ },
+ {
+  "codigo_origen": "0698",
+  "descripcion": "DEARREA AGUDA, FEBRIL MAS EMESIS CON DESHIDRATACIO"
+ },
+ {
+  "codigo_origen": "0716",
+  "descripcion": "OTITIS MEDIA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0724",
+  "descripcion": "OTITIS MEDIA DERECHA"
+ },
+ {
+  "codigo_origen": "0736",
+  "descripcion": "VERTIGO"
+ },
+ {
+  "codigo_origen": "0740",
+  "descripcion": "DERMATITIS MIXTA"
+ },
+ {
+  "codigo_origen": "0750",
+  "descripcion": "ABSCESO HEPATICO"
+ },
+ {
+  "codigo_origen": "0760",
+  "descripcion": "ECZEMA CUERO COBELLODO"
+ },
+ {
+  "codigo_origen": "0769",
+  "descripcion": "ADENITIS AXILAR DERECHA"
  },
  {
   "codigo_origen": "0471",
-  "descripcion": "HIPERCALCIURIA"
+  "descripcion": "ATR"
  },
  {
-  "codigo_origen": "0481",
-  "descripcion": "DEFICIT PONDOESTATURAL"
+  "codigo_origen": "0479",
+  "descripcion": "ARENILLA"
  },
  {
   "codigo_origen": "0369",
@@ -640,68 +1208,124 @@
   "descripcion": "EDEMA AGUDO PULMONAR"
  },
  {
-  "codigo_origen": "0491",
-  "descripcion": "SINDROME NEFROTICO CORTICORESISTENTE"
+  "codigo_origen": "0485",
+  "descripcion": "BAJO PESO"
  },
  {
   "codigo_origen": "0370",
   "descripcion": "FRACTURA DE COLLET"
  },
  {
-  "codigo_origen": "0503",
-  "descripcion": "RINOSINUSITIS AGUDA"
+  "codigo_origen": "0491",
+  "descripcion": "PIELONEFRITIS AGUDA"
  },
  {
-  "codigo_origen": "0512",
-  "descripcion": "RVU IZQ"
+  "codigo_origen": "0653",
+  "descripcion": "CONTROL DE NIÑOS SANOS"
  },
  {
-  "codigo_origen": "0518",
-  "descripcion": "MICROHEMATURIA"
+  "codigo_origen": "0508",
+  "descripcion": "RVU IZQUIERDO GRADO II"
  },
  {
-  "codigo_origen": "0524",
-  "descripcion": "RIÑON UNICO DERECHO"
+  "codigo_origen": "0520",
+  "descripcion": "HIPOPASIA RENAL DERECHA"
  },
  {
-  "codigo_origen": "0534",
-  "descripcion": "GMNA A DESCARTAR"
+  "codigo_origen": "0535",
+  "descripcion": "SOBRE PESO"
  },
  {
-  "codigo_origen": "0541",
-  "descripcion": "ESTENOSIS DE UNION URETERO PIELICA BILATERAL."
+  "codigo_origen": "0539",
+  "descripcion": "VEJIGA NEUROGENICA"
  },
  {
-  "codigo_origen": "0557",
-  "descripcion": "RVU BILATERAL CORREGIDO"
+  "codigo_origen": "0549",
+  "descripcion": "ANTECEDENTE DE ATR"
  },
  {
-  "codigo_origen": "0569",
-  "descripcion": "INTOLERANCIA  A LA LACTOSA"
+  "codigo_origen": "0663",
+  "descripcion": "RINITIS VASOMOTORA"
+ },
+ {
+  "codigo_origen": "0571",
+  "descripcion": "SD CONVULSIVO"
  },
  {
   "codigo_origen": "0575",
-  "descripcion": "RINITIS ALERGICA"
- },
- {
-  "codigo_origen": "0584",
-  "descripcion": "RINONUSITIS AGUDA"
+  "descripcion": "NEFRITIS"
  },
  {
   "codigo_origen": "0381",
   "descripcion": "COLON IRRITABLE"
  },
  {
-  "codigo_origen": "0593",
-  "descripcion": "PARAFIMOSIS"
+  "codigo_origen": "0584",
+  "descripcion": "SINUSITIS"
  },
  {
-  "codigo_origen": "0597",
-  "descripcion": "ANT DE TUMOR DE WILMS"
+  "codigo_origen": "0588",
+  "descripcion": "ANTECEDENTE DE HIPERCALCIURIA"
  },
  {
-  "codigo_origen": "0609",
-  "descripcion": "MIELOMENINGOCELE"
+  "codigo_origen": "0602",
+  "descripcion": "HIPERCALCIURIA ABSORTIVA"
+ },
+ {
+  "codigo_origen": "0611",
+  "descripcion": "LIPOTIMIA"
+ },
+ {
+  "codigo_origen": "0620",
+  "descripcion": "SD EDEMATOSO"
+ },
+ {
+  "codigo_origen": "0673",
+  "descripcion": "RINOSINUSITIS"
+ },
+ {
+  "codigo_origen": "0677",
+  "descripcion": "RN PR AEG"
+ },
+ {
+  "codigo_origen": "0685",
+  "descripcion": "ASIMETRIA FACIAL"
+ },
+ {
+  "codigo_origen": "0693",
+  "descripcion": "GENU VALGO"
+ },
+ {
+  "codigo_origen": "0702",
+  "descripcion": "CATARATAS CONGENITA BILATERAL"
+ },
+ {
+  "codigo_origen": "0713",
+  "descripcion": "CRISI ASMATICA LEVE PERSISTENTE"
+ },
+ {
+  "codigo_origen": "0725",
+  "descripcion": "BOCIO TIROIDEO  ?"
+ },
+ {
+  "codigo_origen": "0732",
+  "descripcion": "RN PTL AEG"
+ },
+ {
+  "codigo_origen": "0741",
+  "descripcion": "OTITIS EXTERNA BILATERAL TIPO MICOTICA"
+ },
+ {
+  "codigo_origen": "0758",
+  "descripcion": "PARASITOSIS : ESTRONGILOIDES???"
+ },
+ {
+  "codigo_origen": "0765",
+  "descripcion": "CRISIS LEVE DE ASMA"
+ },
+ {
+  "codigo_origen": "0913",
+  "descripcion": "?"
  },
  {
   "codigo_origen": "0451",
@@ -717,66 +1341,3570 @@
  },
  {
   "codigo_origen": "0466",
-  "descripcion": "CONTROL NIÑA"
+  "descripcion": "RINITIS ALERGICA"
  },
  {
-  "codigo_origen": "0476",
-  "descripcion": "DILATACION PIELOCALICIAL BILATERAL"
+  "codigo_origen": "0624",
+  "descripcion": "TALLA ALTA"
  },
  {
-  "codigo_origen": "0489",
-  "descripcion": "VULVOVAGINITIS INESPECIFICA"
+  "codigo_origen": "0625",
+  "descripcion": "FIBROSIS QUISTICA"
  },
  {
-  "codigo_origen": "0499",
-  "descripcion": "PELVIS BIFIDA L5 Y S1"
+  "codigo_origen": "0626",
+  "descripcion": "APENDICITIS"
  },
  {
-  "codigo_origen": "0508",
-  "descripcion": "SINDROME DE DOWN"
+  "codigo_origen": "0504",
+  "descripcion": "TALLA BAJA"
  },
  {
-  "codigo_origen": "0514",
+  "codigo_origen": "0511",
+  "descripcion": "CISTITIS"
+ },
+ {
+  "codigo_origen": "0517",
+  "descripcion": "SINDROME NEFROTICO"
+ },
+ {
+  "codigo_origen": "0544",
+  "descripcion": "HIPOTONIA MUSCULAR"
+ },
+ {
+  "codigo_origen": "0552",
+  "descripcion": "ATROFIA RENAL  IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0634",
+  "descripcion": "DERMATITIS CEBORREICA"
+ },
+ {
+  "codigo_origen": "0636",
+  "descripcion": "PITIRIASIS ALBA"
+ },
+ {
+  "codigo_origen": "0642",
+  "descripcion": "BRONQUIOLITIS"
+ },
+ {
+  "codigo_origen": "0595",
   "descripcion": "QUISTE RENAL DERECHO"
  },
  {
-  "codigo_origen": "0525",
-  "descripcion": "DISPLASIA FIBROSA POLIOSTOTICA"
+  "codigo_origen": "0606",
+  "descripcion": "SINDROME NEFROTICO EN REMISION"
  },
  {
-  "codigo_origen": "0539",
-  "descripcion": "FIMOSIS"
+  "codigo_origen": "0618",
+  "descripcion": "HIPERCALCIURIA SUPERADA"
  },
  {
-  "codigo_origen": "0543",
-  "descripcion": "VEJIGA NEUROPATICA"
+  "codigo_origen": "0652",
+  "descripcion": "HRB"
  },
  {
-  "codigo_origen": "0550",
-  "descripcion": "PELVIS EXTRARENAL DERECHA"
- },
- {
-  "codigo_origen": "0561",
-  "descripcion": "PUBERTAD PRECOZ"
- },
- {
-  "codigo_origen": "0570",
-  "descripcion": "EUUP IZQ YA CORREGIDA"
- },
- {
-  "codigo_origen": "0576",
-  "descripcion": "ANTECEDENTE DE FALLO RENAL AGUDO"
- },
- {
-  "codigo_origen": "0587",
-  "descripcion": "MEGAURETERES BILATERALES"
- },
- {
-  "codigo_origen": "0598",
-  "descripcion": "DIVERTICULO VESICAL IZQ,"
+  "codigo_origen": "0656",
+  "descripcion": "MONILIA ORAL"
  },
  {
   "codigo_origen": "0445",
   "descripcion": "SIDA"
+ },
+ {
+  "codigo_origen": "0665",
+  "descripcion": "MOLUSCO CONTAGIOSO"
+ },
+ {
+  "codigo_origen": "0674",
+  "descripcion": "ALERGIA A PROTEINA DE LECHE DE VACA"
+ },
+ {
+  "codigo_origen": "0686",
+  "descripcion": "PARASITOSIS INTESTINAL"
+ },
+ {
+  "codigo_origen": "0697",
+  "descripcion": "LACTANTE CATARROSO"
+ },
+ {
+  "codigo_origen": "0707",
+  "descripcion": "LEUCORREA"
+ },
+ {
+  "codigo_origen": "0712",
+  "descripcion": "DESHIDRATACION LEVE POR EMSIS"
+ },
+ {
+  "codigo_origen": "0723",
+  "descripcion": "DERMATITIS MICOTICA"
+ },
+ {
+  "codigo_origen": "0733",
+  "descripcion": "PIODERMITIS ESTAFILOCOCCICA"
+ },
+ {
+  "codigo_origen": "0745",
+  "descripcion": "SIDROME DE LOGGFER"
+ },
+ {
+  "codigo_origen": "0756",
+  "descripcion": "POTENCIALMENTE INFECTADO: INF MATERNAS"
+ },
+ {
+  "codigo_origen": "0768",
+  "descripcion": "PARAFIMOSIS"
+ },
+ {
+  "codigo_origen": "0781",
+  "descripcion": "PRURIGO"
+ },
+ {
+  "codigo_origen": "0766",
+  "descripcion": "CINEQUIA DE LABIOS MENORES (GENITAL)"
+ },
+ {
+  "codigo_origen": "0771",
+  "descripcion": "INFEC DIFUSA VIAS AEREAS INF CON BRONCOESPAMO"
+ },
+ {
+  "codigo_origen": "0773",
+  "descripcion": "REFLUJO VESICO URETERAL ?"
+ },
+ {
+  "codigo_origen": "0775",
+  "descripcion": "ENCEFALOPATIA HIPOXICO IZQUEMICO, PERINATAL. LEVE"
+ },
+ {
+  "codigo_origen": "0777",
+  "descripcion": "CHALACION PARPADO OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0778",
+  "descripcion": "LUMBALGIA"
+ },
+ {
+  "codigo_origen": "0779",
+  "descripcion": "CRIPTORQUIDEA DERECHA"
+ },
+ {
+  "codigo_origen": "0780",
+  "descripcion": "VARICOCELE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0782",
+  "descripcion": "HIDROCELE CONGENITO BILATERAL"
+ },
+ {
+  "codigo_origen": "0783",
+  "descripcion": "CRISI MODERADA DE ASMA"
+ },
+ {
+  "codigo_origen": "0784",
+  "descripcion": "CELULITIS PERIORBITAL  PRESEPTAL, DERECHA."
+ },
+ {
+  "codigo_origen": "0786",
+  "descripcion": "SINDROME VARICOSO"
+ },
+ {
+  "codigo_origen": "0787",
+  "descripcion": "INTOLERANCIA ORAL"
+ },
+ {
+  "codigo_origen": "0788",
+  "descripcion": "RINOSINUSITIS CON GOTEO NASAL POSTERIOR"
+ },
+ {
+  "codigo_origen": "0789",
+  "descripcion": "PRE-ADOLESCENTE SANO"
+ },
+ {
+  "codigo_origen": "0791",
+  "descripcion": "RN AT GPEG"
+ },
+ {
+  "codigo_origen": "0793",
+  "descripcion": "CARIES DENTAL"
+ },
+ {
+  "codigo_origen": "0795",
+  "descripcion": "RINOSINUSITIS CRONICA MAXILAR BILATERAL"
+ },
+ {
+  "codigo_origen": "0797",
+  "descripcion": "OTITIS MEDIA IZQUIERDA PERFORADA"
+ },
+ {
+  "codigo_origen": "0798",
+  "descripcion": "HIPERTENSION ARTERIAL"
+ },
+ {
+  "codigo_origen": "0799",
+  "descripcion": "PETEQUIAS"
+ },
+ {
+  "codigo_origen": "0800",
+  "descripcion": "NEUMANIA INTERSTICIAL"
+ },
+ {
+  "codigo_origen": "0801",
+  "descripcion": "SOPLO INOCENTE"
+ },
+ {
+  "codigo_origen": "0802",
+  "descripcion": "ALTERACION DE HORMONAS TIROIDEAS"
+ },
+ {
+  "codigo_origen": "0803",
+  "descripcion": "OTITIS MEDIA SEROSA"
+ },
+ {
+  "codigo_origen": "0823",
+  "descripcion": "INAPETENCIA"
+ },
+ {
+  "codigo_origen": "0847",
+  "descripcion": "NEURALGIA FACIAL"
+ },
+ {
+  "codigo_origen": "0848",
+  "descripcion": "ANTEPIE DERECHO VARA DISCRETO"
+ },
+ {
+  "codigo_origen": "0850",
+  "descripcion": "CONJUNTIVITIS DERECHA"
+ },
+ {
+  "codigo_origen": "0851",
+  "descripcion": "CONJUNTIVITIS VIRAL"
+ },
+ {
+  "codigo_origen": "0852",
+  "descripcion": "CONJUNTIVITIS IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0853",
+  "descripcion": "INFECCION URINARIA A REPETICION"
+ },
+ {
+  "codigo_origen": "0854",
+  "descripcion": "INCOMPATIBILIADAD DE GRUPO"
+ },
+ {
+  "codigo_origen": "0855",
+  "descripcion": "TAQUICARDIA"
+ },
+ {
+  "codigo_origen": "0856",
+  "descripcion": "SINDROME DE WOLFF PARKINSON WHITE"
+ },
+ {
+  "codigo_origen": "0857",
+  "descripcion": "DIARREA AGUDA BACTERIANA"
+ },
+ {
+  "codigo_origen": "0858",
+  "descripcion": "ESTEATOSIS HEPATICA"
+ },
+ {
+  "codigo_origen": "0860",
+  "descripcion": "PRIMO-CONVULSION FEBRIL"
+ },
+ {
+  "codigo_origen": "0861",
+  "descripcion": "RN AT II GEMELAR AEG"
+ },
+ {
+  "codigo_origen": "0862",
+  "descripcion": "RN AT PPEG I GEMELAR"
+ },
+ {
+  "codigo_origen": "0863",
+  "descripcion": "DENGUE CLASICO"
+ },
+ {
+  "codigo_origen": "0864",
+  "descripcion": "PANCITOPENIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0865",
+  "descripcion": "TROBOCITOPENIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0866",
+  "descripcion": "MENARQUIA"
+ },
+ {
+  "codigo_origen": "0867",
+  "descripcion": "TESTICULO IZQUIERDO NO DESCENDIDO"
+ },
+ {
+  "codigo_origen": "0868",
+  "descripcion": "CRIPTORQUIDEA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0869",
+  "descripcion": "INFECCION DIFUSA VIAS AEREAS INF CON BRONCAESPASMO"
+ },
+ {
+  "codigo_origen": "0870",
+  "descripcion": "AMIGDALITIS CON PLACAS, SOSPECHA DE MONOCUCLEOSIS"
+ },
+ {
+  "codigo_origen": "0871",
+  "descripcion": "OTITIS EXTERNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0872",
+  "descripcion": "SIND ICTERICO DEL RN"
+ },
+ {
+  "codigo_origen": "0873",
+  "descripcion": "POTENCIALMENTE SEPTICO: RPM"
+ },
+ {
+  "codigo_origen": "0874",
+  "descripcion": "SINDROME HEPATOESPLENICO"
+ },
+ {
+  "codigo_origen": "0875",
+  "descripcion": "FURUNCULOSIS"
+ },
+ {
+  "codigo_origen": "0876",
+  "descripcion": "HERNIA INGUINAL IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0877",
+  "descripcion": "SUFRIMIENTO FETAL AGUDO"
+ },
+ {
+  "codigo_origen": "0878",
+  "descripcion": "FISURA DE MEMBRANAS"
+ },
+ {
+  "codigo_origen": "0879",
+  "descripcion": "DESGARRO MUSCULAR CUADRICEPS DERECHO"
+ },
+ {
+  "codigo_origen": "0880",
+  "descripcion": "ESPINA BIFIDA."
+ },
+ {
+  "codigo_origen": "0882",
+  "descripcion": "PARASITOSIS INTESTINAL: STRONGILOIDES ST"
+ },
+ {
+  "codigo_origen": "0883",
+  "descripcion": "A,ERGIA MEDICAMENTOSA"
+ },
+ {
+  "codigo_origen": "0885",
+  "descripcion": "VERRUGA COMUN"
+ },
+ {
+  "codigo_origen": "0886",
+  "descripcion": "BRONQUITIS ASMATIFORME CON COMPONENTE ATELECTASIO"
+ },
+ {
+  "codigo_origen": "0887",
+  "descripcion": "HERNIA INGUINAL BILATERAL"
+ },
+ {
+  "codigo_origen": "0888",
+  "descripcion": "HERPES NASAL"
+ },
+ {
+  "codigo_origen": "0889",
+  "descripcion": "DIARREA MIXTA: AMIBIAN-BACTERIANA"
+ },
+ {
+  "codigo_origen": "0890",
+  "descripcion": "DIARREA: ENTEROCOLITIS AMIBIANA"
+ },
+ {
+  "codigo_origen": "0891",
+  "descripcion": "RINITIS INFECCIOSA :  P AERUGINOSA"
+ },
+ {
+  "codigo_origen": "0892",
+  "descripcion": "ESPINA BIFIDA OCULTA ?"
+ },
+ {
+  "codigo_origen": "0893",
+  "descripcion": "TIÑA CUERO CABELLODO"
+ },
+ {
+  "codigo_origen": "0894",
+  "descripcion": "ESPLENOMEGALIAS"
+ },
+ {
+  "codigo_origen": "0895",
+  "descripcion": "HERNIA INGUINAL DERECHA"
+ },
+ {
+  "codigo_origen": "0896",
+  "descripcion": "TRAST DEL DESARROLLO DENTRO DEL ESPECTRO AUTISTA"
+ },
+ {
+  "codigo_origen": "0897",
+  "descripcion": "HIDROCELE DERECHO"
+ },
+ {
+  "codigo_origen": "0898",
+  "descripcion": "INFECCION PREPUCIAL"
+ },
+ {
+  "codigo_origen": "0899",
+  "descripcion": "TRASTORNOS VISUALES ?"
+ },
+ {
+  "codigo_origen": "0900",
+  "descripcion": "VPH GENITAL"
+ },
+ {
+  "codigo_origen": "0901",
+  "descripcion": "HERNIA INGUINOESCROTAL DERECHA REDUCTIBLE Y COHERC"
+ },
+ {
+  "codigo_origen": "0908",
+  "descripcion": "RN AT PPEG"
+ },
+ {
+  "codigo_origen": "0902",
+  "descripcion": "PSEUDO ESTRAVISMO, EPICANTOS"
+ },
+ {
+  "codigo_origen": "0903",
+  "descripcion": "OTITIS EXTERNA BILATERAL"
+ },
+ {
+  "codigo_origen": "0904",
+  "descripcion": "BRADICARDIA ASINTOMATICA"
+ },
+ {
+  "codigo_origen": "0905",
+  "descripcion": "HERNIA SUPRAUMBILICAL"
+ },
+ {
+  "codigo_origen": "0906",
+  "descripcion": "QUISTE HIMENEAL ???"
+ },
+ {
+  "codigo_origen": "0907",
+  "descripcion": "DERMATITIS  BACTERIANA EN CUERO CABELLUDO"
+ },
+ {
+  "codigo_origen": "0909",
+  "descripcion": "RN ALTO RIESGO"
+ },
+ {
+  "codigo_origen": "0911",
+  "descripcion": "CRISIS MODERADA DE ASMA"
+ },
+ {
+  "codigo_origen": "0912",
+  "descripcion": "OTITIS EXTERNA MICOTICA DERECHA"
+ },
+ {
+  "codigo_origen": "0914",
+  "descripcion": "ENTEROCOLITIS MIXTA"
+ },
+ {
+  "codigo_origen": "0915",
+  "descripcion": "DERMATITIS PERIANAL"
+ },
+ {
+  "codigo_origen": "0916",
+  "descripcion": "AMIGDALITIS PULTACEA A REPETICION"
+ },
+ {
+  "codigo_origen": "0917",
+  "descripcion": "PIODERMITIS ESTREPTOCOCCICA"
+ },
+ {
+  "codigo_origen": "0918",
+  "descripcion": "RINOSINUSITIS CRONICA"
+ },
+ {
+  "codigo_origen": "0919",
+  "descripcion": "NEUMONIA PARAHILIAR DERECHA"
+ },
+ {
+  "codigo_origen": "0920",
+  "descripcion": "FONTANELA ANTERIOR ALTA"
+ },
+ {
+  "codigo_origen": "0921",
+  "descripcion": "DERMATITIS ESTREPTOCOCICA"
+ },
+ {
+  "codigo_origen": "0922",
+  "descripcion": "ESTRAVISMO CONVERGENTE OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0923",
+  "descripcion": "PARALISISI FACIAL PERIFERICA"
+ },
+ {
+  "codigo_origen": "0924",
+  "descripcion": "INFECCION URINARIA PERSISITESTE"
+ },
+ {
+  "codigo_origen": "0925",
+  "descripcion": "QUEMADURAS AB AC"
+ },
+ {
+  "codigo_origen": "0926",
+  "descripcion": "HERPES LABIAL"
+ },
+ {
+  "codigo_origen": "0927",
+  "descripcion": "TOS NOCTURNA"
+ },
+ {
+  "codigo_origen": "0928",
+  "descripcion": "BRONCOESPASMO NOCTURNO ?"
+ },
+ {
+  "codigo_origen": "0929",
+  "descripcion": "CELULITIS PRESEPTAL IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0931",
+  "descripcion": "HIPERTROFIA ADENOAMIGDALAR LEVE"
+ },
+ {
+  "codigo_origen": "0930",
+  "descripcion": "CHALACION PARPADO SUPERIOR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0932",
+  "descripcion": "CELULITIS PREPUSIO"
+ },
+ {
+  "codigo_origen": "0933",
+  "descripcion": "MONONUCLEOSIS INFECCIOSAS. IANTRIGUA (NO ACTIVA)"
+ },
+ {
+  "codigo_origen": "0934",
+  "descripcion": "RINOCONJUNTIVITIS ALERGICA"
+ },
+ {
+  "codigo_origen": "0935",
+  "descripcion": "RINOSINUSITIS: ESTREPTOCOCO SP"
+ },
+ {
+  "codigo_origen": "0936",
+  "descripcion": "EXUDADO FARINGEO POSITIVO, ASISTOMATICO"
+ },
+ {
+  "codigo_origen": "0937",
+  "descripcion": "EMBARAZO SIMPLE 32 SEMANAS"
+ },
+ {
+  "codigo_origen": "0938",
+  "descripcion": "RINOFARINGITIS ALERGICA"
+ },
+ {
+  "codigo_origen": "0939",
+  "descripcion": "SINDROME HIPOTONICO"
+ },
+ {
+  "codigo_origen": "0940",
+  "descripcion": "HIPERTROFIA CONGENITA DE PILORO"
+ },
+ {
+  "codigo_origen": "0941",
+  "descripcion": "QUISTE DERMOIDE CERVICAL POSTERIOR"
+ },
+ {
+  "codigo_origen": "0942",
+  "descripcion": "ALERGIA MEDICAMENTOSA"
+ },
+ {
+  "codigo_origen": "0943",
+  "descripcion": "HIPER ACTIVIDAD ?"
+ },
+ {
+  "codigo_origen": "0944",
+  "descripcion": "HIPOACUSIA"
+ },
+ {
+  "codigo_origen": "0945",
+  "descripcion": "AÑERGIA A CONTACTO CON GUSANO PELUDO"
+ },
+ {
+  "codigo_origen": "0946",
+  "descripcion": "DESNUTRICION MARASMATICA"
+ },
+ {
+  "codigo_origen": "0947",
+  "descripcion": "PELAGRA"
+ },
+ {
+  "codigo_origen": "0948",
+  "descripcion": "LUPUS  ?"
+ },
+ {
+  "codigo_origen": "0949",
+  "descripcion": "TOS FERINOSO"
+ },
+ {
+  "codigo_origen": "0950",
+  "descripcion": "CELULITIS PERIORBITAL BILATERAL ATOPICA"
+ },
+ {
+  "codigo_origen": "0951",
+  "descripcion": "RINOSINUSITIS MIXTA: STREPTOCOCO PN    MORAXELLA C"
+ },
+ {
+  "codigo_origen": "0952",
+  "descripcion": "DIABETES TIPO II"
+ },
+ {
+  "codigo_origen": "0953",
+  "descripcion": "NEUROPATIA DIABETICA"
+ },
+ {
+  "codigo_origen": "0954",
+  "descripcion": "QUISTE CEBACEO PIERNA DERECHA"
+ },
+ {
+  "codigo_origen": "0955",
+  "descripcion": "CITOMEGALOVIRUS  (INFEC ANTIGUA)"
+ },
+ {
+  "codigo_origen": "0956",
+  "descripcion": "CRISIS CONVULSIVA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0957",
+  "descripcion": "DEARREA AGUDA AFEBRIL SIN DESHIDRATACION"
+ },
+ {
+  "codigo_origen": "0958",
+  "descripcion": "SINDROME TOSFERINOSO"
+ },
+ {
+  "codigo_origen": "0959",
+  "descripcion": "SOPLO INOCENTE ?"
+ },
+ {
+  "codigo_origen": "0960",
+  "descripcion": "CUERPO EXTRAÑO EN FOSA NASAL IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0961",
+  "descripcion": "HEMANGIOMA CONGENITO FRONTAL"
+ },
+ {
+  "codigo_origen": "0962",
+  "descripcion": "DISLIPIDEMIA"
+ },
+ {
+  "codigo_origen": "0963",
+  "descripcion": "ESPASMO DEL SOYOSO"
+ },
+ {
+  "codigo_origen": "0964",
+  "descripcion": "VARICELA EN RESOLUCION"
+ },
+ {
+  "codigo_origen": "0965",
+  "descripcion": "ASIMETRIA PLIEGUES GLUTEOS"
+ },
+ {
+  "codigo_origen": "0966",
+  "descripcion": "ESTADO NUTRICIONAL: NORMAL P:10"
+ },
+ {
+  "codigo_origen": "0967",
+  "descripcion": "FRACTURA DENTAL (INCISIVO MEMBRANOSO)"
+ },
+ {
+  "codigo_origen": "0968",
+  "descripcion": "RINOFARINGITIS BACTERIANA CON GOTEO POST NASAL"
+ },
+ {
+  "codigo_origen": "0969",
+  "descripcion": "DIARREA OSMATICA"
+ },
+ {
+  "codigo_origen": "0970",
+  "descripcion": "INFECCION VIRAL: CITOMEGOLOVIRUS VS EPSTEIN BARR ?"
+ },
+ {
+  "codigo_origen": "0971",
+  "descripcion": "TOS OCACIONAL"
+ },
+ {
+  "codigo_origen": "0972",
+  "descripcion": "CONJUNTIVITIS BILATERAL VIRAL"
+ },
+ {
+  "codigo_origen": "0973",
+  "descripcion": "TRASTORNO DE CONDUCTA"
+ },
+ {
+  "codigo_origen": "0974",
+  "descripcion": "CARDIOPATIA CONGENITA: INSUFICIENCIA TRICUSPIDIA"
+ },
+ {
+  "codigo_origen": "0975",
+  "descripcion": "PAROTIDITIS BILATERAL VIRAL"
+ },
+ {
+  "codigo_origen": "0976",
+  "descripcion": "DERMATITIS ESTAFILOCOCCICA"
+ },
+ {
+  "codigo_origen": "0977",
+  "descripcion": "TRANSGRESION ALIMENTARIA: INICIO PRECOZ  CEREALES"
+ },
+ {
+  "codigo_origen": "0978",
+  "descripcion": "HALITOSIS"
+ },
+ {
+  "codigo_origen": "0979",
+  "descripcion": "PAROTIDITIS CRONICA BILAT PRED DERECHO"
+ },
+ {
+  "codigo_origen": "0980",
+  "descripcion": "PAROTIDITIS ABSCEDADA DERECHA"
+ },
+ {
+  "codigo_origen": "0981",
+  "descripcion": "LACERACION PILAR ANTERIO AMIGDALA DERECHA"
+ },
+ {
+  "codigo_origen": "0983",
+  "descripcion": "FRACTURA FALANGE DISTAL DEDO INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0984",
+  "descripcion": "ADENOMEGALIA CERVICAL DERECHA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "0985",
+  "descripcion": "HEMANGIOMA CUERO CABELLUDO"
+ },
+ {
+  "codigo_origen": "0986",
+  "descripcion": "ANEMIA MODERADA A SEVERA"
+ },
+ {
+  "codigo_origen": "0987",
+  "descripcion": "CONJUNTIVITIS BILATERAL"
+ },
+ {
+  "codigo_origen": "0988",
+  "descripcion": "ENTEROCOLITIS"
+ },
+ {
+  "codigo_origen": "0989",
+  "descripcion": "CELULITIS ABSCEDADA GLUTEO DERECHO"
+ },
+ {
+  "codigo_origen": "0990",
+  "descripcion": "UÑA ENCARNADA CO CELULITIS LOCAL  1º DEDO PIE IZQ"
+ },
+ {
+  "codigo_origen": "0991",
+  "descripcion": "OTITIS MEDIA DERECHA PERFORADA"
+ },
+ {
+  "codigo_origen": "0992",
+  "descripcion": "CONTRACTURA MUCULAR MUSLO IZQ"
+ },
+ {
+  "codigo_origen": "0993",
+  "descripcion": "COLICOS DEL RN"
+ },
+ {
+  "codigo_origen": "0994",
+  "descripcion": "DERMATITIS GENITAL AMONIACAL"
+ },
+ {
+  "codigo_origen": "0995",
+  "descripcion": "RETRASO MOTOR"
+ },
+ {
+  "codigo_origen": "0996",
+  "descripcion": "CELULITIS GENITAL"
+ },
+ {
+  "codigo_origen": "0997",
+  "descripcion": "ICTERICIA FISIOLOGICA PROLONGADA"
+ },
+ {
+  "codigo_origen": "0998",
+  "descripcion": "HERPES CUTANEO"
+ },
+ {
+  "codigo_origen": "0999",
+  "descripcion": "ALOPECIA"
+ },
+ {
+  "codigo_origen": "1000",
+  "descripcion": "FIEBRE MEDICAMENTOSA"
+ },
+ {
+  "codigo_origen": "1001",
+  "descripcion": "PRESENTACION:  PODALICO"
+ },
+ {
+  "codigo_origen": "1002",
+  "descripcion": "ENTERORRAGIA"
+ },
+ {
+  "codigo_origen": "1003",
+  "descripcion": "POLIPO RECTAL VS DIVERTICULO DE MIKEL"
+ },
+ {
+  "codigo_origen": "1009",
+  "descripcion": "DERMOGRAFISMO"
+ },
+ {
+  "codigo_origen": "1004",
+  "descripcion": "DIARREA AGUDA + EMESIS CON ALGUN GRADO DE DESHDRAT"
+ },
+ {
+  "codigo_origen": "1005",
+  "descripcion": "RINOCONJUNTIVITIS VIRAL"
+ },
+ {
+  "codigo_origen": "1006",
+  "descripcion": "DERMATITIS EXCEMATOZA"
+ },
+ {
+  "codigo_origen": "1007",
+  "descripcion": "REFLUJO GASTROESOFAGICO. SOBREALIMENTACION"
+ },
+ {
+  "codigo_origen": "1008",
+  "descripcion": "POLIAQUIURIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1010",
+  "descripcion": "LARINGOTRAQUEITIS POST ENTUBACION"
+ },
+ {
+  "codigo_origen": "1011",
+  "descripcion": "DIARREA AGUDA FEBRIL SIN DESHIDRATACION"
+ },
+ {
+  "codigo_origen": "1012",
+  "descripcion": "ADENITIS INGUINAL"
+ },
+ {
+  "codigo_origen": "1013",
+  "descripcion": "DENGUE CLASICO ?"
+ },
+ {
+  "codigo_origen": "1014",
+  "descripcion": "QUEMADURA II GRADO ABD LEVE"
+ },
+ {
+  "codigo_origen": "1015",
+  "descripcion": "ANEMIA HEMOLITICA"
+ },
+ {
+  "codigo_origen": "1016",
+  "descripcion": "TRASTORNO METABOLICO"
+ },
+ {
+  "codigo_origen": "1017",
+  "descripcion": "DISMENORREA"
+ },
+ {
+  "codigo_origen": "1018",
+  "descripcion": "TRAUMA SIMPLE PIERNA DERECHA"
+ },
+ {
+  "codigo_origen": "1019",
+  "descripcion": "INTOLERANCIA A LECHE DE SOYA?"
+ },
+ {
+  "codigo_origen": "1020",
+  "descripcion": "LACERACION GENITAL  LABIO MENOR POST TRAUMAT"
+ },
+ {
+  "codigo_origen": "1021",
+  "descripcion": "DETENCION DE CURVA DE CRECIMIENTO"
+ },
+ {
+  "codigo_origen": "1022",
+  "descripcion": "LETIASIS VESICULAR"
+ },
+ {
+  "codigo_origen": "1023",
+  "descripcion": "ENEURESIS"
+ },
+ {
+  "codigo_origen": "1024",
+  "descripcion": "TRAUMATISMO NASL LEVE POST CAIDA DESDE LA CAMA"
+ },
+ {
+  "codigo_origen": "1025",
+  "descripcion": "VARICELA ATIPICA"
+ },
+ {
+  "codigo_origen": "1026",
+  "descripcion": "LARINGOTRAQUEOMALASIA"
+ },
+ {
+  "codigo_origen": "1027",
+  "descripcion": "ESTENOSIS VALULAR PULMONAR MODERADA"
+ },
+ {
+  "codigo_origen": "1028",
+  "descripcion": "DIARREA AGUDO FEBRIL + EMESIS + DESH LEVE"
+ },
+ {
+  "codigo_origen": "1029",
+  "descripcion": "OTITIS EXTERNA DERECHA"
+ },
+ {
+  "codigo_origen": "1030",
+  "descripcion": "QUISTE TIROGLOSO PEQUEÑO"
+ },
+ {
+  "codigo_origen": "1031",
+  "descripcion": "PALADAR SUBMUCOSO"
+ },
+ {
+  "codigo_origen": "1032",
+  "descripcion": "RUMINACION"
+ },
+ {
+  "codigo_origen": "1033",
+  "descripcion": "CONSTIPACION : ESTRECHES ESFINTER ANAL?"
+ },
+ {
+  "codigo_origen": "1034",
+  "descripcion": "DERMATITIS GENITO-PERIANAL"
+ },
+ {
+  "codigo_origen": "1035",
+  "descripcion": "ADENOMEGALIA CERVICAL IZQ IEN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1036",
+  "descripcion": "AMIGDALITIS CON PLACAS"
+ },
+ {
+  "codigo_origen": "1037",
+  "descripcion": "LITIASIS BILIAR"
+ },
+ {
+  "codigo_origen": "1038",
+  "descripcion": "DIABETES TIPO I COMPENSADA"
+ },
+ {
+  "codigo_origen": "1039",
+  "descripcion": "MONONUCLEOSIS INFECCIOSA  ?"
+ },
+ {
+  "codigo_origen": "1040",
+  "descripcion": "DERMATITIS ATAPICO RETROAURICUAR"
+ },
+ {
+  "codigo_origen": "1041",
+  "descripcion": "TRAUMATISMO FALANGE MEDIA ANULAR DERECHA ..FX ?"
+ },
+ {
+  "codigo_origen": "1042",
+  "descripcion": "ABSCESO MUSLO DERECHO POSTERIOS EN LUNEA  GLUTEA"
+ },
+ {
+  "codigo_origen": "1043",
+  "descripcion": "ESCALAR SANO"
+ },
+ {
+  "codigo_origen": "1044",
+  "descripcion": "VENTRICULOMEGALIA"
+ },
+ {
+  "codigo_origen": "1045",
+  "descripcion": "SINDACTILIA"
+ },
+ {
+  "codigo_origen": "1046",
+  "descripcion": "RIÑON DERECHO POLIQUISTICO"
+ },
+ {
+  "codigo_origen": "1047",
+  "descripcion": "AGENESIA RENAL IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1048",
+  "descripcion": "DIVERTICULO VESICAL"
+ },
+ {
+  "codigo_origen": "1049",
+  "descripcion": "CONVULSIONES FEBRILES"
+ },
+ {
+  "codigo_origen": "1050",
+  "descripcion": "EMESIS CON ALGUN GRADO DE DESHIDRATACION"
+ },
+ {
+  "codigo_origen": "1051",
+  "descripcion": "GEMELAR"
+ },
+ {
+  "codigo_origen": "1052",
+  "descripcion": "HEMANGIOMA CARRILLO IZQ"
+ },
+ {
+  "codigo_origen": "1053",
+  "descripcion": "CEFALOHEMATOMA PERIETAS DERECHO"
+ },
+ {
+  "codigo_origen": "1054",
+  "descripcion": "INTERCURRENCIA VIRAL"
+ },
+ {
+  "codigo_origen": "1055",
+  "descripcion": "EN RESOLUCION"
+ },
+ {
+  "codigo_origen": "1056",
+  "descripcion": "CONVALESCIENTE DE MININGITIS NEONATAL"
+ },
+ {
+  "codigo_origen": "1057",
+  "descripcion": "ADENOMEGALIAS EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1058",
+  "descripcion": "RN PTL I GEMELAR"
+ },
+ {
+  "codigo_origen": "1059",
+  "descripcion": "RN PTL II GEMELAR"
+ },
+ {
+  "codigo_origen": "1060",
+  "descripcion": "ARTRITIS POST TRAUMATICA? RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "1061",
+  "descripcion": "TRASTORNO DEL DESARROLLO DENTRO DEL ESPECTRO AUTIS"
+ },
+ {
+  "codigo_origen": "1062",
+  "descripcion": "HIDROCELE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1063",
+  "descripcion": "EPISTAXIS POSTERIOR?"
+ },
+ {
+  "codigo_origen": "1064",
+  "descripcion": "HEMATEMESIS"
+ },
+ {
+  "codigo_origen": "1065",
+  "descripcion": "PACIENTE ASINTOMATICO ACTUAL"
+ },
+ {
+  "codigo_origen": "1066",
+  "descripcion": "TRAUMA RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "1067",
+  "descripcion": "OTALGI INTERMITENTE, SINTOMATICO ACTUAL"
+ },
+ {
+  "codigo_origen": "1068",
+  "descripcion": "HIPOGLICEMIA   ASINTOMATICA"
+ },
+ {
+  "codigo_origen": "1069",
+  "descripcion": "MENARCA"
+ },
+ {
+  "codigo_origen": "1070",
+  "descripcion": "CHUCUNGUNYA"
+ },
+ {
+  "codigo_origen": "1071",
+  "descripcion": "RASH EXANTEMICO VIRAL EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1072",
+  "descripcion": "TRAUMATISMO SIMPLE EN ESPALDA"
+ },
+ {
+  "codigo_origen": "1073",
+  "descripcion": "NEUMONIA LABAR DERECHA"
+ },
+ {
+  "codigo_origen": "1074",
+  "descripcion": "QUISTE BRAQUIAL"
+ },
+ {
+  "codigo_origen": "1075",
+  "descripcion": "TRASTORNOS DEL DESARROLLO DENTRO DEL ASPECTRO AUT"
+ },
+ {
+  "codigo_origen": "1076",
+  "descripcion": "NEUMONIA INTRAUTERINA"
+ },
+ {
+  "codigo_origen": "1077",
+  "descripcion": "TRAUMATISMO CRANEAL LEVE: HEMATOMA FRONTAL"
+ },
+ {
+  "codigo_origen": "1078",
+  "descripcion": "PERSISTENCIA CONDUCTO ARTERIOSO"
+ },
+ {
+  "codigo_origen": "1081",
+  "descripcion": "HEMANGIOMA  TORAX"
+ },
+ {
+  "codigo_origen": "1079",
+  "descripcion": "ED NUTRICIANAL:  TALLA Y PESO  PERCENTIL 10"
+ },
+ {
+  "codigo_origen": "1080",
+  "descripcion": "TOSFERINA EN VIAS DE RESOLUCION"
+ },
+ {
+  "codigo_origen": "1082",
+  "descripcion": "ESCOLAR SANO"
+ },
+ {
+  "codigo_origen": "1083",
+  "descripcion": "PIE PLANO + GENU VALGO ASINTOMATICO"
+ },
+ {
+  "codigo_origen": "1084",
+  "descripcion": "TRAUMATISMO FACIAL LEVE: LACERACION"
+ },
+ {
+  "codigo_origen": "1085",
+  "descripcion": "RINOSINUSITIS VIRAL"
+ },
+ {
+  "codigo_origen": "1086",
+  "descripcion": "PAROTIDITIS IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1087",
+  "descripcion": "CELULITIS ABSCEDADA RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "1088",
+  "descripcion": "VITILIGO ?"
+ },
+ {
+  "codigo_origen": "1089",
+  "descripcion": "COXAQUIE VIRUS"
+ },
+ {
+  "codigo_origen": "1090",
+  "descripcion": "EOSINOFILIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1091",
+  "descripcion": "RINOSINUSITIS INFECCIOSA"
+ },
+ {
+  "codigo_origen": "1092",
+  "descripcion": "PSEUDOMONA  AERUGINOSA"
+ },
+ {
+  "codigo_origen": "1093",
+  "descripcion": "NEURALGIA MUSLO IZQ POST TRAUMA"
+ },
+ {
+  "codigo_origen": "1094",
+  "descripcion": "CHALACION"
+ },
+ {
+  "codigo_origen": "1095",
+  "descripcion": "CELULITIS PREPUCIAL"
+ },
+ {
+  "codigo_origen": "1096",
+  "descripcion": "TIÑA CORPIS"
+ },
+ {
+  "codigo_origen": "1097",
+  "descripcion": "CEFALEA NEURALGICA?"
+ },
+ {
+  "codigo_origen": "1098",
+  "descripcion": "ENCEFALOCELE CORREGIDO"
+ },
+ {
+  "codigo_origen": "1099",
+  "descripcion": "FOLICULITIS CUERO CABELLUDO"
+ },
+ {
+  "codigo_origen": "1100",
+  "descripcion": "DOLOR DE VIENTRE EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1101",
+  "descripcion": "TRASTORNO DE IDENTIDAD???"
+ },
+ {
+  "codigo_origen": "1102",
+  "descripcion": "DEFICIT CONGNITIVO LEVE A MODERADO"
+ },
+ {
+  "codigo_origen": "1103",
+  "descripcion": "PIE PLANO + GENU VALGO SINTOMATICO"
+ },
+ {
+  "codigo_origen": "1104",
+  "descripcion": "EMESIS: GASTRITIS ?"
+ },
+ {
+  "codigo_origen": "1105",
+  "descripcion": "VARICOCELE BILATERAL"
+ },
+ {
+  "codigo_origen": "1108",
+  "descripcion": "COLITIS"
+ },
+ {
+  "codigo_origen": "1106",
+  "descripcion": "EXAMEN FISICO PREEMPLEO: NORMAL"
+ },
+ {
+  "codigo_origen": "1107",
+  "descripcion": "HERIDA INFECTADA MANO DERECHA"
+ },
+ {
+  "codigo_origen": "1109",
+  "descripcion": "CELULITIS AMPOLLOSA RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "1110",
+  "descripcion": "RINOFARINGA-AMIGDALITIS BACTERIANA"
+ },
+ {
+  "codigo_origen": "1111",
+  "descripcion": "OBESIDAD INFANTIL"
+ },
+ {
+  "codigo_origen": "1112",
+  "descripcion": "NEUMONIA ANGULO CARDIOFRENICO DERECHO CON COMP ATE"
+ },
+ {
+  "codigo_origen": "1113",
+  "descripcion": "ANOREXIA NERVIOSA"
+ },
+ {
+  "codigo_origen": "1114",
+  "descripcion": "AMENORREA"
+ },
+ {
+  "codigo_origen": "1115",
+  "descripcion": "ABSCESO EN BORDE EXTERNO DEL CONDUCTO AUDIT DERECO"
+ },
+ {
+  "codigo_origen": "1116",
+  "descripcion": "RINOSINUSITIS ALERGICA"
+ },
+ {
+  "codigo_origen": "1117",
+  "descripcion": "CELULITIS ABSCEDADA MUSLO DERECHO"
+ },
+ {
+  "codigo_origen": "1118",
+  "descripcion": "OTITIS MEDIA SEROSA BILATERAL"
+ },
+ {
+  "codigo_origen": "1119",
+  "descripcion": "GENU VARU"
+ },
+ {
+  "codigo_origen": "1120",
+  "descripcion": "ESCABIOSIS IMPETIGENISADA"
+ },
+ {
+  "codigo_origen": "1121",
+  "descripcion": "HERIDA PUNSOPENETRANTE PLANTAR IZQ"
+ },
+ {
+  "codigo_origen": "1122",
+  "descripcion": "CELULITIS PUBICA POST PICADURA DE INSECTO"
+ },
+ {
+  "codigo_origen": "1123",
+  "descripcion": "RN PT AEG"
+ },
+ {
+  "codigo_origen": "1124",
+  "descripcion": "RN BAJO PESO AL NACER"
+ },
+ {
+  "codigo_origen": "1125",
+  "descripcion": "TOXOPLASMOSIS CONGENITA ?"
+ },
+ {
+  "codigo_origen": "1126",
+  "descripcion": "HERNIA UMBILICAL. CREPITANCIA"
+ },
+ {
+  "codigo_origen": "1127",
+  "descripcion": "ARENILLA O CRISTALES RENALES"
+ },
+ {
+  "codigo_origen": "1128",
+  "descripcion": "HEMANGIAMA CONGENITA EN ESPALDA"
+ },
+ {
+  "codigo_origen": "1129",
+  "descripcion": "CARDIOPATIA CANGENITA. FORAMEN OVAL PERMEABLE:"
+ },
+ {
+  "codigo_origen": "1139",
+  "descripcion": "ZICA ?"
+ },
+ {
+  "codigo_origen": "1130",
+  "descripcion": "TRAUMATISMO CRANEL LEVE. ASINTOMATICO"
+ },
+ {
+  "codigo_origen": "1131",
+  "descripcion": "ARTRALGIAS EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1132",
+  "descripcion": "FIBROMIALGIA ?"
+ },
+ {
+  "codigo_origen": "1133",
+  "descripcion": "IMPETIGO BULOSO"
+ },
+ {
+  "codigo_origen": "1134",
+  "descripcion": "INTOLERANCIA TRANSITORIA A LA LACTOSA  MATERNA"
+ },
+ {
+  "codigo_origen": "1135",
+  "descripcion": "ASINTOMATICA  ACTUAL"
+ },
+ {
+  "codigo_origen": "1136",
+  "descripcion": "HEMANGIOMA CONGENITO SACRO-LUMBAR"
+ },
+ {
+  "codigo_origen": "1137",
+  "descripcion": "MIASTENIA GRAVIS ?"
+ },
+ {
+  "codigo_origen": "1138",
+  "descripcion": "DISFONIA ETOPICA"
+ },
+ {
+  "codigo_origen": "1140",
+  "descripcion": "PAROTIDITIS VIRAL DERECHA"
+ },
+ {
+  "codigo_origen": "1141",
+  "descripcion": "CICATRIS MS INF D POR INFILTRACION DE VIA"
+ },
+ {
+  "codigo_origen": "1142",
+  "descripcion": "DESNUTRICION"
+ },
+ {
+  "codigo_origen": "1143",
+  "descripcion": "SEPSIS NEOTAL TARDIA EN  CONVALESCCENCIAS"
+ },
+ {
+  "codigo_origen": "1144",
+  "descripcion": "ZIKA?"
+ },
+ {
+  "codigo_origen": "1145",
+  "descripcion": "SIKA"
+ },
+ {
+  "codigo_origen": "1146",
+  "descripcion": "VENTRICULOMEGALIA: CEREBRAL"
+ },
+ {
+  "codigo_origen": "1147",
+  "descripcion": "TAQUICARDIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1148",
+  "descripcion": "TESTICULOS RETRACTILES"
+ },
+ {
+  "codigo_origen": "1149",
+  "descripcion": "ESCROTOS HIPOTROFICOS"
+ },
+ {
+  "codigo_origen": "1150",
+  "descripcion": "SIKA?"
+ },
+ {
+  "codigo_origen": "1151",
+  "descripcion": "HEMANGIOMA ULCERADO CERVICAL POST TX"
+ },
+ {
+  "codigo_origen": "1152",
+  "descripcion": "HIPER TIROIDISMO"
+ },
+ {
+  "codigo_origen": "1153",
+  "descripcion": "HEMANGIOMA CONGENITO ESPALDA"
+ },
+ {
+  "codigo_origen": "1154",
+  "descripcion": "CONJUNTIVITIS ALERGICA"
+ },
+ {
+  "codigo_origen": "1155",
+  "descripcion": "CARDIOP CONG: HTPULM + FOP + PCA"
+ },
+ {
+  "codigo_origen": "1156",
+  "descripcion": "SINDROME GENTICO EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1157",
+  "descripcion": "PETEQUIAS EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1158",
+  "descripcion": "PETEQUIAS EN ESTUDIO: FRAGILIDAD CAPILAR?"
+ },
+ {
+  "codigo_origen": "1159",
+  "descripcion": "POCO PROGRESION EN LAS CURVAS DE CRECIMIENTO."
+ },
+ {
+  "codigo_origen": "1160",
+  "descripcion": "FISTULA PERIANAL ABSEDADA EN RESOLUCION."
+ },
+ {
+  "codigo_origen": "1161",
+  "descripcion": "OSTEOCONDRITIS COSTAL ANT"
+ },
+ {
+  "codigo_origen": "1162",
+  "descripcion": "GONORREA"
+ },
+ {
+  "codigo_origen": "1163",
+  "descripcion": "CONTACTO CON PX CON HEP A: PX ASINTOMATICO"
+ },
+ {
+  "codigo_origen": "1164",
+  "descripcion": "INCOMPATIBILIDAD RH"
+ },
+ {
+  "codigo_origen": "1165",
+  "descripcion": "HIPERTIROIDISMO ?"
+ },
+ {
+  "codigo_origen": "1166",
+  "descripcion": "RINOSINUSITIS A STAPHYLOCOCCUS AUREUS."
+ },
+ {
+  "codigo_origen": "1167",
+  "descripcion": "COLICOS DEL LACTANTE"
+ },
+ {
+  "codigo_origen": "1168",
+  "descripcion": "HIPERACTIVIDAD INSULINICA?"
+ },
+ {
+  "codigo_origen": "1169",
+  "descripcion": "SANGRADO GENITAL ?"
+ },
+ {
+  "codigo_origen": "1170",
+  "descripcion": "ARRITMIA RESPIRATORIA"
+ },
+ {
+  "codigo_origen": "1171",
+  "descripcion": "VOMITOS: GASTRITIS VS PARASITOSIS INTESTINAL?"
+ },
+ {
+  "codigo_origen": "1172",
+  "descripcion": "QUISTE CUERO CABELLUDO EN RESOLUCION"
+ },
+ {
+  "codigo_origen": "1173",
+  "descripcion": "PERDIDA DE PESO EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1174",
+  "descripcion": "ADHERENCIA PARCIAL BALANOPREPUCIAL"
+ },
+ {
+  "codigo_origen": "1175",
+  "descripcion": "CELULITIS POST TRAUMATICA RODILA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1176",
+  "descripcion": "TORTICULIS CONGENITA (POSICION FETAL VISIOSA)"
+ },
+ {
+  "codigo_origen": "1177",
+  "descripcion": "EDEMA MS IF D EN ESTUDIO Y  EN RESOLUCION"
+ },
+ {
+  "codigo_origen": "1178",
+  "descripcion": "ADENOMEGALIS CERVICAL POST BILAT"
+ },
+ {
+  "codigo_origen": "1179",
+  "descripcion": "MICROCEFALIA"
+ },
+ {
+  "codigo_origen": "1180",
+  "descripcion": "HIPOTIROIDISMO SUBCLINICO"
+ },
+ {
+  "codigo_origen": "1181",
+  "descripcion": "VALORACION CARDIVASCULAR ESXCOLAR"
+ },
+ {
+  "codigo_origen": "1182",
+  "descripcion": "BLEFARITIS PARPEBRAL DERECHA"
+ },
+ {
+  "codigo_origen": "1183",
+  "descripcion": "BALANITIS (INFLAMACIÒN PREPUCIAL)"
+ },
+ {
+  "codigo_origen": "1184",
+  "descripcion": "METRORRAGIA ?"
+ },
+ {
+  "codigo_origen": "1185",
+  "descripcion": "DEFICIT DE ATENCION"
+ },
+ {
+  "codigo_origen": "1186",
+  "descripcion": "ECCEMA  PALPEBRAL"
+ },
+ {
+  "codigo_origen": "1187",
+  "descripcion": "MANCHAS HIPOCROMICAS EN PIEL  CONEGNITAS?"
+ },
+ {
+  "codigo_origen": "1188",
+  "descripcion": "FISTULA BRAQUIAL CIEGA CERVICAL"
+ },
+ {
+  "codigo_origen": "1189",
+  "descripcion": "DIARREA PARA-INTESTINAL?"
+ },
+ {
+  "codigo_origen": "1190",
+  "descripcion": "HERIDA INFECTADA EN CARRILLO IZQ, POST TRAUMA"
+ },
+ {
+  "codigo_origen": "1191",
+  "descripcion": "PIODERMITIS LEVE"
+ },
+ {
+  "codigo_origen": "1192",
+  "descripcion": "ALERGIA CUTANEA"
+ },
+ {
+  "codigo_origen": "1193",
+  "descripcion": "SIND  KAWASAKI  ?"
+ },
+ {
+  "codigo_origen": "1194",
+  "descripcion": "BRADICARDIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1195",
+  "descripcion": "CARDIOPATIA CANGENITA CORREGIDA"
+ },
+ {
+  "codigo_origen": "1196",
+  "descripcion": "ESTENOSIS / INSUFICIENCIA VAL PULM LEVE POST QUIRU"
+ },
+ {
+  "codigo_origen": "1197",
+  "descripcion": "SINCOPE EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1198",
+  "descripcion": "MICROLITIASIS RENAL IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1199",
+  "descripcion": "HERIDA INFECTADA PULGAR IZQ"
+ },
+ {
+  "codigo_origen": "1200",
+  "descripcion": "ADENITIS AXILAR IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1201",
+  "descripcion": "LACERACION FRONTAL POST TRAUMA"
+ },
+ {
+  "codigo_origen": "1202",
+  "descripcion": "DERMATITIS CUERO CABELLUDO"
+ },
+ {
+  "codigo_origen": "1203",
+  "descripcion": "EPLILEPSIA: CRISIS DE AUSENCIA."
+ },
+ {
+  "codigo_origen": "1233",
+  "descripcion": "PERLECH"
+ },
+ {
+  "codigo_origen": "1204",
+  "descripcion": "PARALISIS FACIAL PERIFERICA IZQ CONGENITA ?"
+ },
+ {
+  "codigo_origen": "1205",
+  "descripcion": "MICROLITIASIS RENAL BILAT"
+ },
+ {
+  "codigo_origen": "1206",
+  "descripcion": "ENCEFALOPATIA  ESATTICA"
+ },
+ {
+  "codigo_origen": "1207",
+  "descripcion": "SINDROME GENETICO, MARFAN?"
+ },
+ {
+  "codigo_origen": "1208",
+  "descripcion": "NEUMONITIS QUIMICA"
+ },
+ {
+  "codigo_origen": "1209",
+  "descripcion": "CONJUNTIVITIS BILATERAL BACTERIANA"
+ },
+ {
+  "codigo_origen": "1210",
+  "descripcion": "PIEL ASPERA, CON PAPULAS EN MEJILLAS"
+ },
+ {
+  "codigo_origen": "1211",
+  "descripcion": "ALOPECIAS LEVE PARCIAL"
+ },
+ {
+  "codigo_origen": "1212",
+  "descripcion": "ESCABIOSIS VS MILIARIA"
+ },
+ {
+  "codigo_origen": "1213",
+  "descripcion": "HERNIA UMBILICAL CONGENITA MAYOR DE 2 CNTS"
+ },
+ {
+  "codigo_origen": "1214",
+  "descripcion": "HIPOTIROIDISMO ?"
+ },
+ {
+  "codigo_origen": "1215",
+  "descripcion": "ABSESO PERIDENTAL, BILATERAL"
+ },
+ {
+  "codigo_origen": "1216",
+  "descripcion": "HIPOGLICEMIA POR AYUMNOS PROLONGADOS?"
+ },
+ {
+  "codigo_origen": "1217",
+  "descripcion": "ASFIXIA PERINATAL"
+ },
+ {
+  "codigo_origen": "1218",
+  "descripcion": "HEMMORRAGIA DE LA MATRIZ GERMINAL CEREBRAL GARDO I"
+ },
+ {
+  "codigo_origen": "1219",
+  "descripcion": "TARUMA OBSTETRICO: FX CLAVICULA D"
+ },
+ {
+  "codigo_origen": "1220",
+  "descripcion": "HIPERACITIVIDAD"
+ },
+ {
+  "codigo_origen": "1221",
+  "descripcion": "CARIES RAMPANTE"
+ },
+ {
+  "codigo_origen": "1222",
+  "descripcion": "EXCEMA FACIAL"
+ },
+ {
+  "codigo_origen": "1223",
+  "descripcion": "GRANULOMA PIOGENO UMBIOLICAL"
+ },
+ {
+  "codigo_origen": "1224",
+  "descripcion": "FORUNCULO GLUTEO"
+ },
+ {
+  "codigo_origen": "1225",
+  "descripcion": "RN ALTO RIESGO VPH MATERNO"
+ },
+ {
+  "codigo_origen": "1226",
+  "descripcion": "RINITIS VASOMOTORA PERSISTENTE"
+ },
+ {
+  "codigo_origen": "1227",
+  "descripcion": "MANOS DESCAMADAS"
+ },
+ {
+  "codigo_origen": "1228",
+  "descripcion": "RUBICUNDES FACIAL"
+ },
+ {
+  "codigo_origen": "1229",
+  "descripcion": "QUISTE CEBACEO ? PARPADO SUP IZQ"
+ },
+ {
+  "codigo_origen": "1230",
+  "descripcion": "HERNIA UMBILICAL CONGENITA EN RESOLUCION,"
+ },
+ {
+  "codigo_origen": "1231",
+  "descripcion": "FRACTURA CLAVICULA  IZQ (TRAUMA OBST)"
+ },
+ {
+  "codigo_origen": "1232",
+  "descripcion": "SOPLO SISTOLICO EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1234",
+  "descripcion": "CARDIOPATIA CONG: FORAMEN OVAL PERMEABLE (FOP)"
+ },
+ {
+  "codigo_origen": "1235",
+  "descripcion": "ANTECEDENTE DE HIPOGLICEMIA NEONATAL: HIJA DE MADR"
+ },
+ {
+  "codigo_origen": "1236",
+  "descripcion": "DESVIACION DE COMISURA LABIAL CONGENITA"
+ },
+ {
+  "codigo_origen": "1237",
+  "descripcion": "RINITIS INFECCIOSA: ESTAFILOCOCCO"
+ },
+ {
+  "codigo_origen": "1238",
+  "descripcion": "EED NUYTRICIONAL: ZONA CRITICA PATRON FAMILIAR"
+ },
+ {
+  "codigo_origen": "1239",
+  "descripcion": "CALLO OSEO? PARIETO FRONTAL IZQ, CONGE. EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1240",
+  "descripcion": "INFECCION URINARIA ?"
+ },
+ {
+  "codigo_origen": "1241",
+  "descripcion": "POST OPERAT: CIRCUNSCICION"
+ },
+ {
+  "codigo_origen": "1242",
+  "descripcion": "AMIBIASIS A REPETICION"
+ },
+ {
+  "codigo_origen": "1243",
+  "descripcion": "HISTORIA DE ASMA BRONQUIAL"
+ },
+ {
+  "codigo_origen": "1244",
+  "descripcion": "MENINGOCELE"
+ },
+ {
+  "codigo_origen": "1245",
+  "descripcion": "ANTEPIE VARO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1246",
+  "descripcion": "RETRASO MOTOR LEVE"
+ },
+ {
+  "codigo_origen": "1247",
+  "descripcion": "ADHERENCIAS BALANOPREPUCIALES: SE LIBERAN"
+ },
+ {
+  "codigo_origen": "1248",
+  "descripcion": "HEMATOMA NARIZ POST TRAUMA"
+ },
+ {
+  "codigo_origen": "1249",
+  "descripcion": "OTITIS MEDIA PERF IZQ REINCIDENTE"
+ },
+ {
+  "codigo_origen": "1250",
+  "descripcion": "TRAUMATISMO CRANEAL: FISURA PARIETAL IZQ."
+ },
+ {
+  "codigo_origen": "1251",
+  "descripcion": "PRE-ESCOLAR CATARROSO"
+ },
+ {
+  "codigo_origen": "1252",
+  "descripcion": "TRASTORNOS VISUALES"
+ },
+ {
+  "codigo_origen": "1253",
+  "descripcion": "HERPES GENITAL"
+ },
+ {
+  "codigo_origen": "1254",
+  "descripcion": "INFECCION ACTIVA POR CITOMEGALOVIRUS."
+ },
+ {
+  "codigo_origen": "1255",
+  "descripcion": "BRONQUITIS ALERGICA PERSISTENTE ?"
+ },
+ {
+  "codigo_origen": "1256",
+  "descripcion": "DESHIDRATACION LEVE POR FALTA DE INGESTA"
+ },
+ {
+  "codigo_origen": "1257",
+  "descripcion": "ANEMIA LEVE HIPOCROMICA"
+ },
+ {
+  "codigo_origen": "1258",
+  "descripcion": "ABLACTACION PRECOZ"
+ },
+ {
+  "codigo_origen": "1259",
+  "descripcion": "NEVUS CUERO CABELLODO"
+ },
+ {
+  "codigo_origen": "1260",
+  "descripcion": "CELULITIS DEDO MEÑIQUE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1261",
+  "descripcion": "OTITIS MEDIA EXTERNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1262",
+  "descripcion": "NEUMONIA IZQUIERDA RESUELTA."
+ },
+ {
+  "codigo_origen": "1263",
+  "descripcion": "DEARREA A REPETICION POST QUIRURGICA: RESEC INTES."
+ },
+ {
+  "codigo_origen": "1264",
+  "descripcion": "OTITIS MEDIA  DERECHA SEROSA"
+ },
+ {
+  "codigo_origen": "1265",
+  "descripcion": "TRANSGRESION ALIMENTICIA"
+ },
+ {
+  "codigo_origen": "1266",
+  "descripcion": "AGENESIA MUSC PECTORAL M D"
+ },
+ {
+  "codigo_origen": "1267",
+  "descripcion": "CISTITIS NO INFECCIOSA?"
+ },
+ {
+  "codigo_origen": "1268",
+  "descripcion": "OTITIS MEDIA BILATERAL PERFORADA"
+ },
+ {
+  "codigo_origen": "1269",
+  "descripcion": "HEMMORRAGIA SUBCONJUNTIVAL 8TRAUMA OBSTETRICO)"
+ },
+ {
+  "codigo_origen": "1270",
+  "descripcion": "HERNIA UMBILICAL CONGENITA: MENOR 2 CNTS"
+ },
+ {
+  "codigo_origen": "1271",
+  "descripcion": "GINGIVO-AMIGDALITIS AFTOSA"
+ },
+ {
+  "codigo_origen": "1272",
+  "descripcion": "ARTRITIS REUMATOIDEA JUVENIL"
+ },
+ {
+  "codigo_origen": "1273",
+  "descripcion": "OTALGIA DERECHA"
+ },
+ {
+  "codigo_origen": "1299",
+  "descripcion": "HEMOPTISIS"
+ },
+ {
+  "codigo_origen": "1274",
+  "descripcion": "HIPOTENSION EN ESTUDIO?"
+ },
+ {
+  "codigo_origen": "1275",
+  "descripcion": "HIPOTENSION POR CALOR ?"
+ },
+ {
+  "codigo_origen": "1276",
+  "descripcion": "SIND ANO-MANO-BOCA"
+ },
+ {
+  "codigo_origen": "1277",
+  "descripcion": "CELULIIS FRONTAL"
+ },
+ {
+  "codigo_origen": "1278",
+  "descripcion": "DOLOR EN HIPOGASTRIO EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1279",
+  "descripcion": "ESTENOSIS VALVULAR AORTICA"
+ },
+ {
+  "codigo_origen": "1280",
+  "descripcion": "HERIDA INFECTADA TOBILLO IZQ."
+ },
+ {
+  "codigo_origen": "1281",
+  "descripcion": "PICADURA DE ALACRAN ASINTOMATICA"
+ },
+ {
+  "codigo_origen": "1282",
+  "descripcion": "PICADURA POR GARRAPATAS"
+ },
+ {
+  "codigo_origen": "1283",
+  "descripcion": "HERNIA INGUINAL DERECHA, REDUCTIBLE Y COHERCIBLE."
+ },
+ {
+  "codigo_origen": "1284",
+  "descripcion": "DERMATITIS GENITAL AMONIACAL"
+ },
+ {
+  "codigo_origen": "1285",
+  "descripcion": "CELULITIS ABSCEDADA BRAZO D POST A PICADURA INSECT"
+ },
+ {
+  "codigo_origen": "1286",
+  "descripcion": "RINOFARINGITIS VIRALCON GOTEO POSTNASAL"
+ },
+ {
+  "codigo_origen": "1287",
+  "descripcion": "RINOFARINGITIS ATOPICA CON GOTEO POSTNASAL"
+ },
+ {
+  "codigo_origen": "1288",
+  "descripcion": "BRONQUITIS INFECCIOSA CON BRONCOESPASMO ASOCIADO"
+ },
+ {
+  "codigo_origen": "1289",
+  "descripcion": "ABSCESOS GLUTEOS"
+ },
+ {
+  "codigo_origen": "1290",
+  "descripcion": "PIODERMITIS AMPOLLOSAS"
+ },
+ {
+  "codigo_origen": "1291",
+  "descripcion": "FISURA  ANAL ?"
+ },
+ {
+  "codigo_origen": "1292",
+  "descripcion": "DERMATITIS MICOTICA GENITAL"
+ },
+ {
+  "codigo_origen": "1293",
+  "descripcion": "ERITRODERMIA"
+ },
+ {
+  "codigo_origen": "1294",
+  "descripcion": "PAROTIDITIS RECIDIVANTES"
+ },
+ {
+  "codigo_origen": "1295",
+  "descripcion": "ECEMA RETROAURICULAR"
+ },
+ {
+  "codigo_origen": "1296",
+  "descripcion": "PIOGINGIVITIS"
+ },
+ {
+  "codigo_origen": "1297",
+  "descripcion": "DISPLASIA PULMONAR"
+ },
+ {
+  "codigo_origen": "1304",
+  "descripcion": "TIMIDES"
+ },
+ {
+  "codigo_origen": "1298",
+  "descripcion": "ECCEMA EN PLIGUES CUTANEOS"
+ },
+ {
+  "codigo_origen": "1300",
+  "descripcion": "TRASTORNO MENSTRUAL"
+ },
+ {
+  "codigo_origen": "1301",
+  "descripcion": "HERNIA INGUINAL IZQU. IRREDUCTIBLE VS GANGLIO ?"
+ },
+ {
+  "codigo_origen": "1302",
+  "descripcion": "LIPOMIELOMENINGOCELO"
+ },
+ {
+  "codigo_origen": "1303",
+  "descripcion": "NEUMONIA LOBAR SUP DERECHA"
+ },
+ {
+  "codigo_origen": "1305",
+  "descripcion": "ENTERORRAGIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1306",
+  "descripcion": "ASIMETRIA COMISURA LABIAL"
+ },
+ {
+  "codigo_origen": "1307",
+  "descripcion": "RINOCONJUNTIVITIS INFECCIOSA"
+ },
+ {
+  "codigo_origen": "1308",
+  "descripcion": "PIE PLANO +GENU VARO SINTOMATICO"
+ },
+ {
+  "codigo_origen": "1309",
+  "descripcion": "TRASTORNO PARA LA MARCHA"
+ },
+ {
+  "codigo_origen": "1310",
+  "descripcion": "ED NUTRICIONAL: TALLA BAJA PERFIL 10, PESO DEBAJO"
+ },
+ {
+  "codigo_origen": "1311",
+  "descripcion": "HEMANGIOMA ANTEBRAZO DERECHO"
+ },
+ {
+  "codigo_origen": "1312",
+  "descripcion": "DESNUTRICION"
+ },
+ {
+  "codigo_origen": "1313",
+  "descripcion": "ABSCESO GLUTEO D."
+ },
+ {
+  "codigo_origen": "1314",
+  "descripcion": "REACCION MEDICAMENTOSA"
+ },
+ {
+  "codigo_origen": "1315",
+  "descripcion": "PIE PLANO SINTOMATICO"
+ },
+ {
+  "codigo_origen": "1316",
+  "descripcion": "SANGRAMIENTO GENITAL"
+ },
+ {
+  "codigo_origen": "1317",
+  "descripcion": "ABSCESO MUSLO DERECHO"
+ },
+ {
+  "codigo_origen": "1318",
+  "descripcion": "DISURIA"
+ },
+ {
+  "codigo_origen": "1319",
+  "descripcion": "HERIDA LABIO INFERIOR"
+ },
+ {
+  "codigo_origen": "1320",
+  "descripcion": "DWTENCION DE CURVA DE CRECIMIENTO. PESO"
+ },
+ {
+  "codigo_origen": "1321",
+  "descripcion": "ENTEROCOLITIS: AMIBIANA VS ALERGICA"
+ },
+ {
+  "codigo_origen": "1322",
+  "descripcion": "RINOCONJUNTIVITIS CON GOTEO POST NASAL"
+ },
+ {
+  "codigo_origen": "1323",
+  "descripcion": "ED NUTRICUIONAL  PESO EN PERC 50, PESO MENOR DE 10"
+ },
+ {
+  "codigo_origen": "1324",
+  "descripcion": "POLICETEMIA ???"
+ },
+ {
+  "codigo_origen": "1325",
+  "descripcion": "HERIDA INFECTADA CUERO CABELLUDO"
+ },
+ {
+  "codigo_origen": "1326",
+  "descripcion": "CAIDA DEL CABELLO DIFUSO"
+ },
+ {
+  "codigo_origen": "1327",
+  "descripcion": "ANEMIA DEL RN ASINTOMATICO"
+ },
+ {
+  "codigo_origen": "1328",
+  "descripcion": "PIE PLANO ASINTOMATICO"
+ },
+ {
+  "codigo_origen": "1329",
+  "descripcion": "PIE EQUINO VARO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1330",
+  "descripcion": "DIARREA AGUDA  AFEBRIL CON DESHI. LEVE"
+ },
+ {
+  "codigo_origen": "1331",
+  "descripcion": "FRACTURA CLAVICULA DERECHA : TRAUMA OBST"
+ },
+ {
+  "codigo_origen": "1332",
+  "descripcion": "ADENOMEGALIAS AXILARES BILATERAL"
+ },
+ {
+  "codigo_origen": "1333",
+  "descripcion": "CORIZA COMUN"
+ },
+ {
+  "codigo_origen": "1334",
+  "descripcion": "LUXACION CONGENITA HEMICADERA D"
+ },
+ {
+  "codigo_origen": "1335",
+  "descripcion": "CELULITIS ABSCEDADA MUSLO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1336",
+  "descripcion": "HIPOCALEMIA CLINICA"
+ },
+ {
+  "codigo_origen": "1337",
+  "descripcion": "DESHIDRATACION LEVE POR EMESIS"
+ },
+ {
+  "codigo_origen": "1338",
+  "descripcion": "MORDEDURA  POR CANINO OBS VAC"
+ },
+ {
+  "codigo_origen": "1339",
+  "descripcion": "LEUCOPENIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1340",
+  "descripcion": "PAROTIDITIS POST-VACUNAL"
+ },
+ {
+  "codigo_origen": "1341",
+  "descripcion": "PAROTIDITIS BILATERAL PRED D"
+ },
+ {
+  "codigo_origen": "1342",
+  "descripcion": "NEFRITIS IZQUIERDA' DX ECOGRAFICO"
+ },
+ {
+  "codigo_origen": "1343",
+  "descripcion": "ADENITIS SUB MAX IZQ CON CELULITIS CERVICAL."
+ },
+ {
+  "codigo_origen": "1344",
+  "descripcion": "ANEMIA MODERADA HIPOCROMICA"
+ },
+ {
+  "codigo_origen": "1345",
+  "descripcion": "DERMATITIS POR CONTACTO"
+ },
+ {
+  "codigo_origen": "1346",
+  "descripcion": "HERIDA DE HERNIOPLASTIA UMBILICAL INFECTADA"
+ },
+ {
+  "codigo_origen": "1375",
+  "descripcion": "DISFAGIA"
+ },
+ {
+  "codigo_origen": "1347",
+  "descripcion": "ACIDOSIS TUBULAR RENAL?"
+ },
+ {
+  "codigo_origen": "1348",
+  "descripcion": "NEUMONIA ANGULO CARDIO FRENICO DERECHO"
+ },
+ {
+  "codigo_origen": "1349",
+  "descripcion": "TROMBOSITOSIS EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1350",
+  "descripcion": "TROMBOCITOPENIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1351",
+  "descripcion": "TORAX EXCAVATUM"
+ },
+ {
+  "codigo_origen": "1352",
+  "descripcion": "RINOSINUSITIS ALERGICA"
+ },
+ {
+  "codigo_origen": "1353",
+  "descripcion": "ED NUTRICIONAL: NORMAL T Y P PERCENTIL 50"
+ },
+ {
+  "codigo_origen": "1354",
+  "descripcion": "HEMORROIDES"
+ },
+ {
+  "codigo_origen": "1355",
+  "descripcion": "LITIASIS RENAL BILATERAL"
+ },
+ {
+  "codigo_origen": "1356",
+  "descripcion": "CELULITIS ESTAFILOCOCCICA  FI D"
+ },
+ {
+  "codigo_origen": "1357",
+  "descripcion": "PARALISI FACIAL PERIFERICA IZQ ANTIGUA"
+ },
+ {
+  "codigo_origen": "1358",
+  "descripcion": "ARTROSIS DE RODILLAS"
+ },
+ {
+  "codigo_origen": "1359",
+  "descripcion": "1º DEDO PIE IZQ EN ABDUCCION"
+ },
+ {
+  "codigo_origen": "1360",
+  "descripcion": "PARESIA PLEXO BRAQUIAL IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1361",
+  "descripcion": "ECCEMA FACIAL"
+ },
+ {
+  "codigo_origen": "1362",
+  "descripcion": "BRONCOASPIRACION?"
+ },
+ {
+  "codigo_origen": "1363",
+  "descripcion": "FALTA  DE PROGRESION POND ESTATURAL"
+ },
+ {
+  "codigo_origen": "1364",
+  "descripcion": "OTITIS MEDIA SEROSA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1365",
+  "descripcion": "ABSCESO PERIDENTAL FISTULIZADO ARC S IZQ"
+ },
+ {
+  "codigo_origen": "1366",
+  "descripcion": "LACERACIONES MULTIPLES POR ANIMAL CANINO"
+ },
+ {
+  "codigo_origen": "1367",
+  "descripcion": "UÑAS QUEBRADIZAS"
+ },
+ {
+  "codigo_origen": "1368",
+  "descripcion": "DUODENITIS"
+ },
+ {
+  "codigo_origen": "1369",
+  "descripcion": "HIPOTONIA DISCRETA"
+ },
+ {
+  "codigo_origen": "1370",
+  "descripcion": "ED NUTRICIONAL: PESO P:99 T: 90"
+ },
+ {
+  "codigo_origen": "1376",
+  "descripcion": "ED. NUTRICIONAL: NORMAL"
+ },
+ {
+  "codigo_origen": "1371",
+  "descripcion": "PARASIT. INTEST: ENTEROBIUS VERMICULARES"
+ },
+ {
+  "codigo_origen": "1372",
+  "descripcion": "HERIDA CUERO CABELLUDO CON RAFIA LIMPIA"
+ },
+ {
+  "codigo_origen": "1373",
+  "descripcion": "MIALGIAS EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1374",
+  "descripcion": "HEMANGIOMA CONGENITO NASLA"
+ },
+ {
+  "codigo_origen": "1377",
+  "descripcion": "RINITIS VASOMOTORA + OTITIS MEDIA PERF D"
+ },
+ {
+  "codigo_origen": "1378",
+  "descripcion": "FIMOSIS POST TRAUMATICA."
+ },
+ {
+  "codigo_origen": "1379",
+  "descripcion": "DIARREA AGUDA AFEBRIL S/DESHIDRATACION"
+ },
+ {
+  "codigo_origen": "1380",
+  "descripcion": "MICOSIS CUERO CABELLUDO CON ALOPECIA PARCIAL"
+ },
+ {
+  "codigo_origen": "1381",
+  "descripcion": "HIDROSADENITIS AXILAR DERECHA (GOLONDRINOS)"
+ },
+ {
+  "codigo_origen": "1382",
+  "descripcion": "DERMATITIS EXCEMATOZA PALPEBRAL IZQ"
+ },
+ {
+  "codigo_origen": "1383",
+  "descripcion": "ESTRAVISMO DIVERGENTE OJO IZQ."
+ },
+ {
+  "codigo_origen": "1384",
+  "descripcion": "FASCICULASIONES"
+ },
+ {
+  "codigo_origen": "1385",
+  "descripcion": "ANEMIA DEL LACTANTE"
+ },
+ {
+  "codigo_origen": "1386",
+  "descripcion": "ENFERMEDAD MANO ANO BOCA"
+ },
+ {
+  "codigo_origen": "1387",
+  "descripcion": "HEMANGIOMA CONGENITO HOMBRO D"
+ },
+ {
+  "codigo_origen": "1388",
+  "descripcion": "ALERGIA MEDICAMENTOSA: AINES"
+ },
+ {
+  "codigo_origen": "1389",
+  "descripcion": "HEMANGIOMA 0,5CNT MUSLO IZQ"
+ },
+ {
+  "codigo_origen": "1390",
+  "descripcion": "HEMANGIMA CONG MUSLO D. O,5 CNT"
+ },
+ {
+  "codigo_origen": "1391",
+  "descripcion": "SINOVITIS CADERA ?"
+ },
+ {
+  "codigo_origen": "1392",
+  "descripcion": "DOLOR ABDOMINAL: FOLICULO ROTO"
+ },
+ {
+  "codigo_origen": "1393",
+  "descripcion": "DIASTASIS RECTOS ANTERIORES"
+ },
+ {
+  "codigo_origen": "1394",
+  "descripcion": "DIARREA AGUDA AFEBRIL SIN DESHIDRATACION"
+ },
+ {
+  "codigo_origen": "1395",
+  "descripcion": "RINITIS ALERGICA PERSIST. C/ G. POST NASAL"
+ },
+ {
+  "codigo_origen": "1396",
+  "descripcion": "TIÑA CAPITIS"
+ },
+ {
+  "codigo_origen": "1397",
+  "descripcion": "RETINOPATIA"
+ },
+ {
+  "codigo_origen": "1398",
+  "descripcion": "HIPOTIROIDISMO"
+ },
+ {
+  "codigo_origen": "1399",
+  "descripcion": "ESCOLIOSIS"
+ },
+ {
+  "codigo_origen": "1400",
+  "descripcion": "POLITELIA D"
+ },
+ {
+  "codigo_origen": "1401",
+  "descripcion": "RINITIS VASOMOTORA PERSISTENTE CON GOTEO POS-NASAL"
+ },
+ {
+  "codigo_origen": "1402",
+  "descripcion": "ALERGIA AL CARNISIN : URTICARIA"
+ },
+ {
+  "codigo_origen": "1403",
+  "descripcion": "DEFICIT DEL LENGUAJE"
+ },
+ {
+  "codigo_origen": "1404",
+  "descripcion": "LENGUA GEOGRAFICA"
+ },
+ {
+  "codigo_origen": "1405",
+  "descripcion": "ALERGIA A PROT LECHE VACA DE INGESTA MATERNA"
+ },
+ {
+  "codigo_origen": "1406",
+  "descripcion": "DERMATITIS EXCEMATOSA PABELLON RETRO-AURICULAR"
+ },
+ {
+  "codigo_origen": "1407",
+  "descripcion": "MANCHAS HIPERCROMICAS DENTALES"
+ },
+ {
+  "codigo_origen": "1408",
+  "descripcion": "PARASITOSIS INTESTINAL: OXIUROS"
+ },
+ {
+  "codigo_origen": "1409",
+  "descripcion": "INFECCION PREPUCIAL"
+ },
+ {
+  "codigo_origen": "1410",
+  "descripcion": "DOLOR EN RODILLA D DE ETA"
+ },
+ {
+  "codigo_origen": "1411",
+  "descripcion": "INFECCION VIRAL: COVID 19?"
+ },
+ {
+  "codigo_origen": "1412",
+  "descripcion": "PIE EQUINOVARO DERECHO"
+ },
+ {
+  "codigo_origen": "1413",
+  "descripcion": "RESOLUCION CUADRO ANTERIOR"
+ },
+ {
+  "codigo_origen": "1414",
+  "descripcion": "CONTACTO POSITIVO CON PX CON COVID 19"
+ },
+ {
+  "codigo_origen": "1415",
+  "descripcion": "ADENITIS SUPRACLAVICULAR DERECHA"
+ },
+ {
+  "codigo_origen": "1416",
+  "descripcion": "ADENITIS ABSCEDADA SUPRACLAVICULAR D."
+ },
+ {
+  "codigo_origen": "1417",
+  "descripcion": "RASH MACULO PAPULAR GENRALIZADO"
+ },
+ {
+  "codigo_origen": "1419",
+  "descripcion": "DIARREA AGUDA AFEBRIL S/D RECURRENTE"
+ },
+ {
+  "codigo_origen": "1418",
+  "descripcion": "HEMATOMA DE PARED ABDOMINAL PORTS TRAUMATICO."
+ },
+ {
+  "codigo_origen": "1420",
+  "descripcion": "ESPLENOMEGALIA INESPECIFICA"
+ },
+ {
+  "codigo_origen": "1421",
+  "descripcion": "DESNUTRIDO POST NATAL"
+ },
+ {
+  "codigo_origen": "1422",
+  "descripcion": "EPIDIDIMITIS IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1423",
+  "descripcion": "PROLAPSO RECTAL"
+ },
+ {
+  "codigo_origen": "1424",
+  "descripcion": "PSICOSIS COMPULSIVA"
+ },
+ {
+  "codigo_origen": "1425",
+  "descripcion": "CELULITIS AMBOS MUSLOS"
+ },
+ {
+  "codigo_origen": "1426",
+  "descripcion": "SOB: ESTRECHES URETERAL?"
+ },
+ {
+  "codigo_origen": "1427",
+  "descripcion": "CONVALESCIENTE COVID ?"
+ },
+ {
+  "codigo_origen": "1428",
+  "descripcion": "INFECCION NEONATAL ? EN RESOLUCION"
+ },
+ {
+  "codigo_origen": "1429",
+  "descripcion": "HIPERINSULINEMIA POST PRANDIAL???"
+ },
+ {
+  "codigo_origen": "1430",
+  "descripcion": "FALTA DE INGESTA POR DOLOR EN ARCADA SUP POR BRACK"
+ },
+ {
+  "codigo_origen": "1431",
+  "descripcion": "OTITIS MEDIA BILATERAL SEROSA"
+ },
+ {
+  "codigo_origen": "1432",
+  "descripcion": "INFECCION VIRAL: COVID 19"
+ },
+ {
+  "codigo_origen": "1433",
+  "descripcion": "PARASITOSIS INTESTINAL: ASCARISL"
+ },
+ {
+  "codigo_origen": "1434",
+  "descripcion": "PACIENTE ATOPICO"
+ },
+ {
+  "codigo_origen": "1435",
+  "descripcion": "CONTACTO CON COVID RECIENTE"
+ },
+ {
+  "codigo_origen": "1436",
+  "descripcion": "HEMANGIOMA EN ANTEPIE DERECHO DE 1X1 APROX"
+ },
+ {
+  "codigo_origen": "1437",
+  "descripcion": "SEPSIS NEONATAL ?"
+ },
+ {
+  "codigo_origen": "1438",
+  "descripcion": "ALERGIA A PROTEINA DE HUEVO ?"
+ },
+ {
+  "codigo_origen": "1439",
+  "descripcion": "PRESENTACION DE CARA"
+ },
+ {
+  "codigo_origen": "1440",
+  "descripcion": "NEUTROPENIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1441",
+  "descripcion": "HERNIA UMBILICAL RECIDIVANTE"
+ },
+ {
+  "codigo_origen": "1442",
+  "descripcion": "TELARCA UNILATERAL"
+ },
+ {
+  "codigo_origen": "1443",
+  "descripcion": "DESPISTAJE"
+ },
+ {
+  "codigo_origen": "1444",
+  "descripcion": "PARALISI FACIAL PERIF D. CONGENITA"
+ },
+ {
+  "codigo_origen": "1445",
+  "descripcion": "ESTENOSIS ESOFAGICA CONGENITA CORREGIDA"
+ },
+ {
+  "codigo_origen": "1446",
+  "descripcion": "ECZEMA CUTANEO"
+ },
+ {
+  "codigo_origen": "1447",
+  "descripcion": "ADOLESCENTE SANO"
+ },
+ {
+  "codigo_origen": "1448",
+  "descripcion": "EQUIMOSIS EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1449",
+  "descripcion": "ADENOMEGALIA SUBMAXILAR D"
+ },
+ {
+  "codigo_origen": "1450",
+  "descripcion": "PARAFIMOSIS.. SE REVIERTE"
+ },
+ {
+  "codigo_origen": "1451",
+  "descripcion": "ABSCESO FRANTAL POST PIC INSECTO"
+ },
+ {
+  "codigo_origen": "1452",
+  "descripcion": "TRASTORNOS DE ANSIEDAD"
+ },
+ {
+  "codigo_origen": "1453",
+  "descripcion": "HERNIA INGUINOESCROTAL + HIDROCELE D, REDUC"
+ },
+ {
+  "codigo_origen": "1454",
+  "descripcion": "DESVANECIMIENTO POR CALOR"
+ },
+ {
+  "codigo_origen": "1455",
+  "descripcion": "DERMATITIS EN CUELLO"
+ },
+ {
+  "codigo_origen": "1456",
+  "descripcion": "HEMATURIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1457",
+  "descripcion": "ASIMETRIA DE RAFE MEDIO GLUTEO CONGENITO"
+ },
+ {
+  "codigo_origen": "1458",
+  "descripcion": "RASGOS AUTISTAS?"
+ },
+ {
+  "codigo_origen": "1459",
+  "descripcion": "RINITIS VASOMOTORA CON GOTEO POSTNASAL"
+ },
+ {
+  "codigo_origen": "1460",
+  "descripcion": "DERMATITIS PREPUCIAL"
+ },
+ {
+  "codigo_origen": "1461",
+  "descripcion": "VERRUGA COMUN PERIANAL VS VPH???"
+ },
+ {
+  "codigo_origen": "1462",
+  "descripcion": "COVID 19: OMICRON???"
+ },
+ {
+  "codigo_origen": "1463",
+  "descripcion": "TIC NERVIOS EN EL PARPADO"
+ },
+ {
+  "codigo_origen": "1464",
+  "descripcion": "TIC NERVIOSO EN LOS LABIOS"
+ },
+ {
+  "codigo_origen": "1465",
+  "descripcion": "DIENTES APIÑADOS"
+ },
+ {
+  "codigo_origen": "1466",
+  "descripcion": "SANGRADO GENITAL POR SUPRESION HORMANAL AL NACER"
+ },
+ {
+  "codigo_origen": "1467",
+  "descripcion": "CEFALEA TENSIONAL"
+ },
+ {
+  "codigo_origen": "1480",
+  "descripcion": "ANEMIA MODERADA"
+ },
+ {
+  "codigo_origen": "1468",
+  "descripcion": "MENINGITIS BACTERIANA ?"
+ },
+ {
+  "codigo_origen": "1469",
+  "descripcion": "RINITIS"
+ },
+ {
+  "codigo_origen": "1470",
+  "descripcion": "PARESIA PLEXO BRAQUIAL DERECHO CONGENITO?"
+ },
+ {
+  "codigo_origen": "1471",
+  "descripcion": "NEUMONIA PARAHILIAR D"
+ },
+ {
+  "codigo_origen": "1472",
+  "descripcion": "PAROTIDITIS BILATERAL DE CAUSA MECANICA."
+ },
+ {
+  "codigo_origen": "1473",
+  "descripcion": "ALEWRGIA AL GLUTE?"
+ },
+ {
+  "codigo_origen": "1474",
+  "descripcion": "GENU VALGO SINTOMATICO"
+ },
+ {
+  "codigo_origen": "1475",
+  "descripcion": "TRIGONOCEFALIA (CRANEOSINOSTOSIS)"
+ },
+ {
+  "codigo_origen": "1476",
+  "descripcion": "ANTECEDT DE HEMATOMAS EN MS INF C/TRAUM LEVES"
+ },
+ {
+  "codigo_origen": "1477",
+  "descripcion": "SINOVITIS HEMICADERA IZQ"
+ },
+ {
+  "codigo_origen": "1478",
+  "descripcion": "STRES ESTUDIANTEL"
+ },
+ {
+  "codigo_origen": "1479",
+  "descripcion": "FISTULA PREAURICULAR DERECHA CONGENITA"
+ },
+ {
+  "codigo_origen": "1481",
+  "descripcion": "DISTRES RESP DEL RN:"
+ },
+ {
+  "codigo_origen": "1482",
+  "descripcion": "DISTRES RESP DEL RN: T. TRANS."
+ },
+ {
+  "codigo_origen": "1483",
+  "descripcion": "AUTISMO INFANTIL"
+ },
+ {
+  "codigo_origen": "1484",
+  "descripcion": "SINDROME DE STRES POST PANDEMIA"
+ },
+ {
+  "codigo_origen": "1485",
+  "descripcion": "ADENOMEHALIAS CERVICALES BILAT RETRAAU. EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1486",
+  "descripcion": "LUXACION CONGENITA DE CADERA BILAT?"
+ },
+ {
+  "codigo_origen": "1487",
+  "descripcion": "ADENOMEGALIAS RETROCERVICALES EN ESTUDIO BILATERAL"
+ },
+ {
+  "codigo_origen": "1488",
+  "descripcion": "TRAUMATISMO LEVE GLUTEO"
+ },
+ {
+  "codigo_origen": "1489",
+  "descripcion": "FARINGOAMIGDALITIS VIRAL"
+ },
+ {
+  "codigo_origen": "1490",
+  "descripcion": "EPISTAXIS ANTERIOR: FRAGILIDAD CAPILAR."
+ },
+ {
+  "codigo_origen": "1491",
+  "descripcion": "AMIGDALITIS AA REPETICION"
+ },
+ {
+  "codigo_origen": "1492",
+  "descripcion": "LOE 4TO VENTRICULO"
+ },
+ {
+  "codigo_origen": "1493",
+  "descripcion": "HIDROCEFALIA"
+ },
+ {
+  "codigo_origen": "1494",
+  "descripcion": "QUISTE DE ESMEGMA PREPUCIAL"
+ },
+ {
+  "codigo_origen": "1495",
+  "descripcion": "PURPURA TROMBOCITOPENICA"
+ },
+ {
+  "codigo_origen": "1496",
+  "descripcion": "PITIRIASIS ROSADA"
+ },
+ {
+  "codigo_origen": "1497",
+  "descripcion": "HIDROCELE COMUNICANTE DERECHO"
+ },
+ {
+  "codigo_origen": "1498",
+  "descripcion": "INFECCION POR EPSTEIS BARR ANTIGUA"
+ },
+ {
+  "codigo_origen": "1499",
+  "descripcion": "ALERGIA ALIMENTARIA: CAMARONES INGERIDO POR LA MAD"
+ },
+ {
+  "codigo_origen": "1500",
+  "descripcion": "ED NUTRICIONAL: TALLA P:10 PESO  P:50"
+ },
+ {
+  "codigo_origen": "1501",
+  "descripcion": "CELULITIS FACIAL"
+ },
+ {
+  "codigo_origen": "1502",
+  "descripcion": "CONSTIPACION CON ENCOPRESIS"
+ },
+ {
+  "codigo_origen": "1503",
+  "descripcion": "DENGUE HE,ORRAGICO: SIN SIGNOS DE HEMORRAGIA"
+ },
+ {
+  "codigo_origen": "1504",
+  "descripcion": "QUISTE CEBACEO CERVICAL"
+ },
+ {
+  "codigo_origen": "1505",
+  "descripcion": "INFECCIONES VIRALES A REPETECION"
+ },
+ {
+  "codigo_origen": "1506",
+  "descripcion": "PIODERMITIS"
+ },
+ {
+  "codigo_origen": "1507",
+  "descripcion": "QUISTE CEBACEO AXILAR IZQ"
+ },
+ {
+  "codigo_origen": "1508",
+  "descripcion": "RASGOS AUTISTAS"
+ },
+ {
+  "codigo_origen": "1509",
+  "descripcion": "HIGADO GRASO GRADO 1"
+ },
+ {
+  "codigo_origen": "1510",
+  "descripcion": "BRUSISMO"
+ },
+ {
+  "codigo_origen": "1511",
+  "descripcion": "CRISIS DOLORASO EN AREA OCCIPAL IZQ, DE EAP"
+ },
+ {
+  "codigo_origen": "1512",
+  "descripcion": "DERMATITIS ALERGICA PAPULOSO AMBOS CODOS"
+ },
+ {
+  "codigo_origen": "1513",
+  "descripcion": "ALERGIA MEDICAMENTOSA: ACETAMINOFEN"
+ },
+ {
+  "codigo_origen": "1514",
+  "descripcion": "HIPOXIA PERINATAL"
+ },
+ {
+  "codigo_origen": "1515",
+  "descripcion": "ESTRAVISMO CONVERGENTE BILATERAL"
+ },
+ {
+  "codigo_origen": "1525",
+  "descripcion": "TRAUMA OBSTETRICO"
+ },
+ {
+  "codigo_origen": "1516",
+  "descripcion": "RINITIS INFECCIOSA CON GOTEO POST NASAL"
+ },
+ {
+  "codigo_origen": "1517",
+  "descripcion": "INFECCION VIRAL: COVID 19 VS DENGUE C?"
+ },
+ {
+  "codigo_origen": "1518",
+  "descripcion": "BARRO VESICULAR"
+ },
+ {
+  "codigo_origen": "1519",
+  "descripcion": "CISTITIS HEMORRAGICA"
+ },
+ {
+  "codigo_origen": "1520",
+  "descripcion": "SANGRAMIENTO GENITO URINARIO???"
+ },
+ {
+  "codigo_origen": "1521",
+  "descripcion": "CICATRIZ DE HERNIOPLASTIA UMB, LIMPIA"
+ },
+ {
+  "codigo_origen": "1522",
+  "descripcion": "FIEBRE PROLONGADA"
+ },
+ {
+  "codigo_origen": "1523",
+  "descripcion": "ESTADO NUTRICIONAL NORMAL"
+ },
+ {
+  "codigo_origen": "1524",
+  "descripcion": "PARESIA PLEXO BRAQUIAL DERECHO"
+ },
+ {
+  "codigo_origen": "1526",
+  "descripcion": "LITIASIS RENALD NO OBSTRUCTIVA"
+ },
+ {
+  "codigo_origen": "1527",
+  "descripcion": "OTITIS MEDIA SEROSA DERECHA"
+ },
+ {
+  "codigo_origen": "1528",
+  "descripcion": "ESPLENOMEGALIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1529",
+  "descripcion": "DEPRESION POR DUELO"
+ },
+ {
+  "codigo_origen": "1530",
+  "descripcion": "ANEMIA LEVE CLINICA"
+ },
+ {
+  "codigo_origen": "1531",
+  "descripcion": "OSTEOCONDRITIS COSTAL DERECHA"
+ },
+ {
+  "codigo_origen": "1532",
+  "descripcion": "INGESTA DE MATERIAL FECAL"
+ },
+ {
+  "codigo_origen": "1533",
+  "descripcion": "ALERGIA: EDEMAPALPEBRAL BILATERAL"
+ },
+ {
+  "codigo_origen": "1534",
+  "descripcion": "MONOCUCLESOSIS INFECCIOSA: INF ACTIVA"
+ },
+ {
+  "codigo_origen": "1535",
+  "descripcion": "GINGIVOESTOMATITIS MIXTA: PURULENTA Y AFTOSA"
+ },
+ {
+  "codigo_origen": "1536",
+  "descripcion": "CITOMEGALOVIRUS: CONVALESCIENTE"
+ },
+ {
+  "codigo_origen": "1537",
+  "descripcion": "RINITIS ALERGICA COMPL CON CONJUNTIVITIS"
+ },
+ {
+  "codigo_origen": "1538",
+  "descripcion": "HEMANGIOMA MUSLO DERECHO"
+ },
+ {
+  "codigo_origen": "1539",
+  "descripcion": "AGENESIA TESTICULAR IZQUIERDA ?"
+ },
+ {
+  "codigo_origen": "1540",
+  "descripcion": "ABSCESO PERODENTAL POR CARIES"
+ },
+ {
+  "codigo_origen": "1541",
+  "descripcion": "GENU VALGO ASINTOMATICO"
+ },
+ {
+  "codigo_origen": "1542",
+  "descripcion": "NO VINO A CONSULTA"
+ },
+ {
+  "codigo_origen": "1543",
+  "descripcion": "CELULITIS ABSCEDADA PIERNA IZQ. POST PICADURA INSE"
+ },
+ {
+  "codigo_origen": "1544",
+  "descripcion": "DISFUNSION CEREBRAL"
+ },
+ {
+  "codigo_origen": "1545",
+  "descripcion": "INFECCION PERINATAL TARDIA"
+ },
+ {
+  "codigo_origen": "1546",
+  "descripcion": "ALERGIA ALIMENTARIA: URTICARIA"
+ },
+ {
+  "codigo_origen": "1547",
+  "descripcion": "MAMELON LABIO INF CARA INTERNA"
+ },
+ {
+  "codigo_origen": "1548",
+  "descripcion": "RASH MAC-PAPULAR FACIAL"
+ },
+ {
+  "codigo_origen": "1549",
+  "descripcion": "POLITELIA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1550",
+  "descripcion": "LARINGITIS"
+ },
+ {
+  "codigo_origen": "1551",
+  "descripcion": "HERNIOPLASTIA INGUINAL DERECHA INFECTADA"
+ },
+ {
+  "codigo_origen": "1552",
+  "descripcion": "ESCOTOMAS OJO IZQ"
+ },
+ {
+  "codigo_origen": "1553",
+  "descripcion": "QUISTE PAROTIDA DERECHA"
+ },
+ {
+  "codigo_origen": "1554",
+  "descripcion": "ANTECEDENTE DE CONVULSION FEBRIL"
+ },
+ {
+  "codigo_origen": "1555",
+  "descripcion": "TAQUICARDIA POR EXCESO DE CAFEINA"
+ },
+ {
+  "codigo_origen": "1556",
+  "descripcion": "BRIOTE DENTARIO"
+ },
+ {
+  "codigo_origen": "1557",
+  "descripcion": "TROMBOCITOSIS EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1558",
+  "descripcion": "DERMATITIS EN CUELLO"
+ },
+ {
+  "codigo_origen": "1559",
+  "descripcion": "ENF DE MANOS PIES Y BOCA: COXSAAKIE"
+ },
+ {
+  "codigo_origen": "1560",
+  "descripcion": "ALERGIA RESPIRATORIA"
+ },
+ {
+  "codigo_origen": "1561",
+  "descripcion": "INFLUENZA  A"
+ },
+ {
+  "codigo_origen": "1562",
+  "descripcion": "TAQUIPNEA TRANSITORIA DEL RN"
+ },
+ {
+  "codigo_origen": "1563",
+  "descripcion": "NEUMONIA LOBAR INF IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1564",
+  "descripcion": "ONICOMICOSIS"
+ },
+ {
+  "codigo_origen": "1571",
+  "descripcion": "INCOMPATIBILIDAD DE GRUPO"
+ },
+ {
+  "codigo_origen": "1565",
+  "descripcion": "DEFORMIDADA EN ARCADO DENTAL SUP POR CHUPAR DEDO"
+ },
+ {
+  "codigo_origen": "1566",
+  "descripcion": "HIDROCELE DERECHO DISCRETO COMUNICANTE"
+ },
+ {
+  "codigo_origen": "1567",
+  "descripcion": "LITIASIS RENAL D"
+ },
+ {
+  "codigo_origen": "1568",
+  "descripcion": "AGENESIA TESTICULAR DERECHA?"
+ },
+ {
+  "codigo_origen": "1569",
+  "descripcion": "REFIERE TAQUICARDIA ?"
+ },
+ {
+  "codigo_origen": "1570",
+  "descripcion": "ICTERICIA LEVE DEL RN"
+ },
+ {
+  "codigo_origen": "1572",
+  "descripcion": "RINITIS HIPERTROFICA"
+ },
+ {
+  "codigo_origen": "1573",
+  "descripcion": "INFLUENZA VS COVID?"
+ },
+ {
+  "codigo_origen": "1574",
+  "descripcion": "INSOMNIO"
+ },
+ {
+  "codigo_origen": "1575",
+  "descripcion": "FISTULA PERIDENTAL"
+ },
+ {
+  "codigo_origen": "1576",
+  "descripcion": "SOLO REVISION DE HISTORIA"
+ },
+ {
+  "codigo_origen": "1577",
+  "descripcion": "DIARREA VIRAL?"
+ },
+ {
+  "codigo_origen": "1578",
+  "descripcion": "ADENOMEGALIA SUBMAXILAR IZQ"
+ },
+ {
+  "codigo_origen": "1579",
+  "descripcion": "SE REIMPRIME CARTON DE VACUNAS"
+ },
+ {
+  "codigo_origen": "1580",
+  "descripcion": "ED NUTRICIONAL: T:10  P:30"
+ },
+ {
+  "codigo_origen": "1581",
+  "descripcion": "RN AT DESNUTRIDO IN UTERO"
+ },
+ {
+  "codigo_origen": "1582",
+  "descripcion": "ADENITIS MESENTERICA"
+ },
+ {
+  "codigo_origen": "1583",
+  "descripcion": "NEUMONIA CON EMPIEMA IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1584",
+  "descripcion": "LINFOMA DE HODGKIN"
+ },
+ {
+  "codigo_origen": "1585",
+  "descripcion": "DERMATITIS POR CONTACTO: AMBAS MANOS"
+ },
+ {
+  "codigo_origen": "1586",
+  "descripcion": "RINITIS ALERGICA CON GOTEO POST NASAL"
+ },
+ {
+  "codigo_origen": "1587",
+  "descripcion": "PAROTIDITIS POST VACUNAL"
+ },
+ {
+  "codigo_origen": "1588",
+  "descripcion": "ANEMIA DEL LACTANTE ASINTOMATICA"
+ },
+ {
+  "codigo_origen": "1589",
+  "descripcion": "RUBIOLA"
+ },
+ {
+  "codigo_origen": "1590",
+  "descripcion": "RINITIS VASOMOTORA CON OTITIS MEDIA SEROSA"
+ },
+ {
+  "codigo_origen": "1591",
+  "descripcion": "CITOMEGALOVIRUS Y EPSTEIN BARR INF ACTIVA"
+ },
+ {
+  "codigo_origen": "1592",
+  "descripcion": "DERMATITIS PALPEBRAL"
+ },
+ {
+  "codigo_origen": "1593",
+  "descripcion": "NEURITIS INTERCOSTAL BILATERAL"
+ },
+ {
+  "codigo_origen": "1594",
+  "descripcion": "OTITIS MIXTA MICOTICA BACT PERF Y EXTERNA D"
+ },
+ {
+  "codigo_origen": "1595",
+  "descripcion": "DEPRESION POR DUELO: PADRES RECIEN SEPARADOS"
+ },
+ {
+  "codigo_origen": "1596",
+  "descripcion": "RINOSINUSITIS VIRAL"
+ },
+ {
+  "codigo_origen": "1597",
+  "descripcion": "RN ALTO RIESGO: HIJO DE MADRE CON HIV"
+ },
+ {
+  "codigo_origen": "1598",
+  "descripcion": "LARINGOTRAQUEMALISIA DISCRETA"
+ },
+ {
+  "codigo_origen": "1599",
+  "descripcion": "URTICARIA POR DIETA MATERNA"
+ },
+ {
+  "codigo_origen": "1600",
+  "descripcion": "HIDROCELE INCOMUNICANMTE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1601",
+  "descripcion": "CONSTIPACION HABITUAL"
+ },
+ {
+  "codigo_origen": "1602",
+  "descripcion": "ADENITIS CERVICAL DERECHA"
+ },
+ {
+  "codigo_origen": "1603",
+  "descripcion": "ULCERA GASTRICA"
+ },
+ {
+  "codigo_origen": "1604",
+  "descripcion": "INF POR CITOMEGALOVIRUS Y EPSTEIN B ANTIGUA"
+ },
+ {
+  "codigo_origen": "1605",
+  "descripcion": "DEPRESION INFANTIL"
+ },
+ {
+  "codigo_origen": "1606",
+  "descripcion": "SINDROME NEFRITICO ?"
+ },
+ {
+  "codigo_origen": "1607",
+  "descripcion": "RN PTL DESNUTRIDO IN UTERO"
+ },
+ {
+  "codigo_origen": "1608",
+  "descripcion": "NEUROSIS DE CONVERSION"
+ },
+ {
+  "codigo_origen": "1609",
+  "descripcion": "MIOSITIS MS INF D"
+ },
+ {
+  "codigo_origen": "1610",
+  "descripcion": "TDAH: TRAST DEFICIT ATENC E HIERACTUVID"
+ },
+ {
+  "codigo_origen": "1611",
+  "descripcion": "CARDIOPATIA: INS AORT Y MITRAL LEVE ESTENOS AORT L"
+ },
+ {
+  "codigo_origen": "1612",
+  "descripcion": "DENGUE  CLASICO COMPLICADO"
+ },
+ {
+  "codigo_origen": "1613",
+  "descripcion": "DESNGUE CLASICO COMPLICADO: 3ROS ESPACIOS"
+ },
+ {
+  "codigo_origen": "1614",
+  "descripcion": "DERRAME PLEURAL BILAT PRED DERECHO"
+ },
+ {
+  "codigo_origen": "1615",
+  "descripcion": "DENGUE CLASICO COMPIC: ASCITIS"
+ },
+ {
+  "codigo_origen": "1634",
+  "descripcion": "HIPERURICEMIA"
+ },
+ {
+  "codigo_origen": "1616",
+  "descripcion": "MAREO POR USO DE AURICULARES"
+ },
+ {
+  "codigo_origen": "1617",
+  "descripcion": "ESPONDILITIS ANQUILOSANTE"
+ },
+ {
+  "codigo_origen": "1618",
+  "descripcion": "UÑA ENCARNADA + CELULITIS ABS DEDO G PIE  D"
+ },
+ {
+  "codigo_origen": "1619",
+  "descripcion": "MONONUCLEOSIS INFECCIOSA CRONICA  ACTIVA??"
+ },
+ {
+  "codigo_origen": "1620",
+  "descripcion": "QUISTE SUPRACILIAR IZQUIERDO CONGENITO"
+ },
+ {
+  "codigo_origen": "1621",
+  "descripcion": "CONSULTA ONLINE"
+ },
+ {
+  "codigo_origen": "1622",
+  "descripcion": "CANSANCIO FACIL EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1623",
+  "descripcion": "RETRASO PUBERAL"
+ },
+ {
+  "codigo_origen": "1624",
+  "descripcion": "POLIARTRALGIAS EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1625",
+  "descripcion": "RETRASO EN EL HABLA"
+ },
+ {
+  "codigo_origen": "1626",
+  "descripcion": "HELICOBACTER PULORI"
+ },
+ {
+  "codigo_origen": "1627",
+  "descripcion": "HELICOBACTER PULORI"
+ },
+ {
+  "codigo_origen": "1628",
+  "descripcion": "COINFECCION: COVID + INFLUENZA TIPO"
+ },
+ {
+  "codigo_origen": "1629",
+  "descripcion": "INSOMINIO POR REDES SOCIALES"
+ },
+ {
+  "codigo_origen": "1630",
+  "descripcion": "OTITIS EXTERNA BILATERAL QUIMICA"
+ },
+ {
+  "codigo_origen": "1631",
+  "descripcion": "LOE CEREBRAL: MENINGIOMA"
+ },
+ {
+  "codigo_origen": "1632",
+  "descripcion": "RINITIS QUIMICA POR EXPOSICION A CLORO"
+ },
+ {
+  "codigo_origen": "1633",
+  "descripcion": "ANGINA DE PECHO"
+ },
+ {
+  "codigo_origen": "1635",
+  "descripcion": "LARINGOTRAQUEITIS KEVE"
+ },
+ {
+  "codigo_origen": "1636",
+  "descripcion": "TRAUMATISMO CRENEAL LEVE"
+ },
+ {
+  "codigo_origen": "1637",
+  "descripcion": "SEROMA PARIETAL IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1638",
+  "descripcion": "LIPOTIMIA POSTPRANDIAL"
+ },
+ {
+  "codigo_origen": "1639",
+  "descripcion": "HERNIA INGUINAL IZQ REDUCTIBLE E INCOHERCIBLE"
+ },
+ {
+  "codigo_origen": "1640",
+  "descripcion": "DESNUTRICION EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1641",
+  "descripcion": "CISTITIS CALCULOSA"
+ },
+ {
+  "codigo_origen": "1642",
+  "descripcion": "ADENITIS SATELITE"
+ },
+ {
+  "codigo_origen": "1643",
+  "descripcion": "PRIMO CONVULSION FEBRIL ATIPA"
+ },
+ {
+  "codigo_origen": "1644",
+  "descripcion": "DEFICIT DE VITAMINA D"
+ },
+ {
+  "codigo_origen": "1645",
+  "descripcion": "ABSCESO MUSLO DERECHO POST A VACUNA"
+ },
+ {
+  "codigo_origen": "1646",
+  "descripcion": "FARINGOAMIGDALITIS AFTOSA"
+ },
+ {
+  "codigo_origen": "1647",
+  "descripcion": "NEUMONIA VELAMENTOSA IZQUIERDA VS ATELECTASIA"
+ },
+ {
+  "codigo_origen": "1648",
+  "descripcion": "ANTEPI VARO BILAT"
+ },
+ {
+  "codigo_origen": "1649",
+  "descripcion": "SUB-OCLUSION INTESTINAL. PARASITOSIS INTEST"
+ },
+ {
+  "codigo_origen": "1650",
+  "descripcion": "HTA POR ANSIEDAD"
+ },
+ {
+  "codigo_origen": "1651",
+  "descripcion": "ASPIRACION DE CUERPO EXTRAÑO"
+ },
+ {
+  "codigo_origen": "1652",
+  "descripcion": "RASGOS TALASEMIA: BETA"
+ },
+ {
+  "codigo_origen": "1653",
+  "descripcion": "LIPOTIMIAS EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1654",
+  "descripcion": "PLAGIOCEFALIA POSICIONAL"
+ },
+ {
+  "codigo_origen": "1655",
+  "descripcion": "ORINAS ALCALINA"
+ },
+ {
+  "codigo_origen": "1656",
+  "descripcion": "PX CONTROL"
+ },
+ {
+  "codigo_origen": "1657",
+  "descripcion": "CELULITIS ABSCEDADA 1ER DEDO PIE IZQ."
+ },
+ {
+  "codigo_origen": "1658",
+  "descripcion": "LINFANGITIS LOCAL"
+ },
+ {
+  "codigo_origen": "1659",
+  "descripcion": "FASCEITIS MUSLO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1660",
+  "descripcion": "ASIMETRIA MS INF"
+ },
+ {
+  "codigo_origen": "1661",
+  "descripcion": "MYCOPLASMA PNEUMONIAE"
+ },
+ {
+  "codigo_origen": "1662",
+  "descripcion": "COSTRA LACTEA  CUERO CABELLUDO"
+ },
+ {
+  "codigo_origen": "1663",
+  "descripcion": "HIPERTROFIA PROSTATICA"
+ },
+ {
+  "codigo_origen": "1664",
+  "descripcion": "QUISTE TESTICULAR"
+ },
+ {
+  "codigo_origen": "1665",
+  "descripcion": "INFLUENZA TIPO B"
+ },
+ {
+  "codigo_origen": "1666",
+  "descripcion": "CUERPO EXTRAÑO EN VIAS AEREAS"
+ },
+ {
+  "codigo_origen": "1667",
+  "descripcion": "TRAUMATISMO CERRADO ABD. POST CAIDA"
+ },
+ {
+  "codigo_origen": "1668",
+  "descripcion": "TRAQUEITIS"
+ },
+ {
+  "codigo_origen": "1669",
+  "descripcion": "INF RESP: V. SINSITIAL RESPIRATORIO"
+ },
+ {
+  "codigo_origen": "1670",
+  "descripcion": "CELULITIS DEDO PULGAR D POST PICADA"
+ },
+ {
+  "codigo_origen": "1671",
+  "descripcion": "DEPRESION"
+ },
+ {
+  "codigo_origen": "1672",
+  "descripcion": "ANTROPOMETRIA: CC  -10"
+ },
+ {
+  "codigo_origen": "1673",
+  "descripcion": "LIPOMA CONGENITO BILAT PIERNAS"
+ },
+ {
+  "codigo_origen": "1674",
+  "descripcion": "ESTENOSIS URETERAL IZQ CONGENITA CON HIDRONEGROSIS"
+ },
+ {
+  "codigo_origen": "1675",
+  "descripcion": "VALORACION PEDIT PREOPERATORIA"
+ },
+ {
+  "codigo_origen": "1676",
+  "descripcion": "NEUMONIA COM NEUMOTORX D"
+ },
+ {
+  "codigo_origen": "1677",
+  "descripcion": "HERIDA DE DECORTICACION PL D LIMPIA"
+ },
+ {
+  "codigo_origen": "1678",
+  "descripcion": "OSTEOCONDRITIS COSTAL ANTERO IZQ"
+ },
+ {
+  "codigo_origen": "1679",
+  "descripcion": "HIUPERGLICEMIA EN ESTUDIO"
+ },
+ {
+  "codigo_origen": "1680",
+  "descripcion": "CAMBIOS EN LOS HORARIOS DEL SUEÑO"
+ },
+ {
+  "codigo_origen": "1681",
+  "descripcion": "AMIGDALITIS MEMBRANOSA"
+ },
+ {
+  "codigo_origen": "1682",
+  "descripcion": "ADENITIS AXILAR POST BCG"
+ },
+ {
+  "codigo_origen": "1683",
+  "descripcion": "LIPOTIMIA POR CALOR"
+ },
+ {
+  "codigo_origen": "1684",
+  "descripcion": "PERIMETRO CEFALICO P:10  T:95"
+ },
+ {
+  "codigo_origen": "1685",
+  "descripcion": "DISQUESIA DEL LACTANTE"
+ },
+ {
+  "codigo_origen": "1686",
+  "descripcion": "LIPOTIMIA POST ACT FISICA INTENSA"
+ },
+ {
+  "codigo_origen": "1687",
+  "descripcion": "DESHIDRATACION CON ALTERACION ELECTROLITICA"
+ },
+ {
+  "codigo_origen": "1688",
+  "descripcion": "HIPOKALEMIA"
+ },
+ {
+  "codigo_origen": "1689",
+  "descripcion": "HIPOCALCEMIA"
  }
 ]

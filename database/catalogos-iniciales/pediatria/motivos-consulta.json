@@ -1,87 +1,91 @@
 [
  {
-  "codigo_origen": "0012",
-  "descripcion": "ALTERACION DE LIPIDOS"
+  "codigo_origen": "0208",
+  "descripcion": "TOS Y GRIPE"
  },
  {
-  "codigo_origen": "0014",
-  "descripcion": "MAREOS"
+  "codigo_origen": "0211",
+  "descripcion": "RASH CUTANEO"
  },
  {
-  "codigo_origen": "0078",
-  "descripcion": "DOLOR EN ELPIE DERECHO"
+  "codigo_origen": "0209",
+  "descripcion": "LESION ERITEMATOSA OPUNTIFORME GENERALIZ"
  },
  {
-  "codigo_origen": "0018",
-  "descripcion": "DOLOR PRECORDIAL"
+  "codigo_origen": "0213",
+  "descripcion": "CONGESTION NASAL"
  },
  {
   "codigo_origen": "0079",
   "descripcion": "DOLOR ABDOMINAL"
  },
  {
-  "codigo_origen": "0128",
-  "descripcion": "DEFICIT DE TALLA"
+  "codigo_origen": "0204",
+  "descripcion": "DOLOR DE PESTAÑAS"
  },
  {
   "codigo_origen": "0082",
   "descripcion": "CEFALEA"
  },
  {
-  "codigo_origen": "0084",
-  "descripcion": "GRIPE"
+  "codigo_origen": "0214",
+  "descripcion": "INAPETENCIA"
  },
  {
-  "codigo_origen": "0025",
-  "descripcion": "DOLOR MIEMBROS INFERIORES"
+  "codigo_origen": "0215",
+  "descripcion": "CONGESTION NASAL Y TOS SECA"
  },
  {
-  "codigo_origen": "0027",
-  "descripcion": "DIFICULTAD PARA EL HABLA"
+  "codigo_origen": "0217",
+  "descripcion": "FIEBRE"
  },
  {
   "codigo_origen": "0086",
   "descripcion": "RINORREA"
  },
  {
-  "codigo_origen": "0031",
-  "descripcion": "DOLOR EPIGASTRICO"
+  "codigo_origen": "0219",
+  "descripcion": "FLUJO GENITAL"
  },
  {
-  "codigo_origen": "0087",
-  "descripcion": "DOLOR DE OIDOS"
+  "codigo_origen": "0221",
+  "descripcion": "VACUNACION"
  },
  {
   "codigo_origen": "0088",
   "descripcion": "DISNEA"
  },
  {
-  "codigo_origen": "0037",
-  "descripcion": "DEBILIDAD"
+  "codigo_origen": "0222",
+  "descripcion": "VACUNACIÒN"
  },
  {
-  "codigo_origen": "0039",
-  "descripcion": "DOLOR RETROESTERNAL"
+  "codigo_origen": "0223",
+  "descripcion": "FIEBRE Y GRIPE"
  },
  {
   "codigo_origen": "0041",
   "descripcion": "CONVULCIONES"
  },
  {
-  "codigo_origen": "0011",
-  "descripcion": "CIFRAS TENSIONALES ELEVADAS"
+  "codigo_origen": "0225",
+  "descripcion": "TRAUMATISMO NASAL"
  },
  {
-  "codigo_origen": "0013",
-  "descripcion": "DISNEA DE ESFUERZOS"
+  "codigo_origen": "000",
+  "descripcion": "CONJUNTIVITIS"
  },
  {
-  "codigo_origen": "0017",
-  "descripcion": "DOLOR Y EDEMA DE MIEMBRO INFERIOR"
+  "codigo_origen": "0130",
+  "descripcion": "ITU"
  },
  {
-  "codigo_origen": "0009",
-  "descripcion": "PALPITACIONES"
+  "codigo_origen": "0230",
+  "descripcion": "SINDROME FEBRIL AGUDO"
+ },
+ {
+  "codigo_origen": "0231",
+  "descripcion": "TOS SECA"
  },
  {
   "codigo_origen": "0090",
@@ -92,12 +96,12 @@
   "descripcion": "DISURIA"
  },
  {
-  "codigo_origen": "0024",
-  "descripcion": "SOPLO CARDIACO"
+  "codigo_origen": "0233",
+  "descripcion": "ALERGIA EN PIEL"
  },
  {
-  "codigo_origen": "0026",
-  "descripcion": "PERDIDA DE FUERZA MUSCULAR"
+  "codigo_origen": "0235",
+  "descripcion": "DERMATITIS POR PAÑAL"
  },
  {
   "codigo_origen": "0094",
@@ -108,20 +112,20 @@
   "descripcion": "SECRECION MUCOSA"
  },
  {
-  "codigo_origen": "0032",
-  "descripcion": "MIEDO"
+  "codigo_origen": "0236",
+  "descripcion": "GRIPE Y TOS"
  },
  {
-  "codigo_origen": "0034",
-  "descripcion": "TOS"
+  "codigo_origen": "0237",
+  "descripcion": "DOLOR EN  EL PECHO"
  },
  {
-  "codigo_origen": "0036",
-  "descripcion": "DOLOR CERVICAL"
+  "codigo_origen": "0238",
+  "descripcion": "LESION ERITEMATOSA EN PIEL"
  },
  {
-  "codigo_origen": "0057",
-  "descripcion": "HTA"
+  "codigo_origen": "0240",
+  "descripcion": "SANGRAMIENTO NASAL"
  },
  {
   "codigo_origen": "0096",
@@ -140,44 +144,64 @@
   "descripcion": "DESMAYO"
  },
  {
+  "codigo_origen": "0245",
+  "descripcion": "LESIONES"
+ },
+ {
+  "codigo_origen": "0246",
+  "descripcion": "CONTROL DE NIÑOS SANOS"
+ },
+ {
+  "codigo_origen": "0247",
+  "descripcion": "DIARREA CON MOCO"
+ },
+ {
+  "codigo_origen": "0248",
+  "descripcion": "OTALGIA"
+ },
+ {
+  "codigo_origen": "0252",
+  "descripcion": "TRAUMA GENITAL"
+ },
+ {
   "codigo_origen": "0080",
   "descripcion": "FIEBRE"
  },
  {
-  "codigo_origen": "0083",
-  "descripcion": "CONTROL DE NIÑO SANO"
+  "codigo_origen": "0250",
+  "descripcion": "CONSULTA DE NIÑOS SANOS"
  },
  {
   "codigo_origen": "0058",
   "descripcion": "VERTIGOS"
  },
  {
-  "codigo_origen": "0059",
-  "descripcion": "ACIDEZ"
+  "codigo_origen": "0253",
+  "descripcion": "AUSENCIA DE EVACUACIONES"
  },
  {
-  "codigo_origen": "0042",
-  "descripcion": "DOLOR EN EL PECHO"
+  "codigo_origen": "0254",
+  "descripcion": "TOS DISFONICA"
  },
  {
   "codigo_origen": "0085",
   "descripcion": "DIARREA"
  },
  {
-  "codigo_origen": "0053",
-  "descripcion": "DOLOR A NIVEL LUMBAR"
+  "codigo_origen": "0256",
+  "descripcion": "EVACUACIONES LIQUIDAS"
  },
  {
   "codigo_origen": "0091",
   "descripcion": "PRURITO"
  },
  {
-  "codigo_origen": "0093",
-  "descripcion": "POCO APETITO"
+  "codigo_origen": "0257",
+  "descripcion": "DIFICULTAD RESPIRATORIA"
  },
  {
-  "codigo_origen": "0062",
-  "descripcion": "ANGINA"
+  "codigo_origen": "0258",
+  "descripcion": "COLICO ABDOMINAL"
  },
  {
   "codigo_origen": "0097",
@@ -188,92 +212,60 @@
   "descripcion": "LESIONES EN PENE"
  },
  {
-  "codigo_origen": "0052",
-  "descripcion": "DOLOR INTERESCAPULAR"
+  "codigo_origen": "0259",
+  "descripcion": "TOS, CONGESTION NASAL, FIEBRE"
  },
  {
-  "codigo_origen": "0054",
-  "descripcion": "DOLOR TORACICO ATIPICO"
+  "codigo_origen": "0261",
+  "descripcion": "SENSACION DE AGUA EN EL AIDO"
  },
  {
   "codigo_origen": "0104",
   "descripcion": "RONQUERA"
  },
  {
-  "codigo_origen": "0056",
-  "descripcion": "ALGIAS PRECORDIALES INESPECIFICAS"
+  "codigo_origen": "0262",
+  "descripcion": "CITIRIVAX-D"
  },
  {
-  "codigo_origen": "0109",
-  "descripcion": "CONTROL PANCREATITIS"
+  "codigo_origen": "0263",
+  "descripcion": "MI HIJO NO QUIERE COMER"
  },
  {
   "codigo_origen": "0113",
-  "descripcion": "FLUJO VAGINAQL"
+  "descripcion": "FLUJO VAGINAL"
  },
  {
   "codigo_origen": "0119",
   "descripcion": "PICADURA DE INSECTO"
  },
  {
-  "codigo_origen": "0129",
-  "descripcion": "CRISTALURIA"
+  "codigo_origen": "0264",
+  "descripcion": "CONSTIPACION"
  },
  {
-  "codigo_origen": "0132",
-  "descripcion": "PH URINARIO ALCALINO"
+  "codigo_origen": "0139",
+  "descripcion": "RETRASO EN LA MADURACION OSEA"
  },
  {
-  "codigo_origen": "0070",
-  "descripcion": "CUADRO DEPRESIVO"
- },
- {
-  "codigo_origen": "0134",
-  "descripcion": "MACROHEMATURIA"
- },
- {
-  "codigo_origen": "0140",
-  "descripcion": "EDEMA DE MIEMBROS INF"
- },
- {
-  "codigo_origen": "0073",
-  "descripcion": "CIFRAS TENSIONALES BAJAS"
- },
- {
-  "codigo_origen": "0074",
-  "descripcion": "DOLOR HOMBRO DERECHO"
- },
- {
-  "codigo_origen": "0075",
-  "descripcion": "DOLOR PARAVERTEBRAL"
- },
- {
-  "codigo_origen": "0076",
-  "descripcion": "SUDORACION PROFUSA"
+  "codigo_origen": "0265",
+  "descripcion": "PUJON"
  },
  {
   "codigo_origen": "0142",
-  "descripcion": "ENURESIS NOCTURNA"
- },
- {
-  "codigo_origen": "0143",
-  "descripcion": "TRASTORNO ELECTROLITICO"
+  "descripcion": "TALLA NORMAL BAJA"
  },
  {
   "codigo_origen": "0144",
-  "descripcion": "UROPATIA"
+  "descripcion": "PILECTASIA DERECHA ANTENATAL"
  },
  {
-  "codigo_origen": "0145",
-  "descripcion": "INCONTINENCIA URINARIA DIURNA"
+  "codigo_origen": "0149",
+  "descripcion": "HIPERCALCIURIA"
  },
  {
-  "codigo_origen": "0146",
-  "descripcion": "POLAQUIURIA"
- },
- {
-  "codigo_origen": "0077",
-  "descripcion": "REALIZACION DE ESTUDIOS"
+  "codigo_origen": "0229",
+  "descripcion": "DIARREA Y COLICOS"
  },
  {
   "codigo_origen": "0101",
@@ -284,8 +276,8 @@
   "descripcion": "ESTORNUDOS"
  },
  {
-  "codigo_origen": "0105",
-  "descripcion": "FLUJO AMARILLO"
+  "codigo_origen": "0232",
+  "descripcion": "TOS CON FLEMA"
  },
  {
   "codigo_origen": "0106",
@@ -320,8 +312,8 @@
   "descripcion": "SINEQUIA DE LABIOS MAYORES"
  },
  {
-  "codigo_origen": "0116",
-  "descripcion": "SECRECION OIDO"
+  "codigo_origen": "0234",
+  "descripcion": "LESION ERITEMATOSA EN EL  AREA GENITAL"
  },
  {
   "codigo_origen": "0117",
@@ -364,339 +356,279 @@
   "descripcion": "ICTERICIA"
  },
  {
-  "codigo_origen": "0130",
-  "descripcion": "DILATACION PIELOCALICIAL BILATERAL"
+  "codigo_origen": "0239",
+  "descripcion": "DIARREA"
  },
  {
-  "codigo_origen": "0131",
-  "descripcion": "DEFICIT PONDOESTATURAL"
+  "codigo_origen": "0241",
+  "descripcion": "TEC LEVE"
+ },
+ {
+  "codigo_origen": "0243",
+  "descripcion": "TUMORACIÒN EN REGION MAMARIA"
  },
  {
   "codigo_origen": "0133",
-  "descripcion": "INFECCION URINARIA"
+  "descripcion": "ACIDOSIS METABOLICA"
  },
  {
   "codigo_origen": "0135",
-  "descripcion": "LITIASIS RENAL"
+  "descripcion": "BAJO PESO"
  },
  {
-  "codigo_origen": "0136",
-  "descripcion": "PROTEINURIA"
+  "codigo_origen": "0249",
+  "descripcion": "CONSULTA DE NIÑOS SANOS"
  },
  {
   "codigo_origen": "0137",
-  "descripcion": "POCO APETITO"
+  "descripcion": "CRISTALUIRA"
  },
  {
   "codigo_origen": "0138",
-  "descripcion": "POCA GANANCIA DE PESO"
+  "descripcion": "TALLA BAJA"
  },
  {
-  "codigo_origen": "0139",
-  "descripcion": "EDEMA FACIAL"
+  "codigo_origen": "0140",
+  "descripcion": "RETRASO PUBERAL"
  },
  {
-  "codigo_origen": "0141",
-  "descripcion": "RETENCION DE AZOADOS"
- },
- {
-  "codigo_origen": "0147",
-  "descripcion": "MICROLITIASIS"
- },
- {
-  "codigo_origen": "0148",
-  "descripcion": "DISFUNCION TUBULAR RENAL"
- },
- {
-  "codigo_origen": "0149",
-  "descripcion": "QUISTE RENAL DERECHO"
- },
- {
-  "codigo_origen": "0150",
-  "descripcion": "SECRECION URETRAL PURULENTA"
- },
- {
-  "codigo_origen": "0151",
-  "descripcion": "MICROHEMATURIA"
- },
- {
-  "codigo_origen": "0152",
-  "descripcion": "DOLOR PARA ORINAR"
- },
- {
-  "codigo_origen": "0153",
-  "descripcion": "DOLOR EN HIPOGASTRIO"
- },
- {
-  "codigo_origen": "0154",
-  "descripcion": "DILATACION PIELOCALICIAL IZQ"
- },
- {
-  "codigo_origen": "0155",
-  "descripcion": "REGURGITACIONES"
- },
- {
-  "codigo_origen": "0156",
-  "descripcion": "POCO VOLUMEN URINARIO"
- },
- {
-  "codigo_origen": "0157",
-  "descripcion": "EVALUACION PREOPERATORIA"
- },
- {
-  "codigo_origen": "0158",
-  "descripcion": "RIÑON UNICO IZQ"
- },
- {
-  "codigo_origen": "0159",
-  "descripcion": "SEDIMENTO ABUNDANTE"
- },
- {
-  "codigo_origen": "0160",
-  "descripcion": "INSUFICIENCISA SUPRARENAL CONGENITA"
- },
- {
-  "codigo_origen": "0161",
-  "descripcion": "DOLOR DE OIDOS"
- },
- {
-  "codigo_origen": "0162",
-  "descripcion": "APENDICE PRE AURICULAR DERECHO"
- },
- {
-  "codigo_origen": "0163",
-  "descripcion": "HIDRONEFROSIS BILATERAL"
- },
- {
-  "codigo_origen": "0164",
-  "descripcion": "LITIASIS VESICAL"
- },
- {
-  "codigo_origen": "0165",
-  "descripcion": "GLOMERULONEFRITIS AGUDA"
- },
- {
-  "codigo_origen": "0166",
-  "descripcion": "RIÑON IZQ HIPOTROFICO"
- },
- {
-  "codigo_origen": "0167",
-  "descripcion": "DILATACION PIELOCALICIAL DERECHA"
- },
- {
-  "codigo_origen": "0168",
-  "descripcion": "RIÑON DERCHO HIPOTROFICO"
- },
- {
-  "codigo_origen": "0169",
-  "descripcion": "RIÑON UNICO DERECHO"
- },
- {
-  "codigo_origen": "0170",
-  "descripcion": "TOS SECA"
- },
- {
-  "codigo_origen": "0171",
-  "descripcion": "POLIURIA"
- },
- {
-  "codigo_origen": "0172",
-  "descripcion": "POCA GANANCIA DE TALLA"
- },
- {
-  "codigo_origen": "0173",
-  "descripcion": "GENUS VALGUS IZQ"
- },
- {
-  "codigo_origen": "0174",
-  "descripcion": "HIPOSPADIA"
- },
- {
-  "codigo_origen": "0175",
-  "descripcion": "PUJOS PARA ORINAR"
- },
- {
-  "codigo_origen": "0176",
-  "descripcion": "NEFRECTOMIA IZQ"
- },
- {
-  "codigo_origen": "0177",
-  "descripcion": "NEFRECTOMIA DERECHA"
- },
- {
-  "codigo_origen": "0178",
-  "descripcion": "DOLORES OSEOS"
- },
- {
-  "codigo_origen": "0179",
-  "descripcion": "DIABETES MELLITUS"
- },
- {
-  "codigo_origen": "0180",
-  "descripcion": "ORINAS FETIDAS"
- },
- {
-  "codigo_origen": "0181",
-  "descripcion": "EDEMA GENERALIZADO"
- },
- {
-  "codigo_origen": "0182",
-  "descripcion": "RETENCION AGUDA DE ORINA"
- },
- {
-  "codigo_origen": "0183",
-  "descripcion": "ANEMIA DREPANOCITICA"
- },
- {
-  "codigo_origen": "0184",
-  "descripcion": "UROPATIA OBSTRUCTIVA"
- },
- {
-  "codigo_origen": "0185",
-  "descripcion": "RIÑON ECTOPICO DERECHO"
- },
- {
-  "codigo_origen": "0186",
-  "descripcion": "RIÑON POLIQUISTICO"
- },
- {
-  "codigo_origen": "0187",
-  "descripcion": "RIÑONES POLIQUISTICOS"
- },
- {
-  "codigo_origen": "0188",
-  "descripcion": "ORINAS COLURICAS"
- },
- {
-  "codigo_origen": "0189",
-  "descripcion": "SECRECION VAGINAL"
- },
- {
-  "codigo_origen": "0190",
-  "descripcion": "AVIDEZ POR AGUA"
- },
- {
-  "codigo_origen": "0191",
-  "descripcion": "DEFORMIDAD DE MIEMBROS INF"
- },
- {
-  "codigo_origen": "0192",
-  "descripcion": "QUISTE EN RIÑON IZQ"
- },
- {
-  "codigo_origen": "0193",
-  "descripcion": "ORINAS ESPUMOSAS"
- },
- {
-  "codigo_origen": "0194",
-  "descripcion": "FALLO RENAL AGUDO"
- },
- {
-  "codigo_origen": "0195",
-  "descripcion": "DUPLICACION RENAL"
- },
- {
-  "codigo_origen": "0196",
-  "descripcion": "VALORACION NEFROLOGICA"
- },
- {
-  "codigo_origen": "0197",
-  "descripcion": "HIDRONEFROSIS IZQ"
- },
- {
-  "codigo_origen": "0198",
-  "descripcion": "GLUGENOSIS"
- },
- {
-  "codigo_origen": "0199",
-  "descripcion": "HIPOSTENURIA"
- },
- {
-  "codigo_origen": "0200",
-  "descripcion": "ORINAS CONCENTRADAS"
- },
- {
-  "codigo_origen": "0201",
-  "descripcion": "LUPUS ERITEMATOSO SISTEMICO"
- },
- {
-  "codigo_origen": "0202",
-  "descripcion": "EVALUACION NEFROLOGICA"
- },
- {
-  "codigo_origen": "0203",
-  "descripcion": "RIÑON IZQUIERDO ECTOPICO"
- },
- {
-  "codigo_origen": "0204",
-  "descripcion": "HIDRONEFROSIS DERECHA"
- },
- {
-  "codigo_origen": "0205",
-  "descripcion": "ESTENOSIS DE ARTERIAS RENALES"
- },
- {
-  "codigo_origen": "0206",
-  "descripcion": "RIÑON EN HERRADURA"
- },
- {
-  "codigo_origen": "0207",
-  "descripcion": "APENDICE PRE-AURICULAR IZQ"
- },
- {
-  "codigo_origen": "0208",
-  "descripcion": "TRAUMATISMO RENAL"
- },
- {
-  "codigo_origen": "0209",
-  "descripcion": "TRASTORNO ELECTROLITICO"
+  "codigo_origen": "0251",
+  "descripcion": "DESVANECIMIENTO"
  },
  {
   "codigo_origen": "0210",
-  "descripcion": "DOBLE SISTEMA EXCRETOR IZQUIERDO"
+  "descripcion": "ORINA OSCURA"
  },
  {
-  "codigo_origen": "0211",
-  "descripcion": "AUMENTO DE ECOGENICIDAD"
+  "codigo_origen": "0151",
+  "descripcion": "LITIASIS RENAL"
  },
  {
   "codigo_origen": "0212",
-  "descripcion": "GENUS VALGUS DERECHO"
- },
- {
-  "codigo_origen": "0213",
-  "descripcion": "TUMOR OSEO EN ANTEBRAZO IZQ"
- },
- {
-  "codigo_origen": "0214",
-  "descripcion": "TUMOR RENAL"
- },
- {
-  "codigo_origen": "0215",
-  "descripcion": "DIFICULTAD PÀRA RESPÌRAR"
+  "descripcion": "EVACUACION MOCO SANGUINOLENTA"
  },
  {
   "codigo_origen": "0216",
-  "descripcion": "DEBILIDAD EN LAS UÑAS DE LAS MANOS"
- },
- {
-  "codigo_origen": "0217",
-  "descripcion": "PURPURA DE HENOCH SHOLEIN"
+  "descripcion": "CONGESTION NASALY FLEMA"
  },
  {
   "codigo_origen": "0218",
-  "descripcion": "ERITEMA FACIAL"
+  "descripcion": "DIARREA Y FIEBRE"
  },
  {
-  "codigo_origen": "0219",
-  "descripcion": "EDEMA BIPALPEBRAL"
+  "codigo_origen": "0155",
+  "descripcion": "HIDRONEFROSIS"
+ },
+ {
+  "codigo_origen": "0156",
+  "descripcion": "ACIDOSIS SISTEMICA"
+ },
+ {
+  "codigo_origen": "0157",
+  "descripcion": "CISTITIS"
+ },
+ {
+  "codigo_origen": "0158",
+  "descripcion": "HIPERCALCIURIA"
+ },
+ {
+  "codigo_origen": "0159",
+  "descripcion": "HEMATURIA"
+ },
+ {
+  "codigo_origen": "0160",
+  "descripcion": "INFECCION URINARIA"
  },
  {
   "codigo_origen": "0220",
-  "descripcion": "CALAMBRES MUSCULARES"
+  "descripcion": "SECRECIÒN EN OIDO"
  },
  {
-  "codigo_origen": "0221",
-  "descripcion": "ERITEMA VULVAR"
+  "codigo_origen": "0162",
+  "descripcion": "ARENILLA"
+ },
+ {
+  "codigo_origen": "0163",
+  "descripcion": "EDEMA"
+ },
+ {
+  "codigo_origen": "0164",
+  "descripcion": "ANEMIA"
+ },
+ {
+  "codigo_origen": "0165",
+  "descripcion": "CONTROL NEFROLOGICO"
+ },
+ {
+  "codigo_origen": "0166",
+  "descripcion": "MICROLITIASIS RENAL"
+ },
+ {
+  "codigo_origen": "0167",
+  "descripcion": "RIÑON UNICO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0224",
+  "descripcion": "FIEBRE Y TOS"
+ },
+ {
+  "codigo_origen": "0169",
+  "descripcion": "NIÑO SANO"
+ },
+ {
+  "codigo_origen": "0170",
+  "descripcion": "NEFROCALCINOSIS"
+ },
+ {
+  "codigo_origen": "0171",
+  "descripcion": "CONTROL DE EXAMENES"
+ },
+ {
+  "codigo_origen": "0172",
+  "descripcion": "POLIAQUIRIA"
+ },
+ {
+  "codigo_origen": "0173",
+  "descripcion": "HIPÈRURICOSURIA"
+ },
+ {
+  "codigo_origen": "0174",
+  "descripcion": "FEBRICULA"
+ },
+ {
+  "codigo_origen": "0175",
+  "descripcion": "CRISTALES DE CALCIO EN ORINA"
+ },
+ {
+  "codigo_origen": "0176",
+  "descripcion": "RIÑON POLIQUISTICO"
+ },
+ {
+  "codigo_origen": "0177",
+  "descripcion": "PILECTASIA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0178",
+  "descripcion": "SINDROME NEFROTICO"
+ },
+ {
+  "codigo_origen": "0179",
+  "descripcion": "REFERIDO DE ENDOCRINOLOGO"
+ },
+ {
+  "codigo_origen": "0180",
+  "descripcion": "ENLENTECIMIENTO DE LA CURVA DE CREC"
+ },
+ {
+  "codigo_origen": "0227",
+  "descripcion": "TOS Y FIEBRE"
+ },
+ {
+  "codigo_origen": "0183",
+  "descripcion": "HISRONEFROSIS"
+ },
+ {
+  "codigo_origen": "0184",
+  "descripcion": "CONTROL POR BAJO PESO"
+ },
+ {
+  "codigo_origen": "0205",
+  "descripcion": "FIEBRE Y TOS"
+ },
+ {
+  "codigo_origen": "0186",
+  "descripcion": "DEFICIT PONDOESTATURAL"
+ },
+ {
+  "codigo_origen": "0187",
+  "descripcion": "TRAUMATISMO CRANEAL"
+ },
+ {
+  "codigo_origen": "0188",
+  "descripcion": "HEMATURIA MACROSCOPICA"
+ },
+ {
+  "codigo_origen": "0189",
+  "descripcion": "QUISTE RENAL IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0190",
+  "descripcion": "COLICO NEFRITICO"
+ },
+ {
+  "codigo_origen": "0191",
+  "descripcion": "DIARREA Y VOMITOS"
+ },
+ {
+  "codigo_origen": "0192",
+  "descripcion": "EDEMA FACIAL"
+ },
+ {
+  "codigo_origen": "0193",
+  "descripcion": "MICROLITIASIS BILATERAL"
+ },
+ {
+  "codigo_origen": "0194",
+  "descripcion": "POCA GANANCIA PONDERAL"
+ },
+ {
+  "codigo_origen": "0195",
+  "descripcion": "DIABETES MELLITUS"
+ },
+ {
+  "codigo_origen": "0196",
+  "descripcion": "MICROLITIASIS IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0197",
+  "descripcion": "PILECTASIA BILATERAL"
+ },
+ {
+  "codigo_origen": "0198",
+  "descripcion": "ANTECEDENTE DE IU"
+ },
+ {
+  "codigo_origen": "0199",
+  "descripcion": "MICROLITIASIS DERECHA"
+ },
+ {
+  "codigo_origen": "0226",
+  "descripcion": "TRAUMATISMO CRANEAL LEVE"
+ },
+ {
+  "codigo_origen": "0228",
+  "descripcion": "FIEBRE Y TOS"
+ },
+ {
+  "codigo_origen": "0202",
+  "descripcion": "QUISTES RENALES"
+ },
+ {
+  "codigo_origen": "0203",
+  "descripcion": "EDEMA EN MANOS Y PIES"
+ },
+ {
+  "codigo_origen": "0206",
+  "descripcion": "HIPOREXIA"
+ },
+ {
+  "codigo_origen": "0207",
+  "descripcion": "SECRESIÒN OCULAR"
+ },
+ {
+  "codigo_origen": "0242",
+  "descripcion": "DOLOR EN RODILLAS"
+ },
+ {
+  "codigo_origen": "0244",
+  "descripcion": "DOLOR DE OIDO"
+ },
+ {
+  "codigo_origen": "0255",
+  "descripcion": "INHAPETENCIA"
+ },
+ {
+  "codigo_origen": "0260",
+  "descripcion": "RASH CUTANEO"
  }
 ]

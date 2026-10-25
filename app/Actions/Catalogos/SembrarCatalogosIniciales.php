@@ -23,13 +23,17 @@ use InvalidArgumentException;
  *  - Las referencias (el tipo de un examen, el medicamento de una línea de tratamiento) vienen con el código **de la base de origen** y se traducen al código inicial
  *    de la fila que quedó con esa identidad. Una línea cuyo medicamento no está se omite y se informa.
  *  - Ojo: si el administrador **quitó** una fila inicial, sembrar otra vez la vuelve a crear. Por eso esto se corre a mano, no en cada despliegue.
+ *  - **Reemplazar una especialidad** (`$reemplazar`, 2026-10-25: la base vacía de pediatría que mandó Alexander sustituye a la que se había sembrado): antes de sembrar,
+ *    a cada fila inicial **marcada** con esa especialidad que su archivo ya no trae se le quita la marca; si era sólo de ella, la fila se quita (con sus hijos), salvo
+ *    que otra fila inicial la use, que entonces se conserva y se informa. Las filas generales y las de otras especialidades no se tocan, y lo que un médico ya copió
+ *    tampoco.
  */
 final class SembrarCatalogosIniciales
 {
     public const UMBRAL_GENERAL = 3;
 
     /** Las dependencias primero: el examen apunta a su tipo y la línea de un tratamiento a su medicamento. */
-    private const ORDEN = ['tipos-examen', 'medicamentos', 'diagnosticos', 'motivos-consulta', 'motivos-cita', 'plantillas-texto', 'examenes', 'tratamientos'];
+    private const ORDEN = ['tipos-examen', 'medicamentos', 'diagnosticos', 'motivos-consulta', 'motivos-cita', 'plantillas-texto', 'dietas', 'antecedentes', 'examenes', 'tratamientos'];
 
     /** @var array<string,array<string,array<string,string>>> `catalogo => especialidad => código de origen => código inicial` */
     private array $mapa = [];
@@ -38,16 +42,17 @@ final class SembrarCatalogosIniciales
     private array $identidades = [];
 
     /**
-     * @return array{especialidades: array<string,int>, sin_especialidad: array<int,string>, catalogos: array<string,array{nuevas:int, generales:int, marcas:int, lineas:int}>, omitidas: array<int,string>}
+     * @param  array<int,string>  $reemplazar  especialidades (slug) cuyo catálogo inicial pasa a ser exactamente el de su carpeta (ver arriba)
+     * @return array{especialidades: array<string,int>, sin_especialidad: array<int,string>, catalogos: array<string,array{nuevas:int, generales:int, marcas:int, lineas:int}>, retiradas: array<string,array<string,array{quitadas:int, desmarcadas:int, conservadas:int}>>, omitidas: array<int,string>}
      */
-    public function ejecutar(string $carpeta, bool $simular = false): array
+    public function ejecutar(string $carpeta, bool $simular = false, array $reemplazar = []): array
     {
         if (! is_dir($carpeta)) {
             throw new InvalidArgumentException('No existe la carpeta ' . $carpeta . '.');
         }
 
         $this->mapa = $this->identidades = [];
-        $informe = ['especialidades' => [], 'sin_especialidad' => [], 'catalogos' => [], 'omitidas' => []];
+        $informe = ['especialidades' => [], 'sin_especialidad' => [], 'catalogos' => [], 'retiradas' => [], 'omitidas' => []];
 
         foreach (glob(rtrim($carpeta, '/\\') . '/*', GLOB_ONLYDIR) as $dir) {
             $slug = basename($dir);
@@ -60,9 +65,20 @@ final class SembrarCatalogosIniciales
         }
         ksort($informe['especialidades']);
 
+        foreach ($reemplazar as $slug) {
+            if (! isset($informe['especialidades'][$slug])) {
+                throw new InvalidArgumentException('No se puede reemplazar «' . $slug . '»: no hay una carpeta de esa especialidad o la especialidad no existe.');
+            }
+        }
+
         DB::beginTransaction();
 
         try {
+            foreach ($reemplazar as $slug) {
+                $informe['retiradas'][$slug] = $this->retirar($carpeta, $slug, $informe['especialidades'][$slug], $informe['omitidas']);
+            }
+            $this->mapa = $this->identidades = [];
+
             foreach (self::ORDEN as $catalogo) {
                 $informe['catalogos'][$catalogo] = $this->sembrar($catalogo, $carpeta, $informe['especialidades'], $informe['omitidas']);
             }
@@ -154,6 +170,63 @@ final class SembrarCatalogosIniciales
         return $cuenta;
     }
 
+    /**
+     * Le quita a la especialidad lo que su archivo ya no trae (ver «Reemplazar una especialidad» arriba). Los catálogos van **al revés** del orden de siembra: primero lo
+     * que usa (un tratamiento, un examen) y después lo usado (el medicamento, el tipo), para que lo que se quita no deje a nada apuntando.
+     *
+     * @param  array<int,string>  $omitidas
+     * @return array<string,array{quitadas:int, desmarcadas:int, conservadas:int}>
+     */
+    private function retirar(string $carpeta, string $slug, int $specialtyId, array &$omitidas): array
+    {
+        // Las identidades de lo que trae el archivo, en el orden de siembra (la identidad de un examen lleva la de su tipo).
+        $enArchivo = [];
+        foreach (self::ORDEN as $catalogo) {
+            $def = CatalogosIniciales::de($catalogo);
+            foreach ($this->leer($carpeta, $slug, $catalogo) as $fila) {
+                $fila = $this->normalizarFila($def, $catalogo, $fila);
+                if ($fila === null) {
+                    continue;
+                }
+                $clave = $this->identidadDeOrigen($def, $slug, $fila);
+                $this->identidades[$catalogo][$slug][(string) ($fila['codigo_origen'] ?? '')] = $clave;
+                $enArchivo[$catalogo][$clave] = true;
+            }
+        }
+
+        $cuenta = [];
+        foreach (array_reverse(self::ORDEN) as $catalogo) {
+            $def = CatalogosIniciales::de($catalogo);
+            $cuenta[$catalogo] = ['quitadas' => 0, 'desmarcadas' => 0, 'conservadas' => 0];
+            $filas = DB::table($def['tabla'])->whereNull('reg_medico')->orderBy('id')->get()->all();
+            $marcas = EspecialidadesDelCatalogoInicial::de($catalogo, array_map(fn ($f) => (int) $f->id, $filas));
+
+            foreach ($filas as $fila) {
+                $suyas = $marcas[(int) $fila->id] ?? [];
+                if (! in_array($specialtyId, $suyas, true) || isset($enArchivo[$catalogo][$this->identidadInicial($def, (array) $fila)])) {
+                    continue;
+                }
+
+                if (count($suyas) > 1) {
+                    EspecialidadesDelCatalogoInicial::asignar($catalogo, (int) $fila->id, array_values(array_diff($suyas, [$specialtyId])));
+                    $cuenta[$catalogo]['desmarcadas']++;
+
+                    continue;
+                }
+
+                try {
+                    app(QuitarFilaDeCatalogoInicial::class)->ejecutar($catalogo, (int) $fila->id);
+                    $cuenta[$catalogo]['quitadas']++;
+                } catch (InvalidArgumentException) {
+                    $omitidas[] = $def['titulo'] . ' (' . $slug . '): se conservó «' . trim((string) $fila->{$def['etiqueta']}) . '» porque otra fila inicial lo usa.';
+                    $cuenta[$catalogo]['conservadas']++;
+                }
+            }
+        }
+
+        return $cuenta;
+    }
+
     /** @return array<int,array<string,mixed>> */
     private function leer(string $carpeta, string $especialidad, string $catalogo): array
     {
@@ -180,6 +253,15 @@ final class SembrarCatalogosIniciales
             $texto = $tipo === 'texto' ? trim((string) preg_replace('/\s+/u', ' ', (string) $fila[$columna])) : trim((string) $fila[$columna]);
             $texto = $mayusculas ? mb_strtoupper($texto) : $texto;
             $fila[$columna] = $max > 0 ? mb_substr($texto, 0, $max) : $texto;
+        }
+
+        foreach ($def['campos'] as $columna => [, $tipo]) {
+            if ($tipo === 'opcion') {
+                $fila[$columna] = trim((string) ($fila[$columna] ?? ''));
+                if (! array_key_exists($fila[$columna], $def['opciones'][$columna] ?? [])) {
+                    return null;
+                }
+            }
         }
 
         if ($catalogo === 'plantillas-texto') {

@@ -93,7 +93,7 @@ class CatalogosInicialesTest extends TestCase
     public function test_el_registro_declara_lo_que_la_copia_y_el_abm_necesitan(): void
     {
         $this->assertSame(
-            ['medicamentos', 'tratamientos', 'diagnosticos', 'motivos-consulta', 'motivos-cita', 'tipos-examen', 'examenes', 'plantillas-texto'],
+            ['medicamentos', 'tratamientos', 'diagnosticos', 'motivos-consulta', 'motivos-cita', 'tipos-examen', 'examenes', 'plantillas-texto', 'dietas', 'antecedentes'],
             array_keys(Registro::todos())
         );
 
@@ -320,7 +320,7 @@ class CatalogosInicialesTest extends TestCase
 
         $sesion()->get(route('clinica.catalogos.diagnosticos'))->assertOk()->assertDontSee('id="catalogo-novedades"', false);
         $sesion()->post(route('clinica.catalogos.cargar-inicial', 'diagnosticos'))->assertSessionHas('estado', 'Ya tienes todo lo que trae el catálogo inicial de diagnósticos: no se agregó nada.');
-        $sesion()->post(route('clinica.catalogos.cargar-inicial', 'dietas'))->assertNotFound();
+        $sesion()->post(route('clinica.catalogos.cargar-inicial', 'motivos-factura'))->assertNotFound();
         $sesion()->post(route('clinica.catalogos.cargar-inicial', 'inexistente'))->assertNotFound();
     }
 
