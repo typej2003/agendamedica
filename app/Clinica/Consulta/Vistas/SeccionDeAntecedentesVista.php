@@ -299,7 +299,7 @@ final class SeccionDeAntecedentesVista
             'avisoCatalogo' => $antecedente->enCatalogo ? null : 'ya no está en tu catálogo',
             // «desde dd/mm/aaaa»: el alta registrada en `antecedente_movimientos`; sin registro, nada.
             'desde' => isset($this->desde[trim((string) $antecedente->codigo)])
-                ? 'desde ' . HistorialDeAntecedentesVista::local($this->desde[trim((string) $antecedente->codigo)])->format('d/m/Y')
+                ? 'desde ' . HistorialDeAntecedentesVista::local($this->desde[trim((string) $antecedente->codigo)])->format(\App\Support\Regionalizacion::formatoActual())
                 : null,
         ];
     }

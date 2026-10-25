@@ -63,7 +63,7 @@ final class AgendaVista
     public function titulo(): string
     {
         $titulo = match ($this->vista()) {
-            'semana' => 'Semana del ' . $this->fecha()->copy()->startOfWeek(Carbon::MONDAY)->format('d/m/Y'),
+            'semana' => 'Semana del ' . $this->fecha()->copy()->startOfWeek(Carbon::MONDAY)->format(\App\Support\Regionalizacion::formatoActual()),
             'mes'    => FechaClinica::tituloMes($this->fecha()),
             default  => FechaClinica::tituloDia($this->fecha()),
         };

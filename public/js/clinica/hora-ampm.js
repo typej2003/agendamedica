@@ -10,19 +10,31 @@
  *   - 1 a 6   -> PM («1» = 1:00 PM: nadie atiende de madrugada)
  *   - 7 a 11  -> AM
  * Con «a», «am», «p» o «pm» manda lo escrito (de 1 a 12). «0800», «800», «1:30p», «1pm», «8» son válidos.
+ *
+ * Con un dispositivo de 24 h (WEB-13.5, `<html data-hora-ciclo="24">`) el campo se muestra «13:00» y lo escrito
+ * sin AM/PM se toma **tal cual** («1» = 01:00): quien usa ese reloj escribe 13 para la una de la tarde. AM/PM se
+ * sigue entendiendo si se escribe.
  */
 (function (global) {
     'use strict';
 
     function pad(n) { return (n < 10 ? '0' : '') + n; }
 
-    function formatear(hora, minuto) {
+    /** 12 o 24: el reloj del dispositivo que dejó el servidor en el `<html>` (12 si no lo dijo). */
+    function cicloDelDocumento() {
+        var raiz = typeof document !== 'undefined' ? document.documentElement : null;
+        return raiz && raiz.getAttribute('data-hora-ciclo') === '24' ? 24 : 12;
+    }
+
+    function formatear(hora, minuto, ciclo) {
+        if ((ciclo || cicloDelDocumento()) === 24) { return pad(hora) + ':' + pad(minuto); }
         var h12 = hora % 12 === 0 ? 12 : hora % 12;
         return h12 + ':' + pad(minuto) + ' ' + (hora >= 12 ? 'PM' : 'AM');
     }
 
     /** Texto -> { hhmm: '13:00', texto: '1:00 PM' } o null si no es una hora. */
-    function parsearHora(entrada) {
+    function parsearHora(entrada, ciclo) {
+        ciclo = ciclo || cicloDelDocumento();
         var t = String(entrada == null ? '' : entrada).toLowerCase().replace(/\./g, '').replace(/\s+/g, '');
         var m = /^(\d{1,2}):?(\d{2})?(am|pm|a|p)?$/.exec(t);
         if (!m) { return null; }
@@ -39,18 +51,18 @@
             else { hora = hora === 12 ? 12 : hora + 12; }
         } else {
             if (hora > 23) { return null; }
-            if (hora >= 1 && hora <= 6) { hora += 12; }
+            if (ciclo !== 24 && hora >= 1 && hora <= 6) { hora += 12; }
         }
 
-        return { hhmm: pad(hora) + ':' + pad(minuto), texto: formatear(hora, minuto) };
+        return { hhmm: pad(hora) + ':' + pad(minuto), texto: formatear(hora, minuto, ciclo) };
     }
 
     /** Cambia AM por PM (y al revés) en un `HH:MM`. */
-    function alternar(hhmm) {
+    function alternar(hhmm, ciclo) {
         var p = /^(\d{2}):(\d{2})$/.exec(hhmm || '');
         if (!p) { return null; }
         var hora = (parseInt(p[1], 10) + 12) % 24;
-        return { hhmm: pad(hora) + ':' + p[2], texto: formatear(hora, parseInt(p[2], 10)) };
+        return { hhmm: pad(hora) + ':' + p[2], texto: formatear(hora, parseInt(p[2], 10), ciclo) };
     }
 
     function destino(campo) {
@@ -67,7 +79,9 @@
 
         var invalido = texto !== '' && !hora;
         campo.classList.toggle('is-invalid', invalido);
-        campo.setCustomValidity(invalido ? 'Escribe una hora con AM o PM, por ejemplo 8:00 AM.' : '');
+        campo.setCustomValidity(!invalido ? '' : (cicloDelDocumento() === 24
+            ? 'Escribe una hora de 0 a 23, por ejemplo 13:00.'
+            : 'Escribe una hora con AM o PM, por ejemplo 8:00 AM.'));
         return hora;
     }
 

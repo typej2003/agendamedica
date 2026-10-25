@@ -58,11 +58,9 @@ final class CitaDelPaciente
         return $this->cita->horaIni !== null ? substr((string) $this->cita->horaIni, 0, 5) : '—';
     }
 
-    public function hora12(): string
+    public function horaLegible(): string
     {
-        return $this->hora() !== '—'
-            ? Carbon::createFromFormat('H:i', $this->hora())->format('g:i A')
-            : '—';
+        return \App\Support\HoraLocal::reloj($this->hora(), '—');
     }
 
     public function inicio(): Carbon

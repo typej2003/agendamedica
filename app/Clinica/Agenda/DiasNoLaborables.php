@@ -107,7 +107,7 @@ class DiasNoLaborables
      */
     public function aviso(DiaNoLaborable $dia): string
     {
-        $fecha = $dia->dia->format('d/m/Y');
+        $fecha = $dia->dia->format(\App\Support\Regionalizacion::formatoActual());
         $motivo = trim((string) $dia->motivo);
 
         return $motivo === ''

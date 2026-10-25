@@ -136,9 +136,9 @@ final class CumpleanosVista
     }
 
     /** La misma hora para leerla: «9:00 AM». */
-    public function hora12(): string
+    public function horaLegible(): string
     {
-        return HoraLocal::hora12($this->configuracion->hora());
+        return HoraLocal::reloj($this->configuracion->hora());
     }
 
     /** Si el médico ya guardó la configuración alguna vez, o lo que se ve son los valores por defecto. */

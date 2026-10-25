@@ -21,7 +21,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        // La regionalización de quien mira (WEB-13.5). `scoped`: un job o un request no hereda la del anterior;
+        // el middleware `AplicarRegionalizacion` la reemplaza por la del dispositivo.
+        $this->app->scoped(\App\Support\Regionalizacion::class, fn () => \App\Support\Regionalizacion::porDefecto());
     }
 
     /**

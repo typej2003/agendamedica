@@ -134,7 +134,7 @@ final class NoLaborablesVista
             'motivo'      => $dia->motivo ?: null,
             'urlEditar'   => $this->url($this->mes, ['editar' => $dia->id]),
             'urlEliminar' => route('clinica.agenda.no-laborables.eliminar', $dia->id),
-            'confirmar'   => '¿Quitar la marca del ' . $dia->dia->format('d/m/Y') . '?',
+            'confirmar'   => '¿Quitar la marca del ' . $dia->dia->format(\App\Support\Regionalizacion::formatoActual()) . '?',
         ])->all();
     }
 }

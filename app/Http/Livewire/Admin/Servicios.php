@@ -139,7 +139,7 @@ class Servicios extends Component
         }
         if ($seleccionado && $this->modal === 'renovar') {
             $inicio = $servicios->inicioDeRenovacion((string) $seleccionado->reg_medico);
-            $datos['inicioRenovacion'] = $inicio ? $inicio->format('d/m/Y') . ' (cuando termina el actual)' : 'hoy';
+            $datos['inicioRenovacion'] = $inicio ? $inicio->format(\App\Support\Regionalizacion::formatoActual()) . ' (cuando termina el actual)' : 'hoy';
         }
         if ($seleccionado && in_array($this->modal, ['reemplazar', 'quitar'], true)) {
             $datos['actual'] = $servicios->estado((string) $seleccionado->reg_medico);
@@ -227,7 +227,7 @@ class Servicios extends Component
             (int) $this->meses,
         );
 
-        session()->flash('message', trim($medico->name . ' ' . $medico->lastname) . ': servicio hasta el ' . $nuevo->vence_el->format('d/m/Y') . '.');
+        session()->flash('message', trim($medico->name . ' ' . $medico->lastname) . ': servicio hasta el ' . $nuevo->vence_el->format(\App\Support\Regionalizacion::formatoActual()) . '.');
         $this->cerrarModal();
     }
 
@@ -281,7 +281,7 @@ class Servicios extends Component
             auth()->user()->name,
         );
 
-        session()->flash('message', trim($medico->name . ' ' . $medico->lastname) . ': plan reemplazado, servicio hasta el ' . $nuevo->vence_el->format('d/m/Y') . '.');
+        session()->flash('message', trim($medico->name . ' ' . $medico->lastname) . ': plan reemplazado, servicio hasta el ' . $nuevo->vence_el->format(\App\Support\Regionalizacion::formatoActual()) . '.');
         $this->cerrarModal();
     }
 

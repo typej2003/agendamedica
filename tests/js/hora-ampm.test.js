@@ -21,3 +21,14 @@ for (const mala of ['', 'abc', '24', '8:60', '13pm', '0pm', '1:2', '99']) {
 assert.strictEqual(alternar('08:15').texto, '8:15 PM');
 assert.strictEqual(alternar('23:00').texto, '11:00 AM');
 console.log('hora-ampm: ok');
+
+// Con un dispositivo de 24 h (WEB-13.5): sin AM/PM se toma tal cual y se muestra «13:00».
+const veinticuatro = { '1': ['01:00', '01:00'], '13': ['13:00', '13:00'], '0800': ['08:00', '08:00'], '1pm': ['13:00', '13:00'], '6:30': ['06:30', '06:30'] };
+for (const [entrada, [hhmm, texto]] of Object.entries(veinticuatro)) {
+    const r = parsearHora(entrada, 24);
+    assert.ok(r, 'debía entenderse en 24 h: ' + entrada);
+    assert.strictEqual(r.hhmm, hhmm, entrada);
+    assert.strictEqual(r.texto, texto, entrada);
+}
+assert.strictEqual(alternar('08:15', 24).texto, '20:15');
+console.log('hora-ampm 24 h: ok');

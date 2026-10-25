@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" {!! \App\Support\Regionalizacion::actual()->atributosHtml() !!}>
 <head>
+    @include('layouts._regionalizacion')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @include('layouts._favicon')

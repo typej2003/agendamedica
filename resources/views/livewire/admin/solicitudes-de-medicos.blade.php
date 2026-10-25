@@ -170,7 +170,7 @@
                                 <td>{{ $solicitud->especialidad?->name ?? '—' }}</td>
                                 <td>{{ $solicitud->email }}</td>
                                 <td>
-                                    <div>{{ \App\Support\HoraLocal::instante($solicitud->created_at)?->format('d/m/Y') }}</div>
+                                    <div>{{ \App\Support\HoraLocal::instante($solicitud->created_at)?->format(\App\Support\Regionalizacion::formatoActual()) }}</div>
                                     <small class="text-muted">{{ $solicitud->created_at?->diffForHumans() }}</small>
                                 </td>
                                 <td>

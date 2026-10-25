@@ -69,7 +69,7 @@ trait EmiteApiKeys
             'medico'     => trim($medico->name . ' ' . $medico->lastname),
             'reg_medico' => $reg,
             'equipo'     => $r['credencial']->machine_label,
-            'vence'      => $r['credencial']->expires_at->format('d/m/Y'),
+            'vence'      => $r['credencial']->expires_at->format(\App\Support\Regionalizacion::formatoActual()),
             'token'      => $r['token'],
             'revocadas'  => $r['revocadas'],
         ];

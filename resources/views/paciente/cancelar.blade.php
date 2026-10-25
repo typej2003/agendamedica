@@ -13,7 +13,7 @@
 
         <div class="paciente-resumen">
             <p><strong>{{ $cita->medico->nombre_mostrar }}</strong> · {{ $cita->especialidades() }}</p>
-            <p>{{ $cita->dia() }} · {{ $cita->hora12() }}</p>
+            <p>{{ $cita->dia() }} · {{ $cita->horaLegible() }}</p>
             <p>{{ $cita->sede() }}@if ($cita->direccion()) — {{ $cita->direccion() }}@endif</p>
             <p>Referencia #{{ $cita->id() }} · Turno #{{ $cita->turno() }}</p>
         </div>

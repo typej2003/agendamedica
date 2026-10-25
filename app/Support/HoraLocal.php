@@ -7,7 +7,9 @@ use Carbon\Carbon;
 use Carbon\CarbonInterface;
 
 /**
- * Cómo se **muestran** las horas a las personas: en la hora del consultorio y en 12 h con AM/PM.
+ * Cómo se **muestran** las horas a las personas: en la hora del consultorio y con el reloj y el orden de fecha
+ * de su dispositivo (`Regionalizacion`, WEB-13.5: 12 h con AM/PM o 24 h; `d/m/Y` o `m/d/Y`). Sin dispositivo
+ * (correo, SMS, comandos) vale la convención del consultorio: 12 h y `d/m/Y`.
  *
  * Hay dos clases de hora y no se mezclan:
  *
@@ -61,10 +63,33 @@ final class HoraLocal
         return sprintf('%02d:%s', (int) $hora, substr($minuto, 0, 2));
     }
 
-    /** Dos horas locales `HH:MM[:SS]` → «8:00 AM a 1:00 PM». */
+    /**
+     * `HH:MM[:SS]` (24 h, hora del consultorio) en el reloj de quien mira: «1:00 PM» o «13:00». Es la que usa la
+     * pantalla; `hora12()` es la de 12 h fija (los mensajes al paciente, que no tienen dispositivo).
+     */
+    public static function reloj(?string $hhmm, string $siVacio = ''): string
+    {
+        if (self::hora12($hhmm) === '') {
+            return $siVacio;
+        }
+
+        [$hora, $minuto] = explode(':', trim((string) $hhmm));
+
+        return Regionalizacion::actual()->hora((int) $hora, (int) substr($minuto, 0, 2));
+    }
+
+    /** Dos horas locales `HH:MM[:SS]` → «8:00 AM a 1:00 PM» (o «08:00 a 13:00»). */
     public static function rango(?string $desde, ?string $hasta): string
     {
-        return self::hora12($desde) . ' a ' . self::hora12($hasta);
+        return self::reloj($desde) . ' a ' . self::reloj($hasta);
+    }
+
+    /** La fecha corta de un instante UTC, en la zona del consultorio y en el orden del dispositivo. */
+    public static function fecha($valor, string $siVacio = ''): string
+    {
+        $momento = self::instante($valor);
+
+        return $momento === null ? $siVacio : Regionalizacion::actual()->fecha($momento);
     }
 
     /**
@@ -88,20 +113,29 @@ final class HoraLocal
         return $momento->timezone(FechaDelConsultorio::zona());
     }
 
-    /** La hora de un instante UTC, en hora del consultorio y 12 h («1:00 PM»). */
+    /** La hora de un instante UTC, en hora del consultorio y el reloj del dispositivo («1:00 PM»). */
     public static function hora($valor): string
     {
         $momento = self::instante($valor);
 
-        return $momento === null ? '' : self::hora12($momento->format('H:i'));
+        return $momento === null ? '' : Regionalizacion::actual()->hora($momento->hour, $momento->minute);
     }
 
-    /** «20/10/2026 1:00 PM»: la fecha y la hora de un instante UTC, en la hora del consultorio. */
-    public static function fechaHora($valor, string $siVacio = ''): string
+    /**
+     * «20/10/2026 1:00 PM»: la fecha y la hora de un instante UTC, en la hora del consultorio. `$region` fija la
+     * regionalización (un correo no tiene dispositivo: `Regionalizacion::porDefecto()`).
+     */
+    public static function fechaHora($valor, string $siVacio = '', ?Regionalizacion $region = null): string
     {
         $momento = self::instante($valor);
 
-        return $momento === null ? $siVacio : $momento->format('d/m/Y') . ' ' . self::hora12($momento->format('H:i'));
+        if ($momento === null) {
+            return $siVacio;
+        }
+
+        $region ??= Regionalizacion::actual();
+
+        return $region->fecha($momento) . ' ' . $region->hora($momento->hour, $momento->minute);
     }
 
     /** Igual que `fechaHora()` pero con los segundos: «20/10/2026 1:00:05 PM» (el detalle de la bitácora). */
@@ -113,7 +147,9 @@ final class HoraLocal
             return $siVacio;
         }
 
-        return $momento->format('d/m/Y') . ' ' . $momento->format('g:i:s') . ' ' . ($momento->hour >= 12 ? 'PM' : 'AM');
+        $region = Regionalizacion::actual();
+
+        return $region->fecha($momento) . ' ' . $region->hora($momento->hour, $momento->minute, $momento->second);
     }
 
     /** «hace 5 minutos» calculado sobre el instante (no depende de la zona), en español. */

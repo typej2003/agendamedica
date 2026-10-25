@@ -33,7 +33,7 @@
                 </div>
                 <div>
                     <dt>Día y hora</dt>
-                    <dd>{{ $reserva['dia'] }} · {{ $reserva['hora12'] }}</dd>
+                    <dd>{{ $reserva['dia'] }} · {{ $reserva['hora_legible'] }}</dd>
                 </div>
                 <div>
                     <dt>Lugar</dt>

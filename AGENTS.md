@@ -1288,6 +1288,17 @@ La **entrada** es `<x-ui.hora name=… :valor="'HH:MM'">` + `public/js/clinica/h
 1–6 = PM, 7–11 = AM, 12 = PM; test de Node en `tests/js/hora-ampm.test.js`). **El servidor sigue recibiendo `HH:MM` de 24 h** (un `hidden` con el
 `name`): ninguna validación ni Action cambió, y el API del móvil, el sync y los logs siguen en 24 h. No usar `<input type="time">` en `/clinica`.
 
+**Fechas y horas por dispositivo (WEB-13.5, 2026-10-25):** el **formato** (orden `d/m/Y` o `m/d/Y`, separador y reloj de 12 o 24 h)
+sale de la regionalización del dispositivo; la **zona** sigue siendo la del consultorio. `public/js/regionalizacion.js` (en el `<head>` de
+los layouts) lo detecta con `Intl` del primer idioma `es-*`/`pt-*` y lo deja en la cookie `ddr_region` (`dmy|/|12`); el middleware
+`AplicarRegionalizacion` (grupo `web`) la valida y pone `App\Support\Regionalizacion` en el contenedor (`scoped`), y el `<html>` lleva
+`data-fecha-orden`/`data-fecha-separador`/`data-hora-ciclo`, que leen `hora-ampm.js` (24 h: «13:00», sin la regla 1-6 = PM),
+`mascara-fecha.js` (teclea en el orden de la página y agrega `_fecha_orden`) y `window.Regionalizacion` (`fecha`, `hora`, `leerFecha`).
+En PHP: `HoraLocal::reloj()`/`rango()`/`fecha()`/`fechaHora()`, `FechaClinica::formato()` sin formato y `Regionalizacion::formatoActual()`
+para un `->format()`. **Sin dispositivo** (correos, SMS, WhatsApp, comandos, API) vale `config('clinica.regionalizacion')`
+(`CLINICA_REGIONALIZACION`, por defecto `dmy|/|12`); `HoraLocal::hora12()` y `'d/m/Y'` explícitos quedan para los mensajes al paciente.
+Tests: `Unit/Support/RegionalizacionTest`, `Feature/RegionalizacionDelDispositivoWebTest`, `tests/js/{regionalizacion,hora-ampm}.test.js`. Trampa 173.
+
 **Pauta de pantallas «buscar y agregar» (decisión del usuario, 2026-10-20):** una lista de cosas que se buscan y se agregan
 va en **dos columnas** (`<x-ui.dos-listas>`): a la izquierda lo que se arma (los campos propios —el nombre— y la lista de lo
 agregado, con su guardado), a la derecha **el catálogo a la vista** con su buscador que filtra la lista y el botón «Nuevo …»
@@ -1381,7 +1392,7 @@ hay que saber sin volver a deducirlo (las trampas **151 a 156** de [`TRAMPAS.md`
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **165** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **173** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
 crudos, los roles de la consulta (**trampa 19: "Atender" es sólo del médico**, WEB-4.9), los `[hidden]`,
 `examen_fisico_nuevo`, las **reglas de archivo de

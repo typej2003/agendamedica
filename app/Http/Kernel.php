@@ -37,6 +37,8 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            // Fechas y horas con la regionalización del dispositivo (WEB-13.5): la cookie `ddr_region`.
+            \App\Http\Middleware\AplicarRegionalizacion::class,
             \App\Http\Middleware\UserOnlineMiddleware::class, // Middleware para marcar al usuario como activo
             \App\Http\Middleware\EnsureAccountActive::class,
             \App\Http\Middleware\EnsurePasswordChanged::class,

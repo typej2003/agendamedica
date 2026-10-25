@@ -72,7 +72,7 @@ class ListadosController extends Controller
             // "Hoy" y el médico salen del contexto del consultorio, no de la vista (misma regla que el
             // resumen de historia clínica de WEB-3.5).
             'medico' => $contexto['medico']->nombreMostrar,
-            'fecha'  => FechaDelConsultorio::hoy()->format('d/m/Y'),
+            'fecha'  => FechaDelConsultorio::hoy()->format(\App\Support\Regionalizacion::formatoActual()),
         ]);
     }
 

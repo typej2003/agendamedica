@@ -12,6 +12,7 @@ class EncryptCookies extends Middleware
      * @var array
      */
     protected $except = [
-        //
+        // La regionalización del dispositivo (WEB-13.5): la escribe el navegador y la valida el middleware.
+        \App\Support\Regionalizacion::COOKIE,
     ];
 }
