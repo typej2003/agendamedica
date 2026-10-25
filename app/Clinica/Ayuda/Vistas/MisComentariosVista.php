@@ -90,7 +90,7 @@ final class MisComentariosVista
             'tono' => $this->estadoTono($comentario),
             'respuesta' => $comentario->respuesta,
             'respondido' => $comentario->fueRespondido()
-                ? 'Respondido el ' . (\App\Support\HoraLocal::instante($comentario->respondido_el)?->format('d/m/Y') ?? '')
+                ? 'Respondido el ' . (\App\Support\HoraLocal::instante($comentario->respondido_el)?->format(\App\Support\Regionalizacion::formatoActual()) ?? '')
                 : null,
             // Lo que el usuario tiene que entender de un descartado: lo leímos y decidimos no avanzar (no es
             // que se haya perdido).

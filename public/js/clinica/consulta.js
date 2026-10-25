@@ -486,25 +486,14 @@
     // FPP y edad gestacional en vivo al escribir la FUR (sólo presentación; al guardar el servidor recalcula).
     // La regla de verdad es `App\Clinica\Embarazo\EdadGestacional`: FPP = FUR + `data-dias-fpp` días, semanas =
     // int(días / 7) y días = días mod 7, contra `data-hoy` (el día del consultorio, el mismo del servidor). La FUR
-    // puede ser `AAAA-MM-DD` (campo date) o `dd/mm/aaaa` (campo tecleado). Vacía o inválida: ambas «—»; futura: FPP sí, EG «—».
+    // puede ser `AAAA-MM-DD` (campo date) o tecleada en el orden del dispositivo (`dd/mm/aaaa` o `mm/dd/aaaa`). Vacía o inválida: ambas «—»; futura: FPP sí, EG «—».
     function furEnVivo(formulario, furCampo, fppSalida, egSalida) {
         if (!furCampo || !fppSalida || !egSalida) return;
 
-        const dosCifras = function (n) { return String(n).padStart(2, '0'); };
+        // La fecha tecleada va en el orden de la página (WEB-13.5): `window.Regionalizacion.leerFecha`.
         const aUtc = function (texto) {
-            const t = (texto || '').trim();
-            let a; let m; let d;
-            let r = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t);
-
-            if (r) { a = +r[1]; m = +r[2]; d = +r[3]; } else {
-                r = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(t);
-                if (!r) return null;
-                d = +r[1]; m = +r[2]; a = +r[3];
-            }
-
-            const ms = Date.UTC(a, m - 1, d);
-            const f = new Date(ms);
-            return f.getUTCFullYear() === a && f.getUTCMonth() === m - 1 && f.getUTCDate() === d ? ms : null;
+            const f = window.Regionalizacion.leerFecha(texto);
+            return f === null ? null : Date.UTC(f.anio, f.mes - 1, f.dia);
         };
         const recalcular = function () {
             const fur = aUtc(furCampo.value);
@@ -516,7 +505,7 @@
                 const dias = Math.round((hoy - fur) / 86400000);
                 // La FPP sale de cualquier FUR válida (como en el servidor); la EG sólo si no es futura.
                 const f = new Date(fur + Number(formulario.dataset.diasFpp || 280) * 86400000);
-                fpp = dosCifras(f.getUTCDate()) + '/' + dosCifras(f.getUTCMonth() + 1) + '/' + f.getUTCFullYear();
+                fpp = window.Regionalizacion.fecha(f.getUTCDate(), f.getUTCMonth() + 1, f.getUTCFullYear());
 
                 if (dias >= 0) {
                     const sem = Math.floor(dias / 7);

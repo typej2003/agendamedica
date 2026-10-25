@@ -69,7 +69,7 @@
                                     @if ($r['carga'] && $r['carga']->estado === 'completa')
                                         <span class="badge bg-success">Completa</span>
                                         @if ($r['carga']->finalizada_at)
-                                            <div><small class="text-muted">{{ \App\Support\HoraLocal::instante($r['carga']->finalizada_at)?->format('d/m/Y') }}</small></div>
+                                            <div><small class="text-muted">{{ \App\Support\HoraLocal::instante($r['carga']->finalizada_at)?->format(\App\Support\Regionalizacion::formatoActual()) }}</small></div>
                                         @endif
                                     @elseif ($r['carga'])
                                         <span class="badge bg-warning text-dark">En curso</span>
@@ -142,8 +142,8 @@
                                     @forelse ($credenciales as $c)
                                         <tr wire:key="cred-{{ $c->id }}">
                                             <td class="fw-semibold">{{ $c->machine_label }}</td>
-                                            <td class="fecha-celda">{{ \App\Support\HoraLocal::instante($c->created_at)?->format('d/m/Y') }}</td>
-                                            <td class="fecha-celda">{{ $c->expires_at?->format('d/m/Y') }}</td>
+                                            <td class="fecha-celda">{{ \App\Support\HoraLocal::instante($c->created_at)?->format(\App\Support\Regionalizacion::formatoActual()) }}</td>
+                                            <td class="fecha-celda">{{ $c->expires_at?->format(\App\Support\Regionalizacion::formatoActual()) }}</td>
                                             <td class="fecha-celda">{{ \App\Support\HoraLocal::fechaHora($c->last_used_at, 'Nunca') }}</td>
                                             <td>
                                                 @if ($c->estaRevocada())

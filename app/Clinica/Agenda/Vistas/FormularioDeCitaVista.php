@@ -77,7 +77,7 @@ final class FormularioDeCitaVista
 
     public function subtitulo(): string
     {
-        return ($this->sede?->medicalCenter->name ?? 'Sin sede') . ' · ' . $this->fecha->format('d/m/Y')
+        return ($this->sede?->medicalCenter->name ?? 'Sin sede') . ' · ' . $this->fecha->format(\App\Support\Regionalizacion::formatoActual())
             . ($this->jornada ? ' · próximo #' . $this->jornada->siguienteNumero() : '');
     }
 
@@ -157,7 +157,7 @@ final class FormularioDeCitaVista
 
     public function fechaTexto(): string
     {
-        return $this->fecha->format('d/m/Y');
+        return $this->fecha->format(\App\Support\Regionalizacion::formatoActual());
     }
 
     public function sedeId(): ?int
@@ -263,8 +263,8 @@ final class FormularioDeCitaVista
 
         return [
             'paciente' => $this->paciente['nombre'] ?? 'Este paciente',
-            'fecha'    => $otra->fecha->format('d/m/Y'),
-            'hora'     => $otra->hora_ini ? HoraLocal::hora12($otra->hora_ini) : null,
+            'fecha'    => $otra->fecha->format(\App\Support\Regionalizacion::formatoActual()),
+            'hora'     => $otra->hora_ini ? HoraLocal::reloj($otra->hora_ini) : null,
             'sede'     => $sede ? ($sede->medicalCenter->name ?? 'esa sede') : null,
         ];
     }

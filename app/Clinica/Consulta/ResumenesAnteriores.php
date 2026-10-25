@@ -45,7 +45,7 @@ final class ResumenesAnteriores
             }
             $resumenes[] = [
                 'numero' => (int) $fila->nroconsulta,
-                'fecha' => $fila->fecha ? date('d/m/Y', strtotime((string) $fila->fecha)) : null,
+                'fecha' => $fila->fecha ? \App\Support\FechaClinica::formato((string) $fila->fecha) : null,
                 'texto' => $texto,
             ];
         }

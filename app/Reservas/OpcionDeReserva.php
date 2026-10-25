@@ -39,9 +39,9 @@ final class OpcionDeReserva
     }
 
     /** "8:00 AM" */
-    public function hora12(): string
+    public function horaLegible(): string
     {
-        return HoraLocal::hora12($this->hora);
+        return HoraLocal::reloj($this->hora);
     }
 
     /** El momento de la cita en la zona del consultorio (para comparar con el reloj y las 24 horas). */

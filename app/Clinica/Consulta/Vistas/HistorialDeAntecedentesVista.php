@@ -95,7 +95,7 @@ final class HistorialDeAntecedentesVista
             return ['texto' => 'Consulta borrada', 'url' => null];
         }
 
-        $fecha = $movimiento->consulta_fecha ? ' · ' . Carbon::parse($movimiento->consulta_fecha)->format('d/m/Y') : '';
+        $fecha = $movimiento->consulta_fecha ? ' · ' . Carbon::parse($movimiento->consulta_fecha)->format(\App\Support\Regionalizacion::formatoActual()) : '';
 
         return [
             'texto' => 'Consulta ' . (int) $movimiento->consulta_numero . $fecha,

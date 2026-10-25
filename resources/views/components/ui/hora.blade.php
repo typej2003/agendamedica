@@ -1,6 +1,7 @@
 @props(['name', 'valor' => null, 'id' => null, 'required' => false, 'error' => null])
 
-{{-- Un campo de hora que se escribe y se lee en 12 h con AM/PM («8:00 AM», «1:00 PM»).
+{{-- Un campo de hora que se escribe y se lee en 12 h con AM/PM («8:00 AM», «1:00 PM»), o en 24 h («13:00») si el
+     dispositivo usa ese reloj (WEB-13.5, `App\Support\Regionalizacion`).
 
      Por qué no `<input type="time">`: el navegador lo pinta según su idioma (24 h en muchos) y la gente termina
      escribiendo 13:00 o 1:00pm sin saber qué va a pasar. Acá el campo visible es de texto, tolerante («1pm»,
@@ -15,10 +16,11 @@
 @php
     $idDelCampo = $id ?? $name;
     $claveDelError = $error ?? $name;
-    $texto = \App\Support\HoraLocal::hora12((string) $valor) ?: trim((string) $valor);
+    $texto = \App\Support\HoraLocal::reloj((string) $valor) ?: trim((string) $valor);
     $hhmm = \App\Support\HoraLocal::hora24((string) $valor);
+    $ejemplo = \App\Support\Regionalizacion::actual()->hora(8, 0);
 @endphp
-<input type="text" id="{{ $idDelCampo }}" autocomplete="off" placeholder="8:00 AM" maxlength="12"
+<input type="text" id="{{ $idDelCampo }}" autocomplete="off" placeholder="{{ $ejemplo }}" maxlength="12"
        data-hora-ampm="{{ $idDelCampo }}-valor" value="{{ $texto }}" @if ($required) required @endif
        {{ $attributes->merge(['class' => 'form-control hora-ampm' . (isset($errors) && $errors->has($claveDelError) ? ' is-invalid' : '')]) }}>
 <input type="hidden" name="{{ $name }}" id="{{ $idDelCampo }}-valor" value="{{ $hhmm }}">

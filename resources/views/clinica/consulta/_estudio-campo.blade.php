@@ -37,11 +37,11 @@
         <input type="date" @if ($campo['columna'] === 'fur') max="{{ \App\Clinica\FechaDelConsultorio::hoyComoTexto() }}" @endif class="form-control" id="{{ $campo['columna'] }}" name="{{ $campo['columna'] }}"
                value="{{ $campo['valor'] }}">
     @elseif ($campo['tipo'] === 'fecha-tecleada')
-        {{-- Una fecha que se **teclea** `dd/mm/aaaa` (O-18: la FUR, como en el escritorio): la máscara
+        {{-- Una fecha que se **teclea** `dd/mm/aaaa` —o `mm/dd/aaaa`, según el dispositivo (WEB-13.5)— (O-18: la FUR, como en el escritorio): la máscara
              pone las barras y no deja escribir un mes 13 ni un día 32 (`public/js/clinica/mascara-fecha.js`).
              El servidor la pasa a `AAAA-MM-DD` antes de escribirla en su columna `date`. --}}
         <input type="text" class="form-control" inputmode="numeric" autocomplete="off" maxlength="10"
-               placeholder="dd/mm/aaaa" data-mascara="fecha" @if ($campo['columna'] === 'fur') data-max="{{ \App\Clinica\FechaDelConsultorio::hoyComoTexto() }}" @endif
+               placeholder="{{ \App\Support\Regionalizacion::actual()->patronDeTecleo() }}" data-mascara="fecha" @if ($campo['columna'] === 'fur') data-max="{{ \App\Clinica\FechaDelConsultorio::hoyComoTexto() }}" @endif
                id="{{ $campo['columna'] }}" name="{{ $campo['columna'] }}"
                value="{{ $campo['valor'] }}">
     @elseif ($campo['tipo'] === 'area')

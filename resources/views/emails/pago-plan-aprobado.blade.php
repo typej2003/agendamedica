@@ -36,7 +36,7 @@
         </tr>
         <tr>
             <td style="color: #55555f;">Fecha</td>
-            <td>{{ \App\Support\HoraLocal::fechaHora($pago->pagado_el) }}</td>
+            <td>{{ \App\Support\HoraLocal::fechaHora($pago->pagado_el, '', \App\Support\Regionalizacion::porDefecto()) }}</td>
         </tr>
     </table>
 

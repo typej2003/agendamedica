@@ -168,7 +168,7 @@ final class CitaDeAgenda
 
     public function horaCorta(): string
     {
-        return HoraLocal::hora12($this->horaIni, '—');
+        return HoraLocal::reloj($this->horaIni, '—');
     }
 
     /**

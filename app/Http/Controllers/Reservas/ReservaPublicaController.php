@@ -113,7 +113,7 @@ class ReservaPublicaController extends Controller
             'fecha' => $opcion->fecha,
             'dia' => $opcion->dia(),
             'hora' => $opcion->hora,
-            'hora12' => $opcion->hora12(),
+            'hora_legible' => $opcion->horaLegible(),
             'sede' => $opcion->sede,
             'direccion' => $opcion->direccion,
             'turno' => (int) $cita->numorden,

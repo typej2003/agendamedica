@@ -96,6 +96,6 @@ final class ProximaCitaDelRecipe
             ->orderBy('id')
             ->value('modalidad');
 
-        return $modalidad === Office::MODALIDAD_HORA ? HoraLocal::hora12((string) $cita->hora_ini) : null;
+        return $modalidad === Office::MODALIDAD_HORA ? HoraLocal::reloj((string) $cita->hora_ini) : null;
     }
 }

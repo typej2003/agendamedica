@@ -59,7 +59,7 @@
                                     <td>{{ $e['plan'] ?? '—' }}</td>
                                     <td>
                                         @if ($e['vence_el'])
-                                            {{ \Carbon\Carbon::parse($e['vence_el'])->format('d/m/Y') }}
+                                            {{ \Carbon\Carbon::parse($e['vence_el'])->format(\App\Support\Regionalizacion::formatoActual()) }}
                                         @else
                                             <span class="text-muted">—</span>
                                         @endif
@@ -72,7 +72,7 @@
                                             @endif
                                         @elseif ($e['estado'] === 'gracia')
                                             <span class="badge bg-warning text-dark">En gracia</span>
-                                            <div><small class="text-muted">Sincroniza hasta el {{ \Carbon\Carbon::parse($e['gracia_hasta'])->format('d/m/Y') }}</small></div>
+                                            <div><small class="text-muted">Sincroniza hasta el {{ \Carbon\Carbon::parse($e['gracia_hasta'])->format(\App\Support\Regionalizacion::formatoActual()) }}</small></div>
                                         @elseif ($e['estado'] === 'vencido')
                                             <span class="badge bg-danger">Vencido</span>
                                             <div><small class="text-muted">Sin sincronizar</small></div>
@@ -288,7 +288,7 @@
                                 <small class="text-muted">({{ $seleccionado->reg_medico }})</small>.
                                 Hoy tiene <strong>{{ $actual['plan'] ?? '—' }}</strong>
                                 @if ($actual['vence_el'])
-                                    hasta el {{ \Carbon\Carbon::parse($actual['vence_el'])->format('d/m/Y') }}.
+                                    hasta el {{ \Carbon\Carbon::parse($actual['vence_el'])->format(\App\Support\Regionalizacion::formatoActual()) }}.
                                 @endif
                             </p>
                             <div class="alert alert-warning py-2 small">
@@ -356,7 +356,7 @@
                                 <small class="text-muted">({{ $seleccionado->reg_medico }})</small>.
                                 Hoy tiene <strong>{{ $actual['plan'] ?? '—' }}</strong>
                                 @if ($actual['vence_el'])
-                                    hasta el {{ \Carbon\Carbon::parse($actual['vence_el'])->format('d/m/Y') }}.
+                                    hasta el {{ \Carbon\Carbon::parse($actual['vence_el'])->format(\App\Support\Regionalizacion::formatoActual()) }}.
                                 @endif
                             </p>
                             <div class="alert alert-danger py-2 small">
@@ -415,8 +415,8 @@
                                         <tr wire:key="serv-{{ $s->id }}" class="{{ $s->estado === 'cancelado' ? 'text-muted' : '' }}">
                                             <td class="fw-semibold">{{ $s->plan_nombre }}</td>
                                             <td>{{ $origenes[$s->origen] ?? $s->origen }}</td>
-                                            <td class="fecha-celda">{{ $s->inicia_el->format('d/m/Y') }}</td>
-                                            <td class="fecha-celda">{{ $s->vence_el->format('d/m/Y') }}</td>
+                                            <td class="fecha-celda">{{ $s->inicia_el->format(\App\Support\Regionalizacion::formatoActual()) }}</td>
+                                            <td class="fecha-celda">{{ $s->vence_el->format(\App\Support\Regionalizacion::formatoActual()) }}</td>
                                             <td class="text-end">{{ number_format((float) $s->monto_usd, 2, ',', '.') }}</td>
                                             <td><small>{{ $s->nota }}</small></td>
                                             <td>

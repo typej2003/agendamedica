@@ -138,7 +138,7 @@ final class AnteriorVista
         }
 
         return $this->desde->fecha
-            ? 'del ' . $this->desde->fecha->format('d/m/Y')
+            ? 'del ' . $this->desde->fecha->format(\App\Support\Regionalizacion::formatoActual())
             : 'N.º ' . (int) $this->desde->nroconsulta;
     }
 

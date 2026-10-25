@@ -24,6 +24,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Formato de fechas y horas por defecto (WEB-13.5)
+    |--------------------------------------------------------------------------
+    |
+    | Orden de la fecha (`dmy`/`mdy`), separador (`/`, `-`, `.`) y reloj (`12`/`24`). En la pantalla manda la
+    | regionalización del dispositivo (`App\Support\Regionalizacion`); esto es lo que se usa cuando no hay un
+    | dispositivo detrás (correos, SMS, WhatsApp, comandos) o el navegador no la dijo. Venezuela: `dmy|/|12`.
+    |
+    */
+
+    'regionalizacion' => env('CLINICA_REGIONALIZACION', 'dmy|/|12'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Verificación pública del récipe (WEB-5.6)
     |--------------------------------------------------------------------------
     |

@@ -179,7 +179,7 @@ final class BitacoraVista
     {
         $hoy = FechaDelConsultorio::ahora()->startOfDay();
         $dia = $momento->copy()->startOfDay();
-        $hora = HoraLocal::hora12($momento->format('H:i'));
+        $hora = HoraLocal::reloj($momento->format('H:i'));
 
         if ($dia->equalTo($hoy)) {
             return 'Hoy ' . $hora;
@@ -189,7 +189,7 @@ final class BitacoraVista
             return 'Ayer ' . $hora;
         }
 
-        return $momento->format('d/m/Y') . ' ' . $hora;
+        return $momento->format(\App\Support\Regionalizacion::formatoActual()) . ' ' . $hora;
     }
 
     /** @return array{nombre:string, rol:?string, sinUsuario:bool} */

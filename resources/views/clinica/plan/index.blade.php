@@ -19,7 +19,7 @@
                 </div>
                 @if ($vm->venceEl())
                     <p class="mb-1">
-                        Vence el <strong>{{ \Carbon\Carbon::parse($vm->venceEl())->format('d/m/Y') }}</strong>
+                        Vence el <strong>{{ \Carbon\Carbon::parse($vm->venceEl())->format(\App\Support\Regionalizacion::formatoActual()) }}</strong>
                         @if ($vm->diasRestantes() !== null)
                             @if ($vm->diasRestantes() >= 0)
                                 <span class="text-muted">({{ $vm->diasRestantes() }} {{ $vm->diasRestantes() === 1 ? 'día' : 'días' }})</span>
