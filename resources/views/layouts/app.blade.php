@@ -14,7 +14,7 @@
     {{-- La paleta vive en `gineco.css` y el sistema de la aplicación (Bootstrap recoloreado + armazón) en
          `doctorisimo-ui.css`; el orden importa, el sistema va después de Bootstrap. --}}
     <link rel="stylesheet" href="{{ asset('css/gineco.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/doctorisimo-ui.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/doctorisimo-ui.css') }}?v={{ @filemtime(public_path('css/doctorisimo-ui.css')) }}">
 
     {{-- Estilos propios de una pantalla pública (por ejemplo el portal de reservas). --}}
     @stack('estilos')
