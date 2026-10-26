@@ -22,6 +22,10 @@ use InvalidArgumentException;
  *    reciben el siguiente código inicial. Correrla dos veces no cambia nada.
  *  - Las referencias (el tipo de un examen, el medicamento de una línea de tratamiento) vienen con el código **de la base de origen** y se traducen al código inicial
  *    de la fila que quedó con esa identidad. Una línea cuyo medicamento no está se omite y se informa.
+ *  - **La línea de un tratamiento se resuelve primero por nombre** (2026-10-26): su `descripcion` es la copia `NOMBRE/PRESENTACIÓN` que guardó el escritorio, y el
+ *    código del legado no es confiable —las instalaciones nunca se pensaron para la nube y el médico renombra o borra el medicamento después—. Se busca en el
+ *    vademécum de la misma base por nombre y presentación, después por el nombre si es uno solo, después por la presentación contenida; el código queda de respaldo
+ *    (corrige erratas como «FULGRAN» → FULGRAM).
  *  - Ojo: si el administrador **quitó** una fila inicial, sembrar otra vez la vuelve a crear. Por eso esto se corre a mano, no en cada despliegue.
  *  - **Reemplazar una especialidad** (`$reemplazar`, 2026-10-25: la base vacía de pediatría que mandó Alexander sustituye a la que se había sembrado): antes de sembrar,
  *    a cada fila inicial **marcada** con esa especialidad que su archivo ya no trae se le quita la marca; si era sólo de ella, la fila se quita (con sus hijos), salvo
@@ -41,6 +45,9 @@ final class SembrarCatalogosIniciales
     /** @var array<string,array<string,array<string,string>>> `catalogo => especialidad => código de origen => identidad` */
     private array $identidades = [];
 
+    /** @var array<string,array<string,array<int,array{0:string,1:string}>>> `especialidad => nombre normalizado => [[código de origen, presentación normalizada]…]` */
+    private array $nombres = [];
+
     /**
      * @param  array<int,string>  $reemplazar  especialidades (slug) cuyo catálogo inicial pasa a ser exactamente el de su carpeta (ver arriba)
      * @return array{especialidades: array<string,int>, sin_especialidad: array<int,string>, catalogos: array<string,array{nuevas:int, generales:int, marcas:int, lineas:int}>, retiradas: array<string,array<string,array{quitadas:int, desmarcadas:int, conservadas:int}>>, omitidas: array<int,string>}
@@ -51,7 +58,7 @@ final class SembrarCatalogosIniciales
             throw new InvalidArgumentException('No existe la carpeta ' . $carpeta . '.');
         }
 
-        $this->mapa = $this->identidades = [];
+        $this->mapa = $this->identidades = $this->nombres = [];
         $informe = ['especialidades' => [], 'sin_especialidad' => [], 'catalogos' => [], 'retiradas' => [], 'omitidas' => []];
 
         foreach (glob(rtrim($carpeta, '/\\') . '/*', GLOB_ONLYDIR) as $dir) {
@@ -120,6 +127,9 @@ final class SembrarCatalogosIniciales
                 }
                 $clave = $this->identidadDeOrigen($def, $slug, $fila);
                 $this->identidades[$catalogo][$slug][(string) ($fila['codigo_origen'] ?? '')] = $clave;
+                if ($catalogo === 'medicamentos') {
+                    $this->nombres[$slug][self::normalizar($fila['nombrecomercial'] ?? '')][] = [(string) ($fila['codigo_origen'] ?? ''), self::normalizar($fila['presentacion'] ?? '')];
+                }
                 $grupos[$clave]['fila'] ??= [$slug, $fila];
                 $grupos[$clave]['especialidades'][$slug] = $specialtyId;
             }
@@ -300,7 +310,8 @@ final class SembrarCatalogosIniciales
         $n = 0;
 
         foreach ($tratamiento['lineas'] ?? [] as $i => $linea) {
-            $medicamento = $this->mapa['medicamentos'][$especialidad][(string) ($linea['codemedicina'] ?? '')] ?? null;
+            $origen = $this->medicamentoPorNombre($especialidad, (string) ($linea['descripcion'] ?? ''), (string) ($linea['codemedicina'] ?? ''));
+            $medicamento = $this->mapa['medicamentos'][$especialidad][$origen ?? (string) ($linea['codemedicina'] ?? '')] ?? null;
             if ($medicamento === null) {
                 $omitidas[] = 'Tratamientos (' . $especialidad . '): una línea de «' . $tratamiento['tratamiento'] . '» apunta a un medicamento que su base no trae.';
 
@@ -318,6 +329,31 @@ final class SembrarCatalogosIniciales
         }
 
         return $n;
+    }
+
+    /** El código de origen del medicamento que nombra la línea (`NOMBRE/PRESENTACIÓN`), o `null` si el nombre no alcanza para decidir (manda el código). */
+    private function medicamentoPorNombre(string $especialidad, string $descripcion, string $codigo): ?string
+    {
+        [$nombre, $presentacion] = array_pad(explode('/', $descripcion, 2), 2, '');
+        $candidatos = $this->nombres[$especialidad][self::normalizar($nombre)] ?? [];
+        $presentacion = self::normalizar($presentacion);
+
+        if (count($candidatos) === 1) {
+            return $candidatos[0][0];
+        }
+
+        foreach ([
+            fn ($c) => $c[1] === $presentacion,
+            fn ($c) => $presentacion !== '' && $c[1] !== '' && (str_contains($c[1], $presentacion) || str_contains($presentacion, $c[1])),
+            fn ($c) => $c[0] === $codigo,
+        ] as $criterio) {
+            $elegidos = array_values(array_filter($candidatos, $criterio));
+            if (count($elegidos) === 1) {
+                return $elegidos[0][0];
+            }
+        }
+
+        return null;
     }
 
     /** La identidad de una fila del archivo: la referencia (el tipo de un examen) por la identidad de la fila a la que apunta **en su misma base**. */

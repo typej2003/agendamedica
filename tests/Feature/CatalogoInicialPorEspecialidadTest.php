@@ -345,6 +345,39 @@ class CatalogoInicialPorEspecialidadTest extends TestCase
         $this->assertSame($antes, DB::table('catalogo_inicial_especialidad')->count());
     }
 
+    public function test_la_linea_del_tratamiento_se_resuelve_por_nombre_antes_que_por_codigo(): void
+    {
+        $this->esp('pediatria');
+        $carpeta = $this->archivos(['pediatria' => [
+            'medicamentos' => [
+                ['codigo_origen' => '0826', 'nombrecomercial' => 'BRUGESIC FORTE', 'presentacion' => 'SUSP 200MG'],
+                ['codigo_origen' => '0827', 'nombrecomercial' => 'BRUGESIC PEDIATRICO', 'presentacion' => 'SUSP 100MG'],
+                ['codigo_origen' => '0940', 'nombrecomercial' => 'RINOLAST', 'presentacion' => 'FLEXOFENADINA JARABE'],
+                ['codigo_origen' => '1537', 'nombrecomercial' => 'RINOLAST', 'presentacion' => 'TABLETA'],
+                ['codigo_origen' => '0026', 'nombrecomercial' => 'FULGRAM', 'presentacion' => 'SUSP 600 MG'],
+            ],
+            'tratamientos' => [['codigo_origen' => '0001', 'tratamiento' => 'RESFRIADO', 'lineas' => [
+                // El código apunta a otro medicamento: manda el nombre que la línea guardó.
+                ['codemedicina' => '0826', 'descripcion' => 'BRUGESIC  PEDIATRICO/SUSP 200MG', 'cantidad' => '1', 'orden' => '0'],
+                // El código ya no existe: dos con ese nombre, decide la presentación contenida.
+                ['codemedicina' => '0608', 'descripcion' => 'RINOLAST/JARABE', 'cantidad' => '1', 'orden' => '1'],
+                // El nombre tiene una errata: queda el código.
+                ['codemedicina' => '0026', 'descripcion' => 'FULGRAN/SUSP 600', 'cantidad' => '1', 'orden' => '2'],
+                // Ni el nombre ni el código: se omite.
+                ['codemedicina' => '1009', 'descripcion' => 'FEDYCLAR/jbe', 'cantidad' => '1', 'orden' => '3'],
+            ]]],
+        ]]);
+
+        $r = app(SembrarCatalogosIniciales::class)->ejecutar($carpeta);
+
+        $nombre = fn ($codigo) => DB::table('vademecum')->whereNull('reg_medico')->where('codemedicina', $codigo)->value('nombrecomercial');
+        $lineas = DB::table('recipe_grupo_detalle')->whereNull('reg_medico')->orderBy('orden')->get();
+        $this->assertSame(['BRUGESIC PEDIATRICO', 'RINOLAST', 'FULGRAM'], $lineas->map(fn ($l) => $nombre($l->codemedicina))->all());
+        $this->assertSame('FLEXOFENADINA JARABE', DB::table('vademecum')->whereNull('reg_medico')->where('codemedicina', $lineas[1]->codemedicina)->value('presentacion'));
+        $this->assertSame(3, $r['catalogos']['tratamientos']['lineas']);
+        $this->assertCount(1, array_filter($r['omitidas'], fn ($t) => str_contains($t, 'RESFRIADO')));
+    }
+
     public function test_el_comando_simula_sin_escribir(): void
     {
         $this->esp('pediatria');
