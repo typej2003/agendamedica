@@ -57,12 +57,13 @@ class SedesDelMedicoAdminTest extends TestCase
         return $r;
     }
 
-    private function sede(string $nombre = 'Sede de prueba', bool $activa = true): MedicalCenter
+    private function sede(string $nombre = 'Sede de prueba', bool $activa = true, ?Medico $duenio = null): MedicalCenter
     {
         return MedicalCenter::create([
             'country_id' => DB::table('countries')->value('id'),
             'state_id'   => City::firstOrFail()->state_id,
             'city_id'    => City::firstOrFail()->id,
+            'medico_id'  => $duenio?->id,
             'name'       => $nombre . ' ' . substr(uniqid(), -6),
             'address'    => 'Av. Principal',
             'activo'     => $activa,
@@ -198,13 +199,16 @@ class SedesDelMedicoAdminTest extends TestCase
         $sede = MedicalCenter::where('name', $nombre)->firstOrFail();
         $this->assertSame($ciudad->state_id, (int) $sede->state_id);
         $this->assertTrue((bool) $sede->activo);
+        // La sede nueva queda **a nombre del médico de la ficha**.
+        $this->assertSame($medico->id, (int) $sede->medico_id);
         $this->assertDatabaseHas('offices', ['medical_center_id' => $sede->id, 'reg_medico' => $medico->reg_medico, 'office_number' => 'A1']);
     }
 
     public function test_el_alta_valida_la_sede_y_el_consultorio_y_no_deja_nada_a_medias(): void
     {
         $medico = $this->medico()['medico'];
-        $repetida = $this->sede('Repetida');
+        // La repetida es **del mismo médico**: la unicidad del nombre es por médico, no global.
+        $repetida = $this->sede('Repetida', duenio: $medico);
         $this->actingAs($this->admin());
 
         Livewire::test(SedesDelMedico::class, ['medico' => $medico])

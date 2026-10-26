@@ -2,7 +2,7 @@
 
 namespace App\Clinica\Guia;
 
-use App\Models\MedicalCenter;
+use App\Clinica\Consultorio\SedesDeLaClinica;
 use App\Models\Medico;
 use App\Models\Office;
 
@@ -11,11 +11,19 @@ use App\Models\Office;
  * por el menos dependiente (sede → consultorio → horario). Es la misma exigencia que `CatalogoDeMedicos` le hace al
  * portal de reservas (consultorio activo en sede activa, con al menos un bloque); acá se redacta como pasos.
  *
+ * **El paso de la sede mira SUS sedes**, no el catálogo (2026-10-26: cada médico tiene las suyas). Antes era
+ * `MedicalCenter::activos()->exists()` global: en cuanto cualquiera registraba una sede, el médico sin sedes se
+ * saltaba el paso y caía en «no has agregado ningún consultorio», donde no había dónde colgarlo.
+ *
  * Sin HTTP: devuelve `null` cuando no falta nada. La sede y el consultorio se cargan en la misma pantalla («Sedes y
  * consultorios», 2026-10-20): el enlace abre directamente su panel lateral.
  */
 final class PasosEsenciales
 {
+    public function __construct(private SedesDeLaClinica $sedes)
+    {
+    }
+
     public function siguiente(Medico $medico): ?PasoEsencial
     {
         $reg = $medico->regMedicoPrincipal();
@@ -24,12 +32,15 @@ final class PasosEsenciales
             return null;
         }
 
-        if (! MedicalCenter::activos()->exists()) {
+        // Las suyas: dueño, asignadas y sedes donde ya tiene un consultorio (ver `SedesDeLaClinica`).
+        $susSedes = $this->sedes->listar(['reg_medico' => $reg, 'medico' => $medico], true);
+
+        if ($susSedes->isEmpty()) {
             return new PasoEsencial(
                 'sede', 'clinica.sedes', ['panel' => 'sede'],
-                'Todavía no hay ninguna sede registrada.',
+                'Todavía no tienes ninguna sede registrada.',
                 'Registra el lugar donde atiendes',
-                'Todavía no hay una sede registrada. ¿Quieres registrar el lugar donde atiendes ahora?',
+                'Todavía no tienes una sede registrada. ¿Quieres registrar el lugar donde atiendes ahora?',
             );
         }
 

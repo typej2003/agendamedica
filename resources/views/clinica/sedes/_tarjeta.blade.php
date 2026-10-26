@@ -1,26 +1,30 @@
 {{-- Una sede con sus consultorios (`SedesYConsultoriosVista::tarjetas()`). Editar la sede recarga la pantalla con su
-     panel abierto (`?sede=`); «Consultorio» abre el panel del consultorio con esta sede ya elegida. --}}
+     panel abierto (`?sede=`); «Consultorio» abre el panel del consultorio con esta sede ya elegida. El lápiz y el tacho
+     sólo se ofrecen si la sede es **administrable** (dueño o asignada): la que el médico ve por tener un consultorio en
+     ella es de otro y su ficha no se toca. --}}
 <x-ui.tarjeta class="sede-tarjeta" :titulo="$sede['nombre']" icono="bi-geo-alt">
     <x-slot name="acciones">
         @if ($sede['estado'])
             <x-ui.estado :tono="$sede['estado']['tono']" :icono="$sede['estado']['icono']">{{ $sede['estado']['texto'] }}</x-ui.estado>
         @endif
-        <x-ui.acciones-fila etiqueta="Acciones de la sede {{ $sede['nombre'] }}">
-            <a class="btn btn-sm btn-outline-secondary" href="{{ $sede['urlEditar'] }}"
-               title="Editar la sede" aria-label="Editar la sede {{ $sede['nombre'] }}">
-                <i class="bi bi-pencil" aria-hidden="true"></i>
-            </a>
-            <form method="POST" action="{{ $sede['urlActivar'] }}">
-                @csrf
-                @method('PATCH')
-                <input type="hidden" name="ver_todas" value="{{ $vm->verTodas() }}">
-                <button class="btn btn-sm {{ $sede['activar']['peligro'] ? 'btn-outline-danger' : 'btn-outline-secondary' }}"
-                        title="{{ $sede['activar']['texto'] }} la sede"
-                        aria-label="{{ $sede['activar']['texto'] }} la sede {{ $sede['nombre'] }}">
-                    <i class="bi {{ $sede['activar']['icono'] }}" aria-hidden="true"></i>
-                </button>
-            </form>
-        </x-ui.acciones-fila>
+        @if ($sede['administrable'])
+            <x-ui.acciones-fila etiqueta="Acciones de la sede {{ $sede['nombre'] }}">
+                <a class="btn btn-sm btn-outline-secondary" href="{{ $sede['urlEditar'] }}"
+                   title="Editar la sede" aria-label="Editar la sede {{ $sede['nombre'] }}">
+                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                </a>
+                <form method="POST" action="{{ $sede['urlActivar'] }}">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="ver_todas" value="{{ $vm->verTodas() }}">
+                    <button class="btn btn-sm {{ $sede['activar']['peligro'] ? 'btn-outline-danger' : 'btn-outline-secondary' }}"
+                            title="{{ $sede['activar']['texto'] }} la sede"
+                            aria-label="{{ $sede['activar']['texto'] }} la sede {{ $sede['nombre'] }}">
+                        <i class="bi {{ $sede['activar']['icono'] }}" aria-hidden="true"></i>
+                    </button>
+                </form>
+            </x-ui.acciones-fila>
+        @endif
     </x-slot>
 
     <p class="sede-datos">

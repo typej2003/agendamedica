@@ -137,9 +137,14 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
         // Desde el 2026-10-22 la pantalla **resuelve sola de quién es el consultorio** cuando el usuario tiene un
         // solo registro (`clinica.contexto:consultorios`): un médico nuevo llegaba acá sin contexto y no podía cargar
         // nada. Con dos registros no se resuelve (hay que decir en cuál) y la pantalla avisa para ir a elegir.
-        Route::get('/sedes', [SedeController::class, 'index'])->middleware('clinica.contexto:consultorios')->name('sedes');
-        Route::post('/sedes', [SedeController::class, 'guardar'])->name('sedes.guardar');
-        Route::patch('/sedes/{sede}/activar', [SedeController::class, 'activar'])->name('sedes.activar');
+        //
+        // Desde el 2026-10-26 la sede **es de un médico** (observación de Alexander): las tres rutas comparten el
+        // contexto opcional —el alta y la baja lo necesitan para saber de quién es la sede, y sin él no se crea nada—.
+        Route::middleware('clinica.contexto:consultorios')->group(function () {
+            Route::get('/sedes', [SedeController::class, 'index'])->name('sedes');
+            Route::post('/sedes', [SedeController::class, 'guardar'])->name('sedes.guardar');
+            Route::patch('/sedes/{sede}/activar', [SedeController::class, 'activar'])->name('sedes.activar');
+        });
 
         // Todo lo de abajo exige contexto.
         Route::middleware('clinica.contexto')->group(function () {

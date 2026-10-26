@@ -16,8 +16,10 @@ use Illuminate\Support\Collection;
  *
  * **De quién es cada cosa** (lo único delicado de la pantalla):
  *
- *  - La **sede** (`medical_centers`) es del catálogo de la clínica, no de un médico (decisión del 2026-10-09).
- *    «Las sedes de un médico» son las sedes donde **su tenant** tiene consultorios.
+ *  - La **sede** (`medical_centers`) tiene dueño desde el 2026-10-26 (`medico_id`), pero «las sedes de un
+ *    médico» en esta pantalla siguen siendo las sedes donde **su tenant tiene consultorios**: el panel administra
+ *    consultorios, no la ficha de la sede. Una sede se le puede **asignar** a otro médico (Root puede hacerlo)
+ *    aunque sea de uno; por eso la lectura de acá no se filtra por dueño.
  *  - El **consultorio** (`offices`) es del tenant `reg_medico` (el del médico, o el del centro si la ficha es un
  *    centro). Acá el criterio es **estricto**: `reg_medico` del médico, y por `medico_id` sólo las filas viejas
  *    que todavía no tienen registro. **No** se usa `Office::scopeDelMedico` tal cual porque su `orWhere

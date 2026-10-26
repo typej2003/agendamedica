@@ -26,20 +26,24 @@ use Illuminate\Support\Collection;
  * Los formularios mandan un `formulario` oculto: comparten nombres (`id`, `phone`, `activo`) y sin él un error en la
  * sede reescribiría el teléfono del consultorio con lo que se puso en la sede.
  *
- * La sede es del **catálogo de la clínica** y el consultorio **del médico del contexto**: sin contexto
- * (`$consultorios === null`) la pantalla muestra las sedes y nada del consultorio.
+ * Desde el 2026-10-26 **la sede es del médico** (observación de Alexander): las que llegan acá ya son **suyas**
+ * (las filtra `SedesDeLaClinica`) y no hay catálogo de otros que plegar. La tarjeta dice si la puede
+ * **administrar** (dueño o asignada) o sólo ver por tener un consultorio en ella; en el segundo caso el Blade le
+ * esconde el lápiz y el tacho. Sin contexto (`$consultorios === null`) no hay sedes ni altas: la pantalla muestra
+ * el aviso de `avisoSinContexto()`.
  */
 final class SedesYConsultoriosVista
 {
     private const ABREVIATURAS = [1 => 'Lu', 2 => 'Ma', 3 => 'Mi', 4 => 'Ju', 5 => 'Vi', 6 => 'Sa', 7 => 'Do'];
 
     /**
-     * @param  Collection<int,MedicalCenter>  $sedes  las que se listan (activas, o todas con `verTodas`)
+     * @param  Collection<int,MedicalCenter>  $sedes  **las del médico del contexto** (activas, o todas con `verTodas`)
      * @param  Collection<int,Office>|null  $consultorios  los del médico del contexto, con `schedules`; `null` sin contexto
      * @param  Collection<int,\App\Models\City>  $ciudades
      * @param  string|null  $panel  el panel pedido por la URL (`?panel=sede|consultorio`)
      * @param  int|null  $sedePreelegida  la sede del consultorio nuevo (`?en=`)
      * @param  int|null  $sedeCreada  la sede recién creada, para la pregunta (`sede_creada` de la sesión)
+     * @param  array<int,int>  $administrables  los ids de las sedes que puede editar y activar (dueño o asignada)
      */
     public function __construct(
         private Collection $sedes,
@@ -52,6 +56,7 @@ final class SedesYConsultoriosVista
         private ?int $sedePreelegida,
         private ?int $sedeCreada,
         private int $totalActivas,
+        private array $administrables = [],
     ) {
     }
 
@@ -94,12 +99,20 @@ final class SedesYConsultoriosVista
     }
 
     /**
-     * El aviso con el que la pantalla dice **por qué no ofrece cargar consultorios** y qué hacer.
+     * ¿Se puede dar de alta una sede? La sede es de un médico, así que **sin contexto no se ofrece crear**:
+     * una sede sin dueño no se crea desde acá (decisión del 2026-10-26).
+     */
+    public function puedeCrearSede(): bool
+    {
+        return $this->puedeCargarConsultorios();
+    }
+
+    /**
+     * El aviso con el que la pantalla dice **por qué no ofrece nada** y qué hacer.
      *
-     * Sin contexto la pantalla sólo puede mostrar el catálogo de sedes, y antes eso era un callejón: el médico
-     * nuevo llegaba acá, no veía ningún botón y el menú lateral se quedaba en «Inicio». Hoy la pantalla resuelve
-     * sola el dueño cuando hay **un solo registro** (lo hace `clinica.contexto:consultorios`), así que llegar a
-     * este aviso significa que hay algo que elegir de verdad: dos registros, dos médicos o dos especialidades.
+     * Sin contexto no hay médico del que sean las sedes ni los consultorios, así que la pantalla queda en este
+     * aviso: el dueño lo resuelve `clinica.contexto:consultorios` cuando hay **un solo registro**, y llegar acá
+     * significa que hay algo que elegir de verdad (dos registros, dos médicos o dos especialidades).
      */
     public function avisoSinContexto(): ?string
     {
@@ -120,7 +133,7 @@ final class SedesYConsultoriosVista
         return $this->sedes->isEmpty();
     }
 
-    /** ¿No hay ni una sede activa en la clínica? Es el primer paso, y la tarjeta guía lo dice. */
+    /** ¿No hay ni una sede activa **suya**? Es el primer paso, y la tarjeta guía lo dice. */
     public function sinNingunaSede(): bool
     {
         return $this->totalActivas === 0;
@@ -132,50 +145,20 @@ final class SedesYConsultoriosVista
     }
 
     /**
-     * Las tarjetas a la vista: las sedes **donde el médico tiene consultorio** (más la que se acaba de crear). Si no
-     * tiene ninguno —o no hay contexto—, todas: no tendría sentido esconder el catálogo justo cuando hay que elegir.
+     * Las tarjetas a la vista: **todas** las sedes que recibió, que ya son las del médico del contexto (dueño,
+     * asignadas o con un consultorio suyo). No hay un catálogo de otros que esconder ni plegar.
      *
      * @return array<int,array<string,mixed>>
      */
     public function tarjetas(): array
     {
-        return $this->sedesPropias()->map(fn (MedicalCenter $sede) => $this->tarjeta($sede))->values()->all();
+        return $this->sedes->map(fn (MedicalCenter $sede) => $this->tarjeta($sede))->values()->all();
     }
 
-    /**
-     * El resto del catálogo de la clínica (sedes sin consultorios de este médico), plegado debajo: el catálogo es
-     * compartido y en producción tiene las sedes de todos, que sólo interesan para empezar a atender en una.
-     *
-     * @return array<int,array<string,mixed>>
-     */
-    public function otrasSedes(): array
+    /** ¿La sede es del médico (dueño o asignada) y no sólo la ve por un consultorio? */
+    private function administrable(MedicalCenter $sede): bool
     {
-        $propias = $this->sedesPropias()->map(fn (MedicalCenter $sede) => (int) $sede->id)->all();
-
-        return $this->sedes
-            ->reject(fn (MedicalCenter $sede) => in_array((int) $sede->id, $propias, true))
-            ->map(fn (MedicalCenter $sede) => $this->tarjeta($sede))
-            ->values()
-            ->all();
-    }
-
-    public function tituloOtrasSedes(): string
-    {
-        return 'Otras sedes de la clínica (' . count($this->otrasSedes()) . ')';
-    }
-
-    /** @return Collection<int,MedicalCenter> */
-    private function sedesPropias(): Collection
-    {
-        if ($this->consultorios === null || $this->consultorios->isEmpty()) {
-            return $this->sedes;
-        }
-
-        $conConsultorio = $this->consultorios->map(fn (Office $consultorio) => (int) $consultorio->medical_center_id)->unique()->all();
-
-        return $this->sedes
-            ->filter(fn (MedicalCenter $sede) => in_array((int) $sede->id, $conConsultorio, true) || (int) $sede->id === $this->sedeCreada)
-            ->values();
+        return in_array((int) $sede->id, $this->administrables, true);
     }
 
     /** @return array<string,mixed> */
@@ -192,6 +175,8 @@ final class SedesYConsultoriosVista
             'ciudad'      => $sede->city->name ?? null,
             'telefono'    => $sede->phone ?: null,
             'activa'      => (bool) $sede->activo,
+            // Sólo el dueño o una sede asignada se editan/activan; la que se ve por tener un consultorio, no.
+            'administrable' => $this->administrable($sede),
             'estado'      => $sede->activo ? null : ['tono' => 'neutro', 'icono' => 'bi-slash-circle', 'texto' => 'Inactiva'],
             'urlEditar'   => $this->url(['sede' => $sede->id]),
             'urlActivar'  => route('clinica.sedes.activar', $sede->id),

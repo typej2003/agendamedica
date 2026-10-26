@@ -70,12 +70,14 @@ class ConsultoriosWebTest extends TestCase
         ]]);
     }
 
-    private function sede(string $nombre = 'Sede de prueba', bool $activa = true): MedicalCenter
+    /** Una sede activa del médico (o sin dueño, si no se le pasa: sede vieja o compartida). */
+    private function sede(string $nombre = 'Sede de prueba', bool $activa = true, ?Medico $duenio = null): MedicalCenter
     {
         return MedicalCenter::create([
             'country_id' => DB::table('countries')->value('id'),
             'state_id'   => City::firstOrFail()->state_id,
             'city_id'    => City::firstOrFail()->id,
+            'medico_id'  => $duenio?->id,
             'name'       => $nombre . ' ' . substr(uniqid(), -6),
             'address'    => 'Av. Principal',
             'activo'     => $activa,
@@ -110,7 +112,7 @@ class ConsultoriosWebTest extends TestCase
     public function test_la_pantalla_lista_los_consultorios_del_medico(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $sede = $this->sede('San José');
+        $sede = $this->sede('San José', duenio: $medico);
 
         Office::create([
             'medical_center_id' => $sede->id,
@@ -137,7 +139,7 @@ class ConsultoriosWebTest extends TestCase
     public function test_crear_un_consultorio_escribe_el_registro_y_el_dueno_del_contexto(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $sede = $this->sede();
+        $sede = $this->sede(duenio: $medico);
         $datos = $this->datosDeConsultorio($sede, ['office_number' => 'C1', 'duracion_cita' => 15]);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
@@ -160,14 +162,14 @@ class ConsultoriosWebTest extends TestCase
         [$user, $medico, $gineco] = $this->medicoConAcceso();
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->post('/clinica/consultorios', ['medical_center_id' => $this->sede()->id])
+            ->post('/clinica/consultorios', ['medical_center_id' => $this->sede(duenio: $medico)->id])
             ->assertSessionHasErrors(['office_number', 'modalidad']);
     }
 
     public function test_no_se_carga_un_consultorio_en_una_sede_desactivada(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $cerrada = $this->sede('Sede cerrada', activa: false);
+        $cerrada = $this->sede('Sede cerrada', activa: false, duenio: $medico);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post('/clinica/consultorios', $this->datosDeConsultorio($cerrada))
@@ -179,7 +181,7 @@ class ConsultoriosWebTest extends TestCase
     public function test_la_duracion_es_opcional_y_queda_nula(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $sede = $this->sede();
+        $sede = $this->sede(duenio: $medico);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post('/clinica/consultorios', $this->datosDeConsultorio($sede, ['duracion_cita' => '']))
@@ -194,8 +196,8 @@ class ConsultoriosWebTest extends TestCase
     public function test_editar_cambia_la_modalidad_sin_crear_otro(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $sede = $this->sede();
-        $otraSede = $this->sede('Otra sede');
+        $sede = $this->sede(duenio: $medico);
+        $otraSede = $this->sede('Otra sede', duenio: $medico);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post('/clinica/consultorios', $this->datosDeConsultorio($sede, ['office_number' => 'C1']))
@@ -224,7 +226,7 @@ class ConsultoriosWebTest extends TestCase
     public function test_el_formulario_de_edicion_llega_con_el_consultorio_cargado(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $sede = $this->sede();
+        $sede = $this->sede(duenio: $medico);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post('/clinica/consultorios', $this->datosDeConsultorio($sede, ['office_number' => 'C7']))
@@ -245,7 +247,7 @@ class ConsultoriosWebTest extends TestCase
     public function test_desactivar_un_consultorio_no_lo_borra_y_deja_de_ofrecerse(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $sede = $this->sede();
+        $sede = $this->sede(duenio: $medico);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post('/clinica/consultorios', $this->datosDeConsultorio($sede, ['office_number' => 'C1']))
@@ -278,7 +280,7 @@ class ConsultoriosWebTest extends TestCase
         [, $otro] = $this->medicoConAcceso();
 
         $ajeno = Office::create([
-            'medical_center_id' => $this->sede()->id,
+            'medical_center_id' => $this->sede(duenio: $medico)->id,
             'medico_id'         => $otro->id,
             'reg_medico'        => $otro->reg_medico,
             'office_number'     => 'AJENO',
@@ -294,7 +296,7 @@ class ConsultoriosWebTest extends TestCase
 
         // Y tampoco se puede editar: el id ajeno no está entre los del médico del contexto.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->post('/clinica/consultorios', $this->datosDeConsultorio($this->sede(), ['id' => $ajeno->id, 'office_number' => 'PISADO']))
+            ->post('/clinica/consultorios', $this->datosDeConsultorio($this->sede(duenio: $medico), ['id' => $ajeno->id, 'office_number' => 'PISADO']))
             ->assertNotFound();
 
         $this->assertSame('AJENO', $ajeno->refresh()->office_number);
@@ -306,7 +308,7 @@ class ConsultoriosWebTest extends TestCase
         [, $otro] = $this->medicoConAcceso();
 
         Office::create([
-            'medical_center_id' => $this->sede()->id,
+            'medical_center_id' => $this->sede(duenio: $medico)->id,
             'medico_id'         => $otro->id,
             'reg_medico'        => $otro->reg_medico,
             'office_number'     => 'DEL-OTRO',
@@ -326,7 +328,7 @@ class ConsultoriosWebTest extends TestCase
         [$secretaria, $medico, $gineco] = $this->medicoConAcceso('Secretaria');
         MedicoRegistro::where('medico_id', $medico->id)->update(['user_id' => $secretaria->id]);
 
-        $sede = $this->sede();
+        $sede = $this->sede(duenio: $medico);
 
         $this->conContexto($secretaria, $medico, $gineco)->actingAs($secretaria)
             ->post('/clinica/consultorios', $this->datosDeConsultorio($sede, ['office_number' => 'SEC1']))
@@ -344,7 +346,7 @@ class ConsultoriosWebTest extends TestCase
         // Es el objetivo del paso: un médico sin consultorios no podía agendar. Al cargarlo, la sede
         // aparece en la agenda con su modalidad.
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $sede = $this->sede('Hospital Central');
+        $sede = $this->sede('Hospital Central', duenio: $medico);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get('/clinica/agenda')
@@ -374,7 +376,7 @@ class ConsultoriosWebTest extends TestCase
     public function test_la_fila_muestra_los_bloques_de_horario_del_consultorio(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $sede = $this->sede('San José');
+        $sede = $this->sede('San José', duenio: $medico);
         $consultorio = $this->consultorioDe($medico, $sede, '701');
 
         OfficeSchedule::create([
@@ -403,7 +405,7 @@ class ConsultoriosWebTest extends TestCase
     public function test_agregar_un_bloque_desde_el_listado_vuelve_al_listado(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+        $consultorio = $this->consultorioDe($medico, $this->sede(duenio: $medico), 'C1');
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post(
             '/clinica/consultorios/' . $consultorio->id . '/horarios',
@@ -431,7 +433,7 @@ class ConsultoriosWebTest extends TestCase
     public function test_quitar_un_bloque_desde_el_listado_vuelve_al_listado(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+        $consultorio = $this->consultorioDe($medico, $this->sede(duenio: $medico), 'C1');
         $bloque = OfficeSchedule::create([
             'office_id' => $consultorio->id, 'reg_medico' => $medico->reg_medico,
             'dia_semana' => 2, 'hora_inicio' => '08:00', 'hora_fin' => '12:00',
@@ -450,7 +452,7 @@ class ConsultoriosWebTest extends TestCase
     public function test_encender_varios_dias_crea_un_bloque_por_dia(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+        $consultorio = $this->consultorioDe($medico, $this->sede(duenio: $medico), 'C1');
 
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post(
             '/clinica/consultorios/' . $consultorio->id . '/horarios',
@@ -470,7 +472,7 @@ class ConsultoriosWebTest extends TestCase
     public function test_si_un_dia_se_pisa_no_se_guarda_ninguno(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+        $consultorio = $this->consultorioDe($medico, $this->sede(duenio: $medico), 'C1');
         OfficeSchedule::create([
             'office_id' => $consultorio->id, 'reg_medico' => $medico->reg_medico,
             'dia_semana' => 3, 'hora_inicio' => '10:00', 'hora_fin' => '12:00',
@@ -490,7 +492,7 @@ class ConsultoriosWebTest extends TestCase
     public function test_sin_ningun_dia_encendido_se_pide_elegir_al_menos_uno(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+        $consultorio = $this->consultorioDe($medico, $this->sede(duenio: $medico), 'C1');
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->from('/clinica/consultorios/' . $consultorio->id . '/horarios')
@@ -503,7 +505,7 @@ class ConsultoriosWebTest extends TestCase
     public function test_la_pantalla_ofrece_siete_botones_de_dos_letras_y_el_alta_en_linea_tambien(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+        $consultorio = $this->consultorioDe($medico, $this->sede(duenio: $medico), 'C1');
 
         $pantalla = $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get('/clinica/consultorios/' . $consultorio->id . '/horarios')->assertOk();
@@ -523,7 +525,7 @@ class ConsultoriosWebTest extends TestCase
     public function test_editar_un_bloque_muestra_su_dia_como_un_solo_boton_encendido(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+        $consultorio = $this->consultorioDe($medico, $this->sede(duenio: $medico), 'C1');
         $bloque = OfficeSchedule::create([
             'office_id' => $consultorio->id, 'reg_medico' => $medico->reg_medico,
             'dia_semana' => 4, 'hora_inicio' => '08:00', 'hora_fin' => '12:00',
@@ -542,7 +544,7 @@ class ConsultoriosWebTest extends TestCase
     public function test_desde_el_listado_el_solape_del_mismo_consultorio_se_rechaza(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $consultorio = $this->consultorioDe($medico, $this->sede(), 'C1');
+        $consultorio = $this->consultorioDe($medico, $this->sede(duenio: $medico), 'C1');
         OfficeSchedule::create([
             'office_id' => $consultorio->id, 'reg_medico' => $medico->reg_medico,
             'dia_semana' => 1, 'hora_inicio' => '08:00', 'hora_fin' => '12:00',
@@ -595,8 +597,8 @@ class ConsultoriosWebTest extends TestCase
     public function test_el_alta_de_un_bloque_que_falla_reabre_su_panel_para_ese_consultorio(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
-        $uno = $this->consultorioDe($medico, $this->sede('San José'), '701');
-        $this->consultorioDe($medico, $this->sede('San José'), '702');
+        $uno = $this->consultorioDe($medico, $this->sede('San José', duenio: $medico), '701');
+        $this->consultorioDe($medico, $this->sede('San José', duenio: $medico), '702');
 
         $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->from('/clinica/sedes')

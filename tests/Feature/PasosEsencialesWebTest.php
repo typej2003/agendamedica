@@ -46,12 +46,14 @@ class PasosEsencialesWebTest extends TestCase
         return [$user, $medico, $gineco];
     }
 
-    private function sede(): MedicalCenter
+    /** Una sede activa; con dueño si se le pasa (la guía mira **sus** sedes, no el catálogo). */
+    private function sede(?Medico $medico = null): MedicalCenter
     {
         return MedicalCenter::create([
             'country_id' => DB::table('countries')->value('id'),
             'state_id' => City::firstOrFail()->state_id,
             'city_id' => City::firstOrFail()->id,
+            'medico_id' => $medico?->id,
             'name' => 'Sede guía ' . substr(uniqid(), -6),
             'address' => 'Av. Principal',
             'activo' => true,
@@ -74,7 +76,7 @@ class PasosEsencialesWebTest extends TestCase
         MedicalCenter::query()->update(['activo' => false]);
         $this->assertSame('sede', $pasos->siguiente($medico)->clave);
 
-        $sede = $this->sede();
+        $sede = $this->sede($medico);
         $this->assertSame('consultorio', $pasos->siguiente($medico)->clave);
 
         $consultorio = $this->consultorio($medico, $sede);
@@ -93,7 +95,7 @@ class PasosEsencialesWebTest extends TestCase
     public function test_el_banner_aparece_con_el_enlace_y_el_dialogo_solo_tras_guardar(): void
     {
         [$user, $medico, $gineco] = $this->medico();
-        $this->sede();
+        $this->sede($medico);
 
         $this->actingAs($user)->post('/clinica/contexto', [
             'reg_medico' => $medico->reg_medico, 'specialty_id' => $gineco->id,

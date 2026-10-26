@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Consultorio\GuardarConsultorio;
 use App\Clinica\Consultorio\ConsultoriosDelMedico;
+use App\Clinica\Consultorio\SedesDeLaClinica;
 use App\Http\Controllers\Controller;
-use App\Models\MedicalCenter;
 use App\Models\Office;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -16,8 +16,11 @@ use Illuminate\Validation\ValidationException;
  * Es la pieza de la que depende la agenda: `ArmadorDeAgenda` calcula la jornada con la **modalidad** de la
  * sede y su horario, y el formulario de la cita pregunta la hora solo en las de **hora de cita**.
  *
- * A diferencia de las sedes —que son del catálogo de la clínica—, el consultorio **es de un médico**:
- * `reg_medico` y `medico_id` salen siempre del contexto de trabajo, nunca del formulario.
+ * El consultorio **es de un médico**: `reg_medico` y `medico_id` salen siempre del contexto de trabajo, nunca del
+ * formulario. Y desde el 2026-10-26 la **sede también**: la del formulario tiene que estar entre las suyas
+ * (dueño, asignada o donde ya tiene un consultorio — ver `SedesDeLaClinica`), si no es un error de validación con
+ * palabras. La comprobación vive acá y no en `GuardarConsultorio` porque esa Action la comparte el panel de Root,
+ * que sí puede asignarle al médico una sede del catálogo.
  *
  * Desde el 2026-10-20 no tiene pantalla propia: se carga desde el panel lateral de **Sedes y consultorios**
  * (`SedeController`), y las escrituras de acá vuelven ahí.
@@ -44,8 +47,8 @@ class ConsultorioController extends Controller
         ], fn ($valor) => $valor !== null));
     }
 
-    /** Alta o edición (según venga o no el id). La regla vive en `GuardarConsultorio`. */
-    public function guardar(Request $request, GuardarConsultorio $accion)
+    /** Alta o edición (según venga o no el id). La regla vive en `GuardarConsultorio`; la de la sede, acá. */
+    public function guardar(Request $request, GuardarConsultorio $accion, SedesDeLaClinica $sedes)
     {
         $contexto = $request->attributes->get('contexto_clinico');
 
@@ -62,7 +65,16 @@ class ConsultorioController extends Controller
             'duracion_cita.min'      => 'La duración tiene que ser de al menos 5 minutos.',
         ]);
 
-        $sede = MedicalCenter::findOrFail($datos['medical_center_id']);
+        // La sede tiene que ser **suya** (dueño, asignada o donde ya tiene consultorio). Las de otros médicos no
+        // existen para él: se avisa con palabras y no con un 404, porque viene de un formulario.
+        $sede = $sedes->buscar($contexto, (int) $datos['medical_center_id']);
+
+        if ($sede === null) {
+            throw ValidationException::withMessages([
+                'medical_center_id' => 'Esa sede no es tuya: elige una de tus sedes para el consultorio.',
+            ]);
+        }
+
         if (! $sede->activo) {
             throw ValidationException::withMessages([
                 'medical_center_id' => 'Esa sede está desactivada: actívala antes de cargarle un consultorio.',
