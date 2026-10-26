@@ -164,6 +164,20 @@ class ConsultoriosWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post('/clinica/consultorios', ['medical_center_id' => $this->sede(duenio: $medico)->id])
             ->assertSessionHasErrors(['office_number', 'modalidad']);
+
+        $this->assertSame('Pon el número o la sala donde atiendes.', session('errors')->first('office_number'));
+    }
+
+    /** El lugar del panel se llama «Consultorio» (Alexander, 2026-10-26): el mensaje del servidor también. */
+    public function test_el_lugar_del_panel_se_llama_consultorio_tambien_en_el_mensaje(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/consultorios', ['office_number' => 'C1', 'modalidad' => Office::MODALIDAD_ORDEN])
+            ->assertSessionHasErrors('medical_center_id');
+
+        $this->assertSame('Elige el consultorio donde atiendes.', session('errors')->first('medical_center_id'));
     }
 
     public function test_no_se_carga_un_consultorio_en_una_sede_desactivada(): void
@@ -175,6 +189,10 @@ class ConsultoriosWebTest extends TestCase
             ->post('/clinica/consultorios', $this->datosDeConsultorio($cerrada))
             ->assertSessionHasErrors('medical_center_id');
 
+        $this->assertSame(
+            'Ese consultorio está desactivado: actívalo antes de agregarle un número o sala.',
+            session('errors')->first('medical_center_id'),
+        );
         $this->assertSame(0, Office::where('reg_medico', $medico->reg_medico)->count());
     }
 

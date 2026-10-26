@@ -309,6 +309,66 @@ class SedesWebTest extends TestCase
         $this->assertStringContainsString('data-abrir-sede-rapida', $html);
     }
 
+    /**
+     * **El panel del consultorio llama «Consultorio» al lugar y «Número o sala» al número** (Alexander,
+     * 2026-10-26): los médicos a veces trabajan en edificios que no son clínicas y llaman a su lugar
+     * «Consultorio de Cumanacoa». Es sólo ese panel: el título, el botón y «+ Nueva sede» no cambian.
+     */
+    public function test_el_panel_del_consultorio_usa_consultorio_y_numero_o_sala(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+        $this->sedePropia($medico, 'Clínica de prueba');
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.sedes', ['panel' => 'consultorio']))->assertOk()->getContent();
+
+        $panel = $this->panelDelConsultorio($html);
+
+        // El selector del lugar, con su opción vacía nueva.
+        $this->assertStringContainsString('for="consultorio-sede">Consultorio <span aria-hidden="true">*</span></label>', $panel);
+        $this->assertStringContainsString('— Elige el consultorio —', $panel);
+        $this->assertStringNotContainsString('— Elige la sede —', $panel);
+        // El campo del número: rótulo nuevo y sin el ejemplo viejo.
+        $this->assertStringContainsString('for="consultorio-numero">Número o sala <span aria-hidden="true">*</span></label>', $panel);
+        $this->assertStringContainsString('placeholder="101-A, Piso 2…"', $panel);
+        $this->assertStringNotContainsString('101-A, Piso 2, Consultorio 3', $panel);
+        // Lo que no cambió: el título y el botón siguen diciendo «consultorio», y «Nueva sede» sigue al lado.
+        $this->assertStringContainsString('>Nuevo consultorio</h2>', $panel);
+        $this->assertStringContainsString('Nueva sede', $panel);
+    }
+
+    /**
+     * La ayuda del alta del lugar (Alexander, 2026-10-26) aclara que puede ser una clínica, un edificio o el
+     * consultorio propio. El parcial se incluye **dos veces** —el panel de la sede y el de la sede rápida—:
+     * la ayuda tiene que verse en los dos.
+     */
+    public function test_la_ayuda_del_nombre_del_lugar_aparece_en_los_dos_paneles(): void
+    {
+        [$user, $medico, $gineco] = $this->usuarioClinico();
+        $this->sedePropia($medico, 'Clínica de prueba');
+
+        $html = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.sedes', ['panel' => 'sede']))->assertOk()->getContent();
+
+        $ayuda = 'Puede ser una clínica, un edificio o tu propio consultorio: escribe el nombre con el que lo conoces, por ejemplo «Consultorio de Cumanacoa».';
+
+        $this->assertStringContainsString('id="sede-name"', $html);
+        $this->assertStringContainsString('id="rapida-name"', $html);
+        $this->assertSame(2, substr_count($html, $ayuda), 'La ayuda tiene que estar en el panel de la sede y en el de la sede rápida.');
+    }
+
+    /** El HTML del panel «Nuevo consultorio», para no confundir sus rótulos con el resto de la pantalla. */
+    private function panelDelConsultorio(string $html): string
+    {
+        $inicio = strpos($html, 'id="dialogo-consultorio"');
+        $this->assertNotFalse($inicio, 'La pantalla no trae el panel del consultorio.');
+
+        $fin = strpos($html, '</dialog>', $inicio);
+        $this->assertNotFalse($fin, 'El panel del consultorio quedó sin cerrar.');
+
+        return substr($html, $inicio, $fin - $inicio);
+    }
+
     public function test_con_una_sola_sede_activa_el_consultorio_nace_con_ella(): void
     {
         [$user, $medico, $gineco] = $this->usuarioClinico();
@@ -409,7 +469,7 @@ class SedesWebTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('data-panel-al-cargar="dialogo-consultorio"', $html);
-        $this->assertStringContainsString('Pon el número o el nombre del consultorio.', $html);
+        $this->assertStringContainsString('Pon el número o la sala donde atiendes.', $html);
         $this->assertMatchesRegularExpression('/<option value="' . $sede->id . '" selected>/', $html);
         $this->assertMatchesRegularExpression('/id="consultorio-telefono"[^>]*value="0212-5556677"/', $html);
         // Y no se pinta en el panel de la sede.

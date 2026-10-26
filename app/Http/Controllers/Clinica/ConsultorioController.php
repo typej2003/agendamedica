@@ -61,23 +61,27 @@ class ConsultorioController extends Controller
             'duracion_cita'     => ['nullable', 'integer', 'min:5', 'max:480'],
             'activo'            => ['nullable', 'boolean'],
         ], [
-            'office_number.required' => 'Pon el número o el nombre del consultorio.',
-            'duracion_cita.min'      => 'La duración tiene que ser de al menos 5 minutos.',
+            'medical_center_id.required' => 'Elige el consultorio donde atiendes.',
+            'medical_center_id.integer'  => 'El consultorio elegido no es válido.',
+            'medical_center_id.exists'   => 'El consultorio elegido no existe: elige otro.',
+            'office_number.required'     => 'Pon el número o la sala donde atiendes.',
+            'duracion_cita.min'          => 'La duración tiene que ser de al menos 5 minutos.',
         ]);
 
-        // La sede tiene que ser **suya** (dueño, asignada o donde ya tiene consultorio). Las de otros médicos no
-        // existen para él: se avisa con palabras y no con un 404, porque viene de un formulario.
+        // El consultorio (la sede del catálogo) tiene que ser **suyo** (dueño, asignado o donde ya tiene un
+        // consultorio). Los de otros médicos no existen para él: se avisa con palabras y no con un 404, porque
+        // viene de un formulario.
         $sede = $sedes->buscar($contexto, (int) $datos['medical_center_id']);
 
         if ($sede === null) {
             throw ValidationException::withMessages([
-                'medical_center_id' => 'Esa sede no es tuya: elige una de tus sedes para el consultorio.',
+                'medical_center_id' => 'Ese consultorio no es tuyo: elige uno de tus consultorios.',
             ]);
         }
 
         if (! $sede->activo) {
             throw ValidationException::withMessages([
-                'medical_center_id' => 'Esa sede está desactivada: actívala antes de cargarle un consultorio.',
+                'medical_center_id' => 'Ese consultorio está desactivado: actívalo antes de agregarle un número o sala.',
             ]);
         }
 

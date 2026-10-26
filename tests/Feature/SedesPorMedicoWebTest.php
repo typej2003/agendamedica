@@ -142,7 +142,7 @@ class SedesPorMedicoWebTest extends TestCase
         $this->assertStringContainsString(e($suyaDos->name), $html);
         $this->assertStringNotContainsString(e($ajena->name), $html);
         $this->assertStringContainsString('Activas (2)', $html);
-        // (2) El desplegable «Sede» del panel del consultorio: ninguna opción del otro.
+        // (2) El desplegable «Consultorio» del panel del consultorio: ninguna opción del otro.
         $opciones = $this->selectDeSedes($html);
         $this->assertStringContainsString(e($suyaUno->name), $opciones);
         $this->assertStringContainsString(e($suyaDos->name), $opciones);
@@ -233,7 +233,7 @@ class SedesPorMedicoWebTest extends TestCase
             ])
             ->assertSessionHasErrors('medical_center_id');
 
-        $this->assertSame('Esa sede no es tuya: elige una de tus sedes para el consultorio.', session('errors')->first('medical_center_id'));
+        $this->assertSame('Ese consultorio no es tuyo: elige uno de tus consultorios.', session('errors')->first('medical_center_id'));
         $this->assertSame(0, Office::where('medical_center_id', $ajena->id)->count());
     }
 

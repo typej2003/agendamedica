@@ -161,7 +161,7 @@
                 selectorDeSede.value = String(resultado.datos.id);
                 selectorDeSede.classList.remove('is-invalid');
 
-                if (avisoDeSede) avisoDeSede.textContent = 'Sede «' + resultado.datos.nombre + '» registrada.';
+                if (avisoDeSede) avisoDeSede.textContent = 'Consultorio «' + resultado.datos.nombre + '» registrado.';
 
                 formularioRapido.reset();
                 rapida.close();
