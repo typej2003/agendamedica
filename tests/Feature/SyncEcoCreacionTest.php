@@ -454,8 +454,8 @@ class SyncEcoCreacionTest extends TestCase
     {
         $this->assertCount(35, SyncAppDataRequest::columnasEditables('eco_pelvico'));
         $this->assertCount(36, SyncAppDataRequest::columnasEditables('eco_obstetrico'));
-        $this->assertCount(55, SyncAppDataRequest::columnasEditables('eco_obstetrico_tercer_2'));
-        $this->assertCount(55, SyncAppDataRequest::columnasEditables('eco_obstetrico_tercer'));
+        $this->assertCount(50, SyncAppDataRequest::columnasEditables('eco_obstetrico_tercer_2'));
+        $this->assertCount(50, SyncAppDataRequest::columnasEditables('eco_obstetrico_tercer'));
 
         $this->assertEqualsCanonicalizing(
             array_keys(EcoGinecologico::columnas()),
