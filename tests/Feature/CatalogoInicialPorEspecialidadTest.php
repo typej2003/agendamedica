@@ -289,8 +289,8 @@ class CatalogoInicialPorEspecialidadTest extends TestCase
                 'medicamentos' => [['codigo_origen' => '0001', 'nombrecomercial' => 'ATAMEL', 'presentacion' => 'GOTAS'], ['codigo_origen' => '0089', 'nombrecomercial' => 'SOPHIPREN', 'presentacion' => 'COLIRIO']],
                 'tipos-examen' => [['codigo_origen' => '001', 'tipo' => 'LABORATORIO']],
                 'tratamientos' => [['codigo_origen' => '0002', 'tratamiento' => 'LOTESOFT', 'lineas' => [
-                    ['codemedicina' => '0089', 'descripcion' => 'SOPHIPREN/COLIRIO', 'indicaciones' => 'una gota', 'cantidad' => '1', 'orden' => '0'],
-                    ['codemedicina' => '9999', 'descripcion' => 'NO ESTA', 'cantidad' => '1', 'orden' => '1'],
+                    ['nombrecomercial' => 'SOPHIPREN', 'presentacion' => 'COLIRIO', 'descripcion' => 'SOPHIPREN/COLIRIO', 'indicaciones' => 'una gota', 'cantidad' => '1', 'orden' => '0'],
+                    ['nombrecomercial' => 'NO ESTA', 'descripcion' => 'NO ESTA', 'cantidad' => '1', 'orden' => '1'],
                 ]]],
             ],
             'no-existe' => ['diagnosticos' => [['codigo_origen' => '1', 'descripcion' => 'X']]],
@@ -343,6 +343,45 @@ class CatalogoInicialPorEspecialidadTest extends TestCase
         $this->assertSame(0, array_sum(array_column($r2['catalogos'], 'nuevas')));
         $this->assertSame(0, array_sum(array_column($r2['catalogos'], 'marcas')));
         $this->assertSame($antes, DB::table('catalogo_inicial_especialidad')->count());
+    }
+
+    public function test_la_linea_del_tratamiento_va_al_medicamento_con_su_nombre_y_presentacion_exactos(): void
+    {
+        $ped = $this->esp('pediatria');
+        $carpeta = $this->archivos(['pediatria' => [
+            'medicamentos' => [
+                ['codigo_origen' => '0826', 'nombrecomercial' => 'BRUGESIC FORTE', 'presentacion' => 'SUSP 200MG'],
+                ['codigo_origen' => '0827', 'nombrecomercial' => 'BRUGESIC PEDIATRICO', 'presentacion' => 'SUSP 100MG'],
+                // El que agregó el preparador con el texto de la línea: no trae código del escritorio.
+                ['codigo_origen' => '', 'nombrecomercial' => 'BRUGESIC PEDIATRICO', 'presentacion' => 'SUSP 200MG'],
+                ['codigo_origen' => '0026', 'nombrecomercial' => 'FULGRAM', 'presentacion' => 'SUSP 600 MG'],
+            ],
+            'tratamientos' => [['codigo_origen' => '0001', 'tratamiento' => 'NEUMONIA', 'lineas' => [
+                ['nombrecomercial' => 'brugesic  pediatrico', 'presentacion' => 'susp 200mg', 'descripcion' => 'BRUGESIC  PEDIATRICO/SUSP 200MG', 'cantidad' => '1', 'orden' => '0'],
+                ['nombrecomercial' => 'FULGRAM', 'presentacion' => 'SUSP 600 MG', 'descripcion' => 'FULGRAM/SUSP 600 MG', 'cantidad' => '1', 'orden' => '1'],
+                // Parecido a FULGRAM pero no igual: no se vincula a él.
+                ['nombrecomercial' => 'FULGRAN', 'presentacion' => 'SUSP 600', 'descripcion' => 'FULGRAN/SUSP 600', 'cantidad' => '1', 'orden' => '2'],
+            ]]],
+        ]]);
+
+        $r = app(SembrarCatalogosIniciales::class)->ejecutar($carpeta);
+
+        $medicamento = fn ($codigo) => DB::table('vademecum')->whereNull('reg_medico')->where('codemedicina', $codigo)->first(['nombrecomercial', 'presentacion']);
+        $lineas = DB::table('recipe_grupo_detalle')->whereNull('reg_medico')->orderBy('orden')->get()->map(fn ($l) => (array) $medicamento($l->codemedicina))->all();
+        $this->assertSame([
+            ['nombrecomercial' => 'BRUGESIC PEDIATRICO', 'presentacion' => 'SUSP 200MG'],
+            ['nombrecomercial' => 'FULGRAM', 'presentacion' => 'SUSP 600 MG'],
+        ], $lineas);
+        $this->assertNotEmpty(array_filter($r['omitidas'], fn ($t) => str_contains($t, 'FULGRAN/SUSP 600')));
+
+        // Reemplazar rehace el tratamiento con las líneas del archivo (el que ya estaba no recibe líneas nuevas al sembrar).
+        $codigo = DB::table('recipe_grupo')->whereNull('reg_medico')->value('codigo');
+        DB::table('recipe_grupo_detalle')->whereNull('reg_medico')->where('codigo', $codigo)->delete();
+        app(SembrarCatalogosIniciales::class)->ejecutar($carpeta, false, ['pediatria']);
+        $this->assertSame(1, DB::table('recipe_grupo')->whereNull('reg_medico')->count());
+        $this->assertSame(2, DB::table('recipe_grupo_detalle')->whereNull('reg_medico')->count());
+        $id = (int) DB::table('recipe_grupo')->whereNull('reg_medico')->value('id');
+        $this->assertSame([$ped->id], Marcas::de('tratamientos', [$id])[$id]);
     }
 
     public function test_el_comando_simula_sin_escribir(): void

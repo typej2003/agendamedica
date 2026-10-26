@@ -4,25 +4,27 @@
   "tratamiento": "BEBE 2",
   "lineas": [
    {
-    "codemedicina": "0892",
     "descripcion": "ABVITOS/GOTAS",
     "indicaciones": "DAR 0,5CC UNA VEZ AL DÌA",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "ABVITOS",
+    "presentacion": "GOTAS"
    },
    {
-    "codemedicina": "1188",
     "descripcion": "NATELE/CAP",
     "indicaciones": "TOMAR UNA CAPSULA O  DOS EN LAS MAÑANAS DURANTE EL PRIMER AÑO ( PARA LA MADRE )",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "NATELE",
+    "presentacion": "CAP"
    },
    {
-    "codemedicina": "1281",
     "descripcion": "MULTIVIRAL/",
     "indicaciones": "TOMAR UNA TAB DIARIA, EN LAS MAÑANAS, DURANTE 3 MESES CONSECUTIVOS",
     "cantidad": "1",
-    "orden": "3"
+    "orden": "3",
+    "nombrecomercial": "MULTIVIRAL"
    }
   ]
  },
@@ -31,37 +33,42 @@
   "tratamiento": "BRONCONEUMONIA AMBULATORIA 2",
   "lineas": [
    {
-    "codemedicina": "0026",
     "descripcion": "FULGRAN/SUSP 600",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "FULGRAN",
+    "presentacion": "SUSP 600"
    },
    {
-    "codemedicina": "0802",
     "descripcion": "KLAS/jarabe",
     "indicaciones": "CC CADA 12 HORAS POR 7 A 1O DIAS",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "KLAS",
+    "presentacion": "jarabe"
    },
    {
-    "codemedicina": "0608",
     "descripcion": "RINOLAST/JARABE",
     "indicaciones": "4CC VIA ORAL CADA 12 HORAS",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "RINOLAST",
+    "presentacion": "JARABE"
    },
    {
-    "codemedicina": "0849",
     "descripcion": "PREDNA/jarabe",
     "indicaciones": "DAR        HOY A LAS 3PM LUEGO A LAS 7PM MAÑANA            DIARIO POR 5 DÌAS ALAS 3PM",
     "cantidad": "1",
-    "orden": "3"
+    "orden": "3",
+    "nombrecomercial": "PREDNA",
+    "presentacion": "jarabe"
    },
    {
-    "codemedicina": "0652",
     "descripcion": "CLOFEN/SUSP",
     "cantidad": "1",
-    "orden": "4"
+    "orden": "4",
+    "nombrecomercial": "CLOFEN",
+    "presentacion": "SUSP"
    }
   ]
  },
@@ -70,24 +77,27 @@
   "tratamiento": "DIARREA  SIMPLE",
   "lineas": [
    {
-    "codemedicina": "0943",
     "descripcion": "ENTEROGERMINA/SUSP ORAL",
     "indicaciones": "TOMAR UNA  AMPOLLA DIARIA POR 10 DÌAS",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "ENTEROGERMINA",
+    "presentacion": "SUSP ORAL"
    },
    {
-    "codemedicina": "0733",
     "descripcion": "APIRET/JARABE",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "APIRET",
+    "presentacion": "JARABE"
    },
    {
-    "codemedicina": "0457",
     "descripcion": "PEDIALYTE /SOLUCION",
     "indicaciones": "DAR 2 ONZAS X CADA EVACUACION",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "PEDIALYTE",
+    "presentacion": "SOLUCION"
    }
   ]
  },
@@ -96,17 +106,19 @@
   "tratamiento": "BRONCONEUMONIA AMBULATORIA",
   "lineas": [
    {
-    "codemedicina": "0663",
     "descripcion": "AUGMENTIN 600 MG/SUSP",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "AUGMENTIN 600 MG",
+    "presentacion": "SUSP"
    },
    {
-    "codemedicina": "0589",
     "descripcion": "CATAFLAN/SUSP",
     "indicaciones": "CC CADA 8 HORAS POR 3 DIAS",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "CATAFLAN",
+    "presentacion": "SUSP"
    }
   ]
  },
@@ -115,25 +127,28 @@
   "tratamiento": "SINDROME FEBRIL AGUDO",
   "lineas": [
    {
-    "codemedicina": "1186",
     "descripcion": "ACETAMINOFEN   (TACHIPIRIN, ATAMEL)/ GOTAS",
     "indicaciones": "USAR SOLO SI HAY FIEBRE O MALESTAR",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "ACETAMINOFEN (TACHIPIRIN, ATAMEL)",
+    "presentacion": "GOTAS"
    },
    {
-    "codemedicina": "1037",
     "descripcion": "MIOVIT/ GOTAS",
     "indicaciones": "DARLE 10 A 15 GOTAS DOS VECES AL DIA POR UNO O TRES MESES",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "MIOVIT",
+    "presentacion": "GOTAS"
    },
    {
-    "codemedicina": "0891",
     "descripcion": "ACIDO FOLICO/GOTAS",
     "indicaciones": "DARLE 5 GOTAS UNA VEZ AL DÌA, EN LAS MAÑANAS, DURANMTE 3 MESES",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "ACIDO FOLICO",
+    "presentacion": "GOTAS"
    }
   ]
  },
@@ -142,25 +157,28 @@
   "tratamiento": "SINDROME FEBRIL AGUDO 2",
   "lineas": [
    {
-    "codemedicina": "1214",
     "descripcion": "MIOVIT/Jarabe",
     "indicaciones": "DARLE A TOMAR UNA CUCHARADA DOS VECES AL DIA POR 7 A 10 DIS O HASTA CONSUMIR EL FRASCO",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "MIOVIT",
+    "presentacion": "Jarabe"
    },
    {
-    "codemedicina": "0810",
     "descripcion": "TACHIPIRIN FORTE/SUSP ORAL PEDIATRICO",
     "indicaciones": "SOLO SI HAY FIEBRE O MALESTAR",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "TACHIPIRIN FORTE",
+    "presentacion": "SUSP ORAL PEDIATRICO"
    },
    {
-    "codemedicina": "1040",
     "descripcion": "ACIDO FOLICO/ TAB 5 mg",
     "indicaciones": "DARLE A TOMAR UNA TABLETA DIARIA, TRITURADA, EN UNA CUCHARADA DE COMPOTA O PAPILLAS, HASTA MEJORAR",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "ACIDO FOLICO",
+    "presentacion": "TAB 5 mg"
    }
   ]
  },
@@ -169,18 +187,20 @@
   "tratamiento": "BEBE 1",
   "lineas": [
    {
-    "codemedicina": "0891",
     "descripcion": "ACIDO FOLICO/GOTAS",
     "indicaciones": "DAR 5 GOTAS UNA VEZ AL DÌA",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "ACIDO FOLICO",
+    "presentacion": "GOTAS"
    },
    {
-    "codemedicina": "0890",
     "descripcion": "HENOVIC/GOTAS",
     "indicaciones": "DAR 0,5CC DOS VECES AL DÌA",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "HENOVIC",
+    "presentacion": "GOTAS"
    }
   ]
  },
@@ -189,25 +209,28 @@
   "tratamiento": "RINOFARINGITIS ALERGICA",
   "lineas": [
    {
-    "codemedicina": "1009",
     "descripcion": "FEDYCLAR/jbe",
     "indicaciones": "CADA 12 HORAS POR 7 A 10 DIAS.",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "FEDYCLAR",
+    "presentacion": "jbe"
    },
    {
-    "codemedicina": "1200",
     "descripcion": "AQUAMAR/SPRY PEDIATRICO",
     "indicaciones": "APLICAR VARIAS VECES AL DIA EN CADA FOSA NASAL, SI HAY CONGESTION.",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "AQUAMAR",
+    "presentacion": "SPRY PEDIATRICO"
    },
    {
-    "codemedicina": "0461",
     "descripcion": "RINOMAX/SOL NASAL",
     "indicaciones": "APLICAR EN CADA FOSA NASAL CADA 8 HORAS SI HAY OBSTRUCCION NASAL",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "RINOMAX",
+    "presentacion": "SOL NASAL"
    }
   ]
  },
@@ -216,43 +239,47 @@
   "tratamiento": "BRONCONEUMONIA AMBULATORIA 3",
   "lineas": [
    {
-    "codemedicina": "0001",
     "descripcion": "CEFTIBUTEN  ( CEDAX )/SUSP 30CC (5ML=180MG)",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "CEFTIBUTEN ( CEDAX )",
+    "presentacion": "SUSP 30CC (5ML=180MG)"
    },
    {
-    "codemedicina": "0912",
     "descripcion": "PEDIACORT/",
     "indicaciones": "DAR        HOY ALAS 3 PM LUGO ALAS 7 PM MAÑANA DAR        DIARIO POR 5 DÌAS A LAS 3 PM",
     "cantidad": "1",
-    "orden": "3"
+    "orden": "3",
+    "nombrecomercial": "PEDIACORT"
    },
    {
-    "codemedicina": "1009",
     "descripcion": "FEDYCLAR/jbe",
     "indicaciones": "CADA 12 HORAS POR 7 A 10 DIAS.",
     "cantidad": "1",
-    "orden": "3"
+    "orden": "3",
+    "nombrecomercial": "FEDYCLAR",
+    "presentacion": "jbe"
    },
    {
-    "codemedicina": "0810",
     "descripcion": "TACHIPIRIN FORTE/SUSP ORAL PEDIATRICO",
     "cantidad": "1",
-    "orden": "4"
+    "orden": "4",
+    "nombrecomercial": "TACHIPIRIN FORTE",
+    "presentacion": "SUSP ORAL PEDIATRICO"
    },
    {
-    "codemedicina": "0510",
     "descripcion": "AIRON/TAB. 4MG",
     "indicaciones": "1 TABLETA DIARIA 9 P.M X 3 MESES",
     "cantidad": "1",
-    "orden": "4"
+    "orden": "4",
+    "nombrecomercial": "AIRON",
+    "presentacion": "TAB. 4MG"
    },
    {
-    "codemedicina": "1024",
     "descripcion": "TERAPIA RESPIRATORIA/",
     "cantidad": "1",
-    "orden": "5"
+    "orden": "5",
+    "nombrecomercial": "TERAPIA RESPIRATORIA"
    }
   ]
  },
@@ -261,39 +288,43 @@
   "tratamiento": "RINOFARINGITIS ALERGICA PERSISTENTE",
   "lineas": [
    {
-    "codemedicina": "1009",
     "descripcion": "FEDYCLAR/jbe",
     "indicaciones": "CADA 12 HORAS POR 7 A 10 DIAS.",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "FEDYCLAR",
+    "presentacion": "jbe"
    },
    {
-    "codemedicina": "0499",
     "descripcion": "CORTYNASE/SPRAY NASAL",
     "indicaciones": "Una o dos aplicaciones en cada fosa nasal, dos veces al dia, durante 1 ô 3 meses consecutivos.",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "CORTYNASE",
+    "presentacion": "SPRAY NASAL"
    },
    {
-    "codemedicina": "0510",
     "descripcion": "AIRON/TAB. 4MG",
     "indicaciones": "1 TABLETA DIARIA 9 P.M X 3 MESES",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "AIRON",
+    "presentacion": "TAB. 4MG"
    },
    {
-    "codemedicina": "1200",
     "descripcion": "AQUAMAR/SPRY PEDIATRICO",
     "indicaciones": "APLICAR VARIAS VECES AL DIA EN CADA FOSA NASAL, SI HAY CONGESTION.",
     "cantidad": "1",
-    "orden": "3"
+    "orden": "3",
+    "nombrecomercial": "AQUAMAR",
+    "presentacion": "SPRY PEDIATRICO"
    },
    {
-    "codemedicina": "1030",
     "descripcion": "VAPORIZADOR/",
     "indicaciones": "Mantener el vaporizador en la habitacion, mientras tengas el aire acondicionado encendido, colocarlo cerca de la cuna.",
     "cantidad": "1",
-    "orden": "4"
+    "orden": "4",
+    "nombrecomercial": "VAPORIZADOR"
    }
   ]
  },
@@ -302,38 +333,43 @@
   "tratamiento": "BEBE 3",
   "lineas": [
    {
-    "codemedicina": "0894",
     "descripcion": "VITAMINA E  100MG/capsulas blandas  vivax",
     "indicaciones": "2 gotas una vez al dìa",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "VITAMINA E 100MG",
+    "presentacion": "capsulas blandas  vivax"
    },
    {
-    "codemedicina": "0891",
     "descripcion": "ACIDO FOLICO/GOTAS",
     "indicaciones": "DAR 5 GOTAS UNA VEZ AL DÌA",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "ACIDO FOLICO",
+    "presentacion": "GOTAS"
    },
    {
-    "codemedicina": "0890",
     "descripcion": "HENOVIC/GOTAS",
     "indicaciones": "DAR 0,5CC UNA VEZ AL DÌA",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "HENOVIC",
+    "presentacion": "GOTAS"
    },
    {
-    "codemedicina": "0748",
     "descripcion": "PROVICAR/SOL",
     "cantidad": "1",
-    "orden": "3"
+    "orden": "3",
+    "nombrecomercial": "PROVICAR",
+    "presentacion": "SOL"
    },
    {
-    "codemedicina": "0835",
     "descripcion": "MAXIBOL /CAPS 1MG",
     "indicaciones": "DAR EL CONTENIDO DE LA CAPSULA MEZCLADO EN 1/4 VASO DE JUGO O COMPOTA UNA VEZ AL DIA POR 3 MESES",
     "cantidad": "1",
-    "orden": "4"
+    "orden": "4",
+    "nombrecomercial": "MAXIBOL",
+    "presentacion": "CAPS 1MG"
    }
   ]
  },
@@ -342,49 +378,56 @@
   "tratamiento": "NEUMONIA AMBULATORIA 4",
   "lineas": [
    {
-    "codemedicina": "0797",
     "descripcion": "AUGMENTIN/SUSPENSION 400MG",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "AUGMENTIN",
+    "presentacion": "SUSPENSION 400MG"
    },
    {
-    "codemedicina": "0802",
     "descripcion": "KLAS/jarabe",
     "indicaciones": "CC CADA 12 HORAS POR 7 A 1O DIAS",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "KLAS",
+    "presentacion": "jarabe"
    },
    {
-    "codemedicina": "0849",
     "descripcion": "PREDNA/jarabe",
     "indicaciones": "DAR        HOY A LAS 3PM LUEGO A LAS 7PM MAÑANA            DIARIO POR 5 DÌAS ALAS 3PM",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "PREDNA",
+    "presentacion": "jarabe"
    },
    {
-    "codemedicina": "0826",
     "descripcion": "BRUGESIC  PEDIATRICO/SUSP 200MG",
     "cantidad": "1",
-    "orden": "3"
+    "orden": "3",
+    "nombrecomercial": "BRUGESIC PEDIATRICO",
+    "presentacion": "SUSP 200MG"
    },
    {
-    "codemedicina": "0499",
     "descripcion": "CORTYNASE/SPRAY NASAL",
     "indicaciones": "UNA INSTILACIÒN  NASAL DIARIA POR 15 DIÀS A UN MES",
     "cantidad": "1",
-    "orden": "4"
+    "orden": "4",
+    "nombrecomercial": "CORTYNASE",
+    "presentacion": "SPRAY NASAL"
    },
    {
-    "codemedicina": "0786",
     "descripcion": "AIRON 4MG/TAB X 30",
     "cantidad": "1",
-    "orden": "5"
+    "orden": "5",
+    "nombrecomercial": "AIRON 4MG",
+    "presentacion": "TAB X 30"
    },
    {
-    "codemedicina": "0799",
     "descripcion": "DESALEX/jarabe",
     "cantidad": "1",
-    "orden": "6"
+    "orden": "6",
+    "nombrecomercial": "DESALEX",
+    "presentacion": "jarabe"
    }
   ]
  },
@@ -393,44 +436,50 @@
   "tratamiento": "BRONCONEUMONIA 5",
   "lineas": [
    {
-    "codemedicina": "0026",
     "descripcion": "FULGRAN/SUSP 600",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "FULGRAN",
+    "presentacion": "SUSP 600"
    },
    {
-    "codemedicina": "0849",
     "descripcion": "PREDNA/jarabe",
     "indicaciones": "DAR        HOY A LAS 3PM LUEGO A LAS 7PM MAÑANA            DIARIO POR 5 DÌAS ALAS 3PM",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "PREDNA",
+    "presentacion": "jarabe"
    },
    {
-    "codemedicina": "0543",
     "descripcion": "BUDENAS/SPRAY NASAL",
     "indicaciones": "UNA INSTILACIÒN NASAL DIARIA POR 15 DÌAS A UN MES",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "BUDENAS",
+    "presentacion": "SPRAY NASAL"
    },
    {
-    "codemedicina": "0881",
     "descripcion": "CETIRIVAX/gotas",
     "indicaciones": "DAR  GOTAS DIARIAS POR 10 DIAS",
     "cantidad": "1",
-    "orden": "3"
+    "orden": "3",
+    "nombrecomercial": "CETIRIVAX",
+    "presentacion": "gotas"
    },
    {
-    "codemedicina": "0810",
     "descripcion": "TACHIPIRIN FORTE/SUSP ORAL PEDIATRICO",
     "cantidad": "1",
-    "orden": "4"
+    "orden": "4",
+    "nombrecomercial": "TACHIPIRIN FORTE",
+    "presentacion": "SUSP ORAL PEDIATRICO"
    },
    {
-    "codemedicina": "0909",
     "descripcion": "MUCOSOLVAN COMPUESTO/GOTAS",
     "indicaciones": "DAR      GOTAS CADA 12 HORAS POR 10 DÌAS",
     "cantidad": "1",
-    "orden": "5"
+    "orden": "5",
+    "nombrecomercial": "MUCOSOLVAN COMPUESTO",
+    "presentacion": "GOTAS"
    }
   ]
  },
@@ -454,24 +503,27 @@
   "tratamiento": "ALERGIA 1",
   "lineas": [
    {
-    "codemedicina": "0799",
     "descripcion": "DESALEX/jarabe",
     "indicaciones": "2,5 cc cada 24 horas 5 días",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "DESALEX",
+    "presentacion": "jarabe"
    },
    {
-    "codemedicina": "0824",
     "descripcion": "SINGULAIR  4MG GRANULADO/SOBRE",
     "indicaciones": "TOMAR EL CONTENIDO DEL SOBRE EN COMPOTA O EN JUGO EN PEQUEÑAS PROPORCIONES O EN LECHETODAS LAS NOCHES ANTES DE DORMIR",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "SINGULAIR 4MG GRANULADO",
+    "presentacion": "SOBRE"
    },
    {
-    "codemedicina": "0700",
     "descripcion": "NASONEX/SPRAY NASAL",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "NASONEX",
+    "presentacion": "SPRAY NASAL"
    }
   ]
  },
@@ -480,31 +532,34 @@
   "tratamiento": "RINUSINUSITIS",
   "lineas": [
    {
-    "codemedicina": "1009",
     "descripcion": "FEDYCLAR/jbe",
     "indicaciones": "CADA 12 HORAS POR 7 A 10 DIAS.",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "FEDYCLAR",
+    "presentacion": "jbe"
    },
    {
-    "codemedicina": "1020",
     "descripcion": "NARICLEAR/spay nasal",
     "indicaciones": "Aplicar varias veces al dia en cada fosa nasal, solo si hay congestion y aspirar",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "NARICLEAR",
+    "presentacion": "spay nasal"
    },
    {
-    "codemedicina": "0663",
     "descripcion": "AUGMENTIN 600 MG/SUSP",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "AUGMENTIN 600 MG",
+    "presentacion": "SUSP"
    },
    {
-    "codemedicina": "1030",
     "descripcion": "VAPORIZADOR/",
     "indicaciones": "Mantener el vaporizador en la habitacion, mientras tengas el aire acondicionado encendido, colocarlo cerca de la cuna.",
     "cantidad": "1",
-    "orden": "3"
+    "orden": "3",
+    "nombrecomercial": "VAPORIZADOR"
    }
   ]
  },
@@ -513,51 +568,56 @@
   "tratamiento": "RINOSINUSITIS CON GPN + HRB",
   "lineas": [
    {
-    "codemedicina": "0663",
     "descripcion": "AUGMENTIN 600 MG/SUSP",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "AUGMENTIN 600 MG",
+    "presentacion": "SUSP"
    },
    {
-    "codemedicina": "1009",
     "descripcion": "FEDYCLAR/jbe",
     "indicaciones": "CADA 12 HORAS POR 7 A 10 DIAS.",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "FEDYCLAR",
+    "presentacion": "jbe"
    },
    {
-    "codemedicina": "1024",
     "descripcion": "TERAPIA RESPIRATORIA/",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "TERAPIA RESPIRATORIA"
    },
    {
-    "codemedicina": "0902",
     "descripcion": "BUTOSOL/inhalador",
     "indicaciones": "Una inhalaciòn cada 6 horas, hasta lograr dos dias sin toser, umentar la frecuencias de las inhalaciones si es necesario.",
     "cantidad": "1",
-    "orden": "3"
+    "orden": "3",
+    "nombrecomercial": "BUTOSOL",
+    "presentacion": "inhalador"
    },
    {
-    "codemedicina": "1020",
     "descripcion": "NARICLEAR/spay nasal",
     "indicaciones": "Aplicar varias veces al dia en cada fosa nasal, solo si hay congestion y aspirar",
     "cantidad": "1",
-    "orden": "4"
+    "orden": "4",
+    "nombrecomercial": "NARICLEAR",
+    "presentacion": "spay nasal"
    },
    {
-    "codemedicina": "1030",
     "descripcion": "VAPORIZADOR/",
     "indicaciones": "Mantener el vaporizador en la habitacion, mientras tengas el aire acondicionado encendido, colocarlo cerca de la cuna.",
     "cantidad": "1",
-    "orden": "5"
+    "orden": "5",
+    "nombrecomercial": "VAPORIZADOR"
    },
    {
-    "codemedicina": "0810",
     "descripcion": "TACHIPIRIN FORTE/SUSP ORAL PEDIATRICO",
     "indicaciones": "SOLO SI HAY FIEBRE O MALESTAR",
     "cantidad": "1",
-    "orden": "6"
+    "orden": "6",
+    "nombrecomercial": "TACHIPIRIN FORTE",
+    "presentacion": "SUSP ORAL PEDIATRICO"
    }
   ]
  },
@@ -566,25 +626,28 @@
   "tratamiento": "RINOFARINGITIS VIRAL LACTANTES",
   "lineas": [
    {
-    "codemedicina": "1186",
     "descripcion": "ACETAMINOFEN   (TACHIPIRIN, ATAMEL)/ GOTAS",
     "indicaciones": "USAR SOLO SI HAY FIEBRE O MALESTAR",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "ACETAMINOFEN (TACHIPIRIN, ATAMEL)",
+    "presentacion": "GOTAS"
    },
    {
-    "codemedicina": "0891",
     "descripcion": "ACIDO FOLICO/GOTAS",
     "indicaciones": "DAR 5 GOTAS UNA VEZ AL DÌA",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "ACIDO FOLICO",
+    "presentacion": "GOTAS"
    },
    {
-    "codemedicina": "1037",
     "descripcion": "MIOVIT/ GOTAS",
     "indicaciones": "DARLE 10 A 15 GOTAS DOS VECES AL DIA POR UNO O TRES MESES",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "MIOVIT",
+    "presentacion": "GOTAS"
    }
   ]
  },
@@ -593,25 +656,28 @@
   "tratamiento": "RINOFARINGITIS VIRAL PRES Y ESCOLARES",
   "lineas": [
    {
-    "codemedicina": "0810",
     "descripcion": "TACHIPIRIN FORTE/SUSP ORAL PEDIATRICO",
     "indicaciones": "SOLO SI HAY FIEBRE O MALESTAR",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "TACHIPIRIN FORTE",
+    "presentacion": "SUSP ORAL PEDIATRICO"
    },
    {
-    "codemedicina": "1040",
     "descripcion": "ACIDO FOLICO/ TAB 5 mg",
     "indicaciones": "DARLE A TOMAR UNA TABLETA DIARIA, TRITURADA, EN UNA CUCHARADA DE COMPOTA O PAPILLAS, HASTA MEJORAR",
     "cantidad": "1",
-    "orden": "1"
+    "orden": "1",
+    "nombrecomercial": "ACIDO FOLICO",
+    "presentacion": "TAB 5 mg"
    },
    {
-    "codemedicina": "1214",
     "descripcion": "MIOVIT/Jarabe",
     "indicaciones": "DARLE A TOMAR UNA CUCHARADA DOS VECES AL DIA POR 7 A 10 DIS O HASTA CONSUMIR EL FRASCO",
     "cantidad": "1",
-    "orden": "2"
+    "orden": "2",
+    "nombrecomercial": "MIOVIT",
+    "presentacion": "Jarabe"
    }
   ]
  },
