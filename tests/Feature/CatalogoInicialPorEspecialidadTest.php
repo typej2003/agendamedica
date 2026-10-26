@@ -357,6 +357,108 @@ class CatalogoInicialPorEspecialidadTest extends TestCase
         $this->assertSame(1, DB::table('diagnosticos')->whereNull('reg_medico')->count());
     }
 
+    public function test_el_admin_carga_antecedentes_eligiendo_su_tipo_y_ve_las_dietas(): void
+    {
+        $this->actingAs($this->admin());
+        $this->ini('antecedentes', ['codantecedente' => '0001', 'descripcion' => 'ASMA BRONQUIAL', 'codtipo' => '02']);
+        $this->ini('dietas', ['cod_dieta' => '01', 'dietas' => 'ABLACTACION SOPAS', 'descripcion' => 'Sopas de verduras']);
+
+        Livewire::test(CatalogosIniciales::class, ['catalogo' => 'antecedentes'])
+            ->assertSee('ASMA BRONQUIAL')->assertSee('C.A.')
+            ->call('abrir')->assertSee('PERINATALES')->assertSee('D.P.')
+            ->set('f.descripcion', 'varicela')->set('f.codtipo', '05')->call('guardar')->assertHasNoErrors();
+        $this->assertSame('05', trim((string) DB::table('antecedentes')->whereNull('reg_medico')->where('descripcion', 'VARICELA')->value('codtipo')));
+
+        Livewire::test(CatalogosIniciales::class, ['catalogo' => 'dietas'])->assertSee('ABLACTACION SOPAS')->assertSee('Sopas de verduras');
+
+        // La tarjeta del médico concuerda en género: «dietas nuevas».
+        $tarjeta = new \App\Clinica\Catalogos\Vistas\NovedadesDeCatalogoVista('Dietas', 'dieta', 'dietas', collect([(object) ['dietas' => 'A'], (object) ['dietas' => 'B']]), '/x', true);
+        $this->assertStringStartsWith('Hay 2 dietas nuevas', $tarjeta->texto());
+    }
+
+    public function test_reemplazar_una_especialidad_le_quita_lo_que_su_archivo_ya_no_trae(): void
+    {
+        $ped = $this->esp('pediatria');
+        $gin = $this->esp('ginecologia-y-obstetricia');
+
+        // Lo que dejó la siembra anterior.
+        $viejo = $this->ini('diagnosticos', ['codediagnostico' => '0001', 'descripcion' => 'VIEJO'], [$ped]);
+        $compartido = $this->ini('diagnosticos', ['codediagnostico' => '0002', 'descripcion' => 'COMPARTIDO'], [$ped, $gin]);
+        $general = $this->ini('diagnosticos', ['codediagnostico' => '0003', 'descripcion' => 'GENERAL']);
+        $asma = $this->ini('diagnosticos', ['codediagnostico' => '0004', 'descripcion' => 'ASMA'], [$ped]);
+        $deGine = $this->ini('diagnosticos', ['codediagnostico' => '0005', 'descripcion' => 'DE GINE'], [$gin]);
+        // Un medicamento sólo de pediatría que un tratamiento de ginecología lleva: no se puede quitar.
+        $usado = $this->ini('vademecum', ['codemedicina' => '0001', 'nombrecomercial' => 'USADO', 'presentacion' => 'TAB'], [$ped]);
+        $this->ini('recipe_grupo', ['codigo' => '0001', 'tratamiento' => 'DE GINE'], [$gin]);
+        DB::table('recipe_grupo_detalle')->insert(['reg_medico' => null, 'codigo' => '0001', 'codemedicina' => '0001', 'descripcion' => 'USADO/TAB', 'cantidad' => 1, 'orden' => 0]);
+        // Lo que un médico ya copió no se toca.
+        DB::table('diagnosticos')->insert(['reg_medico' => 'copia-ped', 'codediagnostico' => '0001', 'descripcion' => 'VIEJO']);
+
+        $carpeta = $this->archivos(['pediatria' => ['diagnosticos' => [
+            ['codigo_origen' => '0172', 'descripcion' => 'Asma'], ['codigo_origen' => '0173', 'descripcion' => 'NUEVO'],
+        ]]]);
+
+        $r = app(SembrarCatalogosIniciales::class)->ejecutar($carpeta, false, ['pediatria']);
+
+        $this->assertSame(['quitadas' => 1, 'desmarcadas' => 1, 'conservadas' => 0], $r['retiradas']['pediatria']['diagnosticos']);
+        $this->assertSame(['quitadas' => 0, 'desmarcadas' => 0, 'conservadas' => 1], $r['retiradas']['pediatria']['medicamentos']);
+        $this->assertNotEmpty(array_filter($r['omitidas'], fn ($t) => str_contains($t, 'USADO')));
+
+        $this->assertFalse(DB::table('diagnosticos')->where('id', $viejo)->exists());
+        $this->assertSame([], Marcas::de('diagnosticos', [$viejo]));
+        $this->assertSame([$gin->id], Marcas::de('diagnosticos', [$compartido])[$compartido]);
+        $this->assertSame([], Marcas::de('diagnosticos', [$general]));
+        $this->assertSame([$ped->id], Marcas::de('diagnosticos', [$asma])[$asma]);
+        $this->assertSame([$gin->id], Marcas::de('diagnosticos', [$deGine])[$deGine]);
+        $this->assertSame([$ped->id], Marcas::de('medicamentos', [$usado])[$usado]);
+        $this->assertSame(1, DB::table('diagnosticos')->where('reg_medico', 'copia-ped')->count());
+
+        // ASMA no se duplica y NUEVO entra con la marca de pediatría.
+        $this->assertSame(1, DB::table('diagnosticos')->whereNull('reg_medico')->where('descripcion', 'ASMA')->count());
+        $nuevo = (int) DB::table('diagnosticos')->whereNull('reg_medico')->where('descripcion', 'NUEVO')->value('id');
+        $this->assertSame([$ped->id], Marcas::de('diagnosticos', [$nuevo])[$nuevo]);
+
+        // Una especialidad sin carpeta no se puede reemplazar.
+        $this->expectException(InvalidArgumentException::class);
+        app(SembrarCatalogosIniciales::class)->ejecutar($carpeta, false, ['cardiologia']);
+    }
+
+    public function test_dietas_y_antecedentes_se_siembran_y_se_copian_con_su_tipo(): void
+    {
+        $ped = $this->esp('pediatria');
+        $carpeta = $this->archivos(['pediatria' => [
+            'dietas' => [['codigo_origen' => '05', 'dietas' => 'antiestreñimiento', 'descripcion' => "ALIMENTOS PERMITIDOS:\n Casabe", 'calorias' => '1']],
+            'antecedentes' => [
+                ['codigo_origen' => '0012', 'descripcion' => 'asma bronquial', 'codtipo' => '02'],
+                ['codigo_origen' => '0013', 'descripcion' => 'ASMA BRONQUIAL', 'codtipo' => '01'],
+                ['codigo_origen' => '0014', 'descripcion' => 'SIN TIPO', 'codtipo' => '09'],
+            ],
+        ]]);
+
+        $this->artisan('catalogos:sembrar-iniciales', ['--carpeta' => $carpeta])->assertExitCode(0);
+
+        // El mismo nombre en dos tipos son dos antecedentes; el de un tipo que no existe no entra.
+        $this->assertEqualsCanonicalizing(['01', '02'], DB::table('antecedentes')->whereNull('reg_medico')->pluck('codtipo')->all());
+        $this->assertSame(['ASMA BRONQUIAL'], DB::table('antecedentes')->whereNull('reg_medico')->distinct()->pluck('descripcion')->all());
+        $this->assertSame('ANTIESTREÑIMIENTO', DB::table('dietas')->whereNull('reg_medico')->value('dietas'));
+
+        // El pediatra los recibe con el tipo tal cual y sus propios códigos.
+        [, $medico] = $this->medico([$ped]);
+        $copia = app(CopiarCatalogoInicial::class);
+        $this->assertSame(2, $copia->ejecutar('antecedentes', $medico->reg_medico, [$medico->reg_medico], [$ped->id])['copiadas']);
+        $this->assertSame(1, $copia->ejecutar('dietas', $medico->reg_medico, [$medico->reg_medico], [$ped->id])['copiadas']);
+        $this->assertSame(['01', '02'], $this->propias('antecedentes', $medico, 'codtipo'));
+        $this->assertSame(['0001', '0002'], $this->propias('antecedentes', $medico, 'codantecedente'));
+        $this->assertSame(['01'], $this->propias('dietas', $medico, 'cod_dieta'));
+
+        // El administrador elige el tipo de una lista cerrada.
+        $guardar = app(GuardarFilaDeCatalogoInicial::class);
+        $guardar->ejecutar('antecedentes', ['descripcion' => 'Varicela', 'codtipo' => '05']);
+        $this->assertSame('05', trim((string) DB::table('antecedentes')->whereNull('reg_medico')->where('descripcion', 'VARICELA')->value('codtipo')));
+        $this->expectException(InvalidArgumentException::class);
+        $guardar->ejecutar('antecedentes', ['descripcion' => 'Otro', 'codtipo' => '99']);
+    }
+
     // ------------------------------------------------------------------------------------------ La copia automática
 
     public function test_al_asignar_una_especialidad_el_medico_nuevo_recibe_su_catalogo(): void

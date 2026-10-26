@@ -1,7 +1,11 @@
 [
  {
+  "codigo_origen": "04",
+  "tipo_atencion": "CONTROL"
+ },
+ {
   "codigo_origen": "01",
-  "tipo_atencion": "PRIMERA CONSULTA"
+  "tipo_atencion": "CONSULTA DE PRIMERA"
  },
  {
   "codigo_origen": "02",
@@ -9,6 +13,30 @@
  },
  {
   "codigo_origen": "03",
-  "tipo_atencion": "CONTROL"
+  "tipo_atencion": "ESTUDIOS"
+ },
+ {
+  "codigo_origen": "05",
+  "tipo_atencion": "VACUNACIÓN"
+ },
+ {
+  "codigo_origen": "06",
+  "tipo_atencion": "EVALUACIÓN PRE-OPERATORIA"
+ },
+ {
+  "codigo_origen": "07",
+  "tipo_atencion": "CONSTANCIA MEDICA"
+ },
+ {
+  "codigo_origen": "08",
+  "tipo_atencion": "EXONERADO"
+ },
+ {
+  "codigo_origen": "09",
+  "tipo_atencion": "EVALUACION CARDIOVASCULAR ESCOLAR"
+ },
+ {
+  "codigo_origen": "10",
+  "tipo_atencion": "CONSULTA ONLINE"
  }
 ]

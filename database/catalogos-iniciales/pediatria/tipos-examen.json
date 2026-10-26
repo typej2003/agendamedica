@@ -5,14 +5,18 @@
  },
  {
   "codigo_origen": "002",
-  "tipo": "ESTUDIO DE IMAGENES"
+  "tipo": "PREOPERATORIO"
  },
  {
   "codigo_origen": "003",
-  "tipo": "ESTUDIOS ESPECIALES"
+  "tipo": "PERFIL LIPIDICO"
  },
  {
   "codigo_origen": "004",
-  "tipo": "PREOPERATORIO"
+  "tipo": "PERFIL RESPIRATORIO VIRAL"
+ },
+ {
+  "codigo_origen": "007",
+  "tipo": "HEMATOLOGIA COMPLETA"
  }
 ]

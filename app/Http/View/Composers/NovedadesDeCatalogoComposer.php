@@ -34,7 +34,7 @@ class NovedadesDeCatalogoComposer
         $novedades = app(CopiarCatalogoInicial::class)->novedades($slug, $registros, CatalogoInicialController::especialidades($contexto));
 
         $vista->with('novedadesIniciales', $novedades->isEmpty() ? null : new NovedadesDeCatalogoVista(
-            $def['titulo'], $def['singular'], $def['etiqueta'], $novedades, route('clinica.catalogos.cargar-inicial', $slug),
+            $def['titulo'], $def['singular'], $def['etiqueta'], $novedades, route('clinica.catalogos.cargar-inicial', $slug), $def['femenino'] ?? false,
         ));
     }
 

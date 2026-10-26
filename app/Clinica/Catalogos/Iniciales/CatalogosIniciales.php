@@ -2,6 +2,8 @@
 
 namespace App\Clinica\Catalogos\Iniciales;
 
+use App\Actions\Pacientes\SembrarTiposDeAntecedentePediatricos;
+
 /**
  * **El registro único de los catálogos iniciales** (WEB-12.8): qué catálogos del consultorio tienen una versión inicial (filas con `reg_medico` NULL) que el
  * administrador arma y de la que cada médico recibe una **copia** («Cargar el catálogo inicial»). Declara, por catálogo, **cómo se guarda** (tabla, columna del
@@ -14,14 +16,15 @@ namespace App\Clinica\Catalogos\Iniciales;
  * (`CopiarVacunasIniciales`, `GuardarPercentilInicial`): sus códigos significan algo —las dosis y los niños los citan— y no se renumeran al copiar.
  *
  * Forma de una entrada:
- *  - `titulo`, `singular`: cómo se nombra en pantalla.
+ *  - `titulo`, `singular`: cómo se nombra en pantalla; `femenino` para que la tarjeta del médico diga «nuevas» (dietas, plantillas).
  *  - `tabla`, `codigo`, `digitos`: dónde vive y cómo se numera (el mayor numérico del médico + 1, relleno de ceros a `digitos`).
  *  - `etiqueta`: la columna que nombra una fila (la lista y los avisos).
  *  - `identidad`: columnas que, normalizadas (sin tildes ni mayúsculas), dicen «es la misma fila»; `ref:<columna>` suma la identidad de la fila a la que apunta.
  *  - `columnas`: lo que se copia (nunca `id`, `reg_medico`, el código ni las marcas de tiempo).
  *  - `refs`: `columna => catálogo` al que apunta por código; al copiar se mapea por identidad (y se copia la dependencia si falta).
  *  - `hijos`: tablas que cuelgan de la fila por su código (`tabla`, `enlace`, `columnas`, `refs`, `orden`).
- *  - `campos`: el formulario del administrador: `columna => [rotulo, tipo (texto|area|numero|decimal|marca|porkilo|ref), max, requerido, mayusculas, grupo?, ayuda?]`.
+ *  - `opciones`: `columna => [código => nombre]` de los campos `opcion`: códigos fijos que se copian tal cual (el tipo de un antecedente), no un catálogo que se renumera.
+ *  - `campos`: el formulario del administrador: `columna => [rotulo, tipo (texto|area|numero|decimal|marca|porkilo|ref|opcion), max, requerido, mayusculas, grupo?, ayuda?]`.
  *    `decimal` es un número opcional con tres decimales (la dosis por kilo); `porkilo` es una casilla que guarda `SI` en `vademecum.dosificacion` (lo que lee
  *    `DosisPediatrica`); `grupo` junta campos en una sección del formulario (`dosis` = «Dosis por kilo»).
  */
@@ -96,12 +99,33 @@ final class CatalogosIniciales
             ],
         ],
         'plantillas-texto' => [
-            'titulo' => 'Plantillas de texto', 'singular' => 'plantilla', 'tabla' => 'formato_print', 'codigo' => 'codigo', 'digitos' => 4,
+            'titulo' => 'Plantillas de texto', 'singular' => 'plantilla', 'femenino' => true, 'tabla' => 'formato_print', 'codigo' => 'codigo', 'digitos' => 4,
             'etiqueta' => 'titulo', 'identidad' => ['tipo', 'titulo'], 'columnas' => ['titulo', 'descripcion', 'tipo'],
             'campos' => [
                 'tipo' => ['Tipo', 'tipo', 10, true, false],
                 'titulo' => ['Título', 'texto', 200, true, true],
                 'descripcion' => ['Texto', 'area', 20000, true, false],
+            ],
+        ],
+        // Pediatría (2026-10-25, la base vacía de Alexander). La dieta es lo que la pestaña *Alimentación* ofrece para copiar.
+        'dietas' => [
+            'titulo' => 'Dietas', 'singular' => 'dieta', 'femenino' => true, 'tabla' => 'dietas', 'codigo' => 'cod_dieta', 'digitos' => 2,
+            'etiqueta' => 'dietas', 'identidad' => ['dietas'], 'columnas' => ['dietas', 'descripcion', 'calorias'],
+            'campos' => [
+                'dietas' => ['Título', 'texto', 200, true, true],
+                'calorias' => ['Calorías', 'numero', 0, false, false],
+                'descripcion' => ['Texto', 'area', 20000, true, false],
+            ],
+        ],
+        // El catálogo de donde la consulta agrega antecedentes. El tipo es uno de los siete códigos fijos de las solapas
+        // (`SembrarTiposDeAntecedentePediatricos`, que cada pediatra ya tiene): se copia tal cual. El mismo nombre en dos tipos son dos filas.
+        'antecedentes' => [
+            'titulo' => 'Antecedentes', 'singular' => 'antecedente', 'tabla' => 'antecedentes', 'codigo' => 'codantecedente', 'digitos' => 4,
+            'etiqueta' => 'descripcion', 'identidad' => ['descripcion', 'codtipo'], 'columnas' => ['descripcion', 'codtipo'],
+            'opciones' => ['codtipo' => SembrarTiposDeAntecedentePediatricos::TIPOS],
+            'campos' => [
+                'descripcion' => ['Antecedente', 'texto', 40, true, true],
+                'codtipo' => ['Tipo', 'opcion', 2, true, false],
             ],
         ],
     ];
@@ -132,6 +156,8 @@ final class CatalogosIniciales
             'motivos_consulta',
             'motivo_cita',
             'formato_print',
+            'dietas',
+            'antecedentes',
             'vademecum',                              // último: lo referencian los detalles de tratamiento
         ];
     }
