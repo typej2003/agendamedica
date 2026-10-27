@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Agenda;
 
+use App\Actions\Pacientes\IdentidadDePaciente;
 use App\Clinica\Pacientes\DuenoDeLaHistoria;
 use App\Models\Cola;
 use App\Models\MedicoPaciente;
@@ -77,13 +78,14 @@ class PacientesDeCita
         }
 
         $cedula = trim((string) ($valores['nuevo_cedula'] ?? ''));
-        if ($cedula === '') {
+        if (trim((string) ($valores['nuevo_nombres'] ?? '')) === '') {
             throw ValidationException::withMessages([
                 'paciente_id' => 'Elige un paciente de la lista o carga los datos de uno nuevo.',
             ]);
         }
 
-        $paciente = Paciente::where('cedula', $cedula)->first();
+        // Sin cédula (vacía o `S.C.`) no se enlaza con nadie: es una ficha nueva (`CrearPaciente`).
+        $paciente = IdentidadDePaciente::esSinCedula($cedula) ? null : Paciente::where('cedula', $cedula)->first();
         if ($paciente === null) {
             return ['paciente' => null, 'numhistoria' => null];
         }
@@ -97,7 +99,7 @@ class PacientesDeCita
     public function columnasDelNuevo(array $valores): array
     {
         return [
-            'cedula'    => trim((string) $valores['nuevo_cedula']),
+            'cedula'    => $this->texto($valores['nuevo_cedula'] ?? null),
             'nombres'   => trim((string) ($valores['nuevo_nombres'] ?? '')),
             'apellidos' => trim((string) ($valores['nuevo_apellidos'] ?? '')),
             'telefono'  => $this->texto($valores['nuevo_telefono'] ?? null),

@@ -283,7 +283,7 @@ final class FormularioDeCitaVista
     /** El alta de un paciente nuevo se muestra abierta si ya se empezó a escribir. */
     public function altaAbierta(): bool
     {
-        return (bool) $this->valor('nuevo_cedula');
+        return (bool) ($this->valor('nuevo_nombres') ?: $this->valor('nuevo_cedula'));
     }
 
     // --------------------------------------------------------------------------------------- Paso 3

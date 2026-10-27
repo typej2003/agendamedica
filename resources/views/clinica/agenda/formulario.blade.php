@@ -179,7 +179,7 @@
 
                         <div class="row g-3 mt-0">
                             <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_cedula">Cédula *</label>
+                                <label class="form-label" for="nuevo_cedula">Cédula</label>
                                 <input type="text" name="nuevo_cedula" id="nuevo_cedula" class="form-control" value="{{ $vm->valor('nuevo_cedula') }}">
                                 @error('nuevo_cedula') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
@@ -194,8 +194,9 @@
                                 @error('nuevo_apellidos') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_telefono">Teléfono</label>
+                                <label class="form-label" for="nuevo_telefono">Teléfono *</label>
                                 <input type="text" name="nuevo_telefono" id="nuevo_telefono" class="form-control" value="{{ $vm->valor('nuevo_telefono') }}">
+                                @error('nuevo_telefono') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-sm-6">
                                 <label class="form-label" for="nuevo_email">Correo</label>
@@ -211,7 +212,7 @@
                                 </select>
                             </div>
                             <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_fnacimiento">Fecha de nacimiento *</label>
+                                <label class="form-label" for="nuevo_fnacimiento">Fecha de nacimiento</label>
                                 <input type="date" name="nuevo_fnacimiento" id="nuevo_fnacimiento" class="form-control" max="{{ \App\Clinica\FechaDelConsultorio::hoyComoTexto() }}" value="{{ $vm->valor('nuevo_fnacimiento') }}">
                                 @error('nuevo_fnacimiento') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>

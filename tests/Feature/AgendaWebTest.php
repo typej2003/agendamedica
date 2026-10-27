@@ -871,6 +871,7 @@ class AgendaWebTest extends TestCase
                 'hora'              => '09:00',
                 'nuevo_cedula'      => '31415926',
                 'nuevo_nombres'     => 'Con',
+                'nuevo_telefono'    => '0414-5550001',
                 'nuevo_apellidos'   => 'Datos',
                 'nuevo_fnacimiento' => '1988-03-04',
                 'nuevo_nac'         => 'E',
@@ -886,20 +887,75 @@ class AgendaWebTest extends TestCase
         $this->assertSame('Calle 5 con carrera 7', $paciente->direccion);
     }
 
-    public function test_el_alta_rapida_exige_la_fecha_de_nacimiento_y_no_acepta_una_futura(): void
+    /** 2026-10-27 (Alexander, Dra. Cadenas): la primera cita no se frena por la cédula ni por la fecha de nacimiento. */
+    public function test_el_alta_rapida_pide_solo_nombre_apellido_y_telefono(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
         $this->bloque($sede, '08:00', '12:00');
 
-        $base = ['hora' => '09:00', 'nuevo_cedula' => '27182818', 'nuevo_nombres' => 'Sin', 'nuevo_apellidos' => 'Fecha'];
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'            => '09:00',
+                'nuevo_nombres'   => 'Sin',
+                'nuevo_apellidos' => 'Cédula',
+                'nuevo_telefono'  => '0414-5550010',
+            ]))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect($this->urlDeLaAgenda($sede));
+
+        $paciente = Paciente::where('apellidos', 'Cédula')->firstOrFail();
+        $this->assertNull($paciente->cedula);
+        $this->assertNull($paciente->getRawOriginal('fnacimiento'));
+        $this->assertSame(1, Cola::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    public function test_dos_altas_sin_cedula_son_dos_fichas_distintas(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        foreach (['09:00' => 'Uno', '10:00' => 'Dos'] as $hora => $nombre) {
+            $this->conContexto($user, $medico, $gineco)->actingAs($user)
+                ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                    'hora' => $hora, 'nuevo_nombres' => $nombre, 'nuevo_apellidos' => 'Anónimo', 'nuevo_telefono' => '0414-5550011',
+                ]))
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(2, Paciente::where('apellidos', 'Anónimo')->count());
+    }
+
+    public function test_el_alta_rapida_sin_telefono_o_sin_apellido_avisa_y_no_guarda_nada(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->post('/clinica/agenda', $this->datosDeCita($sede, $base))
-            ->assertSessionHasErrors(['nuevo_fnacimiento']);
+            ->post('/clinica/agenda', $this->datosDeCita($sede, ['hora' => '09:00', 'nuevo_nombres' => 'Sin', 'nuevo_apellidos' => 'Teléfono']))
+            ->assertSessionHasErrors(['nuevo_telefono' => 'Falta el teléfono del paciente nuevo.']);
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
-            ->post('/clinica/agenda', $this->datosDeCita($sede, $base + ['nuevo_fnacimiento' => '2999-01-01']))
+            ->post('/clinica/agenda', $this->datosDeCita($sede, ['hora' => '09:00', 'nuevo_nombres' => 'Sin', 'nuevo_telefono' => '0414-5550012']))
+            ->assertSessionHasErrors(['nuevo_apellidos']);
+
+        $this->assertNull(Paciente::where('nombres', 'Sin')->first());
+        $this->assertSame(0, Cola::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    public function test_el_alta_rapida_no_acepta_una_fecha_de_nacimiento_futura(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora' => '09:00', 'nuevo_cedula' => '27182818', 'nuevo_nombres' => 'Sin', 'nuevo_apellidos' => 'Fecha',
+                'nuevo_telefono' => '0414-5550013', 'nuevo_fnacimiento' => '2999-01-01',
+            ]))
             ->assertSessionHasErrors(['nuevo_fnacimiento']);
 
         $this->assertNull(Paciente::where('cedula', '27182818')->first());
@@ -1073,7 +1129,7 @@ class AgendaWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post('/clinica/agenda', $this->datosDeCita($sede))
             ->assertSessionHasErrors([
-                'nuevo_cedula' => 'Elige un paciente de la lista o carga uno nuevo (con su cédula, nombres y apellidos).',
+                'nuevo_nombres' => 'Elige un paciente de la lista o carga uno nuevo (con su nombre, apellido y teléfono).',
             ]);
 
         $this->assertSame(0, Cola::where('reg_medico', $medico->reg_medico)->count());
@@ -2134,6 +2190,7 @@ class AgendaWebTest extends TestCase
                 'nuevo_fnacimiento' => '1990-01-15',
                 'nuevo_nombres'   => 'Nueva',
                 'nuevo_apellidos' => 'Paciente',
+                'nuevo_telefono'  => '0414-5550003',
             ]))
             ->assertRedirect($this->urlDeLaAgenda($sede));
 
@@ -2161,6 +2218,7 @@ class AgendaWebTest extends TestCase
                     'nuevo_fnacimiento' => '1990-01-15',
                     'nuevo_nombres'   => 'Otra',
                     'nuevo_apellidos' => $apellidos,
+                    'nuevo_telefono'  => '0414-5550004',
                 ]))
                 ->assertRedirect($this->urlDeLaAgenda($sede));
         }
