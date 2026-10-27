@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Clinica;
 
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\FechaDelConsultorio;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -19,9 +20,17 @@ class GuardarCitaRequest extends FormRequest
         return true;
     }
 
+    /** ¿El consultorio del contexto es de pediatría? Ahí el alta mínima pide el representante y su teléfono, no el del niño. */
+    private function esPediatria(): bool
+    {
+        return AlcanceDeLaEspecialidad::de($this->attributes->get('contexto_clinico')['specialty']?->slug ?? null)->esPediatria();
+    }
+
     /** @return array<string,array<int,mixed>> */
     public function rules(): array
     {
+        $pediatria = $this->esPediatria();
+
         return [
             'sede'            => ['nullable', 'integer'],
             'fecha'           => ['required', 'date_format:Y-m-d'],
@@ -36,7 +45,12 @@ class GuardarCitaRequest extends FormRequest
             'nuevo_cedula'    => ['nullable', 'string', 'max:20'],
             'nuevo_nombres'   => ['nullable', 'required_without:paciente_id', 'string', 'max:100'],
             'nuevo_apellidos' => ['nullable', 'required_with:nuevo_nombres', 'string', 'max:100'],
-            'nuevo_telefono'  => ['nullable', 'required_with:nuevo_nombres', 'string', 'max:30'],
+            // En pediatría el teléfono que importa es el del representante; el del niño es opcional.
+            'nuevo_telefono'  => array_merge(['nullable'], $pediatria ? [] : ['required_with:nuevo_nombres'], ['string', 'max:30']),
+            'representante_nombre'     => array_merge(['nullable'], $pediatria ? ['required_with:nuevo_nombres'] : [], ['string', 'max:40']),
+            'representante_telefono'   => array_merge(['nullable'], $pediatria ? ['required_with:nuevo_nombres'] : [], ['string', 'max:20']),
+            'representante_parentesco' => ['nullable', 'string', 'max:1'],
+            'representante_cedula'     => ['nullable', 'regex:/^[0-9]{1,10}$/'],
             'nuevo_email'     => ['nullable', 'email', 'max:120'],
             'nuevo_sexo'      => ['nullable', 'in:F,M'],
             // La fecha de nacimiento, la nacionalidad, el lugar de nacimiento y la dirección (2026-10-23) son opcionales: son las
@@ -80,6 +94,12 @@ class GuardarCitaRequest extends FormRequest
             'nuevo_telefono.required_with'  => 'Falta el teléfono del paciente nuevo.',
             'nuevo_apellidos.max'           => 'El apellido del paciente no puede pasar de 100 caracteres.',
             'nuevo_telefono.max'            => 'El teléfono no puede pasar de 30 caracteres.',
+            'representante_nombre.required_with'   => 'Falta el nombre del representante.',
+            'representante_nombre.max'             => 'El nombre del representante no puede pasar de 40 caracteres.',
+            'representante_telefono.required_with' => 'Falta el teléfono del representante.',
+            'representante_telefono.max'           => 'El teléfono del representante no puede pasar de 20 caracteres.',
+            'representante_parentesco.max'         => 'El parentesco del representante es un solo carácter.',
+            'representante_cedula.regex'           => 'La cédula del representante solo lleva números (hasta 10 dígitos).',
             'nuevo_email.email'             => 'Revisa el correo: no tiene forma de correo.',
             'nuevo_email.max'               => 'El correo no puede pasar de 120 caracteres.',
             'nuevo_sexo.in'                 => 'El sexo del paciente nuevo debe ser femenino o masculino.',

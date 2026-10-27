@@ -961,6 +961,75 @@ class AgendaWebTest extends TestCase
         $this->assertNull(Paciente::where('cedula', '27182818')->first());
     }
 
+    // ------------------------------------------------------------------------ Pediatría: el representante en el alta rápida
+
+    /** @return array{0: Specialty} */
+    private function pediatria(Medico $medico): array
+    {
+        $pediatria = Specialty::firstOrCreate(['slug' => 'pediatria'], ['name' => 'Pediatría']);
+        $medico->specialties()->syncWithoutDetaching([$pediatria->id]);
+
+        return [$pediatria];
+    }
+
+    /** Alexander, 2026-10-26: «falta datos de representante» en el alta rápida del niño. */
+    public function test_en_pediatria_el_alta_rapida_ofrece_el_representante_y_en_ginecologia_no(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [$pediatria] = $this->pediatria($medico);
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)->get('/clinica/agenda/nueva')
+            ->assertOk()->assertSee('Teléfono del representante')->assertSee('name="representante_nombre"', false);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/agenda/nueva')
+            ->assertOk()->assertDontSee('Teléfono del representante')->assertDontSee('name="representante_nombre"', false);
+    }
+
+    public function test_en_pediatria_el_alta_rapida_guarda_el_representante_en_la_historia_del_nino(): void
+    {
+        [$user, $medico] = $this->medicoConAcceso();
+        [$pediatria] = $this->pediatria($medico);
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'                     => '09:00',
+                'nuevo_nombres'            => 'Alejo',
+                'nuevo_apellidos'          => 'Duran',
+                'nuevo_fnacimiento'        => '2025-12-24',
+                'representante_nombre'     => 'Ana Duran',
+                'representante_telefono'   => '0414-5550030',
+                'representante_cedula'     => '12345678',
+            ]))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect($this->urlDeLaAgenda($sede));
+
+        $nino = Paciente::where('apellidos', 'Duran')->firstOrFail();
+        $numhistoria = MedicoPaciente::where('medico_id', $medico->id)->where('paciente_id', $nino->id)->value('numhistoria');
+        $representante = DB::table('representante')->where('reg_medico', $medico->reg_medico)->where('numhistoria', $numhistoria)->first();
+
+        $this->assertNotNull($representante, 'el representante queda guardado para la historia recién numerada');
+        $this->assertSame('Ana Duran', $representante->nombre);
+        $this->assertSame('0414-5550030', $representante->telefono);
+        $this->assertSame('12345678', $representante->cedula);
+    }
+
+    public function test_en_pediatria_el_alta_rapida_pide_el_representante_y_su_telefono_no_el_del_nino(): void
+    {
+        [$user, $medico] = $this->medicoConAcceso();
+        [$pediatria] = $this->pediatria($medico);
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, ['hora' => '09:00', 'nuevo_nombres' => 'Sin', 'nuevo_apellidos' => 'Adulto']))
+            ->assertSessionHasErrors(['representante_nombre' => 'Falta el nombre del representante.', 'representante_telefono' => 'Falta el teléfono del representante.'])
+            ->assertSessionDoesntHaveErrors(['nuevo_telefono']);
+
+        $this->assertNull(Paciente::where('apellidos', 'Adulto')->first());
+    }
+
     public function test_la_cedula_repetida_enlaza_la_ficha_y_no_pisa_sus_datos(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();

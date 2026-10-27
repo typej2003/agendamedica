@@ -7,6 +7,7 @@ use App\Actions\Agenda\EditarCita;
 use App\Actions\Catalogos\FijarPrecioDelMotivoDeCita;
 use App\Actions\Pacientes\AsignarHistoria;
 use App\Actions\Pacientes\CrearPaciente;
+use App\Actions\Pacientes\GuardarRepresentante;
 use App\Models\Cola;
 use App\Models\MotivoCita;
 use App\Models\Office;
@@ -16,6 +17,7 @@ use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -94,6 +96,30 @@ class AgendamientoDeCitas
         }
     }
 
+    /**
+     * El representante del alta mínima de pediatría, para la historia recién numerada (`GuardarRepresentante`, la misma regla de la ficha).
+     * Si falla, la cita y el paciente ya están hechos: se deja el rastro en el log y la ficha permite cargarlo.
+     */
+    private function guardarRepresentante(string $regMedico, int $numhistoria, array $valores): void
+    {
+        $datos = [
+            'nombre' => $valores['representante_nombre'] ?? null,
+            'codeparentesco' => $valores['representante_parentesco'] ?? null,
+            'cedula' => $valores['representante_cedula'] ?? null,
+            'telefono' => $valores['representante_telefono'] ?? null,
+        ];
+
+        if (collect($datos)->every(fn ($valor) => trim((string) $valor) === '')) {
+            return;
+        }
+
+        try {
+            app(GuardarRepresentante::class)->ejecutar($regMedico, (string) $numhistoria, $datos);
+        } catch (\Throwable $excepcion) {
+            Log::warning('Alta rápida de la cita: no se pudo guardar el representante', ['reg_medico' => $regMedico, 'numhistoria' => $numhistoria, 'error' => $excepcion->getMessage()]);
+        }
+    }
+
     /** Qué paciente es, para el candado: el elegido, la cédula escrita o su nombre y teléfono. */
     private function huellaDelPaciente(array $valores): string
     {
@@ -169,6 +195,7 @@ class AgendamientoDeCitas
                 // El número es **del consultorio de la cita** (`$regMedico`), que es el tenant del vínculo.
                 $historia = $this->asignarHistoria->ejecutar($contexto['medico'], $regMedico, (int) $paciente->getKey());
                 $objetivo = ['paciente' => $paciente, 'numhistoria' => (int) $historia->numhistoria];
+                $this->guardarRepresentante($regMedico, (int) $historia->numhistoria, $valores);
             } else {
                 $objetivo = ['paciente' => $paciente, 'numhistoria' => null];
             }
