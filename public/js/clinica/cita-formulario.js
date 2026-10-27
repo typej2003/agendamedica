@@ -128,3 +128,25 @@
         }
     });
 })();
+
+/*
+ * Un solo envío por vez (2026-10-27, las citas repetidas de la Dra. Cadenas): con una conexión lenta el segundo clic en «Guardar»
+ * mandaba otro pedido y la cita se creaba dos veces. Al enviar se desactivan los botones del formulario (en el siguiente turno del
+ * navegador, para que el botón pulsado alcance a mandar su `decision`) y vuelven a activarse si la página se restaura con «Atrás».
+ */
+(function () {
+    'use strict';
+
+    document.querySelectorAll('form[method="POST"]').forEach(function (formulario) {
+        formulario.addEventListener('submit', function () {
+            setTimeout(function () {
+                formulario.querySelectorAll('button:not([type="button"])').forEach(function (boton) { boton.disabled = true; });
+            }, 0);
+        });
+    });
+
+    window.addEventListener('pageshow', function (evento) {
+        if (!evento.persisted) return;
+        document.querySelectorAll('form[method="POST"] button:disabled').forEach(function (boton) { boton.disabled = false; });
+    });
+})();

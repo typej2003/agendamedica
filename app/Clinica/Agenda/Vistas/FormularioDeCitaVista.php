@@ -46,6 +46,10 @@ final class FormularioDeCitaVista
         private bool $puedeAdministrarMotivos = false,
         /** El sexo con el que arranca el alta mínima del paso 2, si la especialidad del contexto lo declara (O-01). */
         private ?string $sexoPorDefectoDelNuevoPaciente = null,
+        /** El alta mínima de **pediatría** pide también el representante del niño (Alexander, 2026-10-26). */
+        private bool $ofreceRepresentante = false,
+        /** @var Collection<int,object>|null  el catálogo de parentescos (`codigo`, `nombre`) para el selector del representante */
+        private ?Collection $parentescos = null,
     ) {
     }
 
@@ -68,6 +72,33 @@ final class FormularioDeCitaVista
     public function sexoPorDefectoDelNuevoPaciente(): ?string
     {
         return $this->sexoPorDefectoDelNuevoPaciente;
+    }
+
+    /** ¿El alta mínima del paso 2 pide el representante? Sólo en pediatría: ahí el teléfono es el del adulto y no el del niño. */
+    public function ofreceRepresentante(): bool
+    {
+        return $this->ofreceRepresentante;
+    }
+
+    /**
+     * Las opciones del selector de parentesco, con la elegida marcada (la primera es «Sin dato»: no es obligatorio).
+     *
+     * @return array<int, array{valor:string, texto:string, elegido:bool}>
+     */
+    public function parentescos(): array
+    {
+        $elegido = (string) $this->valor('representante_parentesco', '');
+        $opciones = [['valor' => '', 'texto' => '— Sin dato —', 'elegido' => $elegido === '']];
+
+        foreach ($this->parentescos ?? [] as $parentesco) {
+            $opciones[] = [
+                'valor' => (string) $parentesco->codigo,
+                'texto' => (string) $parentesco->nombre,
+                'elegido' => (string) $parentesco->codigo === $elegido,
+            ];
+        }
+
+        return $opciones;
     }
 
     public function titulo(): string
@@ -283,7 +314,7 @@ final class FormularioDeCitaVista
     /** El alta de un paciente nuevo se muestra abierta si ya se empezó a escribir. */
     public function altaAbierta(): bool
     {
-        return (bool) $this->valor('nuevo_cedula');
+        return (bool) ($this->valor('nuevo_nombres') ?: $this->valor('nuevo_cedula'));
     }
 
     // --------------------------------------------------------------------------------------- Paso 3
