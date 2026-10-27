@@ -221,6 +221,9 @@ class ConsultaController extends Controller
 
         abort_unless($paciente !== null, 404);
 
+        // Las pantallas del paciente que se abren desde acá (vacunas, crecimiento, representante) ofrecen volver a esta consulta.
+        \App\Clinica\Consulta\VolverALaConsulta::recordar($request, (int) $consulta->id, (int) $paciente->id, (int) $consulta->nroconsulta);
+
         // **O-22 (2026-10-17): `?seccion=examenes` ya no es una sección.** La galería de imágenes vive ahora
         // como solapa de *Evaluación física* y los exámenes informados, dentro de *Resultado de exámenes*. Se
         // redirige (302) para no dejar enlaces viejos muertos ni romper el historial del navegador.

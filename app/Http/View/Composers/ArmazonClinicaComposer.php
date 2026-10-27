@@ -2,6 +2,7 @@
 
 namespace App\Http\View\Composers;
 
+use App\Clinica\Consulta\VolverALaConsulta;
 use App\Clinica\ContextoAutomatico;
 use App\Clinica\Vistas\ArmazonVista;
 use Illuminate\Support\Collection;
@@ -29,6 +30,9 @@ class ArmazonClinicaComposer
         if ($contexto !== null && $usuario !== null) {
             $hayAlgoQueElegir = app(ContextoAutomatico::class)->de($usuario) === null;
         }
+
+        // El botón «Volver a la consulta» de las pantallas del paciente abiertas desde una consulta (`VolverALaConsulta`).
+        $vista->with('volverALaConsulta', VolverALaConsulta::para($peticion));
 
         $vista->with('armazon', new ArmazonVista(
             $contexto,
