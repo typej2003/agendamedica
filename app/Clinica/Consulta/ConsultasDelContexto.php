@@ -89,6 +89,9 @@ final class ConsultasDelContexto
             'id' => (int) $paciente->id,
             'nombres' => $paciente->nombres,
             'apellidos' => $paciente->apellidos,
+            // La edad del encabezado de pediatría se cuenta con esto (`ConsultaShellVista::edad()`): sin la fecha el encabezado decía
+            // «sin fecha de nacimiento» aunque el paciente la tuviera (Alexander, 2026-10-26).
+            'fnacimiento' => $paciente->getRawOriginal('fnacimiento'),
             'numhistoria' => (string) (int) $consulta->numhistoria,
         ];
     }

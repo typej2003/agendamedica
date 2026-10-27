@@ -1,0 +1,758 @@
+[
+    {
+        "codi_vacuna": "01",
+        "dosis": 1,
+        "dosis_descri": "Recién Nacido",
+        "meses": 0,
+        "obligatoria": "O",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "02",
+        "dosis": 1,
+        "dosis_descri": "Recién Nacido",
+        "meses": 0,
+        "obligatoria": "O",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "02",
+        "dosis": 2,
+        "dosis_descri": "1era. Dosis",
+        "meses": 2,
+        "obligatoria": "O",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "02",
+        "dosis": 3,
+        "dosis_descri": "2da. Dosis",
+        "meses": 4,
+        "obligatoria": "O",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "03",
+        "dosis": 1,
+        "dosis_descri": "Recién Nacido",
+        "meses": 0,
+        "obligatoria": "O",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "03",
+        "dosis": 2,
+        "dosis_descri": "1era. Dosis",
+        "meses": 2,
+        "obligatoria": "O",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "03",
+        "dosis": 3,
+        "dosis_descri": "2da. Dosis",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "03",
+        "dosis": 4,
+        "dosis_descri": "3era. Dosis",
+        "meses": 6,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "19",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 1,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "04",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 2,
+        "obligatoria": "O",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "04",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": 4,
+        "obligatoria": "O",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "04",
+        "dosis": 3,
+        "dosis_descri": "3era. Dosis",
+        "meses": 6,
+        "obligatoria": "O",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "04",
+        "dosis": 4,
+        "dosis_descri": "REFUERZO",
+        "meses": 24,
+        "obligatoria": "O",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "05",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 2,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "05",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "06",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 2,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "06",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "06",
+        "dosis": 3,
+        "dosis_descri": "3era. Dosis",
+        "meses": 6,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "06",
+        "dosis": 4,
+        "dosis_descri": "REFUERZO",
+        "meses": 24,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "07",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 2,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "07",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "07",
+        "dosis": 3,
+        "dosis_descri": "3era. Dosis",
+        "meses": 6,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "09",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 12,
+        "obligatoria": "O",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "10",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "11",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "11",
+        "dosis": 2,
+        "dosis_descri": "REFUERZO",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "12",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "02",
+        "dosis": 4,
+        "dosis_descri": "3era. Dosis",
+        "meses": 6,
+        "obligatoria": "O",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "22",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 2,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "23",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 2,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "13",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 36,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "14",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 2,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "16",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "17",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 2,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "17",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "17",
+        "dosis": 3,
+        "dosis_descri": "3era. Dosis",
+        "meses": 6,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "17",
+        "dosis": 4,
+        "dosis_descri": "REFUERZO",
+        "meses": 24,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "18",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 2,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "18",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "18",
+        "dosis": 3,
+        "dosis_descri": "3era. Dosis",
+        "meses": 6,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "07",
+        "dosis": 4,
+        "dosis_descri": "REFUERZO",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "14",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "16",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": 6,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "19",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "19",
+        "dosis": 3,
+        "dosis_descri": "3era. Dosis",
+        "meses": 6,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "19",
+        "dosis": 4,
+        "dosis_descri": "REFUERZO",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "21",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 24,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "21",
+        "dosis": 2,
+        "dosis_descri": "REFUERZO",
+        "meses": 120,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "03",
+        "dosis": 5,
+        "dosis_descri": "REFUERZO",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "22",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "22",
+        "dosis": 3,
+        "dosis_descri": "3era. Dosis",
+        "meses": 6,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "22",
+        "dosis": 4,
+        "dosis_descri": "REFUERZO",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "23",
+        "dosis": 3,
+        "dosis_descri": "2da. Dosis",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "23",
+        "dosis": 4,
+        "dosis_descri": "3era. Dosis",
+        "meses": 6,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "23",
+        "dosis": 5,
+        "dosis_descri": "REFUERZO",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "05",
+        "dosis": 3,
+        "dosis_descri": "2da. Dosis",
+        "meses": 6,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "20",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 2,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "20",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "20",
+        "dosis": 3,
+        "dosis_descri": "3era. Dosis",
+        "meses": 6,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "20",
+        "dosis": 4,
+        "dosis_descri": "REFUERZO",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "12",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "24",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "16",
+        "dosis": 3,
+        "dosis_descri": "REFUERZO",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "25",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 0,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "25",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": 1,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "25",
+        "dosis": 3,
+        "dosis_descri": "3era. Dosis",
+        "meses": 2,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "25",
+        "dosis": 4,
+        "dosis_descri": "3era. Dosis",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "25",
+        "dosis": 5,
+        "dosis_descri": "REFUERZO",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "25",
+        "dosis": 6,
+        "dosis_descri": "REFUERZO",
+        "meses": 6,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "09",
+        "dosis": 2,
+        "dosis_descri": "REFUERZO",
+        "meses": 36,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "03",
+        "dosis": 6,
+        "dosis_descri": "REFUERZO",
+        "meses": 60,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "26",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "27",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 2,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "27",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": 4,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "27",
+        "dosis": 3,
+        "dosis_descri": "3era. Dosis",
+        "meses": 6,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "27",
+        "dosis": 4,
+        "dosis_descri": "REFUERZO",
+        "meses": 12,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "27",
+        "dosis": 5,
+        "dosis_descri": "REFUERZO",
+        "meses": 60,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "16",
+        "dosis": 4,
+        "dosis_descri": "REFUERZO",
+        "meses": 24,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "16",
+        "dosis": 5,
+        "dosis_descri": "REFUERZO",
+        "meses": 36,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "16",
+        "dosis": 6,
+        "dosis_descri": "REFUERZO",
+        "meses": 48,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "21",
+        "dosis": 3,
+        "dosis_descri": "REFUERZO",
+        "meses": 132,
+        "obligatoria": "R",
+        "sexo": "A",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "30",
+        "dosis": 1,
+        "dosis_descri": "1era. Dosis",
+        "meses": 6,
+        "obligatoria": "R",
+        "sexo": "F",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "30",
+        "dosis": 2,
+        "dosis_descri": "2da. Dosis",
+        "meses": null,
+        "obligatoria": "R",
+        "sexo": "F",
+        "frecuencia": null
+    },
+    {
+        "codi_vacuna": "30",
+        "dosis": 3,
+        "dosis_descri": "3era. Dosis",
+        "meses": null,
+        "obligatoria": "R",
+        "sexo": "F",
+        "frecuencia": null
+    }
+]

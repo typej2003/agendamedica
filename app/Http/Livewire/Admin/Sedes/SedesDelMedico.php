@@ -19,11 +19,14 @@ use Livewire\Component;
  * Panel · **Sedes del médico** (`/admin/medicos/{medico}/sedes`): el primer nivel de «dónde atiende», para que un
  * administrador ayude al médico a configurarse (sedes → consultorios → horarios y cupos).
  *
- * La sede es **del catálogo de la clínica** (la comparten todos los que atienden ahí), así que acá:
+ * Desde el 2026-10-26 la sede **tiene dueño** (`medical_centers.medico_id`): la que se registra desde acá queda con
+ * dueño = el médico de la ficha y **el nombre es único por médico** (dos médicos pueden tener cada uno su «CEMOC»).
+ * La sede que ya existía en el catálogo se sigue pudiendo **asignar** al médico con su primer consultorio, aunque
+ * sea de otro: eso es lo que hace Root desde el panel.
  *
  *  - **Agregar** es elegir una sede del catálogo (o registrar una nueva con `GuardarSede`) **y su primer
  *    consultorio** (`GuardarConsultorio`): sin consultorio la sede no es «del médico».
- *  - **Editar** cambia la ficha de la sede para todos (se avisa cuántos otros médicos la usan).
+ *  - **Editar** cambia la ficha de la sede (se avisa cuántos otros médicos la usan); **no la cambia de dueño**.
  *  - **Quitar** da de baja **los consultorios del médico** en esa sede (`activo = false`, la regla de
  *    `GuardarConsultorio`: nunca se borran) y no toca la sede, que puede ser de otros.
  */
@@ -109,8 +112,9 @@ class SedesDelMedico extends Component
 
         try {
             $sede = DB::transaction(function () use ($guardarSede, $guardarConsultorio, $tenant) {
+                // La sede nueva queda **a nombre de este médico** (el de la ficha); la existente no cambia de dueño.
                 $sede = $this->modo === 'nueva'
-                    ? $guardarSede->ejecutar($this->datosDeLaSede(true))
+                    ? $guardarSede->ejecutar($this->datosDeLaSede(true), null, (int) $this->medico->id)
                     : MedicalCenter::activos()->findOrFail((int) $this->sede_existente_id);
 
                 $guardarConsultorio->ejecutar([
@@ -154,7 +158,7 @@ class SedesDelMedico extends Component
     {
         $sede = $this->sedeDelMedico((int) $this->sedeId);
 
-        $this->validate($this->reglasDeLaSede($sede->id), $this->mensajes());
+        $this->validate($this->reglasDeLaSede($sede->id, $sede->medico_id !== null ? (int) $sede->medico_id : null), $this->mensajes());
 
         // `GuardarSede` reactiva la sede si no le llega `activo`: se le pasa el que tiene, porque editar la
         // dirección no es reabrir una sede que alguien cerró.
@@ -255,11 +259,17 @@ class SedesDelMedico extends Component
         ];
     }
 
-    /** Las mismas reglas que `/clinica/sedes` (`SedeController::guardar`). */
-    private function reglasDeLaSede(?int $ignorar): array
+    /**
+     * Las mismas reglas que `/clinica/sedes` (`SedeController::guardar`). El nombre es único **por médico**: el de
+     * la sede si ya tiene dueño (editar una asignada no cambia su espacio de nombres) y, si no, el de la ficha.
+     */
+    private function reglasDeLaSede(?int $ignorar, ?int $duenio = null): array
     {
         return [
-            'name'    => ['required', 'string', 'max:200', Rule::unique('medical_centers', 'name')->ignore($ignorar)],
+            'name'    => [
+                'required', 'string', 'max:200',
+                Rule::unique('medical_centers', 'name')->where('medico_id', $duenio ?? (int) $this->medico->id)->ignore($ignorar),
+            ],
             'address' => ['required', 'string', 'max:1000'],
             'phone'   => ['nullable', 'string', 'max:50'],
             'city_id' => ['required', 'integer', 'exists:cities,id'],
@@ -281,7 +291,7 @@ class SedesDelMedico extends Component
     {
         return [
             'name.required'              => 'Pon el nombre de la sede.',
-            'name.unique'                => 'Ya hay una sede con ese nombre: elígela en «Sede existente».',
+            'name.unique'                => 'Ese médico ya tiene una sede con ese nombre: elígela en «Sede existente».',
             'address.required'           => 'La dirección es obligatoria: es lo que identifica al lugar.',
             'city_id.required'           => 'Elige la ciudad.',
             'sede_existente_id.required' => 'Elige la sede.',

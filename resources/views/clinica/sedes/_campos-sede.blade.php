@@ -5,7 +5,8 @@
        sede rápida nace vacío y sus errores los escribe `sedes.js` en los `[data-error-de]` (llega por `fetch`, no hay
        `old()`), así que su clave de error no es la del servidor: un error del otro panel no se le pinta. --}}
 <div class="row g-3">
-    <x-ui.campo etiqueta="Nombre" for="{{ $prefijo }}name" :error="($conValores ? '' : $prefijo) . 'name'" requerido class="col-12">
+    <x-ui.campo etiqueta="Nombre" for="{{ $prefijo }}name" :error="($conValores ? '' : $prefijo) . 'name'" requerido class="col-12"
+                ayuda="Puede ser una clínica, un edificio o tu propio consultorio: escribe el nombre con el que lo conoces, por ejemplo «Consultorio de Cumanacoa».">
         <input type="text" name="name" id="{{ $prefijo }}name" class="form-control" maxlength="200" autofocus
                placeholder="Clínica Metropolitana" value="{{ $conValores ? $vm->valorSede('name') : '' }}">
         @unless ($conValores)<span class="campo-error" data-error-de="name" hidden></span>@endunless

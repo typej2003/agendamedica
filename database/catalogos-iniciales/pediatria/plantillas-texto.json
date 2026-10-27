@@ -1,13 +1,50 @@
 [
  {
-  "codigo_origen": "0001",
-  "titulo": "RECOMENDACIONES DE ALIMENTACION PARA PRE-ESCOLARES",
-  "descripcion": "Aumentar ingesta de agua\r\nDieta baja en sal \r\nDIETA COMPLETA : DESAYUNO , ALMUERZO Y CENA QUE INCLUYA CARNES( RES, POLLO, PESCADO, CERDO) , HUYEVO, QUESO ,VERDURAS, FRUTAS, SOPAS, CEREALES, ARROZ, PASTA, VEGETALES HORTALIZAS. \r\nEvitar consumo :\r\n       Chucherías saladas, refrescos, chocolates\r\n       Embutidos (jamón, mortadela etc.) y enlatados\r\n       Quesos muy salados, colorantes\r\n       Salsas envasadas: mayonesas, salsa de tomate.soya, inglesa\r\nConsumo de  frutas citricas 2 veces por semana : guayaba, mora, parchita, fresa, naranja. \r\nAumentar la ingesta de frutas no citricas y vegetales: melón, patilla mango, pera, manzana, lechoza, cambur, , papas, zanahoria, ciruelas, ciruelas pasas, uvas,plátanos, lechuga.\r\nCARNES ROJAS TOMATES Y FRUTAS CITRICAS 1-2 VECES POR SEMANA \r\nDar 2- 3  raciones de lácteos al día. Una ración es igual a 1 vaso de leche, 1 yogurt, 1 rebana de queso.\r\nFORMULA INFANTIL PARA NIÑOS MAYORES DE 2 AÑOS\r\nNo dar calcio ni  vitamina C sin prescripcion médica"
+  "codigo_origen": "0043",
+  "titulo": "TEORIA DE DESARROLO PSICOMOTOR",
+  "descripcion": "El desarrollo psicomotor de los niños - Presentation Transcript\r\n\r\n   1. El desarrollo psicomotor de los niños Realizado por: Miriam Urrea Herranz\r\n   2. Definición del desarrollo psicomotor en los niños • Se conoce como desarrollo psicomotor a la madurez psicológica y muscular que tiene una persona, en este caso un niño. Los aspectos psicológicos y musculares son las variables que constituyen la conducta o la actitud. Al contrario del intelectual que está dado por la maduración de la memoria, el razonamiento y el proceso global del pensamiento.\r\n   3. Crecimiento psicomotor • El desarrollo psicomotor es diferente en cada niño, sin embargo, es claro que él se presenta en el mismo orden en cada niño. • Los factores hereditarios, ambientales y físicos también influyen en el proceso de crecimiento psicomotor.\r\n   4. El proceso de crecimiento psicomotor de los niños hasta los 5 años: 2 años 3 años Nacimiento 18 meses 4 años 6 semanas 3 meses 1 año 5 años 6 meses 9 meses\r\n   5. Nacimiento prácticamente el niño duerme todo el día. Responde con llanto a sus necesidades básicas de alimentación, dolor y cambio de temperatura.\r\n   6. 6 semanas Comienza a sonreír cuando le hablan. Mira los objetos situados en su campo visual. No sostiene la cabeza y puede descansar extendido sobre su abdomen.\r\n   7. 3 meses sonríe espontáneamente, sus ojos siguen los objetos en movimiento, sostiene la cabeza al estar sentado, agarra los objetos colocados en su mano y vocaliza.\r\n   8. 6 meses se sostiene en posición erecta, se sienta con apoyo y logra girar sobre su propio eje. Puede transferir los objetos de una mano a la otra. Balbucea a los juguetes.\r\n   9. 9 meses ya se sienta completamente solo, gatea y logra ponerse en posición erecta y puede dar los primeros pasos. Dice “papá”, “mamá” “tete”, se despide con las manos, y sujeta el biberón.\r\n  10. 1 año ayuda a vestirse, dice varias palabras y camina con ayuda de los familiares.\r\n  11. 18 meses Camina sin ayuda, sube escaleras con ayuda, tiene mejor control de sus dedos, come parcialmente solo y dice unas 10 palabras.\r\n  12. 2 años Corre, sube y baja escaleras sin ayuda, puede pasar las páginas de un libro de una en una, se viste casi sin ayuda (las prendas sencillas), dice frases cortas y puede comunicar sus necesidades de evacuación.\r\n  13. 3 años Sabe vestirse sin ayuda (a excepción de anudar los cordones y abotonarse), usa palabras en plural, sube en triciclo, puede comer sin ayuda y hace preguntas constantemente.\r\n  14. 4 años lanza la pelota a lo lejos, puede saltar sobre un pie, puede copiar a imagen de una cruz, conoce al menos un color, puede resolver sus necesidades de evacuación.\r\n  15. 5 años atrapa con las manos la pelota que le lanzan, puede copiar un triángulo, conoce al menos cuatro colores y puede desvestirse y vestirse sin ayuda.\r\n  16. FIN",
+  "tipo": "AN"
  },
  {
-  "codigo_origen": "0002",
-  "titulo": "VOMITO",
-  "descripcion": "Paciente quien presenta vomito desde hacen 10 días",
+  "codigo_origen": "0045",
+  "titulo": "CONSTANCIA MEDICA CON PERMISO LABORAL",
+  "descripcion": "SE HACE CONSTAR QUE LA SEÑORA__________________________  CI:\r\n\r\nACUDIÒ A ESTE CENTRO ASISTENCIAL CON SU HIJO A LA CONSULTA\r\n\r\n DE PEDIATRIA__________________ \r\n\r\nDE_______  AÑOS,  ACTUALMENTE PRESENTA________________\r\n\r\nAMERITA CUIDADOS MATERNOS ESTRICTOS ,POR LO QUE ES NECESARIO PERMISO\r\n\r\n LABORAL.PARA SU PRONTA RECUEPERACION.",
+  "tipo": "IM"
+ },
+ {
+  "codigo_origen": "0047",
+  "titulo": "COLICO",
+  "descripcion": "Paciente quien dolor coloco",
   "tipo": "EA"
+ },
+ {
+  "codigo_origen": "0042",
+  "titulo": "DESARROLLO PSICOMOTOR",
+  "descripcion": "ANTECEDENTES MATERNOS:\r\n\r\nANTECEDENTES PATERNOS:\r\n\r\nANTECEDENTES NEONATALES:     PESO:                    TALLA\r\n\r\n                                                       CIRCUNFERENCIA CEFALICA:            APGAR:\r\n\r\nALIMENTACIÒN: LACTANCIA MATERNA:\r\n                          LACTANCIA MATERNA COMPLEMENTARIA\r\n                          ABLACTACIÒN PRECOZ:  JUGOS:                                     \r\n                                                                  SOPAS:\r\n                                                                  CEREALES:\r\nDESARROLLO PSICOMOTOR: SOSTEN CEFALICO:      \r\n                                               SONRIE\r\n                                               ROLADO INCOMPLETO\r\n                                               ROLADO COMPLETO\r\n                                               SE SENTO \r\n                                               GATEO\r\n                                               SE PARO\r\n                                               PRIMERAS PALABRAS\r\n                                               PRIMEROS PASOS \r\n                                               CAMINO\r\n                                               CONTROL DE ESFIENTERES",
+  "tipo": "AN"
+ },
+ {
+  "codigo_origen": "0044",
+  "titulo": "APTITUD FISICA",
+  "descripcion": "EN EL MOMENTO ACTUAL CERTIFICO QUE EL PACIENTE ---------------------------------------------------\r\n\r\nDE---------------------------  AÑOS, AL EXAMEN CLINICO PEDIATRICO NO PRESENTA IMPEDIMENTO \r\n\r\nALGUNO PARA EFECTUAR ACTIVIDAD FISICA Y DEPORTIVA RECREATIVA, ACORDE CON SU\r\n\r\nEDAD Y SEXO. \r\n\r\n                                                                          -------------------- SANO",
+  "tipo": "IM"
+ },
+ {
+  "codigo_origen": "0046",
+  "titulo": "CONSTANCIA MEDICA",
+  "descripcion": "SE HACE CONSTAR QUE LA SEÑORA____________________ CI:\r\n\r\nACUDIÒ CON SU HIJO__________________________________________________________\r\n\r\n DE EMERGENCIA A ESTE CENTRO ASITENCIAL, PARA VALORACION PEDATRICA EN EL DIA\r\n\r\n DE HOY________________________________",
+  "tipo": "IM"
+ },
+ {
+  "codigo_origen": "0048",
+  "titulo": "PRUEBA",
+  "descripcion": "Impresión Diagnostica:\r\n\r\n\r\nAmerita:\r\nReposo domiciliario:  días.\r\nCuidados Maternos:  días.\r\nPermiso de ley para lactancia materna: \r\nMadre: __________________  CI.: _____________\r\nPadre: ___________________ CI.: _____________\r\nObservaciones: _____________________________\r\n__________________________________________",
+  "tipo": "IM"
+ },
+ {
+  "codigo_origen": "0049",
+  "titulo": "CONSTANCIA DE NIÑOS SANOS",
+  "descripcion": "Se hace constar, que el paciente en cuestion:\r\n\r\n          no presenta: enfermedades Infecto-contagiosas, agudas ó cronicas que le impidad efectuar las labores escolares propias de su edad.",
+  "tipo": "IM"
  }
 ]

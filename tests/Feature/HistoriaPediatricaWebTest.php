@@ -112,6 +112,57 @@ class HistoriaPediatricaWebTest extends TestCase
             ->assertSee('data-imprimir', false);
     }
 
+    /** Alexander, 2026-10-26: el encabezado de la consulta decía «sin fecha de nacimiento» aunque el niño la tuviera. */
+    public function test_el_encabezado_de_la_consulta_pediatrica_muestra_la_edad_en_anios_meses_y_dias(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        [, $consulta] = $this->nino($medico);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.consulta', $consulta->id))
+            ->assertOk()
+            ->assertSee('2 años')
+            ->assertDontSee('sin fecha de nacimiento');
+    }
+
+    /** Alexander, 2026-10-26: de Inmunizaciones, el crecimiento o la ficha «no hay cómo retornar a la consulta». */
+    public function test_las_pantallas_del_paciente_ofrecen_volver_a_la_consulta_abierta(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        [$id, $consulta] = $this->nino($medico);
+        [$otro] = $this->nino($medico, 9402);
+        $pantallas = ['clinica.pacientes.vacunas', 'clinica.pacientes.crecimiento', 'clinica.pacientes.ver'];
+
+        // Sin consulta abierta no hay botón.
+        foreach ($pantallas as $ruta) {
+            $this->conContexto($medico, $pediatria)->actingAs($user)->get(route($ruta, $id))->assertOk()->assertDontSee('Volver a la consulta');
+        }
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.consulta', $consulta->id))->assertOk();
+
+        foreach ($pantallas as $ruta) {
+            $this->conContexto($medico, $pediatria)->actingAs($user)->get(route($ruta, $id))
+                ->assertOk()
+                ->assertSee('Volver a la consulta N.º 1')
+                ->assertSee(route('clinica.consulta', $consulta->id), false);
+        }
+
+        // La pantalla de otro paciente no ofrece volver a la consulta de éste.
+        $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.pacientes.vacunas', $otro))->assertOk()->assertDontSee('Volver a la consulta');
+    }
+
+    public function test_inmunizaciones_desde_la_consulta_lleva_a_las_vacunas_con_el_regreso(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        [$id, $consulta] = $this->nino($medico);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'inmunizaciones']))
+            ->assertRedirect(route('clinica.pacientes.vacunas', $id));
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.pacientes.vacunas', $id))
+            ->assertOk()->assertSee('Volver a la consulta N.º 1');
+    }
+
     public function test_un_nino_sin_nada_cargado_dice_que_no_hay_en_cada_bloque(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();

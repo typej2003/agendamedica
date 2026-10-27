@@ -22,6 +22,9 @@ namespace App\Clinica\Consulta;
  *     - `DAR <mg> mg <cada> veces al día por <días> días` (sin presentación)
  *  5. si el medicamento **no** es por kilo, deja el texto del vademécum (`uso`) tal cual (`:252-253`).
  *
+ * **`dosis` son los mg/kg de todo el día** y `cada` las tomas del día: la posología de cada toma es `dosis × peso ÷ cada`. Es la fórmula del escritorio y de ahí
+ * sale el rótulo «Dosis (mg/kg al día)» del vademécum (2026-10-27: antes decía «por toma», que habría exigido multiplicar por `cada`).
+ *
  * ⚠️ **Una rareza del escritorio que la web corrige**: el `hot` del fuente es `integer`, así que **trunca** las horas
  * (`24 / 5` = 4.8 se imprime «CADA 4 HORAS»). Acá se imprime el **intervalo real** con un decimal (4.8), que es lo que
  * la fórmula significa: `vademecum.cada` son las **veces al día** (el propio fuente escribe «`cada` veces al día» en la

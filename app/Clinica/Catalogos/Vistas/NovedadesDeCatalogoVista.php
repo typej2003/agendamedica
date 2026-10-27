@@ -17,6 +17,7 @@ final class NovedadesDeCatalogoVista
         private string $etiqueta,
         private Collection $novedades,
         private string $urlCargar,
+        private bool $femenino = false,
     ) {
     }
 
@@ -35,7 +36,9 @@ final class NovedadesDeCatalogoVista
         $total = $this->novedades->count();
         $nombres = $this->novedades->take(3)->map(fn ($f) => '«' . trim((string) $f->{$this->etiqueta}) . '»')->implode(', ');
 
-        return ($total === 1 ? 'Hay 1 ' . $this->singular . ' nuevo' : 'Hay ' . $total . ' ' . mb_strtolower($this->titulo) . ' nuevos')
+        $nuevo = $this->femenino ? 'nueva' : 'nuevo';
+
+        return ($total === 1 ? 'Hay 1 ' . $this->singular . ' ' . $nuevo : 'Hay ' . $total . ' ' . mb_strtolower($this->titulo) . ' ' . $nuevo . 's')
             . ' en el catálogo inicial que todavía no tienes: ' . $nombres . ($total > 3 ? ' y ' . ($total - 3) . ' más' : '')
             . '. Lo que ya tienes no se toca.';
     }

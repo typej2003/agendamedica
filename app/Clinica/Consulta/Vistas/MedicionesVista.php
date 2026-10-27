@@ -29,6 +29,21 @@ final class MedicionesVista
     ];
 
     /**
+     * La máscara de cada campo (`mascara-numero.js`, la de la evaluación física): `[tipo, dígitos enteros, dígitos decimales]`. Sin ella el campo
+     * aceptaba cualquier texto —«170/90» en la PA diastólica, que va sola— y el error aparecía recién al guardar (Alexander, 2026-10-26).
+     * El peso admite tres decimales (un recién nacido pesa 3,250 kg); las medidas en centímetros, uno; las presiones y el pulso son enteros.
+     */
+    private const MASCARAS = [
+        'peso' => ['decimal', 3, 3],
+        'talla' => ['decimal', 3, 1],
+        'c_cefalica' => ['decimal', 3, 1],
+        'c_brazo' => ['decimal', 3, 1],
+        'pulso' => ['entero', 3, 0],
+        'p_a_sistolica' => ['entero', 3, 0],
+        'p_a_diastolica' => ['entero', 3, 0],
+    ];
+
+    /**
      * @param  array<string,mixed>  $old  el `old()` del formulario (`[]` en la primera carga)
      */
     public function __construct(
@@ -103,6 +118,9 @@ final class MedicionesVista
                 'valor' => $valor,
                 'posicion' => $posicion,
                 'fuera' => $fuera,
+                'mascara' => self::MASCARAS[$columna][0],
+                'enteros' => self::MASCARAS[$columna][1],
+                'decimales' => self::MASCARAS[$columna][2],
             ];
         }
 

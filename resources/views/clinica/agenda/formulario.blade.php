@@ -116,13 +116,12 @@
                         <strong>{{ $pendiente['paciente'] }}</strong> ya tiene cita el {{ $pendiente['fecha'] }}
                         @if ($pendiente['hora']) a las {{ $pendiente['hora'] }} @endif
                         @if ($pendiente['sede']) en {{ $pendiente['sede'] }}@endif.
-                        Normalmente un paciente tiene <strong>una sola</strong> cita pendiente por consultorio (los
+                        Un paciente tiene <strong>una sola</strong> cita pendiente por consultorio (los
                         tratamientos —masajistas, terapias— son la excepción: ahí se agendan varias).
-                        ¿Qué quieres hacer?
+                        ¿Quieres moverla a esta fecha?
                     </p>
                     <div class="d-flex flex-wrap gap-2">
                         <button class="btn btn-primary" name="decision" value="mover">Mover esa cita a la nueva fecha</button>
-                        <button class="btn btn-outline-primary" name="decision" value="otra">Agendar otra de todos modos</button>
                         <button class="btn btn-outline-secondary" name="decision" value="cancelar">Cancelar</button>
                     </div>
 
@@ -179,7 +178,7 @@
 
                         <div class="row g-3 mt-0">
                             <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_cedula">Cédula *</label>
+                                <label class="form-label" for="nuevo_cedula">Cédula</label>
                                 <input type="text" name="nuevo_cedula" id="nuevo_cedula" class="form-control" value="{{ $vm->valor('nuevo_cedula') }}">
                                 @error('nuevo_cedula') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
@@ -194,8 +193,9 @@
                                 @error('nuevo_apellidos') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_telefono">Teléfono</label>
+                                <label class="form-label" for="nuevo_telefono">Teléfono{{ $vm->ofreceRepresentante() ? "" : " *" }}</label>
                                 <input type="text" name="nuevo_telefono" id="nuevo_telefono" class="form-control" value="{{ $vm->valor('nuevo_telefono') }}">
+                                @error('nuevo_telefono') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-sm-6">
                                 <label class="form-label" for="nuevo_email">Correo</label>
@@ -211,7 +211,7 @@
                                 </select>
                             </div>
                             <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_fnacimiento">Fecha de nacimiento *</label>
+                                <label class="form-label" for="nuevo_fnacimiento">Fecha de nacimiento</label>
                                 <input type="date" name="nuevo_fnacimiento" id="nuevo_fnacimiento" class="form-control" max="{{ \App\Clinica\FechaDelConsultorio::hoyComoTexto() }}" value="{{ $vm->valor('nuevo_fnacimiento') }}">
                                 @error('nuevo_fnacimiento') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
@@ -231,6 +231,36 @@
                                 <input type="text" name="nuevo_direccion" id="nuevo_direccion" class="form-control" maxlength="200" value="{{ $vm->valor('nuevo_direccion') }}">
                             </div>
                         </div>
+
+                        @if ($vm->ofreceRepresentante())
+                            {{-- Pediatría (Alexander, 2026-10-26): el niño llega con su adulto; el teléfono que importa es el del representante. --}}
+                            <h3 class="h6 mt-3 mb-2"><i class="bi bi-person-hearts" aria-hidden="true"></i> Representante</h3>
+                            <div class="row g-3 mt-0">
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="representante_nombre">Nombre y apellido *</label>
+                                    <input type="text" name="representante_nombre" id="representante_nombre" class="form-control" maxlength="40" autocomplete="off" value="{{ $vm->valor('representante_nombre') }}">
+                                    @error('representante_nombre') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="representante_telefono">Teléfono del representante *</label>
+                                    <input type="text" name="representante_telefono" id="representante_telefono" class="form-control" maxlength="20" autocomplete="off" value="{{ $vm->valor('representante_telefono') }}">
+                                    @error('representante_telefono') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="representante_parentesco">Parentesco</label>
+                                    <select name="representante_parentesco" id="representante_parentesco" class="form-select">
+                                        @foreach ($vm->parentescos() as $opcion)
+                                            <option value="{{ $opcion['valor'] }}" {{ $opcion['elegido'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="representante_cedula">Cédula del representante</label>
+                                    <input type="text" name="representante_cedula" id="representante_cedula" class="form-control" inputmode="numeric" maxlength="10" autocomplete="off" value="{{ $vm->valor('representante_cedula') }}">
+                                    @error('representante_cedula') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        @endif
 
                         <p class="form-text mb-0 mt-2">
                             Queda <strong>sin número de historia</strong>: lo asigna el sistema cuando se complete la historia.

@@ -4,11 +4,12 @@
   "tratamiento": "CATARATA",
   "lineas": [
    {
-    "codemedicina": "0171",
     "descripcion": "CIPROFLOXACINA/tab 500 mg",
     "indicaciones": "una tableta cada 12 horas por 7 dias",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "CIPROFLOXACINA",
+    "presentacion": "tab 500 mg"
    }
   ]
  },
@@ -17,11 +18,12 @@
   "tratamiento": "LOTESOFT (GOTAS)",
   "lineas": [
    {
-    "codemedicina": "0089",
     "descripcion": "SOPHIPREN/COLIRIO",
     "indicaciones": "AGITAR ANTES DE APLICAR UNA GOTA CADA 2 HORAS POR 5 DIAS LUEGO CADA 6 HORAS POR 5 DIAS, DESPUES CADA 8 HORAS POR 5 DIAS SEGUIDO CADA 12 HORAS Y TERMINA CON UNA GOTA DIARIA HASTA QUE TERMINE EL FRASCO",
     "cantidad": "1",
-    "orden": "0"
+    "orden": "0",
+    "nombrecomercial": "SOPHIPREN",
+    "presentacion": "COLIRIO"
    }
   ]
  },

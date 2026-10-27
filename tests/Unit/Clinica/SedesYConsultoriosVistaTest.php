@@ -10,8 +10,11 @@ use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 /**
- * **Sedes y consultorios** (2026-10-20) sin base de datos: qué sedes van a la vista y cuáles plegadas, el orden de los
- * bloques, la sede que el consultorio nuevo trae elegida y el panel que se abre al cargar.
+ * **Sedes y consultorios** (2026-10-20) sin base de datos: qué sedes van a la vista, el orden de los bloques, la sede
+ * que el consultorio nuevo trae elegida y el panel que se abre al cargar.
+ *
+ * Desde el 2026-10-26 las sedes que recibe el ViewModel **ya son las del médico** (las filtra `SedesDeLaClinica`): acá
+ * no hay catálogo de otros ni «otras sedes» que plegar, y la tarjeta dice si la puede administrar o sólo ver.
  *
  * ⚠️ Extiende `Tests\TestCase` (y no el de PHPUnit) porque el ViewModel lee `old()` y arma rutas: necesita la app
  * arrancada aunque no toque ninguna tabla (trampa 68).
@@ -62,33 +65,46 @@ class SedesYConsultoriosVistaTest extends TestCase
             $extra['en'] ?? null,
             $extra['creada'] ?? null,
             count(array_filter($sedes, fn ($sede) => $sede->activo)),
+            // Por defecto, todas administrables: las que llegan son las del médico.
+            $extra['administrables'] ?? array_map(fn (MedicalCenter $sede) => $sede->id, $sedes),
         );
     }
 
-    public function test_las_sedes_del_medico_van_a_la_vista_y_las_demas_plegadas(): void
+    public function test_las_sedes_del_medico_son_las_tarjetas_y_cada_una_lista_sus_consultorios(): void
     {
         $vm = $this->vista(
             [$this->sede(1, 'Alfa'), $this->sede(2, 'Beta'), $this->sede(3, 'Gamma')],
             [$this->consultorio(10, 2, 'B-1')],
         );
 
-        $this->assertSame(['Beta'], array_column($vm->tarjetas(), 'nombre'));
-        $this->assertSame(['B-1'], array_column($vm->tarjetas()[0]['consultorios'], 'nombre'));
-        $this->assertSame(['Alfa', 'Gamma'], array_column($vm->otrasSedes(), 'nombre'));
-        $this->assertSame('Otras sedes de la clínica (2)', $vm->tituloOtrasSedes());
+        $this->assertSame(['Alfa', 'Beta', 'Gamma'], array_column($vm->tarjetas(), 'nombre'));
+        $this->assertSame([], $vm->tarjetas()[0]['consultorios']);
+        $this->assertSame(['B-1'], array_column($vm->tarjetas()[1]['consultorios'], 'nombre'));
+        $this->assertTrue($vm->tarjetas()[0]['administrable']);
     }
 
-    public function test_sin_consultorios_o_sin_contexto_se_ven_todas_las_sedes(): void
+    public function test_sin_contexto_no_hay_sedes_y_no_se_ofrece_crear_nada(): void
     {
-        $sedes = [$this->sede(1, 'Alfa'), $this->sede(2, 'Beta')];
+        // El controlador no le pasa sedes sin contexto: la pantalla queda en el aviso.
+        $sinContexto = $this->vista([], null);
 
-        $this->assertCount(2, $this->vista($sedes, [])->tarjetas());
-        $this->assertSame([], $this->vista($sedes, [])->otrasSedes());
-
-        $sinContexto = $this->vista($sedes, null);
-        $this->assertCount(2, $sinContexto->tarjetas());
+        $this->assertSame([], $sinContexto->tarjetas());
+        $this->assertTrue($sinContexto->estaVacio());
         $this->assertFalse($sinContexto->puedeCargarConsultorios());
-        $this->assertFalse($sinContexto->tarjetas()[0]['puedeAgregar']);
+        $this->assertFalse($sinContexto->puedeCrearSede());
+        $this->assertNotNull($sinContexto->avisoSinContexto());
+    }
+
+    public function test_la_sede_que_solo_se_ve_por_consultorio_no_se_administra(): void
+    {
+        $vm = $this->vista(
+            [$this->sede(1, 'Suya'), $this->sede(2, 'Prestada')],
+            [],
+            ['administrables' => [1]],
+        );
+
+        $this->assertTrue($vm->tarjetas()[0]['administrable']);
+        $this->assertFalse($vm->tarjetas()[1]['administrable']);
     }
 
     public function test_la_sede_recien_creada_se_ve_y_dispara_la_pregunta(): void

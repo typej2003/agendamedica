@@ -13,6 +13,8 @@
         </x-slot>
     </x-ui.page-head>
 
+    @include('clinica.catalogos._novedades-iniciales')
+
     <x-ui.barra-herramientas>
         <x-ui.buscador agregar="dialogo-catalogo" campo="dieta-titulo" :accion="$vm->urlBase()" :valor="$vm->buscar()" :limpiar="$vm->urlLimpiar()"
                        placeholder="Título, texto o código" etiqueta="Buscar dieta" />

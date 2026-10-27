@@ -346,6 +346,10 @@ class CatalogosIniciales extends Component
                 return (string) DB::table('tipos_examenes')->whereNull('reg_medico')->where('codetipo', $fila->codetipo)->value('tipo');
             case 'plantillas-texto':
                 return TiposDePlantillaDeTexto::nombre($fila->tipo) . ' · ' . Str::limit(trim((string) preg_replace('/\s+/u', ' ', (string) $fila->descripcion)), 70);
+            case 'antecedentes':
+                return (string) ($def['opciones']['codtipo'][trim((string) $fila->codtipo)] ?? 'Sin tipo');
+            case 'dietas':
+                return Str::limit(trim((string) preg_replace('/\s+/u', ' ', (string) $fila->descripcion)), 70);
             case 'motivos-cita':
                 return $fila->precio === null ? 'Sin precio' : number_format((float) $fila->precio, 2, ',', '.');
             case 'tratamientos':
@@ -354,7 +358,7 @@ class CatalogosIniciales extends Component
                 return $n . ($n === 1 ? ' medicamento' : ' medicamentos');
             case 'medicamentos':
                 $porKilo = strtoupper(trim((string) $fila->dosificacion)) === DosisPediatrica::POR_KILO
-                    ? 'Por kilo' . ($fila->dosis !== null ? ': ' . rtrim(rtrim(number_format((float) $fila->dosis, 3, ',', ''), '0'), ',') . ' mg/kg' : ' (sin dosis)')
+                    ? 'Por kilo' . ($fila->dosis !== null ? ': ' . rtrim(rtrim(number_format((float) $fila->dosis, 3, ',', ''), '0'), ',') . ' mg/kg al día' : ' (sin dosis)')
                     : '';
 
                 return trim(implode(' · ', array_filter([trim((string) $fila->presentacion), trim((string) $fila->nombregenerico), $porKilo])));
@@ -363,7 +367,7 @@ class CatalogosIniciales extends Component
         return '';
     }
 
-    /** @return array<string,array<string,string>> las opciones de los campos `ref` y `tipo` */
+    /** @return array<string,array<string,string>> las opciones de los campos `ref`, `tipo` y `opcion` */
     private function opciones(array $def): array
     {
         $opciones = [];
@@ -376,6 +380,9 @@ class CatalogosIniciales extends Component
             }
             if ($campo[1] === 'tipo') {
                 $opciones[$columna] = TiposDePlantillaDeTexto::nombres();
+            }
+            if ($campo[1] === 'opcion') {
+                $opciones[$columna] = $def['opciones'][$columna] ?? [];
             }
         }
 

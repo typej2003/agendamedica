@@ -17,7 +17,7 @@
         @if ($tipo === 'area')
             <textarea id="ini-{{ $columna }}" rows="{{ $max > 5000 ? 8 : 3 }}" class="form-control" wire:model="f.{{ $columna }}"
                       @if ($ayuda) aria-describedby="ini-{{ $columna }}-ayuda" @endif></textarea>
-        @elseif ($tipo === 'ref' || $tipo === 'tipo')
+        @elseif (in_array($tipo, ['ref', 'tipo', 'opcion'], true))
             <select id="ini-{{ $columna }}" class="form-select" wire:model="f.{{ $columna }}">
                 <option value="">Elige…</option>
                 @foreach ($opciones[$columna] ?? [] as $valor => $texto)

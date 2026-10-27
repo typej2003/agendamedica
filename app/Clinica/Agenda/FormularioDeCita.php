@@ -47,6 +47,8 @@ class FormularioDeCita
             ? $this->armador->jornadaPara($regMedico, $sedes, $fecha, $sede->medical_center_id, $horaEfectiva)
             : null;
 
+        $ofreceRepresentante = \App\Clinica\Consulta\AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null)->esPediatria();
+
         return new FormularioDeCitaVista(
             citaId: $datos['cita']?->id,
             accion: $datos['accion'],
@@ -69,6 +71,9 @@ class FormularioDeCita
             puedeAdministrarMotivos: (bool) ($datos['puedeAdministrarMotivos'] ?? false),
             // El alta mínima del paso 2 arranca con el sexo de la especialidad, como el alta de la ficha (O-01).
             sexoPorDefectoDelNuevoPaciente: FormularioDePacienteVista::sexoPorDefectoDe($contexto['specialty'] ?? null),
+            // En pediatría el alta mínima pide también el representante (nombre, teléfono, parentesco y cédula).
+            ofreceRepresentante: $ofreceRepresentante,
+            parentescos: $ofreceRepresentante ? app(\App\Clinica\Pacientes\CatalogoDeParentescos::class)->todos() : null,
         );
     }
 }

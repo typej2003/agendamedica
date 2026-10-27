@@ -125,7 +125,7 @@ final class GuardarFilaDeCatalogoInicial
 
         if ($texto === '') {
             if ($requerido) {
-                throw new InvalidArgumentException($tipo === 'ref' || $tipo === 'tipo' ? 'Elige ' . mb_strtolower($rotulo) . '.' : 'Escribe ' . mb_strtolower($rotulo) . '.');
+                throw new InvalidArgumentException(in_array($tipo, ['ref', 'tipo', 'opcion'], true) ? 'Elige ' . mb_strtolower($rotulo) . '.' : 'Escribe ' . mb_strtolower($rotulo) . '.');
             }
 
             return null;
@@ -156,6 +156,13 @@ final class GuardarFilaDeCatalogoInicial
                 $destino = CatalogosIniciales::de($def['refs'][$columna]);
                 if (! DB::table($destino['tabla'])->whereNull('reg_medico')->where($destino['codigo'], $texto)->exists()) {
                     throw new InvalidArgumentException($rotulo . ': esa opción no está en el catálogo inicial.');
+                }
+
+                return $texto;
+
+            case 'opcion':
+                if (! array_key_exists($texto, $def['opciones'][$columna] ?? [])) {
+                    throw new InvalidArgumentException('Elige ' . mb_strtolower($rotulo) . '.');
                 }
 
                 return $texto;

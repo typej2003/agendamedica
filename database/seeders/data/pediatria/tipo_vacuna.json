@@ -1,0 +1,17 @@
+[
+    {
+        "tipo_vacu": "001",
+        "vacuna": "ANTIPOLIOMIELITIS (IPV)",
+        "descripcion": null
+    },
+    {
+        "tipo_vacu": "002",
+        "vacuna": "MENINGOCOCO  A, C, Y, W-135",
+        "descripcion": null
+    },
+    {
+        "tipo_vacu": "003",
+        "vacuna": "ANTI-INFLUENZA",
+        "descripcion": "ADULTOS Y NIÑOS"
+    }
+]

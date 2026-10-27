@@ -316,6 +316,12 @@ consulta.
   llegaba ahí sin contexto, no tenía «+ Consultorio» y el menú lateral quedaba sólo en «Inicio». Tests:
   `Feature/ConsultorioSinContextoWebTest`; verificador `../.agent-tools/verificar-consultorio-sin-contexto-web.js` con
   `../.agent-tools/consultorio-sin-contexto-preparar.php`. Trampa 161.
+- **Sedes por médico (2026-10-26, Alexander)**: `medical_centers.medico_id` (nullable, sin FK) le da dueño a la sede;
+  «las suyas» son la **unión** de las propias, las **asignadas** en `medico_medical_center` y las que tienen un
+  **consultorio** suyo (`SedesDeLaClinica`). Pantalla, contador y desplegable muestran sólo ésas; editar/activar es del
+  dueño o de una asignada (lo demás 404) y el nombre es **único por médico**; sin contexto no hay sedes ni altas.
+  Migración `2026_10_26_120000` (relleno). Tests: `SedesPorMedicoWebTest`; verificador
+  `../.agent-tools/verificar-sedes-por-medico-web.js` con `../.agent-tools/sedes-por-medico-preparar.php`. Trampa 177.
 - **Pre-factura (F9, 2026-10-20, ginecología y pediatría)**: `?seccion=prefactura`, el último ítem «Documentos» de los
   dos catálogos (ya no quedan ítems «Próximamente»: 13 de 13 y 14 de 14; `ANCLAS_SIN_SECCION` se borró y «I.Q.» se
   ancla detrás de la pre-factura como cualquier postgrado). Los ítems viven en **`his_con_pre_factura`** —clave de
@@ -1236,7 +1242,13 @@ de docs, desde lo que exporta `bridge/tools/exportar-catalogos-asa8.ps1`). La re
 `App\Actions\Catalogos\SembrarCatalogosIniciales`; el puente de especialidades, en
 `App\Clinica\Catalogos\Iniciales\EspecialidadesDelCatalogoInicial`; la copia automática al médico nuevo, en
 `CargarCatalogosInicialesAlMedico` (la llama `CuentaService::asignarEspecialidades`). Tests:
-`tests/Feature/CatalogoInicialPorEspecialidadTest.php`.
+`tests/Feature/CatalogoInicialPorEspecialidadTest.php`. **`--reemplazar=<especialidad>`** deja el catálogo inicial de esa
+especialidad igual a su carpeta: a lo que su archivo ya no trae se le quita la marca y, si era sólo suyo, se quita (salvo que
+otra fila inicial lo use); lo general y lo de otras especialidades no se toca. Pediatría sale de la **base vacía que mandó
+Alexander el 2026-10-25** (también trae dietas y antecedentes, con el tipo fijo `01`–`07`). Las curvas de crecimiento y el
+catálogo inicial de vacunas (con dosis y tipos) van aparte: **`php artisan pediatria:sembrar-referencia`**, que no pisa un
+catálogo de vacunas que ya existe salvo con `--reemplazar-vacunas` (`SembrarReferenciaDePediatria`, tests en
+`tests/Feature/ReferenciaDePediatriaTest.php`).
 
 **Nunca commitear `.env` ni datos reales de pacientes** (el repo arrastra el esquema y los seeders del
 sistema legado).

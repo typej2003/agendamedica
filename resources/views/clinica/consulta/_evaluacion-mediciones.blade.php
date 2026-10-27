@@ -26,9 +26,10 @@
                 <x-ui.campo :etiqueta="$campo['etiqueta']" :for="'medicion-' . $campo['columna']" class="col-6 col-md-4"
                             :error="$campo['columna']">
                     <div class="examen-unidad">
-                        <input type="text" inputmode="decimal" class="form-control" autocomplete="off"
+                        <input type="text" inputmode="{{ $campo['mascara'] === 'entero' ? 'numeric' : 'decimal' }}" class="form-control" autocomplete="off"
                                id="medicion-{{ $campo['columna'] }}" name="{{ $campo['columna'] }}"
-                               value="{{ $campo['valor'] }}" data-medicion="{{ $campo['columna'] }}">
+                               value="{{ $campo['valor'] }}" data-medicion="{{ $campo['columna'] }}"
+                               data-mascara="{{ $campo['mascara'] }}" data-enteros="{{ $campo['enteros'] }}" data-decimales="{{ $campo['decimales'] }}">
                         <span>{{ $campo['unidad'] }}</span>
                     </div>
                     @if ($campo['posicion'])
