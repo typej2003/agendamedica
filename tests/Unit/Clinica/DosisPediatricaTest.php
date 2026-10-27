@@ -45,7 +45,7 @@ class DosisPediatricaTest extends TestCase
 
     public function test_la_posologia_es_dosis_por_peso_entre_cada(): void
     {
-        // 10 mg/kg × 12 kg / 8 h = 15 mg por toma.
+        // 10 mg/kg/día × 12 kg / 8 tomas = 15 mg por toma.
         $calculo = (new DosisPediatrica())->calcular($this->medicamento(), 12);
 
         $this->assertNotNull($calculo);
@@ -60,7 +60,7 @@ class DosisPediatricaTest extends TestCase
 
     public function test_con_presentacion_pasa_a_mililitros(): void
     {
-        // 10 mg/kg × 12 kg / 8 h = 15 mg; el envase tiene 250 mg en 5 ml → 5 × 15 / 250 = 0.3 ml.
+        // 10 mg/kg/día × 12 kg / 8 tomas = 15 mg; el envase tiene 250 mg en 5 ml → 5 × 15 / 250 = 0.3 ml.
         $calculo = (new DosisPediatrica())->calcular($this->medicamento(['pvc' => 250, 'pvs' => 5]), 12);
 
         $this->assertEqualsWithDelta(0.3, $calculo['ml'], 0.001);

@@ -168,7 +168,7 @@
 
                         <div class="dosis-por-kilo__panel mt-2">
                             <div class="row g-3">
-                                <x-ui.campo etiqueta="Dosis (mg/kg por toma)" for="medicamento-dosis" error="dosis" class="col-6 col-md-4">
+                                <x-ui.campo etiqueta="Dosis (mg/kg al día)" info="La dosis de todo el día: el récipe la reparte entre las veces al día (dosis × peso ÷ veces)." for="medicamento-dosis" error="dosis" class="col-6 col-md-4">
                                     <input type="number" step="0.01" min="0" name="dosis" id="medicamento-dosis"
                                            class="form-control" value="{{ $vm->texto('dosis') }}">
                                 </x-ui.campo>

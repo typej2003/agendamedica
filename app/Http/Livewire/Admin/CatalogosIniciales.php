@@ -358,7 +358,7 @@ class CatalogosIniciales extends Component
                 return $n . ($n === 1 ? ' medicamento' : ' medicamentos');
             case 'medicamentos':
                 $porKilo = strtoupper(trim((string) $fila->dosificacion)) === DosisPediatrica::POR_KILO
-                    ? 'Por kilo' . ($fila->dosis !== null ? ': ' . rtrim(rtrim(number_format((float) $fila->dosis, 3, ',', ''), '0'), ',') . ' mg/kg' : ' (sin dosis)')
+                    ? 'Por kilo' . ($fila->dosis !== null ? ': ' . rtrim(rtrim(number_format((float) $fila->dosis, 3, ',', ''), '0'), ',') . ' mg/kg al día' : ' (sin dosis)')
                     : '';
 
                 return trim(implode(' · ', array_filter([trim((string) $fila->presentacion), trim((string) $fila->nombregenerico), $porKilo])));

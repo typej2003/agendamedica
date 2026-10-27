@@ -27,7 +27,7 @@ use InvalidArgumentException;
  * peso. Por eso la ayuda del formulario dice que hay que escribir **SI**.
  *
  * Los seis números de la fórmula se editan acá desde esta tarea, con los nombres y las unidades del DataWindow:
- * `dosis` (mg/kg), `cada` (**veces al día**), `durante` (días), `pvc` (mg del envase), `pvs` (ml del envase) y
+ * `dosis` (mg/kg **al día**: la fórmula la divide entre `cada`), `cada` (**veces al día**), `durante` (días), `pvc` (mg del envase), `pvs` (ml del envase) y
  * `concentracion` (gotas por ml). Todos son opcionales: sin ellos, el récipe compone el rótulo en miligramos.
 
  * Las cuatro primeras reglas (nombre, genérico, presentación, indicaciones) son **las del alta rápida de la
