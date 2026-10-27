@@ -116,13 +116,12 @@
                         <strong>{{ $pendiente['paciente'] }}</strong> ya tiene cita el {{ $pendiente['fecha'] }}
                         @if ($pendiente['hora']) a las {{ $pendiente['hora'] }} @endif
                         @if ($pendiente['sede']) en {{ $pendiente['sede'] }}@endif.
-                        Normalmente un paciente tiene <strong>una sola</strong> cita pendiente por consultorio (los
+                        Un paciente tiene <strong>una sola</strong> cita pendiente por consultorio (los
                         tratamientos —masajistas, terapias— son la excepción: ahí se agendan varias).
-                        ¿Qué quieres hacer?
+                        ¿Quieres moverla a esta fecha?
                     </p>
                     <div class="d-flex flex-wrap gap-2">
                         <button class="btn btn-primary" name="decision" value="mover">Mover esa cita a la nueva fecha</button>
-                        <button class="btn btn-outline-primary" name="decision" value="otra">Agendar otra de todos modos</button>
                         <button class="btn btn-outline-secondary" name="decision" value="cancelar">Cancelar</button>
                     </div>
 

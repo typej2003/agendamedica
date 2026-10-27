@@ -1020,7 +1020,8 @@ class AgendaWebTest extends TestCase
         $this->assertSame(1, Cola::where('reg_medico', $medico->reg_medico)->count());
     }
 
-    public function test_se_puede_agendar_otra_cita_de_todos_modos(): void
+    /** 2026-10-27 (Alexander): «Agendar otra de todos modos» ya no existe; la pregunta vuelve y no se escribe nada. */
+    public function test_no_se_puede_agendar_otra_cita_de_todos_modos(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
@@ -1034,10 +1035,64 @@ class AgendaWebTest extends TestCase
                 'paciente_id' => $pacienteId,
                 'decision'    => 'otra',
             ]))
-            ->assertRedirect($this->urlDeLaAgenda($sede));
+            ->assertSessionHasErrors(['decision']);
 
-        // La excepción del tratamiento: dos citas del mismo paciente (masajistas, terapias).
-        $this->assertSame(2, Cola::where('reg_medico', $medico->reg_medico)->count());
+        $this->assertSame(1, Cola::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    public function test_el_formulario_ya_no_ofrece_agendar_otra_de_todos_modos(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+        $this->cita($medico, $sede, Carbon::today()->addDay()->toDateString(), '09:00:00', 1, ['numhistoria' => 2001]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, ['hora' => '10:00', 'paciente_id' => $pacienteId]))
+            ->assertSee('Mover esa cita a la nueva fecha')
+            ->assertDontSee('Agendar otra de todos modos');
+    }
+
+    /**
+     * Las citas repetidas de la Dra. Cadenas (2026-10-27): el doble clic en «Guardar» mandaba dos pedidos casi juntos y los dos
+     * creaban su cita. El segundo, con el paciente nuevo ya creado por el primero, tiene que recibir la pregunta y no crear nada.
+     */
+    public function test_el_mismo_alta_enviada_dos_veces_no_duplica_ni_la_ficha_ni_la_cita(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        // Una fecha futura: las citas de días pasados no cuentan como pendientes.
+        $datos = $this->datosDeCita($sede, [
+            'fecha' => Carbon::today()->addDay()->toDateString(),
+            'hora' => '09:00', 'nuevo_nombres' => 'Doble', 'nuevo_apellidos' => 'Clic', 'nuevo_telefono' => '0414-5550020',
+        ]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post('/clinica/agenda', $datos)->assertSessionHasNoErrors();
+        $segunda = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post('/clinica/agenda', $datos);
+
+        $segunda->assertOk()->assertSee('Ya tiene una cita pendiente');
+        $this->assertSame(1, Paciente::where('apellidos', 'Clic')->count());
+        $this->assertSame(1, Cola::where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    public function test_el_mismo_alta_con_cedula_enviada_dos_veces_no_duplica_la_cita(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $datos = $this->datosDeCita($sede, [
+            'fecha' => Carbon::today()->addDay()->toDateString(),
+            'hora' => '09:00', 'nuevo_cedula' => '30123456', 'nuevo_nombres' => 'Doble', 'nuevo_apellidos' => 'Cedula', 'nuevo_telefono' => '0414-5550021',
+        ]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post('/clinica/agenda', $datos)->assertSessionHasNoErrors();
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post('/clinica/agenda', $datos)->assertSee('Ya tiene una cita pendiente');
+
+        $this->assertSame(1, Cola::where('reg_medico', $medico->reg_medico)->count());
     }
 
     public function test_mover_la_cita_pendiente_conserva_lo_cobrado_y_reinicia_la_confirmacion(): void

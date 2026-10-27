@@ -45,7 +45,7 @@ class GuardarCitaRequest extends FormRequest
             'nuevo_nac'         => ['nullable', 'in:V,E'],
             'nuevo_lnacimiento' => ['nullable', 'string', 'max:100'],
             'nuevo_direccion'   => ['nullable', 'string', 'max:200'],
-            'decision'        => ['nullable', 'in:mover,otra,cancelar'],
+            'decision'        => ['nullable', 'in:mover,cancelar'],
             // De qué consulta se vino con "Hacer cita" (WEB-5.2): sólo para volver a sus récipes al guardar.
             'volver_consulta' => ['nullable', 'integer'],
         ];

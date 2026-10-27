@@ -84,8 +84,9 @@ class PacientesDeCita
             ]);
         }
 
-        // Sin cédula (vacía o `S.C.`) no se enlaza con nadie: es una ficha nueva (`CrearPaciente`).
-        $paciente = IdentidadDePaciente::esSinCedula($cedula) ? null : Paciente::where('cedula', $cedula)->first();
+        // Sin cédula (vacía o `S.C.`) no se enlaza con nadie: es una ficha nueva (`CrearPaciente`)… salvo que sea la que este mismo
+        // consultorio acaba de crear con los mismos datos (el doble clic en «Guardar»: sin esto nacen dos fichas y dos citas).
+        $paciente = IdentidadDePaciente::esSinCedula($cedula) ? $this->fichaRecienCreada($contexto, $valores) : Paciente::where('cedula', $cedula)->first();
         if ($paciente === null) {
             return ['paciente' => null, 'numhistoria' => null];
         }
@@ -93,6 +94,27 @@ class PacientesDeCita
         // La cédula ya existe: es la misma persona. Si ya es paciente de este médico, su número de
         // historia es el que va en la cita.
         return ['paciente' => $paciente, 'numhistoria' => $this->numHistoriaDe($contexto, $paciente)];
+    }
+
+    /** La ficha sin cédula que este consultorio creó hace pocos minutos con el mismo nombre, apellido y teléfono, o `null`. */
+    private function fichaRecienCreada(array $contexto, array $valores): ?Paciente
+    {
+        $nombres = trim((string) ($valores['nuevo_nombres'] ?? ''));
+        $apellidos = trim((string) ($valores['nuevo_apellidos'] ?? ''));
+        $telefono = $this->texto($valores['nuevo_telefono'] ?? null);
+
+        if ($nombres === '' || $apellidos === '' || $telefono === null) {
+            return null;
+        }
+
+        return Paciente::query()
+            ->where('nombres', $nombres)
+            ->where('apellidos', $apellidos)
+            ->where('telefono', $telefono)
+            ->where('created_at', '>=', now()->subMinutes(10))
+            ->whereIn('id', MedicoPaciente::where('reg_medico', $contexto['reg_medico'])->select('paciente_id'))
+            ->orderByDesc('id')
+            ->first();
     }
 
     /** @return array<string,mixed> Las columnas del alta mínima de paciente (las mismas que el móvil). */

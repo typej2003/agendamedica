@@ -12,7 +12,9 @@ use App\Models\MotivoCita;
 use App\Models\Office;
 use App\Models\Paciente;
 use Carbon\Carbon;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -54,8 +56,7 @@ class AgendamientoDeCitas
      * Agendar una cita nueva.
      *
      * Si el paciente **ya tiene una cita pendiente** en ese consultorio no se escribe nada todavía: se
-     * devuelve la pregunta —mover esa cita a la fecha nueva, agendar otra de todos modos o cancelar—, que
-     * es lo que hace el móvil. Con un motivo que **admite varias citas pendientes** la pregunta no
+     * devuelve la pregunta —mover esa cita a la fecha nueva o cancelar—. Con un motivo que **admite varias citas pendientes** la pregunta no
      * existe: se agenda directo (WEB-2.17).
      *
      * @param  array<string,mixed>  $valores  lo validado del formulario
@@ -72,6 +73,42 @@ class AgendamientoDeCitas
      *                                               el alta con historia y la cita sin confirmar.
      */
     public function agendar(array $contexto, array $valores, array $registrosMedicos, array $opciones = []): ResultadoDeAgendamiento
+    {
+        // **Un solo agendamiento a la vez por paciente** (2026-10-27, las citas repetidas de la Dra. Cadenas): con una conexión lenta
+        // el doble clic en «Guardar» manda dos pedidos casi juntos; los dos miraban «¿tiene cita pendiente?» antes de que el primero
+        // escribiera y los dos creaban la suya. Con el candado el segundo espera, ve la cita del primero y recibe la pregunta.
+        $candado = Cache::lock('agendar:' . $contexto['reg_medico'] . ':' . $this->huellaDelPaciente($valores), 20);
+
+        try {
+            $candado->block(10);
+        } catch (LockTimeoutException) {
+            throw ValidationException::withMessages([
+                'paciente_id' => 'Se está guardando otra cita de este paciente. Espera un momento y revisa la agenda antes de volver a intentarlo.',
+            ]);
+        }
+
+        try {
+            return $this->agendarConCandado($contexto, $valores, $registrosMedicos, $opciones);
+        } finally {
+            $candado->release();
+        }
+    }
+
+    /** Qué paciente es, para el candado: el elegido, la cédula escrita o su nombre y teléfono. */
+    private function huellaDelPaciente(array $valores): string
+    {
+        if (! empty($valores['paciente_id'])) {
+            return 'p' . (int) $valores['paciente_id'];
+        }
+
+        $cedula = trim((string) ($valores['nuevo_cedula'] ?? ''));
+
+        return $cedula !== ''
+            ? 'c' . $cedula
+            : 'n' . md5(mb_strtolower(trim((string) ($valores['nuevo_nombres'] ?? '')) . '|' . trim((string) ($valores['nuevo_apellidos'] ?? '')) . '|' . trim((string) ($valores['nuevo_telefono'] ?? ''))));
+    }
+
+    private function agendarConCandado(array $contexto, array $valores, array $registrosMedicos, array $opciones): ResultadoDeAgendamiento
     {
         $regMedico = $contexto['reg_medico'];
         $numerarHistoria = $opciones['numerar_historia'] ?? true;
@@ -103,7 +140,9 @@ class AgendamientoDeCitas
             : $this->armador->citaPendiente($regMedico, $objetivo['numhistoria'], $objetivo['paciente']?->id, $centroId);
         $decision = $valores['decision'] ?? null;
 
-        if ($pendiente !== null && $decision === null) {
+        // «Agendar otra de todos modos» ya no existe (Alexander, 2026-10-27): un motivo que no admite varias citas pendientes no puede
+        // tener dos. Sólo se mueve la cita que ya tiene o se cancela; cualquier otra cosa vuelve a mostrar la pregunta.
+        if ($pendiente !== null && ! in_array($decision, ['mover', 'cancelar'], true)) {
             return new ResultadoDeAgendamiento(ResultadoDeAgendamiento::PREGUNTA, $fecha, $sede, $valores, $objetivo, $pendiente);
         }
 
