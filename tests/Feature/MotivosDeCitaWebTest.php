@@ -486,6 +486,6 @@ class MotivosDeCitaWebTest extends TestCase
         $respuesta->assertSee('Ya tiene una cita pendiente');
         $respuesta->assertSee('márcalo en los motivos de cita');
         $respuesta->assertSee(route('clinica.catalogos.motivos-cita'), false);
-        $respuesta->assertSee('Agendar otra de todos modos');
+        $respuesta->assertDontSee('Agendar otra de todos modos');
     }
 }
