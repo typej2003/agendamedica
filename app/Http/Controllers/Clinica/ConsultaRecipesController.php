@@ -9,6 +9,7 @@ use App\Actions\Consulta\ResultadoDeRecipe;
 use App\Clinica\Busquedas\BusquedaConCorrector;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\DosisPediatrica;
+use App\Clinica\Crecimiento\MedicionesDeLaConsulta;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Http\Controllers\Clinica\Concerns\ItemsDeUnRecipeEnElFormulario;
@@ -87,7 +88,7 @@ class ConsultaRecipesController extends Controller
      * El buscador de medicamentos del vademécum del médico: por nombre comercial o genérico, sin
      * distinguir tildes. Es JSON porque filtra mientras se escribe y no escribe nada.
      */
-    public function medicamentos(Request $request, Consulta $consulta, RecipesDeLaConsulta $lectura, DosisPediatrica $dosis, BusquedaConCorrector $corrector): JsonResponse
+    public function medicamentos(Request $request, Consulta $consulta, RecipesDeLaConsulta $lectura, DosisPediatrica $dosis, BusquedaConCorrector $corrector, MedicionesDeLaConsulta $mediciones): JsonResponse
     {
         $consulta = $this->delContexto($request, $consulta);
 
@@ -96,7 +97,10 @@ class ConsultaRecipesController extends Controller
         // **La dosis del niño** (2026-10-19): cuando el medicamento es por kilo, el récipe propone las indicaciones
         // ya calculadas con el peso del examen físico de la consulta (`DosisPediatrica`, la fórmula del escritorio).
         // El médico las puede corregir: se cargan en su campo, no se guardan solas.
-        $peso = $consulta->peso;
+        // El peso sale de las **mediciones** de la consulta (la solapa de pediatría, tabla `percentiles_paciente`) y, si no hay, del examen físico
+        // (`consultas.peso`). Sin esto la dosis nunca se calculaba en la web: el médico carga el peso en las mediciones y el examen físico queda
+        // vacío (Alexander, 2026-10-26: «no está funcionando la dosificación en función del peso»).
+        $peso = $mediciones->de($consulta)?->peso ?: $consulta->peso;
 
         // Primero lo escrito; si no encontró nada, el término corregido (PecleSearch).
         [$encontrados, $correccion] = $corrector->con(

@@ -108,6 +108,27 @@ class ConsultaRecipesDosisWebTest extends TestCase
         $this->assertEqualsWithDelta(0.6, $medicamento['dosisCalculada']['ml'], 0.001);
     }
 
+    /** Alexander, 2026-10-26: el peso que carga el pediatra está en las mediciones, no en el examen físico, y la dosis no se calculaba. */
+    public function test_el_buscador_calcula_la_dosis_con_el_peso_de_las_mediciones(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $this->medicamento($medico, ['dosificacion' => 'SI', 'dosis' => 20, 'cada' => 8, 'durante' => 7,
+            'pvc' => 250, 'pvs' => 5, 'concentracion' => 0]);
+        [, $consulta] = $this->pacienteYConsulta($medico, null);
+        DB::table('percentiles_paciente')->insert([
+            'reg_medico' => $medico->reg_medico, 'hhistoria' => 1001, 'hconsulta' => 1, 'peso' => 12.0, 'fecha' => now()->toDateString(),
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $respuesta = $this->withSession(['clinica.contexto' => [
+            'reg_medico' => $medico->reg_medico, 'specialty_id' => $pediatria->id, 'office_id' => null,
+        ]])->actingAs($user)->getJson(route('clinica.consulta.recipes.medicamentos', [$consulta->id, 'q' => 'amoxi']));
+
+        $respuesta->assertOk();
+        $this->assertSame('DAR 0.6 ML CADA 3 HORAS POR 7 DÍAS', $respuesta->json('medicamentos.0.indicacionSugerida'));
+        $this->assertEqualsWithDelta(12.0, $respuesta->json('medicamentos.0.dosisCalculada.peso'), 0.001);
+    }
+
     public function test_sin_peso_en_la_consulta_no_hay_sugerencia(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
