@@ -20,16 +20,15 @@ use InvalidArgumentException;
  *    no daba casi nada: medido el 2026-10-21, ningún medicamento con su presentación estaba en las cinco.
  *  - **Sólo agrega**: una fila que ya existe no se edita. Si ya tiene marcas se le suman las que falten; si es general (sin marcas) queda general. Las filas nuevas
  *    reciben el siguiente código inicial. Correrla dos veces no cambia nada.
- *  - Las referencias (el tipo de un examen, el medicamento de una línea de tratamiento) vienen con el código **de la base de origen** y se traducen al código inicial
- *    de la fila que quedó con esa identidad. Una línea cuyo medicamento no está se omite y se informa.
- *  - **La línea de un tratamiento se resuelve primero por nombre** (2026-10-26): su `descripcion` es la copia `NOMBRE/PRESENTACIÓN` que guardó el escritorio, y el
- *    código del legado no es confiable —las instalaciones nunca se pensaron para la nube y el médico renombra o borra el medicamento después—. Se busca en el
- *    vademécum de la misma base por nombre y presentación, después por el nombre si es uno solo, después por la presentación contenida; el código queda de respaldo
- *    (corrige erratas como «FULGRAN» → FULGRAM).
+ *  - El tipo de un examen viene con el código **de la base de origen** y se traduce al código inicial de la fila que quedó con esa identidad.
+ *  - **La línea de un tratamiento no usa ningún código del escritorio** (2026-10-26): trae el nombre y la presentación de su medicamento —el texto que el
+ *    escritorio copia al récipe— y se vincula a la fila inicial con **exactamente esa identidad**. El preparador (`preparar-catalogos-iniciales.py`) agrega al
+ *    archivo de medicamentos el que falte, así que una línea siempre encuentra el suyo; si no, se omite y se informa (nunca se vincula a otro parecido).
  *  - Ojo: si el administrador **quitó** una fila inicial, sembrar otra vez la vuelve a crear. Por eso esto se corre a mano, no en cada despliegue.
  *  - **Reemplazar una especialidad** (`$reemplazar`, 2026-10-25: la base vacía de pediatría que mandó Alexander sustituye a la que se había sembrado): antes de sembrar,
  *    a cada fila inicial **marcada** con esa especialidad que su archivo ya no trae se le quita la marca; si era sólo de ella, la fila se quita (con sus hijos), salvo
- *    que otra fila inicial la use, que entonces se conserva y se informa. Las filas generales y las de otras especialidades no se tocan, y lo que un médico ya copió
+ *    que otra fila inicial la use, que entonces se conserva y se informa. Un tratamiento sólo de ella se quita **aunque el archivo lo traiga**, para rehacerlo con
+ *    las líneas del archivo (la siembra no toca las líneas de un tratamiento que ya existe). Las filas generales y las de otras especialidades no se tocan, y lo que un médico ya copió
  *    tampoco.
  */
 final class SembrarCatalogosIniciales
@@ -45,8 +44,8 @@ final class SembrarCatalogosIniciales
     /** @var array<string,array<string,array<string,string>>> `catalogo => especialidad => código de origen => identidad` */
     private array $identidades = [];
 
-    /** @var array<string,array<string,array<int,array{0:string,1:string}>>> `especialidad => nombre normalizado => [[código de origen, presentación normalizada]…]` */
-    private array $nombres = [];
+    /** @var array<string,string> `identidad del medicamento => código inicial`, para las líneas de los tratamientos */
+    private array $medicamentos = [];
 
     /**
      * @param  array<int,string>  $reemplazar  especialidades (slug) cuyo catálogo inicial pasa a ser exactamente el de su carpeta (ver arriba)
@@ -58,7 +57,7 @@ final class SembrarCatalogosIniciales
             throw new InvalidArgumentException('No existe la carpeta ' . $carpeta . '.');
         }
 
-        $this->mapa = $this->identidades = $this->nombres = [];
+        $this->mapa = $this->identidades = $this->medicamentos = [];
         $informe = ['especialidades' => [], 'sin_especialidad' => [], 'catalogos' => [], 'retiradas' => [], 'omitidas' => []];
 
         foreach (glob(rtrim($carpeta, '/\\') . '/*', GLOB_ONLYDIR) as $dir) {
@@ -127,9 +126,6 @@ final class SembrarCatalogosIniciales
                 }
                 $clave = $this->identidadDeOrigen($def, $slug, $fila);
                 $this->identidades[$catalogo][$slug][(string) ($fila['codigo_origen'] ?? '')] = $clave;
-                if ($catalogo === 'medicamentos') {
-                    $this->nombres[$slug][self::normalizar($fila['nombrecomercial'] ?? '')][] = [(string) ($fila['codigo_origen'] ?? ''), self::normalizar($fila['presentacion'] ?? '')];
-                }
                 $grupos[$clave]['fila'] ??= [$slug, $fila];
                 $grupos[$clave]['especialidades'][$slug] = $specialtyId;
             }
@@ -165,6 +161,12 @@ final class SembrarCatalogosIniciales
                 }
             } elseif (! $general && EspecialidadesDelCatalogoInicial::de($catalogo, [(int) $existente->id]) !== []) {
                 $cuenta['marcas'] += EspecialidadesDelCatalogoInicial::agregar($catalogo, (int) $existente->id, array_values($grupo['especialidades']));
+            }
+        }
+
+        if ($catalogo === 'medicamentos') {
+            foreach ($existentes as $clave => $fila) {
+                $this->medicamentos[$clave] = trim((string) $fila->{$def['codigo']});
             }
         }
 
@@ -213,7 +215,8 @@ final class SembrarCatalogosIniciales
 
             foreach ($filas as $fila) {
                 $suyas = $marcas[(int) $fila->id] ?? [];
-                if (! in_array($specialtyId, $suyas, true) || isset($enArchivo[$catalogo][$this->identidadInicial($def, (array) $fila)])) {
+                $rehacer = isset($def['hijos']) && $suyas === [$specialtyId];
+                if (! in_array($specialtyId, $suyas, true) || (! $rehacer && isset($enArchivo[$catalogo][$this->identidadInicial($def, (array) $fila)]))) {
                     continue;
                 }
 
@@ -310,10 +313,10 @@ final class SembrarCatalogosIniciales
         $n = 0;
 
         foreach ($tratamiento['lineas'] ?? [] as $i => $linea) {
-            $origen = $this->medicamentoPorNombre($especialidad, (string) ($linea['descripcion'] ?? ''), (string) ($linea['codemedicina'] ?? ''));
-            $medicamento = $this->mapa['medicamentos'][$especialidad][$origen ?? (string) ($linea['codemedicina'] ?? '')] ?? null;
+            $medicamento = $this->medicamentoDeLaLinea($especialidad, $linea);
             if ($medicamento === null) {
-                $omitidas[] = 'Tratamientos (' . $especialidad . '): una línea de «' . $tratamiento['tratamiento'] . '» apunta a un medicamento que su base no trae.';
+                $omitidas[] = 'Tratamientos (' . $especialidad . '): la línea «' . trim((string) ($linea['descripcion'] ?? '')) . '» de «' . $tratamiento['tratamiento']
+                    . '» no tiene en el catálogo un medicamento con ese nombre y esa presentación.';
 
                 continue;
             }
@@ -331,29 +334,15 @@ final class SembrarCatalogosIniciales
         return $n;
     }
 
-    /** El código de origen del medicamento que nombra la línea (`NOMBRE/PRESENTACIÓN`), o `null` si el nombre no alcanza para decidir (manda el código). */
-    private function medicamentoPorNombre(string $especialidad, string $descripcion, string $codigo): ?string
+    /** El código inicial del medicamento con **exactamente** el nombre y la presentación de la línea (normalizados como el resto del catálogo), o `null`. */
+    private function medicamentoDeLaLinea(string $especialidad, array $linea): ?string
     {
-        [$nombre, $presentacion] = array_pad(explode('/', $descripcion, 2), 2, '');
-        $candidatos = $this->nombres[$especialidad][self::normalizar($nombre)] ?? [];
-        $presentacion = self::normalizar($presentacion);
+        $def = CatalogosIniciales::de('medicamentos');
+        $fila = $this->normalizarFila($def, 'medicamentos', [
+            'nombrecomercial' => $linea['nombrecomercial'] ?? '', 'presentacion' => $linea['presentacion'] ?? '',
+        ]);
 
-        if (count($candidatos) === 1) {
-            return $candidatos[0][0];
-        }
-
-        foreach ([
-            fn ($c) => $c[1] === $presentacion,
-            fn ($c) => $presentacion !== '' && $c[1] !== '' && (str_contains($c[1], $presentacion) || str_contains($presentacion, $c[1])),
-            fn ($c) => $c[0] === $codigo,
-        ] as $criterio) {
-            $elegidos = array_values(array_filter($candidatos, $criterio));
-            if (count($elegidos) === 1) {
-                return $elegidos[0][0];
-            }
-        }
-
-        return null;
+        return $fila === null ? null : ($this->medicamentos[$this->identidadDeOrigen($def, $especialidad, $fila)] ?? null);
     }
 
     /** La identidad de una fila del archivo: la referencia (el tipo de un examen) por la identidad de la fila a la que apunta **en su misma base**. */
