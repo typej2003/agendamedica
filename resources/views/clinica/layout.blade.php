@@ -232,6 +232,15 @@
             @include('clinica._tour')
         @endif
 
+        {{-- Las pantallas del paciente abiertas desde una consulta (vacunas, crecimiento, ficha) ofrecen volver a ella. --}}
+        @if (! empty($volverALaConsulta))
+            <p class="mb-3" id="volver-a-la-consulta">
+                <a class="btn btn-outline-primary" href="{{ $volverALaConsulta['url'] }}">
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i> {{ $volverALaConsulta['texto'] }}
+                </a>
+            </p>
+        @endif
+
         @yield('contenido')
     </main>
 </div>

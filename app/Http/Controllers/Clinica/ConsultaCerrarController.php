@@ -90,6 +90,7 @@ class ConsultaCerrarController extends Controller
 
         // La consulta ya no está abierta: se suelta el candado «abierta en otro dispositivo».
         app(\App\Actions\Consulta\LiberarSesionDeConsulta::class)->ejecutar($consulta);
+        \App\Clinica\Consulta\VolverALaConsulta::olvidar($request);
 
         return $this->aLaAgenda($dia, $sede)
             ->with('estado', $resultado->mensaje((string) $consulta->nroconsulta));
