@@ -10,10 +10,10 @@
 
         <div class="dialogo-cuerpo">
             <div class="row g-3">
-                <x-ui.campo etiqueta="Sede" for="consultorio-sede" error="medical_center_id" requerido class="col-12">
+                <x-ui.campo etiqueta="Consultorio" for="consultorio-sede" error="medical_center_id" requerido class="col-12">
                     <div class="input-group">
                         <select name="medical_center_id" id="consultorio-sede" class="form-select" required>
-                            <option value="">— Elige la sede —</option>
+                            <option value="">— Elige el consultorio —</option>
                             @foreach ($vm->opcionesDeSede() as $opcion)
                                 <option value="{{ $opcion['valor'] }}" {{ $opcion['elegida'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
                             @endforeach
@@ -25,9 +25,9 @@
                     <span class="form-text d-block" role="status" data-aviso-sede></span>
                 </x-ui.campo>
 
-                <x-ui.campo etiqueta="Consultorio" for="consultorio-numero" error="office_number" requerido class="col-12">
+                <x-ui.campo etiqueta="Número o sala" for="consultorio-numero" error="office_number" requerido class="col-12">
                     <input type="text" name="office_number" id="consultorio-numero" class="form-control" maxlength="50" autofocus
-                           placeholder="101-A, Piso 2, Consultorio 3…" value="{{ $vm->valorConsultorio('office_number') }}">
+                           placeholder="101-A, Piso 2…" value="{{ $vm->valorConsultorio('office_number') }}">
                 </x-ui.campo>
 
                 <x-ui.campo etiqueta="Cómo se atiende" for="consultorio-modalidad" error="modalidad" requerido class="col-12">

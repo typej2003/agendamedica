@@ -316,6 +316,12 @@ consulta.
   llegaba ahí sin contexto, no tenía «+ Consultorio» y el menú lateral quedaba sólo en «Inicio». Tests:
   `Feature/ConsultorioSinContextoWebTest`; verificador `../.agent-tools/verificar-consultorio-sin-contexto-web.js` con
   `../.agent-tools/consultorio-sin-contexto-preparar.php`. Trampa 161.
+- **Sedes por médico (2026-10-26, Alexander)**: `medical_centers.medico_id` (nullable, sin FK) le da dueño a la sede;
+  «las suyas» son la **unión** de las propias, las **asignadas** en `medico_medical_center` y las que tienen un
+  **consultorio** suyo (`SedesDeLaClinica`). Pantalla, contador y desplegable muestran sólo ésas; editar/activar es del
+  dueño o de una asignada (lo demás 404) y el nombre es **único por médico**; sin contexto no hay sedes ni altas.
+  Migración `2026_10_26_120000` (relleno). Tests: `SedesPorMedicoWebTest`; verificador
+  `../.agent-tools/verificar-sedes-por-medico-web.js` con `../.agent-tools/sedes-por-medico-preparar.php`. Trampa 177.
 - **Pre-factura (F9, 2026-10-20, ginecología y pediatría)**: `?seccion=prefactura`, el último ítem «Documentos» de los
   dos catálogos (ya no quedan ítems «Próximamente»: 13 de 13 y 14 de 14; `ANCLAS_SIN_SECCION` se borró y «I.Q.» se
   ancla detrás de la pre-factura como cualquier postgrado). Los ítems viven en **`his_con_pre_factura`** —clave de

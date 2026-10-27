@@ -70,12 +70,14 @@ class ConsultorioSinContextoWebTest extends TestCase
         return City::with('state')->firstOrFail();
     }
 
-    private function sede(string $nombre): MedicalCenter
+    /** Una sede activa; con dueño si se le pasa (la que la pantalla tiene que ofrecer al médico). */
+    private function sede(string $nombre, ?Medico $duenio = null): MedicalCenter
     {
         return MedicalCenter::create([
             'country_id' => DB::table('countries')->value('id'),
             'state_id'   => $this->ciudad()->state_id,
             'city_id'    => $this->ciudad()->id,
+            'medico_id'  => $duenio?->id,
             'name'       => $nombre,
             'address'    => 'Calle de la sede',
             'activo'     => true,
@@ -103,7 +105,7 @@ class ConsultorioSinContextoWebTest extends TestCase
     public function test_el_medico_nuevo_entra_a_sedes_y_puede_cargar_su_consultorio_sin_haber_elegido(): void
     {
         [$user, $medico] = $this->medicoNuevo();
-        $sede = $this->sede('Sede para el médico nuevo');
+        $sede = $this->sede('Sede para el médico nuevo', $medico);
 
         // Sin contexto en la sesión: es como se llega desde el enlace de «Elegir consultorio».
         $html = $this->actingAs($user)->get('/clinica/sedes')->assertOk()->getContent();
@@ -133,7 +135,7 @@ class ConsultorioSinContextoWebTest extends TestCase
     public function test_el_consultorio_se_crea_y_queda_a_nombre_del_medico(): void
     {
         [$user, $medico] = $this->medicoNuevo();
-        $sede = $this->sede('Sede donde carga');
+        $sede = $this->sede('Sede donde carga', $medico);
 
         // La pantalla fija el contexto al abrirse; el POST es el mismo que usa todo el mundo.
         $this->actingAs($user)->get('/clinica/sedes')->assertOk();

@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use App\Clinica\Tours\ToursDisponibles;
+use App\Models\City;
 use App\Models\Consulta;
 use App\Models\Historia;
+use App\Models\MedicalCenter;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
+use App\Models\Office;
 use App\Models\Specialty;
 use App\Models\User;
 use Database\Seeders\EspecialidadesYModulosSeeder;
@@ -103,6 +106,33 @@ class TourDeLaPantallaWebTest extends TestCase
     private function pasosEnElHtml(string $html): int
     {
         return substr_count($html, 'data-tour-paso');
+    }
+
+    /**
+     * Una sede **del médico** con un consultorio: desde el 2026-10-26 la pantalla sólo muestra las suyas, y sin
+     * ninguna la grilla (y los pasos del tour que la señalan) no existe.
+     */
+    private function sedeConConsultorio(Medico $medico): void
+    {
+        $sede = MedicalCenter::create([
+            'country_id' => DB::table('countries')->value('id'),
+            'state_id'   => City::firstOrFail()->state_id,
+            'city_id'    => City::firstOrFail()->id,
+            'medico_id'  => $medico->id,
+            'name'       => 'Sede del tour ' . substr(uniqid(), -6),
+            'address'    => 'Av. Principal',
+            'activo'     => true,
+        ]);
+
+        Office::create([
+            'medical_center_id' => $sede->id,
+            'medico_id'         => $medico->id,
+            'reg_medico'        => $medico->reg_medico,
+            'office_number'     => 'T-1',
+            'modalidad'         => Office::MODALIDAD_ORDEN,
+            'duracion_cita'     => 30,
+            'activo'            => true,
+        ]);
     }
 
     // ------------------------------------------------------------------- Primera visita y la marca
@@ -250,6 +280,7 @@ class TourDeLaPantallaWebTest extends TestCase
     public function test_los_pasos_de_la_agenda_y_de_los_consultorios_tienen_su_elemento(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->sedeConConsultorio($medico);
 
         $agenda = $this->conContexto($user, $medico, $gineco)->get(route('clinica.agenda'))->assertOk()->getContent();
         foreach (['agenda-barra', 'agenda-nueva'] as $selector) {

@@ -11,16 +11,18 @@ use Illuminate\Database\Eloquent\Model;
  * la cita guarda en `cola.medical_center_id` —no el consultorio, ver esa migración— y por eso lo que
  * se da de baja es la sede entera, no una sala.
  *
- * A diferencia de `offices` y `office_schedules` (tablas nuevas de AppDDR), acá el nombre y la
- * dirección son los mismos para todos los médicos del lugar: **el lugar es de la clínica, el
- * consultorio es del médico** (decisión del 2026-10-09). La tabla legada `clinicas` del dump tiene
- * las sedes reales y sigue sin migrar (ver `ROADMAP.md`).
+ * **La sede es de un médico** (`medico_id`, desde el 2026-10-26: «cada doctor tiene sus sedes», Alexander).
+ * Antes era del catálogo de la clínica y todos veían las de todos. `medico_id` nulo es una sede vieja o
+ * compartida: no le pertenece a nadie y sólo se ve por los consultorios que cada médico tenga en ella. El
+ * **nombre es único por médico**, no global: dos médicos pueden tener cada uno su «CEMOC». La tabla legada
+ * `clinicas` del dump tiene las sedes reales y sigue sin migrar (ver `ROADMAP.md`).
  */
 class MedicalCenter extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'medico_id',
         'country_id',
         'state_id',
         'city_id',
@@ -38,6 +40,12 @@ class MedicalCenter extends Model
     public function scopeActivos($query)
     {
         return $query->where('activo', true);
+    }
+
+    /** El médico **dueño** de la sede; `null` en las viejas o compartidas. */
+    public function medico()
+    {
+        return $this->belongsTo(Medico::class);
     }
 
     public function country()

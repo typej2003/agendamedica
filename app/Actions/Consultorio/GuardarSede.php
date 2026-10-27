@@ -9,8 +9,9 @@ use App\Models\MedicalCenter;
  * Alta y edición de una **sede** (`medical_centers`) — el lugar donde atiende un médico.
  *
  * Es la primera mitad de la configuración de agenda (WEB-2.8b.1): sin sedes no hay dónde colgar un
- * consultorio. El **lugar es de la clínica** (el nombre y la dirección son los mismos para todos los
- * médicos que atienden ahí), así que no lleva `reg_medico` ni médico: la fila es del catálogo.
+ * consultorio. Desde el 2026-10-26 la sede **es de un médico** (`medico_id`, observación de Alexander): el
+ * alta queda con dueño = el médico del contexto y **el nombre es único por médico**, no global (dos médicos
+ * pueden tener cada uno su «CEMOC»). Editar la sede **no la cambia de manos**.
  *
  * El **país y el estado no se preguntan**: se derivan de la ciudad elegida
  * (`cities.state_id` → `estados.country_id`). Son obligatorios en la tabla por herencia del esquema
@@ -25,12 +26,14 @@ class GuardarSede
 {
     /**
      * @param  array{name: string, address: string, phone?: ?string, city_id: int, activo?: bool}  $datos
+     * @param  int|null  $medicoId  el dueño que se le pone **al crear** (el del contexto o el de la ficha del panel)
      */
-    public function ejecutar(array $datos, ?MedicalCenter $sede = null): MedicalCenter
+    public function ejecutar(array $datos, ?MedicalCenter $sede = null, ?int $medicoId = null): MedicalCenter
     {
         $ciudad = City::findOrFail($datos['city_id']);
 
         $sede ??= new MedicalCenter();
+        $nueva = ! $sede->exists;
 
         $sede->fill([
             'name'    => trim((string) $datos['name']),
@@ -41,7 +44,14 @@ class GuardarSede
             'state_id'   => $ciudad->state_id,
             'country_id' => $ciudad->state->country_id,
             'activo'     => (bool) ($datos['activo'] ?? true),
-        ])->save();
+        ]);
+
+        // El dueño se fija en el alta: corregir la dirección de una sede vieja no se la adjudica a quien la edita.
+        if ($nueva && $medicoId !== null) {
+            $sede->medico_id = $medicoId;
+        }
+
+        $sede->save();
 
         return $sede;
     }
