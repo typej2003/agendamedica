@@ -242,6 +242,24 @@ class ConsultaMedicionesWebTest extends TestCase
             ->assertDontSee('Examen ginecológico');
     }
 
+    /** Alexander, 2026-10-26: la PA diastólica aceptaba «170/90» y el perímetro cefálico cualquier cosa; faltaban las máscaras. */
+    public function test_cada_medicion_lleva_su_mascara_numerica(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $consulta = $this->ninoYConsulta($medico);
+
+        $html = $this->conContexto($medico, $pediatria)->actingAs($user)->get($this->url($consulta, null))->assertOk()->getContent();
+
+        foreach (['peso' => ['decimal', 3, 3], 'talla' => ['decimal', 3, 1], 'c_cefalica' => ['decimal', 3, 1], 'c_brazo' => ['decimal', 3, 1],
+            'pulso' => ['entero', 3, 0], 'p_a_sistolica' => ['entero', 3, 0], 'p_a_diastolica' => ['entero', 3, 0]] as $columna => [$tipo, $enteros, $decimales]) {
+            $this->assertMatchesRegularExpression(
+                '/name="' . $columna . '"[^>]*data-mascara="' . $tipo . '" data-enteros="' . $enteros . '" data-decimales="' . $decimales . '"/',
+                $html,
+                "«{$columna}» tiene que llevar su máscara ({$tipo}, {$enteros} enteros, {$decimales} decimales).",
+            );
+        }
+    }
+
     public function test_en_ginecologia_no_se_ofrece_la_solapa(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso('ginecologia-y-obstetricia');
