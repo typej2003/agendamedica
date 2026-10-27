@@ -103,7 +103,7 @@ class ConsultaRecipesDosisWebTest extends TestCase
 
         $medicamento = $respuesta->json('medicamentos.0');
 
-        // 20 mg/kg × 12 kg / 8 h = 30 mg; el envase tiene 250 mg en 5 ml → 5 × 30 / 250 = 0.6 ml.
+        // 20 mg/kg/día × 12 kg / 8 tomas = 30 mg; el envase tiene 250 mg en 5 ml → 5 × 30 / 250 = 0.6 ml.
         $this->assertSame('DAR 0.6 ML CADA 3 HORAS POR 7 DÍAS', $medicamento['indicacionSugerida']);
         $this->assertEqualsWithDelta(0.6, $medicamento['dosisCalculada']['ml'], 0.001);
     }

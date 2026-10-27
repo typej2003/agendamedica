@@ -49,7 +49,7 @@ final class CatalogosIniciales
                 'uso' => ['Indicaciones', 'area', 2000, false, false],
                 // La dosis por peso del récipe pediátrico (`DosisPediatrica`), con los nombres y unidades del ABM del médico (`CamposDelMedicamento`).
                 'dosificacion' => ['La dosis es por kilo (récipe de pediatría)', 'porkilo', 0, false, false, 'dosis'],
-                'dosis' => ['Dosis (mg/kg por toma)', 'decimal', 0, false, false, 'dosis'],
+                'dosis' => ['Dosis (mg/kg al día)', 'decimal', 0, false, false, 'dosis', 'La dosis de todo el día: el récipe la reparte entre las veces al día (dosis × peso ÷ veces).'],
                 'cada' => ['Cada (veces al día)', 'decimal', 0, false, false, 'dosis'],
                 'durante' => ['Durante (días)', 'decimal', 0, false, false, 'dosis'],
                 'pvc' => ['Envase: mg', 'decimal', 0, false, false, 'dosis', 'Los mg que trae la presentación (250 en «250 mg / 5 ml»).'],
