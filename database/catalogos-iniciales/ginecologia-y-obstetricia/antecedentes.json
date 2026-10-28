@@ -420,11 +420,6 @@
   "codtipo": "01"
  },
  {
-  "codigo_origen": "0109",
-  "descripcion": "NINGUNO",
-  "codtipo": "02"
- },
- {
   "codigo_origen": "0273",
   "descripcion": "LABERINTITIS",
   "codtipo": "01"
@@ -660,64 +655,9 @@
   "codtipo": "04"
  },
  {
-  "codigo_origen": "0169",
-  "descripcion": "QUISTE ENEL SENO IZQ",
-  "codtipo": "01"
- },
- {
-  "codigo_origen": "0170",
-  "descripcion": "PARALISIS FACIAL A LOS 11 AÑOS",
-  "codtipo": "01"
- },
- {
-  "codigo_origen": "0171",
-  "descripcion": "QUISTE EN SENO IZQ,TRATADO QX, HACE 17 A",
-  "codtipo": "01"
- },
- {
   "codigo_origen": "0256",
   "descripcion": "OBESIDAD",
   "codtipo": "07"
- },
- {
-  "codigo_origen": "0172",
-  "descripcion": "PADRE FALLECIDO POR ECV MÁS HDS",
-  "codtipo": "02"
- },
- {
-  "codigo_origen": "0173",
-  "descripcion": "MADRE CON DM  2 Y HTA",
-  "codtipo": "02"
- },
- {
-  "codigo_origen": "0174",
-  "descripcion": "2 CURETAJES, OCTUBRE 2003 Y FEBRERO 2004",
-  "codtipo": "05"
- },
- {
-  "codigo_origen": "0175",
-  "descripcion": "ABUELO MATERNO FALLECIDO POR CA PULMÓN",
-  "codtipo": "02"
- },
- {
-  "codigo_origen": "0176",
-  "descripcion": "ABUELA MATERNA FALLECIDA  POR  CA",
-  "codtipo": "02"
- },
- {
-  "codigo_origen": "0177",
-  "descripcion": "3 HIJOS,2 SON  ASMÁTICOS",
-  "codtipo": "02"
- },
- {
-  "codigo_origen": "0178",
-  "descripcion": "EQX  EN  ENERO 2004",
-  "codtipo": "04"
- },
- {
-  "codigo_origen": "0179",
-  "descripcion": "BOCIO  TIROIDEO, TRATADO HACE 6  AÑOS QX",
-  "codtipo": "01"
  },
  {
   "codigo_origen": "0180",
@@ -826,7 +766,7 @@
  },
  {
   "codigo_origen": "0202",
-  "descripcion": "1 CEESAEA",
+  "descripcion": "1 CESAREA",
   "codtipo": "04"
  },
  {
@@ -858,11 +798,6 @@
   "codigo_origen": "0207",
   "descripcion": "1 MORTINATO",
   "codtipo": "04"
- },
- {
-  "codigo_origen": "0208",
-  "descripcion": "PERSONALES",
-  "codtipo": "02"
  },
  {
   "codigo_origen": "0209",
@@ -968,11 +903,6 @@
   "codigo_origen": "0229",
   "descripcion": "BRONQUITIS.",
   "codtipo": "01"
- },
- {
-  "codigo_origen": "0230",
-  "descripcion": "GLAUCOMA",
-  "codtipo": "06"
  },
  {
   "codigo_origen": "0231",
@@ -1296,7 +1226,7 @@
  },
  {
   "codigo_origen": "0345",
-  "descripcion": "DERMATITIIS ATOPICA",
+  "descripcion": "DERMATITIS ATOPICA",
   "codtipo": "01"
  },
  {

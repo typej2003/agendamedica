@@ -8,10 +8,6 @@
   "descripcion": "MAREOS"
  },
  {
-  "codigo_origen": "0116",
-  "descripcion": "DOLOR UÑAS"
- },
- {
   "codigo_origen": "0085",
   "descripcion": "FALTA DE MENSTRUACIÓN"
  },
@@ -46,10 +42,6 @@
  {
   "codigo_origen": "0031",
   "descripcion": "DOLOR EPIGASTRICO"
- },
- {
-  "codigo_origen": "0118",
-  "descripcion": "WE"
  },
  {
   "codigo_origen": "0097",
@@ -144,10 +136,6 @@
   "descripcion": "EBA"
  },
  {
-  "codigo_origen": "0117",
-  "descripcion": "AA"
- },
- {
   "codigo_origen": "0095",
   "descripcion": "FLUJO FETIDO"
  },
@@ -197,7 +185,7 @@
  },
  {
   "codigo_origen": "0055",
-  "descripcion": "INFERTTILIDAD SECUNDARIA"
+  "descripcion": "INFERTILIDAD SECUNDARIA"
  },
  {
   "codigo_origen": "0056",
@@ -353,7 +341,7 @@
  },
  {
   "codigo_origen": "0148",
-  "descripcion": "OVARIOS MULTIFOLICULRES.-"
+  "descripcion": "OVARIOS MULTIFOLICULARES"
  },
  {
   "codigo_origen": "0149",
@@ -561,15 +549,11 @@
  },
  {
   "codigo_origen": "0202",
-  "descripcion": "QUISTE FUNCIONA OVARIO DERECHO"
+  "descripcion": "QUISTE FUNCIONAL OVARIO DERECHO"
  },
  {
   "codigo_origen": "0203",
   "descripcion": "QUISTE FUNCIONAL EN AMBOS OVARIOS.-"
- },
- {
-  "codigo_origen": "0204",
-  "descripcion": "DIANES"
  },
  {
   "codigo_origen": "0205",
@@ -605,7 +589,7 @@
  },
  {
   "codigo_origen": "0214",
-  "descripcion": "PRADO III"
+  "descripcion": "GRADO III"
  },
  {
   "codigo_origen": "0215",
@@ -641,7 +625,7 @@
  },
  {
   "codigo_origen": "0223",
-  "descripcion": "DRENAR GLANDULA GARNER"
+  "descripcion": "DRENAR GLANDULA DE GARTNER"
  },
  {
   "codigo_origen": "0224",
@@ -649,7 +633,7 @@
  },
  {
   "codigo_origen": "0225",
-  "descripcion": "LEEX ESTUDIOS PLAN MUJER"
+  "descripcion": "LEER ESTUDIOS PLAN MUJER"
  },
  {
   "codigo_origen": "0226",
