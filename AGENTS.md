@@ -1260,6 +1260,14 @@ la copia automática (incluido el salto al médico del escritorio y al centro); 
 (`/clinica/catalogos/antecedentes` no existe): se ven y se agregan desde `?seccion=antecedentes` de la consulta; los motivos sí,
 en `/clinica/catalogos/motivos-consulta`.
 
+**Los siete tipos de antecedente son por especialidad** (2026-10-28, seguimiento del mismo reporte). Los códigos `01`–`07` son los
+mismos, pero los nombres no: pediatría usa PATOLÓGICOS… y ginecología **PERSONAL, FAMILIAR, PSICOBIOLOGICOS, OBSTETRICOS,
+GINECOLOGICOS, ACTIVIDAD SEXUAL y VARIOS** (de `tipo_antecedente` de la misma base de ejemplo; sin tildes). `TiposDeAntecedente`
+guarda los dos mapas y `SembrarTiposDeAntecedente` siembra los del médico **según la especialidad del contexto** en el mismo punto
+que pediatría (al abrir la consulta y en la historia pediátrica): es idempotente y **no pisa** un nombre que el médico ya tenga;
+las especialidades sin nombres en la fuente no siembran nada. Los médicos que ya existen lo reciben al abrir su próxima consulta.
+Tests: `tests/Feature/TiposDeAntecedentePorEspecialidadTest.php`.
+
 **Nunca commitear `.env` ni datos reales de pacientes** (el repo arrastra el esquema y los seeders del
 sistema legado).
 

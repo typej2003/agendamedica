@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Actions\Pacientes\SembrarTiposDeAntecedente;
 use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\CitaDeLaConsulta;
@@ -266,13 +267,15 @@ class ConsultaController extends Controller
             return $destino;
         }
 
+        // Los siete tipos de antecedente con el nombre de la especialidad del contexto: pediatría tiene los suyos
+        // (Patológicos, C.A., Madre…) y ginecología los suyos (Personal, Familiar, H.P., Obst., Gine., A.S., Otros);
+        // las demás no tienen nombres en la fuente y no se siembran. Es idempotente y nunca pisa el nombre que el
+        // médico ya tenía. Se hace acá, una sola vez por petición, para que el médico que ya existe lo reciba al
+        // abrir su próxima consulta.
+        app(SembrarTiposDeAntecedente::class)->ejecutar($contexto['reg_medico'], $contexto['specialty']?->slug);
+
         // Las alertas (WEB-11.6): todas las del paciente, fijas en la pantalla; y el diálogo de aviso **una vez por atención** (el id
         // queda en la sesión y `MostradorController` lo olvida al darle «Atender» otra vez).
-        // Pediatría (WEB-12.3): sus siete tipos de antecedente (Patológicos, C.A., Madre…) se siembran en el catálogo del médico la primera vez.
-        if ($this->alcance()->esPediatria()) {
-            app(\App\Actions\Pacientes\SembrarTiposDeAntecedentePediatricos::class)->ejecutar($contexto['reg_medico']);
-        }
-
         $alertas = $antecedentes->delPaciente($contexto['reg_medico'], (string) $consulta->numhistoria)
             ->where('alerta', true)
             ->map(fn ($fila) => ['nombre' => $fila->nombre, 'detalle' => $fila->detalle])
