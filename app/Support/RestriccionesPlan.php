@@ -17,8 +17,10 @@ class RestriccionesPlan implements JsonSerializable
 {
     /** `null` = sin límite. */
     public const DEFAULTS = [
-        // Cuentas de médico enlazadas al `reg_medico` que el plan permite.
+        // Médicos enlazados al `reg_medico` que el plan permite (la ficha dueña cuenta).
         'max_medicos' => null,
+        // Cuentas de secretaría enlazadas al `reg_medico` que el plan permite.
+        'max_secretarias' => null,
         // Cuántos meses hacia atrás se ven citas, consultas y fichas en el app y la web.
         'max_historico_meses' => null,
     ];
@@ -53,6 +55,11 @@ class RestriccionesPlan implements JsonSerializable
     public function maxMedicos(): ?int
     {
         return $this->entero('max_medicos');
+    }
+
+    public function maxSecretarias(): ?int
+    {
+        return $this->entero('max_secretarias');
     }
 
     public function maxHistoricoMeses(): ?int

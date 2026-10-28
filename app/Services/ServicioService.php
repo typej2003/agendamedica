@@ -10,17 +10,17 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Servicio contratado por `reg_medico`: cuál es el vigente, en qué estado está y si deja sincronizar.
+ * Servicio contratado por `reg_medico`: cuál es el vigente, en qué estado está y si deja sincronizar o imprimir.
  *
  * Estados (por la fecha `vence_el`, que cuenta completa — se sirve hasta el final de ese día):
  *  - `vigente`: no ha vencido.
  *  - `gracia`:  venció hace [config servicios.dias_gracia] días o menos. Se sincroniza, pero ya figura vencido.
- *  - `vencido`: pasó la gracia. **No se sincroniza**: el API responde 402 `servicio_vencido`.
- *  - `sin_servicio`: el `reg_medico` no tiene ninguna fila. Tampoco sincroniza; no debería pasar, porque
- *    cada médico recibe su prueba al crearse y quien sincroniza desde el escritorio, su año de cortesía.
+ *  - `vencido`: pasó la gracia. **No se sincroniza** (402 `servicio_vencido`) **ni se imprime**.
+ *  - `sin_servicio`: el `reg_medico` no tiene ninguna fila. Tampoco sincroniza ni imprime; no debería pasar,
+ *    porque cada médico recibe su prueba al crearse y quien sincroniza desde el escritorio, su año de cortesía.
  *
- * Lo único que se bloquea es la sincronización. Lo demás (ver lo que ya hay en el teléfono o el escritorio,
- * iniciar sesión, el panel) sigue igual.
+ * La impresión además depende de la característica `impresion_reportes` del plan contratado. Lo demás (ver lo
+ * que ya hay en el teléfono o el escritorio, iniciar sesión, el panel) sigue igual.
  */
 class ServicioService
 {
@@ -40,16 +40,17 @@ class ServicioService
     }
 
     /**
-     * @return array{estado:string, permite_sync:bool, reg_medico:string, plan:?string, plan_codigo:?string, origen:?string, inicia_el:?string, vence_el:?string, dias_restantes:?int, gracia_hasta:?string, restricciones:array}
+     * @return array{estado:string, permite_sync:bool, permite_imprimir:bool, reg_medico:string, plan:?string, plan_id:?int, plan_codigo:?string, origen:?string, inicia_el:?string, vence_el:?string, dias_restantes:?int, gracia_hasta:?string, restricciones:array, caracteristicas:array}
      */
     public function estado(string $regMedico, ?Carbon $hoy = null): array
     {
         $servicio = $this->actual($regMedico);
         if (! $servicio) {
             return [
-                'estado' => self::SIN_SERVICIO, 'permite_sync' => false, 'reg_medico' => $regMedico,
-                'plan' => null, 'plan_codigo' => null, 'origen' => null, 'inicia_el' => null, 'vence_el' => null,
-                'dias_restantes' => null, 'gracia_hasta' => null, 'restricciones' => [],
+                'estado' => self::SIN_SERVICIO, 'permite_sync' => false, 'permite_imprimir' => false,
+                'reg_medico' => $regMedico, 'plan' => null, 'plan_id' => null, 'plan_codigo' => null,
+                'origen' => null, 'inicia_el' => null, 'vence_el' => null, 'dias_restantes' => null,
+                'gracia_hasta' => null, 'restricciones' => [], 'caracteristicas' => [],
             ];
         }
 
@@ -58,8 +59,11 @@ class ServicioService
         return [
             'estado' => $c['estado'],
             'permite_sync' => $c['estado'] !== self::VENCIDO,
+            // La gracia imprime igual que sincroniza; el corte es al pasar a vencido o si el plan no la incluye.
+            'permite_imprimir' => $c['estado'] !== self::VENCIDO && $servicio->caracteristicas->impresionReportes(),
             'reg_medico' => $regMedico,
             'plan' => $servicio->plan_nombre,
+            'plan_id' => $servicio->plan_id,
             'plan_codigo' => $servicio->plan?->codigo,
             'origen' => $servicio->origen,
             'inicia_el' => $servicio->inicia_el->toDateString(),
@@ -67,7 +71,39 @@ class ServicioService
             'dias_restantes' => $c['dias'],
             'gracia_hasta' => $c['gracia_hasta'],
             'restricciones' => $servicio->restricciones->toArray(),
+            'caracteristicas' => $servicio->caracteristicas->toArray(),
         ];
+    }
+
+    /** ¿El plan vigente (o en gracia) de este consultorio deja imprimir reportes y PDF? */
+    public function permiteImprimir(string $regMedico, ?Carbon $hoy = null): bool
+    {
+        return (bool) ($this->estado($regMedico, $hoy)['permite_imprimir'] ?? false);
+    }
+
+    /** El texto para el aviso y la redirección; null si el plan sí deja imprimir. */
+    public function motivoDeNoImprimir(string $regMedico, ?array $estado = null): ?string
+    {
+        $estado = $estado ?? $this->estado($regMedico);
+
+        if (($estado['permite_imprimir'] ?? false) === true) {
+            return null;
+        }
+
+        if (($estado['estado'] ?? '') === self::SIN_SERVICIO) {
+            return 'Este consultorio no tiene un plan activo: no se pueden imprimir reportes ni generar PDF.';
+        }
+
+        if (($estado['estado'] ?? '') === self::VENCIDO) {
+            $vence = $estado['vence_el'] ?? null;
+            $texto = $vence
+                ? 'El plan de este consultorio venció el ' . Carbon::parse($vence)->format(\App\Support\Regionalizacion::formatoActual())
+                : 'El plan de este consultorio venció';
+
+            return $texto . ': no se pueden imprimir reportes ni generar PDF hasta renovarlo.';
+        }
+
+        return 'Tu plan no incluye la impresión de reportes ni PDF. Mejora el plan para imprimir.';
     }
 
     /**
@@ -266,7 +302,10 @@ class ServicioService
      * Renovar o contratar un plan. Si el servicio actual todavía no vence, el nuevo período empieza donde
      * termina ese (no se pierde nada de lo ya pagado); si no, empieza hoy.
      *
-     * @param  float|null  $monto  lo cobrado; por defecto, el precio del plan
+     * En un plan **por asiento** el llamador tiene que pasar el monto ya calculado con `CupoDelPlan`
+     * (`precioUsdE2`): acá no se adivina el equipo. La web, el panel y el comando lo hacen.
+     *
+     * @param  float|null  $monto  lo cobrado; por defecto, el precio fijo del plan
      * @param  int|null  $meses  por defecto, los del plan (así se puede dar de más: "paga 10, disfruta 12")
      */
     public function renovar(
@@ -295,7 +334,7 @@ class ServicioService
     }
 
     /**
-     * Crea una fila de servicio con las restricciones del plan copiadas.
+     * Crea una fila de servicio con las restricciones y las características del plan copiadas.
      *
      * @param  int|null  $meses  por defecto, los del plan (1 mensual, 12 anual)
      */
@@ -328,6 +367,7 @@ class ServicioService
             'vence_el' => $inicia->copy()->addMonthsNoOverflow($meses),
             'monto_usd' => $monto,
             'restricciones' => $plan->restricciones,
+            'caracteristicas' => $plan->caracteristicas,
             'estado' => RegMedicoServicio::ACTIVO,
             'nota' => $nota,
         ]);

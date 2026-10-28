@@ -12,10 +12,17 @@
             <strong>Tu servicio</strong>
         </div>
         <div class="card-body">
+            <p class="mb-2 text-muted">{{ $vm->uso() }}</p>
+
             @if ($vm->tieneServicio())
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                     <span class="fs-5 fw-semibold">{{ $vm->planActual() }}</span>
                     <span class="badge bg-{{ $vm->estadoTono() }}">{{ $vm->estadoLegible() }}</span>
+                    @if ($vm->estado['permite_imprimir'] ?? false)
+                        <span class="badge bg-success">Impresión incluida</span>
+                    @else
+                        <span class="badge bg-secondary">Sin impresión</span>
+                    @endif
                 </div>
                 @if ($vm->venceEl())
                     <p class="mb-1">
@@ -31,11 +38,11 @@
                 @endif
                 @if ($vm->estado['estado'] === 'gracia')
                     <p class="text-warning-emphasis small mb-0">
-                        Estás en los días de gracia: todavía sincroniza, pero el servicio ya figura vencido.
+                        Estás en los días de gracia: todavía sincroniza e imprime, pero el servicio ya figura vencido.
                     </p>
                 @elseif ($vm->estado['estado'] === 'vencido')
                     <p class="text-danger small mb-0">
-                        El servicio venció: la sincronización está suspendida hasta que renueves.
+                        El servicio venció: la sincronización y la impresión están suspendidas hasta que renueves.
                     </p>
                 @endif
             @else
@@ -61,8 +68,9 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Plan</th>
+                            <th>Incluye</th>
                             <th>Frecuencia</th>
-                            <th class="text-end">Precio</th>
+                            <th class="text-end">Precio para tu equipo</th>
                             <th class="text-end">Pagar</th>
                         </tr>
                     </thead>
@@ -70,28 +78,55 @@
                         @forelse ($vm->planes as $plan)
                             <tr>
                                 <td>
-                                    <div class="fw-semibold">{{ $plan->nombre }}</div>
+                                    <div class="fw-semibold">
+                                        {{ $plan->nombre }}
+                                        @if ($vm->esElPlanActual($plan))
+                                            <span class="badge bg-primary ms-1">Tu plan actual</span>
+                                        @endif
+                                    </div>
                                     @if ($plan->descripcion)
                                         <small class="text-muted">{{ $plan->descripcion }}</small>
                                     @endif
-                                    @if ($plan->precio_tachado_usd && (float) $plan->precio_tachado_usd > (float) $plan->precio_usd)
+                                    @if (! $vm->esPorAsiento($plan) && $plan->precio_tachado_usd && (float) $plan->precio_tachado_usd > (float) $plan->precio_usd)
                                         <div class="small">
                                             <del class="text-muted">{{ $vm->precioTachadoUsdTexto($plan) }}</del>
                                             <span class="text-success ms-1">ahorras {{ $vm->ahorroTexto($plan) }}</span>
                                         </div>
                                     @endif
                                 </td>
+                                <td>
+                                    <ul class="list-unstyled small mb-0">
+                                        @foreach ($vm->incluye($plan) as $item)
+                                            <li><i class="bi bi-check2 text-success" aria-hidden="true"></i> {{ $item }}</li>
+                                        @endforeach
+                                    </ul>
+                                </td>
                                 <td>{{ $plan->frecuencia === \App\Models\Plan::ANUAL ? 'Anual (12 meses)' : 'Mensual' }}</td>
-                                <td class="text-end fw-semibold">{{ $vm->precioUsdTexto($plan) }}</td>
                                 <td class="text-end">
-                                    <a href="{{ route('clinica.plan.elegir', $plan) }}" class="btn btn-primary btn-sm text-nowrap">
-                                        <i class="bi bi-credit-card me-1" aria-hidden="true"></i> Pagar
-                                    </a>
+                                    <div class="fw-semibold">{{ $vm->precioUsdTexto($plan) }}</div>
+                                    @if ($vm->detallePrecio($plan))
+                                        <small class="text-muted d-block">{{ $vm->detallePrecio($plan) }}</small>
+                                    @endif
+                                </td>
+                                <td class="text-end">
+                                    @if ($vm->puedeContratar($plan))
+                                        <a href="{{ route('clinica.plan.elegir', $plan) }}" class="btn btn-primary btn-sm text-nowrap">
+                                            <i class="bi bi-credit-card me-1" aria-hidden="true"></i>
+                                            {{ $vm->esElPlanActual($plan) ? 'Renovar' : 'Pagar' }}
+                                        </a>
+                                    @else
+                                        <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap" disabled
+                                                title="{{ $vm->motivoNoContratable($plan) }}">
+                                            <i class="bi bi-lock me-1" aria-hidden="true"></i> No cabe tu equipo
+                                        </button>
+                                        <small class="text-muted d-block mt-1">{{ $vm->motivoNoContratable($plan) }}</small>
+                                        <a class="small" href="{{ route('clinica.equipo') }}">Ver el equipo</a>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-4">No hay planes disponibles.</td>
+                                <td colspan="5" class="text-center text-muted py-4">No hay planes disponibles.</td>
                             </tr>
                         @endforelse
                     </tbody>

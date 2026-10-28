@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Clinica\ContextoAutomatico;
 use App\Clinica\ContextoTrabajo;
+use App\Services\ServicioService;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -31,6 +32,10 @@ class AsegurarContextoClinico
 {
     /** El parámetro de `clinica.contexto` que resuelve solo el dueño de los consultorios cuando no hay contexto. */
     public const CONSULTORIOS = 'consultorios';
+
+    public function __construct(private readonly ServicioService $servicios)
+    {
+    }
 
     public function handle(Request $request, Closure $next, ?string $opcional = null)
     {
@@ -61,6 +66,15 @@ class AsegurarContextoClinico
         // menú salía de los módulos del shell y nada más).
         view()->share('contexto', $contexto);
         view()->share('modulos', $trabajo->modulos($contexto, $trabajo->roles($request->user())));
+
+        // El plan del contexto, para el banner del layout y para los botones de imprimir. Se comparte en
+        // todas las pantallas clínicas: el aviso de “sin impresión” tiene que verse también fuera de la hoja.
+        $estadoServicio = $this->servicios->estado((string) $contexto['reg_medico']);
+        view()->share('estadoServicio', $estadoServicio);
+        view()->share('planPermiteImprimir', (bool) ($estadoServicio['permite_imprimir'] ?? false));
+        view()->share('motivoSinImpresion', ($estadoServicio['permite_imprimir'] ?? false)
+            ? null
+            : $this->servicios->motivoDeNoImprimir((string) $contexto['reg_medico'], $estadoServicio));
 
         return $next($request);
     }

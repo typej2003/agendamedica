@@ -406,8 +406,38 @@ class ServiciosPanelTest extends TestCase
         $this->assertSame('anual', $plan->frecuencia);
         $this->assertSame(39.99, $plan->ahorroUsd());
         $this->assertFalse($plan->es_default);
-        // Sin restricciones editables todavía: quedan las de por defecto (sin límite).
+        // Sin límites elegidos: quedan los de por defecto (sin límite).
         $this->assertNull($plan->restricciones->maxMedicos());
+    }
+
+    public function test_un_plan_personalizado_guarda_limites_y_caracteristicas(): void
+    {
+        $this->actingAs($this->admin());
+
+        Livewire::test(Servicios::class)
+            ->call('cambiarPestana', 'planes')
+            ->call('nuevoPlan')
+            ->set('nombre', 'Plan amigo')
+            ->set('codigo', 'amigo-' . substr(uniqid(), -6))
+            ->set('precio_usd', '10')
+            ->set('max_medicos', '1')
+            ->set('max_secretarias', '2')
+            ->set('impresion_reportes', false)
+            ->set('precio_asiento_usd', '10')
+            ->set('secretarias_incluidas', '2')
+            ->set('minimo_asientos', '3')
+            ->call('guardarPlan')
+            ->assertHasNoErrors();
+
+        $plan = Plan::latest('id')->firstOrFail();
+        $this->assertSame(1, $plan->restricciones->maxMedicos());
+        $this->assertSame(2, $plan->restricciones->maxSecretarias());
+        $this->assertFalse($plan->caracteristicas->impresionReportes());
+        $this->assertSame(10.0, $plan->caracteristicas->precioAsientoUsd());
+        $this->assertSame(2, $plan->caracteristicas->secretariasIncluidas());
+        $this->assertSame(3, $plan->caracteristicas->minimoAsientos());
+        $this->assertSame(3, $plan->asientosQueSeCobran(1, 2));
+        $this->assertSame(3000, app(\App\Services\CupoDelPlan::class)->precioUsdE2($plan, ['medicos' => 1, 'secretarias' => 2]));
     }
 
     public function test_el_codigo_es_unico_y_sin_espacios_ni_mayusculas(): void

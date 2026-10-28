@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\CaracteristicasPlanCast;
 use App\Casts\RestriccionesPlanCast;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,7 +25,7 @@ class RegMedicoServicio extends Model
 
     protected $fillable = [
         'reg_medico', 'plan_id', 'plan_nombre', 'origen', 'inicia_el', 'vence_el',
-        'monto_usd', 'restricciones', 'estado', 'nota',
+        'monto_usd', 'restricciones', 'caracteristicas', 'estado', 'nota',
     ];
 
     protected $casts = [
@@ -32,6 +33,7 @@ class RegMedicoServicio extends Model
         'vence_el' => 'date',
         'monto_usd' => 'decimal:2',
         'restricciones' => RestriccionesPlanCast::class,
+        'caracteristicas' => CaracteristicasPlanCast::class,
     ];
 
     public function plan(): BelongsTo

@@ -207,6 +207,22 @@
                 <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> {{ session('error') }}
             </div>
         @endif
+
+        {{-- Sin plan vigente (o sin la característica de impresión) no se imprimen reportes ni PDF. El aviso
+             va en todas las pantallas clínicas; en la pantalla de planes no hace falta repetirlo. --}}
+        @if (request()->attributes->has('contexto_clinico') && isset($estadoServicio) && ($planPermiteImprimir ?? true) === false && ! request()->routeIs('clinica.plan*'))
+            <div class="alert alert-warning py-2 d-flex align-items-center gap-2" role="alert" data-plan-sin-impresion>
+                <i class="bi bi-printer-fill" aria-hidden="true"></i>
+                <span>{{ $motivoSinImpresion }}
+                    @if (auth()->user()?->trabajaLaConsulta())
+                        <a class="alert-link" href="{{ route('clinica.plan') }}">Renovar o mejorar el plan</a>.
+                    @else
+                        Pídele al médico que renueve el plan.
+                    @endif
+                </span>
+            </div>
+        @endif
+
         {{-- La guía de puesta en marcha: el siguiente dato esencial que le falta al médico, de uno en uno
              (`PasosEsenciales`). Tras guardar una sede, un consultorio o un bloque de horario (`guiado`), además se
              le pregunta en un diálogo si quiere seguir ahora. --}}

@@ -4,9 +4,12 @@ namespace App\Console\Commands;
 
 use App\Models\Plan;
 use App\Models\RegMedicoServicio;
+use App\Pagos\Centavos;
+use App\Services\CupoDelPlan;
 use App\Services\ServicioService;
 use DomainException;
 use Illuminate\Console\Command;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Operar los servicios por consola (mientras el panel no tenga su pantalla):
@@ -42,10 +45,10 @@ class ServicioCommand extends Command
     private function planes(): int
     {
         $this->table(
-            ['código', 'nombre', 'frecuencia', 'USD', 'tachado', 'default', 'visible', 'restricciones'],
+            ['código', 'nombre', 'frecuencia', 'USD', 'tachado', 'default', 'visible', 'restricciones', 'caracteristicas'],
             Plan::orderBy('orden')->orderBy('id')->get()->map(fn (Plan $p) => [
                 $p->codigo, $p->nombre, $p->frecuencia, $p->precio_usd, $p->precio_tachado_usd ?? '-',
-                $p->es_default ? 'sí' : '', $p->visible ? 'sí' : '', json_encode($p->restricciones),
+                $p->es_default ? 'sí' : '', $p->visible ? 'sí' : '', json_encode($p->restricciones), json_encode($p->caracteristicas),
             ])
         );
 
@@ -83,11 +86,25 @@ class ServicioCommand extends Command
 
             return self::FAILURE;
         }
+        $cupos = app(CupoDelPlan::class);
+
+        try {
+            $cupos->exigirQueCubra($plan, $reg);
+        } catch (ValidationException $e) {
+            $this->error($e->errors()['plan'][0] ?? $e->getMessage());
+
+            return self::FAILURE;
+        }
+
         $monto = $this->option('monto');
         if ($monto !== null && ! is_numeric($monto)) {
             $this->error('--monto tiene que ser un número.');
 
             return self::FAILURE;
+        }
+
+        if ($monto === null && $plan->cobraPorAsiento()) {
+            $monto = Centavos::aDecimal($cupos->precioUsdE2($plan, $cupos->conteo($reg)));
         }
 
         try {

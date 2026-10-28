@@ -7,13 +7,27 @@
          temporal de una cuenta recién creada o restablecida se pinta una vez, desde la sesión flash, y se pierde al recargar. --}}
     <x-ui.page-head titulo="Usuarios" :subtitulo="$vm->subtitulo()">
         <x-slot name="acciones">
-            <button type="button" class="btn btn-primary" data-dialogo="dialogo-usuario">
-                <i class="bi bi-plus-lg" aria-hidden="true"></i> Nueva secretaria
-            </button>
+            @if ($vm->puedeAgregarSecretaria())
+                <button type="button" class="btn btn-primary" data-dialogo="dialogo-usuario">
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Nueva secretaria
+                </button>
+            @else
+                <a href="{{ $vm->urlPlan() }}" class="btn btn-warning">
+                    <i class="bi bi-arrow-up-circle" aria-hidden="true"></i> Mejorar plan
+                </a>
+            @endif
         </x-slot>
     </x-ui.page-head>
 
     <x-ui.errores />
+
+    @if (! $vm->puedeAgregarSecretaria() && $vm->motivoNoPuedeAgregar())
+        <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2" role="alert">
+            <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+            <span>{{ $vm->motivoNoPuedeAgregar() }}</span>
+            <a class="alert-link" href="{{ $vm->urlPlan() }}">Ver los planes</a>
+        </div>
+    @endif
 
     @if ($vm->claveNueva())
         @php $clave = $vm->claveNueva(); @endphp
@@ -47,9 +61,15 @@
             <x-ui.vacio :icono="$vacio['icono']" :titulo="$vacio['titulo']">
                 {{ $vacio['texto'] }}
                 <x-slot name="acciones">
-                    <button type="button" class="btn btn-primary" data-dialogo="dialogo-usuario">
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Crear la cuenta de mi secretaria
-                    </button>
+                    @if ($vm->puedeAgregarSecretaria())
+                        <button type="button" class="btn btn-primary" data-dialogo="dialogo-usuario">
+                            <i class="bi bi-plus-lg" aria-hidden="true"></i> Crear la cuenta de mi secretaria
+                        </button>
+                    @else
+                        <a href="{{ $vm->urlPlan() }}" class="btn btn-warning">
+                            <i class="bi bi-arrow-up-circle" aria-hidden="true"></i> Mejorar plan
+                        </a>
+                    @endif
                 </x-slot>
             </x-ui.vacio>
         @else
@@ -138,35 +158,37 @@
         Quitarle el acceso no borra nada: su cuenta queda sin acceso.
     </p>
 
-    <x-ui.dialogo id="dialogo-usuario" titulo="Nueva secretaria" lateral
-                  data-abrir-al-cargar="{{ ($errors->has('name') || $errors->has('email')) ? '1' : '0' }}">
-        <form method="POST" action="{{ $vm->urlCrear() }}">
-            @csrf
-            <div class="dialogo-cuerpo">
-                <div class="row g-3">
-                    <x-ui.campo etiqueta="Nombre completo" for="usuario-nombre" error="name" class="col-12" :requerido="true">
-                        <input type="text" name="name" id="usuario-nombre" class="form-control" data-foco-inicial
-                               maxlength="100" autocomplete="off" value="{{ old('name') }}">
-                    </x-ui.campo>
+    @if ($vm->puedeAgregarSecretaria())
+        <x-ui.dialogo id="dialogo-usuario" titulo="Nueva secretaria" lateral
+                      data-abrir-al-cargar="{{ ($errors->has('name') || $errors->has('email') || $errors->has('secretaria')) ? '1' : '0' }}">
+            <form method="POST" action="{{ $vm->urlCrear() }}">
+                @csrf
+                <div class="dialogo-cuerpo">
+                    <div class="row g-3">
+                        <x-ui.campo etiqueta="Nombre completo" for="usuario-nombre" error="name" class="col-12" :requerido="true">
+                            <input type="text" name="name" id="usuario-nombre" class="form-control" data-foco-inicial
+                                   maxlength="100" autocomplete="off" value="{{ old('name') }}">
+                        </x-ui.campo>
 
-                    <x-ui.campo etiqueta="Correo" for="usuario-correo" error="email" class="col-12" :requerido="true"
-                                ayuda="Con este correo entra al sistema. Debe ser uno que no tenga cuenta todavía.">
-                        <input type="email" name="email" id="usuario-correo" class="form-control"
-                               maxlength="150" autocomplete="off" value="{{ old('email') }}">
-                    </x-ui.campo>
+                        <x-ui.campo etiqueta="Correo" for="usuario-correo" error="email" class="col-12" :requerido="true"
+                                    ayuda="Con este correo entra al sistema. Debe ser uno que no tenga cuenta todavía.">
+                            <input type="email" name="email" id="usuario-correo" class="form-control"
+                                   maxlength="150" autocomplete="off" value="{{ old('email') }}">
+                        </x-ui.campo>
 
-                    <p class="texto-tenue small mb-0">
-                        Al crearla se genera una <strong>clave temporal</strong> que verás una sola vez; la secretaria tiene que cambiarla al entrar.
-                    </p>
+                        <p class="texto-tenue small mb-0">
+                            Al crearla se genera una <strong>clave temporal</strong> que verás una sola vez; la secretaria tiene que cambiarla al entrar.
+                        </p>
+                    </div>
                 </div>
-            </div>
 
-            <div class="dialogo-pie">
-                <button type="button" class="btn btn-outline-secondary" data-cerrar-dialogo>Cancelar</button>
-                <button class="btn btn-primary">Crear la cuenta</button>
-            </div>
-        </form>
-    </x-ui.dialogo>
+                <div class="dialogo-pie">
+                    <button type="button" class="btn btn-outline-secondary" data-cerrar-dialogo>Cancelar</button>
+                    <button class="btn btn-primary">Crear la cuenta</button>
+                </div>
+            </form>
+        </x-ui.dialogo>
+    @endif
 
     <x-ui.dialogo id="dialogo-bloquear" titulo="Bloquear el acceso" lateral>
         <form method="POST" action="" id="bloquear-form">

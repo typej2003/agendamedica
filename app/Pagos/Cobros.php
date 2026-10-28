@@ -12,8 +12,10 @@ use App\Models\PagoEvento;
 use App\Models\Plan;
 use App\Models\TasaDeCambio;
 use App\Models\User;
+use App\Services\CupoDelPlan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Throwable;
 
@@ -29,11 +31,16 @@ use Throwable;
  */
 final class Cobros
 {
+    public function __construct(private readonly CupoDelPlan $cupos)
+    {
+    }
+
     /**
      * Crea la intención de pago de un plan. No cobra: deja el pago en `pendiente`, con la tasa y el monto
      * en VES congelados, para que el médico pague con el método elegido.
      *
-     * @throws RuntimeException si falta la tasa, el método no está activo o el plan no tiene precio
+     * @throws RuntimeException si falta la tasa, el método no está activo, el plan no tiene precio o no
+     *                          cubre al equipo actual (salvo que sea la renovación del mismo plan)
      */
     public function crearParaPlan(string $regMedico, Plan $plan, MetodoPago $metodo, ?int $usuarioId = null): Pago
     {
@@ -45,7 +52,14 @@ final class Cobros
             throw new RuntimeException('El método de pago elegido no está disponible.');
         }
 
-        $montoUsdE2 = Centavos::deDecimal((string) $plan->precio_usd);
+        try {
+            $this->cupos->exigirQueCubra($plan, $regMedico);
+        } catch (ValidationException $e) {
+            throw new RuntimeException($e->errors()['plan'][0] ?? $e->getMessage());
+        }
+
+        $conteo = $this->cupos->conteo($regMedico);
+        $montoUsdE2 = $this->cupos->precioUsdE2($plan, $conteo);
         if ($montoUsdE2 <= 0) {
             throw new RuntimeException('Este plan es gratuito: no hay nada que cobrar.');
         }
@@ -83,7 +97,8 @@ final class Cobros
             'canal' => Pago::CANAL_PLAN,
             'pagable_tipo' => Pago::PAGABLE_PLAN,
             'pagable_id' => $plan->id,
-            'concepto' => 'Plan ' . $plan->nombre . ' · ' . ($plan->frecuencia === Plan::ANUAL ? 'anual' : 'mensual'),
+            'concepto' => 'Plan ' . $plan->nombre . ' · ' . ($plan->frecuencia === Plan::ANUAL ? 'anual' : 'mensual')
+                . ($plan->cobraPorAsiento() ? ' · ' . $this->cupos->asientos($plan, $conteo) . ' asientos' : ''),
             'metodo_pago_id' => $metodo->id,
             'cuenta_bancaria_id' => $metodo->cuenta_bancaria_id,
             'moneda' => $moneda,

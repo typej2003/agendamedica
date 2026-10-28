@@ -24,6 +24,23 @@
                         <dt class="col-6 fw-normal text-muted">Precio</dt>
                         <dd class="col-6 text-end fw-semibold">{{ $vm->precioUsdTexto() }}</dd>
                     </dl>
+
+                    @if ($vm->desglose())
+                        <p class="small text-muted mt-2 mb-0">{{ $vm->desglose() }}</p>
+                    @endif
+
+                    <ul class="list-unstyled small mt-3 mb-0">
+                        <li>
+                            <i class="bi bi-people text-success" aria-hidden="true"></i>
+                            {{ $vm->plan->restricciones->maxMedicos() === null ? 'Médicos sin límite' : $vm->plan->restricciones->maxMedicos() . ' médico' . ($vm->plan->restricciones->maxMedicos() === 1 ? '' : 's') }}
+                            y
+                            {{ $vm->plan->restricciones->maxSecretarias() === null ? 'secretarías sin límite' : $vm->plan->restricciones->maxSecretarias() . ' secretaría' . ($vm->plan->restricciones->maxSecretarias() === 1 ? '' : 's') }}
+                        </li>
+                        <li>
+                            <i class="bi {{ $vm->plan->caracteristicas->impresionReportes() ? 'bi-printer text-success' : 'bi-printer text-muted' }}" aria-hidden="true"></i>
+                            {{ $vm->plan->caracteristicas->impresionReportes() ? 'Impresión de reportes y PDF incluida' : 'Sin impresión de reportes' }}
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>

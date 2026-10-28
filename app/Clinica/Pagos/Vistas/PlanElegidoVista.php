@@ -19,11 +19,14 @@ final class PlanElegidoVista
 {
     /**
      * @param  Collection<int,MetodoPago>  $metodos
+     * @param  int  $precioE2  el precio ya calculado para el equipo actual, en centavos de USD
      */
     public function __construct(
         public readonly Plan $plan,
         public readonly Collection $metodos,
         public readonly ?TasaDeCambio $tasa,
+        public readonly int $precioE2 = 0,
+        public readonly ?string $desglose = null,
     ) {
     }
 
@@ -40,6 +43,12 @@ final class PlanElegidoVista
     public function precioUsdTexto(): string
     {
         return Centavos::formatear($this->precioUsdE2(), 'USD');
+    }
+
+    /** “4 asientos × USD 12,00 · 1 secretaría incluida”, o null si el plan es de precio fijo. */
+    public function desglose(): ?string
+    {
+        return $this->desglose;
     }
 
     /** El monto que se cobra con ese método, en su moneda; `null` si falta la tasa o la moneda no se maneja. */
@@ -105,6 +114,8 @@ final class PlanElegidoVista
 
     private function precioUsdE2(): int
     {
-        return Centavos::deDecimal((string) $this->plan->precio_usd);
+        return $this->precioE2 > 0
+            ? $this->precioE2
+            : Centavos::deDecimal((string) $this->plan->precio_usd);
     }
 }

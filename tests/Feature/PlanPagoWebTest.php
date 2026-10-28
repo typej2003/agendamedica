@@ -693,6 +693,58 @@ class PlanPagoWebTest extends TestCase
         $this->assertSame(0, Pago::count());
     }
 
+    public function test_el_plan_por_asiento_cobra_el_equipo_actual_y_la_secretaria_extra(): void
+    {
+        [$user, $medico] = $this->medicoDePrueba('asiento-d');
+        $metodo = $this->metodoDePrueba();
+        TasaDeCambio::fijar('36,5');
+
+        // El consultorio arranca con el plan de equipo (sin tope) para poder afiliar a los médicos.
+        app(\App\Services\ServicioService::class)->reemplazar(
+            $medico->reg_medico,
+            Plan::porCodigo('equipo-por-asiento'),
+            0,
+            'prueba',
+        );
+
+        foreach (['asiento-1', 'asiento-2', 'asiento-3'] as $sufijo) {
+            [, $otro] = $this->medicoDePrueba($sufijo . '-' . substr(uniqid(), -5));
+            app(\App\Services\CuentaService::class)->asignarRegistro($otro, $medico->reg_medico);
+        }
+
+        app(\App\Services\CuentaService::class)->crearSecretaria(
+            'Secretaria uno',
+            'asiento-sec1-' . substr(uniqid(), -6) . '@example.com',
+            $medico->reg_medico,
+        );
+
+        $asiento = $this->planDePrueba('asiento-' . substr(uniqid(), -6));
+        $asiento->update([
+            'precio_usd' => 0,
+            'caracteristicas' => [
+                'precio_asiento_usd' => 12,
+                'secretarias_incluidas' => 1,
+                'minimo_asientos' => 4,
+            ],
+        ]);
+
+        $pago = app(Cobros::class)->crearParaPlan($medico->reg_medico, $asiento, $metodo, $user->id);
+
+        $this->assertSame(4800, (int) $pago->monto_usd_e2);
+        $this->assertStringContainsString('4 asientos', (string) $pago->concepto);
+
+        app(\App\Services\CuentaService::class)->crearSecretaria(
+            'Secretaria dos',
+            'asiento-sec2-' . substr(uniqid(), -6) . '@example.com',
+            $medico->reg_medico,
+        );
+
+        $conDos = app(Cobros::class)->crearParaPlan($medico->reg_medico, $asiento, $metodo, $user->id);
+
+        $this->assertSame(6000, (int) $conDos->monto_usd_e2);
+        $this->assertStringContainsString('5 asientos', (string) $conDos->concepto);
+    }
+
     public function test_un_medico_no_puede_ver_el_pago_de_otro(): void
     {
         [$user, $medico, $gineco] = $this->medicoDePrueba();

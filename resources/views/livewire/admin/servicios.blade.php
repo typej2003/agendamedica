@@ -148,6 +148,7 @@
                         <thead class="table-dark">
                             <tr>
                                 <th>Plan</th>
+                                <th>Incluye</th>
                                 <th>Frecuencia</th>
                                 <th class="text-end">Monto (USD)</th>
                                 <th class="text-end">Tachado</th>
@@ -164,17 +165,39 @@
                                         <div class="fw-semibold">{{ $plan->nombre }}</div>
                                         <small class="text-muted">{{ $plan->codigo }}</small>
                                     </td>
+                                    <td>
+                                        <small class="d-block text-muted">
+                                            {{ $plan->restricciones->maxMedicos() === null ? 'Médicos sin límite' : $plan->restricciones->maxMedicos() . ' méd.' }}
+                                            · {{ $plan->restricciones->maxSecretarias() === null ? 'Secretarías sin límite' : $plan->restricciones->maxSecretarias() . ' secr.' }}
+                                        </small>
+                                        <small class="d-block {{ $plan->caracteristicas->impresionReportes() ? 'text-success' : 'text-danger' }}">
+                                            Impresión: {{ $plan->caracteristicas->impresionReportes() ? 'sí' : 'no' }}
+                                        </small>
+                                        @if ($plan->cobraPorAsiento())
+                                            <small class="d-block text-muted">
+                                                {{ number_format((float) $plan->caracteristicas->precioAsientoUsd(), 2, ',', '.') }} USD/asiento
+                                                · mínimo {{ $plan->caracteristicas->minimoAsientos() }}
+                                            </small>
+                                        @endif
+                                    </td>
                                     <td>{{ $plan->frecuencia === 'anual' ? 'Anual (12 meses)' : 'Mensual' }}</td>
-                                    <td class="text-end">{{ number_format((float) $plan->precio_usd, 2, ',', '.') }}</td>
                                     <td class="text-end">
-                                        @if ($plan->precio_tachado_usd !== null)
+                                        @if ($plan->cobraPorAsiento())
+                                            <span class="d-block fw-semibold">Desde {{ \App\Pagos\Centavos::aTexto(\App\Pagos\Centavos::deDecimal((string) $plan->caracteristicas->precioAsientoUsd()) * max(1, $plan->caracteristicas->minimoAsientos())) }}</span>
+                                            <small class="text-muted">{{ (float) $plan->precio_usd > 0 ? number_format((float) $plan->precio_usd, 2, ',', '.') . ' fijo' : 'Sin monto fijo' }}</small>
+                                        @else
+                                            {{ number_format((float) $plan->precio_usd, 2, ',', '.') }}
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        @if (! $plan->cobraPorAsiento() && $plan->precio_tachado_usd !== null)
                                             <del>{{ number_format((float) $plan->precio_tachado_usd, 2, ',', '.') }}</del>
                                         @else
                                             —
                                         @endif
                                     </td>
                                     <td class="text-end">
-                                        @if ($plan->ahorroUsd() > 0)
+                                        @if (! $plan->cobraPorAsiento() && $plan->ahorroUsd() > 0)
                                             <span class="text-success">{{ number_format($plan->ahorroUsd(), 2, ',', '.') }}</span>
                                         @else
                                             —
@@ -232,11 +255,20 @@
                                 <label class="form-label">Plan <span class="text-danger">*</span></label>
                                 <select class="form-select" wire:model.live="planElegido">
                                     @foreach ($planesActivos as $plan)
-                                        <option value="{{ $plan->id }}">
-                                            {{ $plan->nombre }} · {{ $plan->frecuencia === 'anual' ? 'anual' : 'mensual' }} · USD {{ number_format((float) $plan->precio_usd, 2, ',', '.') }}
+                                        <option value="{{ $plan->id }}" @if (isset($planesNoCubren[$plan->id])) disabled @endif>
+                                            {{ $plan->nombre }} · {{ $plan->frecuencia === 'anual' ? 'anual' : 'mensual' }} ·
+                                            @if ($plan->cobraPorAsiento())
+                                                USD {{ number_format((float) $plan->caracteristicas->precioAsientoUsd(), 2, ',', '.') }}/asiento
+                                            @else
+                                                USD {{ number_format((float) $plan->precio_usd, 2, ',', '.') }}
+                                            @endif
+                                            @if (isset($planesNoCubren[$plan->id])) · no cubre tu equipo @endif
                                         </option>
                                     @endforeach
                                 </select>
+                                @if (! empty($planesNoCubren))
+                                    <div class="form-text">Los planes que no cubren al equipo actual aparecen deshabilitados.</div>
+                                @endif
                                 @error('planElegido') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
 
@@ -300,11 +332,20 @@
                                 <label class="form-label">Plan nuevo <span class="text-danger">*</span></label>
                                 <select class="form-select" wire:model.live="planElegido">
                                     @foreach ($planesActivos as $plan)
-                                        <option value="{{ $plan->id }}">
-                                            {{ $plan->nombre }} · {{ $plan->frecuencia === 'anual' ? 'anual' : 'mensual' }} · USD {{ number_format((float) $plan->precio_usd, 2, ',', '.') }}
+                                        <option value="{{ $plan->id }}" @if (isset($planesNoCubren[$plan->id])) disabled @endif>
+                                            {{ $plan->nombre }} · {{ $plan->frecuencia === 'anual' ? 'anual' : 'mensual' }} ·
+                                            @if ($plan->cobraPorAsiento())
+                                                USD {{ number_format((float) $plan->caracteristicas->precioAsientoUsd(), 2, ',', '.') }}/asiento
+                                            @else
+                                                USD {{ number_format((float) $plan->precio_usd, 2, ',', '.') }}
+                                            @endif
+                                            @if (isset($planesNoCubren[$plan->id])) · no cubre tu equipo @endif
                                         </option>
                                     @endforeach
                                 </select>
+                                @if (! empty($planesNoCubren))
+                                    <div class="form-text">Los planes que no cubren al equipo actual aparecen deshabilitados.</div>
+                                @endif
                                 @error('planElegido') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                             </div>
 
@@ -507,6 +548,52 @@
                                     · ahorro de USD {{ number_format($ahorroVista, 2, ',', '.') }}
                                 </p>
                             @endif
+
+                            <div class="border-top pt-3 mt-3">
+                                <h6 class="mb-2">Límites del equipo</h6>
+                                <div class="row">
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label">Máximo de médicos</label>
+                                        <input type="number" min="1" max="999" class="form-control" wire:model="max_medicos" placeholder="Sin límite">
+                                        <div class="form-text">Vacío = sin límite. La ficha dueña cuenta como médico.</div>
+                                        @error('max_medicos') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label">Máximo de secretarías</label>
+                                        <input type="number" min="0" max="999" class="form-control" wire:model="max_secretarias" placeholder="Sin límite">
+                                        <div class="form-text">Vacío = sin límite.</div>
+                                        @error('max_secretarias') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border-top pt-3 mt-3">
+                                <h6 class="mb-2">Características y cobro</h6>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="plan-impresion" wire:model="impresion_reportes">
+                                    <label class="form-check-label" for="plan-impresion">Permite imprimir reportes y generar PDF</label>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4 mb-3">
+                                        <label class="form-label">Precio por asiento (USD)</label>
+                                        <input type="number" min="0.01" step="0.01" class="form-control" wire:model.live="precio_asiento_usd" placeholder="Precio fijo">
+                                        <div class="form-text">Vacío = se cobra el monto fijo de arriba.</div>
+                                        @error('precio_asiento_usd') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-4 mb-3">
+                                        <label class="form-label">Secretarías incluidas</label>
+                                        <input type="number" min="0" max="999" class="form-control" wire:model="secretarias_incluidas">
+                                        <div class="form-text">La “1 secretaría gratis” del plan por asiento.</div>
+                                        @error('secretarias_incluidas') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-4 mb-3">
+                                        <label class="form-label">Mínimo de asientos</label>
+                                        <input type="number" min="0" max="999" class="form-control" wire:model="minimo_asientos">
+                                        <div class="form-text">Piso que se cobra aunque el equipo sea más chico.</div>
+                                        @error('minimo_asientos') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="row">
                                 <div class="col-4 mb-3">
