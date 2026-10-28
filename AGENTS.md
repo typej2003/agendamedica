@@ -1261,6 +1261,36 @@ la copia automática (incluido el salto al médico del escritorio y al centro); 
 (`/clinica/catalogos/antecedentes` no existe): se ven y se agregan desde `?seccion=antecedentes` de la consulta; los motivos sí,
 en `/clinica/catalogos/motivos-consulta`.
 
+**Pasos de datos que se corren una sola vez: `datos:actualizar`** (2026-10-28). Hay comandos de datos que no pueden ir en una
+migración —el catálogo inicial, la copia a los médicos que ya existen— y hasta ahora se corrían a mano después de desplegar, con el
+riesgo de olvidarlos. Ahora la base lleva una **versión de datos** (empieza en 0) y los pasos se declaran en código, en
+`App\Support\Datos\VersionesDeDatos::VERSIONES`:
+
+```php
+1 => ['catalogos:sembrar-iniciales', 'catalogos:cargar-a-medicos'],
+```
+
+`php artisan datos:actualizar` lee la versión, corre en orden los comandos de las versiones mayores (los deduplica: uno que aparece
+en dos versiones se corre una sola vez, en la primera) y deja anotada la última. **La versión es la unidad atómica**: si un comando
+de la versión N falla, se corta ahí, la versión queda en la última que terminó entera y el comando sale con error; la corrida
+siguiente reintenta desde ahí (los comandos de datos son idempotentes, así que reintentar la versión entera es seguro). `--simular`
+muestra la versión y los comandos sin ejecutar ni escribir nada. **Cada paso nuevo es una entrada más** y una versión ya publicada
+no se edita: la misma regla que las migraciones.
+
+La versión vive en **`configuracion_api`**, la tabla clave/valor de **configuraciones internas del servidor**, con la clave
+`version_datos` (`App\Models\ConfiguracionApi`: `valor()`, `entero()` y `fijar()`). No es para datos clínicos ni viaja por el sync.
+⚠️ Los valores se guardan en **texto claro**: si algún día hay que guardar un secreto, va cifrado aparte, no en esta tabla.
+
+**En el script del servidor, después de `migrate --force`** (y después de `especialidades:sembrar`, porque el catálogo inicial las
+necesita), agrega:
+
+```
+php artisan datos:actualizar
+```
+
+Tests: `tests/Unit/Support/Datos/VersionesDeDatosTest.php`, `tests/Feature/ConfiguracionApiTest.php` y
+`tests/Feature/DatosActualizarCommandTest.php`.
+
 **Los siete tipos de antecedente son por especialidad** (2026-10-28, seguimiento del mismo reporte). Los códigos `01`–`07` son los
 mismos, pero los nombres no: pediatría usa PATOLÓGICOS… y ginecología **PERSONAL, FAMILIAR, PSICOBIOLOGICOS, OBSTETRICOS,
 GINECOLOGICOS, ACTIVIDAD SEXUAL y VARIOS** (de `tipo_antecedente` de la misma base de ejemplo; sin tildes). `TiposDeAntecedente`
