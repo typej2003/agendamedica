@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Historia;
 
+use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoAbdominal;
 use App\Clinica\Consulta\EcoDoppler;
@@ -53,8 +54,13 @@ final class HistoriaDelPaciente
      */
     public const TIPO2_ALERTA = 'A';
 
-    public function __construct(private ResumenMedicoDeLaConsulta $resumenes)
-    {
+    public function __construct(
+        private ResumenMedicoDeLaConsulta $resumenes,
+        // Los nombres de los siete tipos son los mismos que usa la consulta: el del propio médico manda y el de
+        // cualquier otro sólo completa lo que le falte (`AntecedentesDelPaciente::tipos`). Sin esto la historia
+        // agrupaba con el primer catálogo de la base, que podía ser el de otra especialidad.
+        private AntecedentesDelPaciente $tipos,
+    ) {
     }
 
     /**
@@ -130,7 +136,7 @@ final class HistoriaDelPaciente
         }
 
         $catalogo = $this->catalogoDeAntecedentes();
-        $tipos = $this->tiposDeAntecedente();
+        $tipos = collect($this->tipos->tipos($regMedico))->pluck('nombre', 'codigo')->all();
 
         return DB::table('antece_paciente')
             ->where('reg_medico', $regMedico)
@@ -1069,23 +1075,6 @@ final class HistoriaDelPaciente
     private function catalogoDeAntecedentes(): array
     {
         return $this->catalogo('antecedentes', 'codantecedente', ['descripcion', 'codtipo']);
-    }
-
-    /** @return array<string, string> codetipo => descripción del tipo */
-    private function tiposDeAntecedente(): array
-    {
-        $tipos = [];
-
-        foreach (DB::table('tipo_antecedente')->get(['codetipo', 'descripcion']) as $fila) {
-            $codigo = CamposDePaciente::texto($fila->codetipo);
-            $descripcion = CamposDePaciente::texto($fila->descripcion);
-
-            if ($codigo !== null && $descripcion !== null) {
-                $tipos[$codigo] ??= $descripcion;
-            }
-        }
-
-        return $tipos;
     }
 
     /** @return array<string, string> */

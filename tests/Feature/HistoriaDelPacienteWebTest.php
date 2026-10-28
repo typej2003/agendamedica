@@ -237,6 +237,35 @@ class HistoriaDelPacienteWebTest extends TestCase
     }
 
     /**
+     * El nombre del tipo también es **del propio médico** (2026-10-28): la historia agrupaba con el primer catálogo
+     * de `tipo_antecedente` que encontrara en la base, que podía ser el de otra especialidad (el mismo defecto que
+     * el reporte de la doctora Olivia destapó en la consulta). La regla es la de `AntecedentesDelPaciente`: lo suyo
+     * manda y lo ajeno sólo completa lo que le falte.
+     */
+    public function test_la_historia_usa_el_nombre_de_tipo_del_propio_medico_y_no_el_de_otro(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Beto');
+        $this->consulta($medico, '1001', 1);
+
+        // El catálogo ajeno entra primero (id menor): con la lectura vieja agrupaba el antecedente como PATOLÓGICOS.
+        DB::table('tipo_antecedente')->insert([
+            'reg_medico' => 'otro-medico', 'codetipo' => '01', 'descripcion' => 'PATOLÓGICOS',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('tipo_antecedente')->insert([
+            'reg_medico' => $medico->reg_medico, 'codetipo' => '01', 'descripcion' => 'MIS PATOLOGIAS',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $this->antecedente($medico, '1001');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.historia', $paciente));
+
+        $respuesta->assertOk()->assertSee('MIS PATOLOGIAS')->assertSee('DIABETES')->assertDontSee('PATOLÓGICOS');
+    }
+
+    /**
      * Los documentos, **sin las plantillas vacías** que el legado crea al abrir cada consulta: un reposo de
      * un día sin observación, un informe con el texto `'.'` y una constancia sin nada propio no son
      * documentos de nadie (es el mismo criterio del móvil, `ReportesRepository::armar`).

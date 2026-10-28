@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\Consulta\TiposDeAntecedente;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Models\Consulta;
 use App\Models\Historia;
@@ -126,17 +127,12 @@ class ConsultaAntecedentesWebTest extends TestCase
      */
     private function tipos(Medico $medico): void
     {
-        foreach ([
-            ['01', 'PERSONAL', 'P'],
-            ['02', 'FAMILIAR', 'F'],
-            ['04', 'OBSTETRICOS', 'O'],
-            ['07', 'VARIOS', 'V'],
-        ] as [$codigo, $nombre, $letra]) {
+        foreach (TiposDeAntecedente::GINECOLOGIA as $codigo => $nombre) {
             DB::table('tipo_antecedente')->insert([
                 'reg_medico' => $medico->reg_medico,
                 'codetipo' => $codigo,
                 'descripcion' => $nombre,
-                'tipoantecedente' => $letra,
+                'tipoantecedente' => TiposDeAntecedente::LETRAS_DE_GINECOLOGIA[$codigo] ?? null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -301,9 +297,10 @@ class ConsultaAntecedentesWebTest extends TestCase
         $respuesta->assertSee('Antecedentes del paciente', false);
         $respuesta->assertSee('Guardar los antecedentes', false);
 
-        // Los chips son los del catálogo de tipos y el elegido es el primero **con antecedentes** (Per.).
+        // Los chips son los del catálogo de tipos (los siete de ginecología) y el elegido es el primero
+        // **con antecedentes** (Per.).
         $chips = $this->chipsDeLaRespuesta($respuesta->getContent());
-        $this->assertSame(['PERSONAL', 'FAMILIAR', 'OBSTETRICOS', 'VARIOS'], array_column($chips, 'nombre'));
+        $this->assertSame(array_values(TiposDeAntecedente::GINECOLOGIA), array_column($chips, 'nombre'));
         $this->assertSame(['PERSONAL'], array_column(array_filter($chips, fn ($c) => $c['activo']), 'nombre'));
 
         // La columna muestra **sólo** los de ese tipo: el detalle de la fila y la alerta tildada.

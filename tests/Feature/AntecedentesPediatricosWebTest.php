@@ -2,7 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Actions\Pacientes\SembrarTiposDeAntecedentePediatricos;
+use App\Actions\Pacientes\SembrarTiposDeAntecedente;
+use App\Clinica\Consulta\TiposDeAntecedente;
 use App\Models\Consulta;
 use App\Models\Historia;
 use App\Models\Medico;
@@ -18,7 +19,8 @@ use Tests\TestCase;
 
 /**
  * **Los antecedentes de pediatría** (WEB-12.3): las siete categorías del escritorio (Patológicos, C.A., Madre, Padre, Perinatales, Alimentación y D.P.)
- * sembradas en el catálogo del médico, como chips que filtran la lista, con el nombre que **cada médico** le da a cada tipo. Ginecología no cambia.
+ * sembradas en el catálogo del médico, como chips que filtran la lista, con el nombre que **cada médico** le da a cada tipo. Desde el 2026-10-28
+ * ginecología tiene sus propios nombres (`TiposDeAntecedentePorEspecialidadTest`); el último caso de este archivo cuida que no se crucen.
  */
 class AntecedentesPediatricosWebTest extends TestCase
 {
@@ -85,7 +87,7 @@ class AntecedentesPediatricosWebTest extends TestCase
         $this->conContexto($medico, $pediatria)->actingAs($user)->get($this->url($consulta))->assertOk();
 
         $tipos = DB::table('tipo_antecedente')->where('reg_medico', $medico->reg_medico)->orderBy('codetipo')->pluck('descripcion', 'codetipo')->all();
-        $this->assertSame(SembrarTiposDeAntecedentePediatricos::TIPOS, $tipos);
+        $this->assertSame(TiposDeAntecedente::PEDIATRIA, $tipos);
         $this->assertSame('C.A.', $tipos['02']);
         $this->assertSame(7, DB::table('tipo_antecedente')->where('reg_medico', $medico->reg_medico)->count());
     }
@@ -95,9 +97,9 @@ class AntecedentesPediatricosWebTest extends TestCase
         [, $medico] = $this->medicoConAcceso();
         DB::table('tipo_antecedente')->insert(['reg_medico' => $medico->reg_medico, 'codetipo' => '01', 'descripcion' => 'MIS PATOLOGIAS', 'created_at' => now(), 'updated_at' => now()]);
 
-        $this->assertSame(6, app(SembrarTiposDeAntecedentePediatricos::class)->ejecutar($medico->reg_medico));
+        $this->assertSame(6, app(SembrarTiposDeAntecedente::class)->ejecutar($medico->reg_medico, 'pediatria'));
         $this->assertSame('MIS PATOLOGIAS', DB::table('tipo_antecedente')->where('reg_medico', $medico->reg_medico)->where('codetipo', '01')->value('descripcion'));
-        $this->assertSame(0, app(SembrarTiposDeAntecedentePediatricos::class)->ejecutar($medico->reg_medico));
+        $this->assertSame(0, app(SembrarTiposDeAntecedente::class)->ejecutar($medico->reg_medico, 'pediatria'));
     }
 
     public function test_los_chips_son_las_siete_categorias_con_su_cuenta_y_el_elegido_filtra(): void
@@ -151,17 +153,26 @@ class AntecedentesPediatricosWebTest extends TestCase
             ->assertOk()->assertSee('APGAR BAJO');
     }
 
-    public function test_ginecologia_no_cambia_ni_siembra_ni_muestra_chips(): void
+    /**
+     * Ginecología ya no es «la que no cambia» (2026-10-28): sus siete nombres se siembran en el mismo punto que los
+     * de pediatría y nunca se le prestan los de pediatría. El caso completo está en
+     * `TiposDeAntecedentePorEspecialidadTest`; acá queda el cruce de las dos especialidades en la misma base.
+     */
+    public function test_ginecologia_siembra_sus_nombres_y_no_los_de_pediatria(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso('ginecologia-y-obstetricia');
-        DB::table('tipo_antecedente')->insert(['reg_medico' => $medico->reg_medico, 'codetipo' => '01', 'descripcion' => 'PERSONAL', 'created_at' => now(), 'updated_at' => now()]);
+        // Un tipo que el médico ya tenía, con su propio nombre: el sembrado no lo pisa.
+        DB::table('tipo_antecedente')->insert(['reg_medico' => $medico->reg_medico, 'codetipo' => '06', 'descripcion' => 'N. PAREJAS', 'created_at' => now(), 'updated_at' => now()]);
         $consulta = $this->consulta($medico);
         $this->antecedente($medico, 9601, '0001', 'MIOMATOSIS', '01');
 
         $this->conContexto($medico, $gineco)->actingAs($user)->get($this->url($consulta))
-            ->assertOk()->assertSee('PERSONAL')->assertSee('MIOMATOSIS')
+            ->assertOk()
+            ->assertSee('N. PAREJAS')->assertSee('PERSONAL')->assertSee('MIOMATOSIS')
             ->assertDontSee('PATOLÓGICOS');
 
-        $this->assertSame(1, DB::table('tipo_antecedente')->where('reg_medico', $medico->reg_medico)->count());
+        // Completó los seis que le faltaban y conservó el suyo.
+        $this->assertSame(7, DB::table('tipo_antecedente')->where('reg_medico', $medico->reg_medico)->count());
+        $this->assertSame('N. PAREJAS', DB::table('tipo_antecedente')->where('reg_medico', $medico->reg_medico)->where('codetipo', '06')->value('descripcion'));
     }
 }
