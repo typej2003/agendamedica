@@ -1250,6 +1250,16 @@ catálogo inicial de vacunas (con dosis y tipos) van aparte: **`php artisan pedi
 catálogo de vacunas que ya existe salvo con `--reemplazar-vacunas` (`SembrarReferenciaDePediatria`, tests en
 `tests/Feature/ReferenciaDePediatriaTest.php`).
 
+**Ginecología: motivos de consulta y antecedentes** (2026-10-28, pedido de la doctora Olivia). La base real de ginecología no trajo
+esos dos catálogos, así que salieron de la **base de ejemplo** `Docs\DATAGI - datos de ejemplo en ASA 8.0.1.zip` (trampa 178):
+`database/catalogos-iniciales/ginecologia-y-obstetricia/motivos-consulta.json` (165 filas) y `antecedentes.json` (284, con los
+`codtipo` `01`–`07`). Los médicos que ya tenían cuenta se completan con **`php artisan catalogos:cargar-a-medicos`**
+(`--catalogo=*` y `--simular`): copia **sólo** los catálogos pedidos y **sólo donde el médico está vacío**, con la misma regla que
+la copia automática (incluido el salto al médico del escritorio y al centro); es idempotente. Tests:
+`tests/Feature/CatalogoInicialGinecologiaTest.php`. ⚠️ Los **antecedentes no tienen ABM para el médico**
+(`/clinica/catalogos/antecedentes` no existe): se ven y se agregan desde `?seccion=antecedentes` de la consulta; los motivos sí,
+en `/clinica/catalogos/motivos-consulta`.
+
 **Nunca commitear `.env` ni datos reales de pacientes** (el repo arrastra el esquema y los seeders del
 sistema legado).
 
