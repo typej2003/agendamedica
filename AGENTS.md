@@ -999,6 +999,12 @@ y el JS `public/js/clinica/plan-pago.js`; las pantallas del panel, en `resources
 | `POST` | `/api/app/comentarios` | `ComentarioController@guardar` — el comentario del app con **hasta 3 capturas** (`multipart`, `imagenes[]`; 5 MB, PNG/JPG/WEBP, tipo real), `throttle:30,1`, online-only. La regla es `App\Actions\Comentarios\EnviarComentario` —**la misma de `/clinica/ayuda`**— y guarda `origen = app`, **`plataforma`** (`android`, `ios`, `windows`, `macos`, `linux`, `web`; campo propio desde el 2026-10-20, y si no viene se usa la del `contexto`, que es donde la mandaban las versiones anteriores) y el `contexto` (versión, pantalla, plataforma; viaja como cadena JSON y si viene mal se descarta). Un disco lleno contesta **500 con un `message` legible**, no un 422. |
 | `GET` | `/api/app/comentarios/{comentario}/imagenes/{imagen}` | `ImagenDelComentarioController@delAutor` — la captura adjunta, **sólo para su autor** (la misma puerta que «Mis comentarios» de la web; la bandeja de `/admin` usa la suya). El disco es privado: un comentario de otra cuenta da **404**. |
 
+**Estado para herramientas externas**
+
+| Método | Ruta | Controlador |
+|---|---|---|
+| `GET` | `/api/estado/usuarios-en-linea` | `UsuariosEnLineaController@index` — **quiénes están conectados ahora**, para el servidor MCP propio antes de desplegar a producción. `auth:api` + `account.active` y **sólo Root** (403 al resto; la comprobación va en el controlador con el guard `web` explícito). La señal es **la misma del panel** (`RootDashboard`): las claves `user-is-online-<id>` que `UserOnlineMiddleware` deja **5 minutos** en caché en cada petición web autenticada — el endpoint no marca a nadie ni escribe nada. Devuelve `generado_en` (hora del consultorio), `ventana_minutos` (la constante `UsuariosEnLineaController::VENTANA_MINUTOS`, 5), `total` y `usuarios` (`id`, `name`, `email`, `roles`), ordenados por nombre. Tests: `UsuariosEnLineaTest`. |
+
 **Cuentas de acceso** (Paso 26, `app/Services/CuentaService.php`). **El mecanismo de inicio de sesión (API y
 web)**: `users` con roles Spatie (`Root`, `Administrador`, `Medico`…) y `medicos.user_id` como vínculo con el
 doctor, como ya era. **Desde el 2026-10-19 el login web es uno solo** (pedido del usuario): la pantalla pide
