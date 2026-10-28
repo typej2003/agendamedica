@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Clinica;
 
-use App\Actions\Pacientes\SembrarTiposDeAntecedentePediatricos;
+use App\Actions\Pacientes\SembrarTiposDeAntecedente;
 use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\Vistas\SeccionDeAntecedentesVista;
 use App\Clinica\Crecimiento\CrecimientoDelPaciente;
@@ -53,8 +53,9 @@ class HistoriaPediatricaController extends Controller
         $hoy = FechaDelConsultorio::hoy()->toDateString();
         $volver = route('clinica.pacientes.ver', $paciente);
 
-        // Los tipos de antecedente de pediatría (Patológicos, C.A., Madre…) con el nombre que tiene el catálogo del médico.
-        app(SembrarTiposDeAntecedentePediatricos::class)->ejecutar($regMedico);
+        // Los tipos de antecedente de la especialidad (en pediatría, Patológicos, C.A., Madre…; en ginecología, los
+        // suyos) con el nombre que tiene el catálogo del médico.
+        app(SembrarTiposDeAntecedente::class)->ejecutar($regMedico, $contexto['specialty']?->slug);
 
         $datos = $vacunas->de($regMedico, $historia);
         $armado = $calendario->armar($ficha->fnacimiento ? (string) $ficha->fnacimiento : null, $ficha->sexo, $hoy, $datos['vacunas'], $datos['dosis'], $datos['aplicadas']);

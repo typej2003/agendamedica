@@ -391,6 +391,11 @@ final class AntecedentesDelPaciente
      * `codetipo => descripcion`, el **primero** que aparece: el catálogo dice lo mismo en todas las
      * instalaciones y el orden por `id` es el del escritorio (01 PERSONAL … 07 VARIOS).
      *
+     * Los del propio médico mandan (WEB-12.3): el catálogo de tipos no dice lo mismo en todas las
+     * especialidades. El resultado se ordena por `codetipo` porque es el orden de las solapas y porque los
+     * códigos que el sembrado agrega quedan con `id` mayor: sin ordenar, un médico que ya tenía `01`, `02`,
+     * `04` y `07` vería los tres nuevos al final (`01, 02, 04, 07, 03, 05, 06`).
+     *
      * @return array<string,string>
      */
     private function tiposDeAntecedente(?string $regMedico = null): array
@@ -417,6 +422,8 @@ final class AntecedentesDelPaciente
                 $tipos[$codigo] ??= $nombre;
             }
         }
+
+        ksort($tipos);
 
         return $tipos;
     }

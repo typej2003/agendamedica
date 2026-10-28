@@ -999,6 +999,12 @@ y el JS `public/js/clinica/plan-pago.js`; las pantallas del panel, en `resources
 | `POST` | `/api/app/comentarios` | `ComentarioController@guardar` — el comentario del app con **hasta 3 capturas** (`multipart`, `imagenes[]`; 5 MB, PNG/JPG/WEBP, tipo real), `throttle:30,1`, online-only. La regla es `App\Actions\Comentarios\EnviarComentario` —**la misma de `/clinica/ayuda`**— y guarda `origen = app`, **`plataforma`** (`android`, `ios`, `windows`, `macos`, `linux`, `web`; campo propio desde el 2026-10-20, y si no viene se usa la del `contexto`, que es donde la mandaban las versiones anteriores) y el `contexto` (versión, pantalla, plataforma; viaja como cadena JSON y si viene mal se descarta). Un disco lleno contesta **500 con un `message` legible**, no un 422. |
 | `GET` | `/api/app/comentarios/{comentario}/imagenes/{imagen}` | `ImagenDelComentarioController@delAutor` — la captura adjunta, **sólo para su autor** (la misma puerta que «Mis comentarios» de la web; la bandeja de `/admin` usa la suya). El disco es privado: un comentario de otra cuenta da **404**. |
 
+**Estado para herramientas externas**
+
+| Método | Ruta | Controlador |
+|---|---|---|
+| `GET` | `/api/estado/usuarios-en-linea` | `UsuariosEnLineaController@index` — **quiénes están conectados ahora**, para el servidor MCP propio antes de desplegar a producción. `auth:api` + `account.active` y **sólo Root** (403 al resto; la comprobación va en el controlador con el guard `web` explícito). La señal es **la misma del panel** (`RootDashboard`): las claves `user-is-online-<id>` que `UserOnlineMiddleware` deja **5 minutos** en caché en cada petición web autenticada — el endpoint no marca a nadie ni escribe nada. Devuelve `generado_en` (hora del consultorio), `ventana_minutos` (la constante `UsuariosEnLineaController::VENTANA_MINUTOS`, 5), `total` y `usuarios` (`id`, `name`, `email`, `roles`), ordenados por nombre. Tests: `UsuariosEnLineaTest`. |
+
 **Cuentas de acceso** (Paso 26, `app/Services/CuentaService.php`). **El mecanismo de inicio de sesión (API y
 web)**: `users` con roles Spatie (`Root`, `Administrador`, `Medico`…) y `medicos.user_id` como vínculo con el
 doctor, como ya era. **Desde el 2026-10-19 el login web es uno solo** (pedido del usuario): la pantalla pide
@@ -1249,6 +1255,55 @@ Alexander el 2026-10-25** (también trae dietas y antecedentes, con el tipo fijo
 catálogo inicial de vacunas (con dosis y tipos) van aparte: **`php artisan pediatria:sembrar-referencia`**, que no pisa un
 catálogo de vacunas que ya existe salvo con `--reemplazar-vacunas` (`SembrarReferenciaDePediatria`, tests en
 `tests/Feature/ReferenciaDePediatriaTest.php`).
+
+**Ginecología: motivos de consulta y antecedentes** (2026-10-28, pedido de la doctora Olivia). La base real de ginecología no trajo
+esos dos catálogos, así que salieron de la **base de ejemplo** `Docs\DATAGI - datos de ejemplo en ASA 8.0.1.zip` (trampa 178):
+`database/catalogos-iniciales/ginecologia-y-obstetricia/motivos-consulta.json` (161 filas) y `antecedentes.json` (270, con los
+`codtipo` `01`–`07`). La lista de origen es la de un ginecólogo real: se **curó** quitando 18 entradas personales o sin sentido
+(«PARALISIS FACIAL A LOS 11 AÑOS», «3 HIJOS,2 SON ASMÁTICOS», «NINGUNO», «DINANES»…) y corrigiendo 8 tipeos. Los médicos que ya tenían cuenta se completan con **`php artisan catalogos:cargar-a-medicos`**
+(`--catalogo=*` y `--simular`): copia **sólo** los catálogos pedidos y **sólo donde el médico está vacío**, con la misma regla que
+la copia automática (incluido el salto al médico del escritorio y al centro); es idempotente. Tests:
+`tests/Feature/CatalogoInicialGinecologiaTest.php`. ⚠️ Los **antecedentes no tienen ABM para el médico**
+(`/clinica/catalogos/antecedentes` no existe): se ven y se agregan desde `?seccion=antecedentes` de la consulta; los motivos sí,
+en `/clinica/catalogos/motivos-consulta`.
+
+**Pasos de datos que se corren una sola vez: `datos:actualizar`** (2026-10-28). Hay comandos de datos que no pueden ir en una
+migración —el catálogo inicial, la copia a los médicos que ya existen— y hasta ahora se corrían a mano después de desplegar, con el
+riesgo de olvidarlos. Ahora la base lleva una **versión de datos** (empieza en 0) y los pasos se declaran en código, en
+`App\Support\Datos\VersionesDeDatos::VERSIONES`:
+
+```php
+1 => ['catalogos:sembrar-iniciales', 'catalogos:cargar-a-medicos'],
+```
+
+`php artisan datos:actualizar` lee la versión, corre en orden los comandos de las versiones mayores (los deduplica: uno que aparece
+en dos versiones se corre una sola vez, en la primera) y deja anotada la última. **La versión es la unidad atómica**: si un comando
+de la versión N falla, se corta ahí, la versión queda en la última que terminó entera y el comando sale con error; la corrida
+siguiente reintenta desde ahí (los comandos de datos son idempotentes, así que reintentar la versión entera es seguro). `--simular`
+muestra la versión y los comandos sin ejecutar ni escribir nada. **Cada paso nuevo es una entrada más** y una versión ya publicada
+no se edita: la misma regla que las migraciones.
+
+La versión vive en **`configuracion_api`**, la tabla clave/valor de **configuraciones internas del servidor**, con la clave
+`version_datos` (`App\Models\ConfiguracionApi`: `valor()`, `entero()` y `fijar()`). No es para datos clínicos ni viaja por el sync.
+⚠️ Los valores se guardan en **texto claro**: si algún día hay que guardar un secreto, va cifrado aparte, no en esta tabla.
+
+**En el script del servidor, después de `migrate --force`** (y después de `especialidades:sembrar`, porque el catálogo inicial las
+necesita), agrega:
+
+```
+php artisan datos:actualizar
+```
+
+Tests: `tests/Unit/Support/Datos/VersionesDeDatosTest.php`, `tests/Feature/ConfiguracionApiTest.php` y
+`tests/Feature/DatosActualizarCommandTest.php`.
+
+**Los siete tipos de antecedente son por especialidad** (2026-10-28, seguimiento del mismo reporte). Los códigos `01`–`07` son los
+mismos, pero los nombres no: pediatría usa PATOLÓGICOS… y ginecología **PERSONAL, FAMILIAR, PSICOBIOLOGICOS, OBSTETRICOS,
+GINECOLOGICOS, ACTIVIDAD SEXUAL y VARIOS** (de `tipo_antecedente` de la misma base de ejemplo; sin tildes). `TiposDeAntecedente`
+guarda los dos mapas y `SembrarTiposDeAntecedente` siembra los del médico **según la especialidad del contexto** en el mismo punto
+que pediatría (al abrir la consulta y en la historia pediátrica): es idempotente y **no pisa** un nombre que el médico ya tenga;
+las especialidades sin nombres en la fuente no siembran nada. Los médicos que ya existen lo reciben al abrir su próxima consulta.
+Tests: `tests/Feature/TiposDeAntecedentePorEspecialidadTest.php`.
 
 **Nunca commitear `.env` ni datos reales de pacientes** (el repo arrastra el esquema y los seeders del
 sistema legado).

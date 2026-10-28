@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\ReportesEscritorioController;
 use App\Http\Controllers\Api\ImagenesPcController;
 use App\Http\Controllers\Api\RecipeFormatoController;
 use App\Http\Controllers\Api\UploadServerController;
+use App\Http\Controllers\Api\UsuariosEnLineaController;
 use App\Http\Controllers\Comentarios\ImagenDelComentarioController;
 
 use App\Http\Controllers\WhatsAppWebhookController;
@@ -44,6 +45,13 @@ use App\Services\WhatsAppService;
 Route::middleware(['auth:api', 'account.active'])->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// ** Estado para herramientas externas (2026-10-28) **
+// Lo consulta el servidor MCP propio antes de desplegar a producción: quiénes están conectados ahora. La
+// señal es la MISMA del panel de Root (`user-is-online-<id>` en caché, puesta por `UserOnlineMiddleware`),
+// no una sesión del API: un token no significa estar en línea. Sólo el Root puede llamarlo (403 al resto),
+// y la comprobación vive en el controlador: en el API el guard por defecto es `api` y los roles son `web`.
+Route::middleware(['auth:api', 'account.active'])->get('/estado/usuarios-en-linea', [UsuariosEnLineaController::class, 'index']);
 
 // Rutas con límite de tasa para la recepción de lotes/paquetes desde PowerBuilder
 Route::middleware('throttle:1000,1')->group(function () {

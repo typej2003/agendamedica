@@ -2,7 +2,7 @@
 
 namespace App\Clinica\Catalogos\Iniciales;
 
-use App\Actions\Pacientes\SembrarTiposDeAntecedentePediatricos;
+use App\Clinica\Consulta\TiposDeAntecedente;
 
 /**
  * **El registro único de los catálogos iniciales** (WEB-12.8): qué catálogos del consultorio tienen una versión inicial (filas con `reg_medico` NULL) que el
@@ -118,11 +118,12 @@ final class CatalogosIniciales
             ],
         ],
         // El catálogo de donde la consulta agrega antecedentes. El tipo es uno de los siete códigos fijos de las solapas
-        // (`SembrarTiposDeAntecedentePediatricos`, que cada pediatra ya tiene): se copia tal cual. El mismo nombre en dos tipos son dos filas.
+        // (`TiposDeAntecedente`): se copia tal cual. Los nombres cambian por especialidad, así que el desplegable del
+        // administrador muestra los dos. El mismo nombre en dos tipos son dos filas.
         'antecedentes' => [
             'titulo' => 'Antecedentes', 'singular' => 'antecedente', 'tabla' => 'antecedentes', 'codigo' => 'codantecedente', 'digitos' => 4,
             'etiqueta' => 'descripcion', 'identidad' => ['descripcion', 'codtipo'], 'columnas' => ['descripcion', 'codtipo'],
-            'opciones' => ['codtipo' => SembrarTiposDeAntecedentePediatricos::TIPOS],
+            'opciones' => ['codtipo' => TiposDeAntecedente::ETIQUETAS_DEL_ADMINISTRADOR],
             'campos' => [
                 'descripcion' => ['Antecedente', 'texto', 40, true, true],
                 'codtipo' => ['Tipo', 'opcion', 2, true, false],
