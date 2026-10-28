@@ -1,0 +1,662 @@
+[
+ {
+  "codigo_origen": "0083",
+  "descripcion": "SANGRADO GENITAL POSTMENOPAUSICO"
+ },
+ {
+  "codigo_origen": "0014",
+  "descripcion": "MAREOS"
+ },
+ {
+  "codigo_origen": "0116",
+  "descripcion": "DOLOR UÑAS"
+ },
+ {
+  "codigo_origen": "0085",
+  "descripcion": "FALTA DE MENSTRUACIÓN"
+ },
+ {
+  "codigo_origen": "0103",
+  "descripcion": "CONTROL POST OPERATORIO"
+ },
+ {
+  "codigo_origen": "0019",
+  "descripcion": "CEFALEA"
+ },
+ {
+  "codigo_origen": "0088",
+  "descripcion": "DOLOR PELVICO"
+ },
+ {
+  "codigo_origen": "0092",
+  "descripcion": "AUMENTO DE VOLUMEN DEL ABDOMEN"
+ },
+ {
+  "codigo_origen": "0093",
+  "descripcion": "FLUJO ABUNDANTE"
+ },
+ {
+  "codigo_origen": "0094",
+  "descripcion": "BIOPSIA NIC I"
+ },
+ {
+  "codigo_origen": "0096",
+  "descripcion": "AMENORREA"
+ },
+ {
+  "codigo_origen": "0031",
+  "descripcion": "DOLOR EPIGASTRICO"
+ },
+ {
+  "codigo_origen": "0118",
+  "descripcion": "WE"
+ },
+ {
+  "codigo_origen": "0097",
+  "descripcion": "HIPERMENORREA"
+ },
+ {
+  "codigo_origen": "0037",
+  "descripcion": "DEBILIDAD"
+ },
+ {
+  "codigo_origen": "0099",
+  "descripcion": "PELOTICA DE CARNE VAGINAL"
+ },
+ {
+  "codigo_origen": "0100",
+  "descripcion": "METRORRAGIA"
+ },
+ {
+  "codigo_origen": "0011",
+  "descripcion": "CIFRAS TENSIONALES ELEVADAS"
+ },
+ {
+  "codigo_origen": "0119",
+  "descripcion": "ANTECEDENTE DE VPH"
+ },
+ {
+  "codigo_origen": "0015",
+  "descripcion": "EDEMA DE MIEMBROS INFERIORES"
+ },
+ {
+  "codigo_origen": "0101",
+  "descripcion": "ARDOR VAGINAL,FLUJO"
+ },
+ {
+  "codigo_origen": "0009",
+  "descripcion": "PALPITACIONES"
+ },
+ {
+  "codigo_origen": "0102",
+  "descripcion": "FIEBRE, ESCALOFRIOS"
+ },
+ {
+  "codigo_origen": "0104",
+  "descripcion": "VER EXAMENES CONTROL"
+ },
+ {
+  "codigo_origen": "0105",
+  "descripcion": "DESEA UN HIJO"
+ },
+ {
+  "codigo_origen": "0106",
+  "descripcion": "DISMENORREA"
+ },
+ {
+  "codigo_origen": "0107",
+  "descripcion": "FLUJO"
+ },
+ {
+  "codigo_origen": "0108",
+  "descripcion": "DISURIA"
+ },
+ {
+  "codigo_origen": "0109",
+  "descripcion": "ASTENIA SEXUAL"
+ },
+ {
+  "codigo_origen": "0034",
+  "descripcion": "TOS"
+ },
+ {
+  "codigo_origen": "0110",
+  "descripcion": "INFECCION URINARIA"
+ },
+ {
+  "codigo_origen": "0111",
+  "descripcion": "INSONNIO"
+ },
+ {
+  "codigo_origen": "0112",
+  "descripcion": "RESULTADO DE CITOLOGIA"
+ },
+ {
+  "codigo_origen": "0113",
+  "descripcion": "PEPITAS EN VAGINA"
+ },
+ {
+  "codigo_origen": "0114",
+  "descripcion": "SANGRADO INTERMENSTRUAL"
+ },
+ {
+  "codigo_origen": "0170",
+  "descripcion": "EBA"
+ },
+ {
+  "codigo_origen": "0117",
+  "descripcion": "AA"
+ },
+ {
+  "codigo_origen": "0095",
+  "descripcion": "FLUJO FETIDO"
+ },
+ {
+  "codigo_origen": "0044",
+  "descripcion": "EMBARAZO"
+ },
+ {
+  "codigo_origen": "0045",
+  "descripcion": "PRURITO VAGINAL"
+ },
+ {
+  "codigo_origen": "0046",
+  "descripcion": "DOLOR PELVICO"
+ },
+ {
+  "codigo_origen": "0120",
+  "descripcion": "COLOCAR LIQUIDO VULVA"
+ },
+ {
+  "codigo_origen": "0048",
+  "descripcion": "CONTROL GINECOLOGICO"
+ },
+ {
+  "codigo_origen": "0049",
+  "descripcion": "CONTROL PRENATAL"
+ },
+ {
+  "codigo_origen": "0050",
+  "descripcion": "SENSACIÓN DE PESO EN GENITALES"
+ },
+ {
+  "codigo_origen": "0098",
+  "descripcion": "VAPORONES"
+ },
+ {
+  "codigo_origen": "0052",
+  "descripcion": "TRASTORNOS MENSTRUALES"
+ },
+ {
+  "codigo_origen": "0122",
+  "descripcion": "CHEQUEO R.F CUELLO/VULVA"
+ },
+ {
+  "codigo_origen": "0124",
+  "descripcion": "CONSULTA"
+ },
+ {
+  "codigo_origen": "0055",
+  "descripcion": "INFERTTILIDAD SECUNDARIA"
+ },
+ {
+  "codigo_origen": "0056",
+  "descripcion": "VALORACION GINECOLOGICA"
+ },
+ {
+  "codigo_origen": "0057",
+  "descripcion": "DOLOR LUMBAR"
+ },
+ {
+  "codigo_origen": "0058",
+  "descripcion": "INFERTILIDAD PRIMARIA"
+ },
+ {
+  "codigo_origen": "0126",
+  "descripcion": "COLOCAR LIQUIDO VAGINA"
+ },
+ {
+  "codigo_origen": "0128",
+  "descripcion": "COLOCAR LIQUIDO GLANDE"
+ },
+ {
+  "codigo_origen": "0130",
+  "descripcion": "CHEQUEO R.F. RECTO"
+ },
+ {
+  "codigo_origen": "0062",
+  "descripcion": "PLANIFICACIÓN  FAMILIAR"
+ },
+ {
+  "codigo_origen": "0132",
+  "descripcion": "LEER PCR VULVA"
+ },
+ {
+  "codigo_origen": "0134",
+  "descripcion": "LEER PCR URETRA"
+ },
+ {
+  "codigo_origen": "0136",
+  "descripcion": "TOMA DE PCR GLANDE"
+ },
+ {
+  "codigo_origen": "0066",
+  "descripcion": "LEUCORREA"
+ },
+ {
+  "codigo_origen": "0067",
+  "descripcion": "TRASTORNO DEL CICLO MENSTRUAL"
+ },
+ {
+  "codigo_origen": "0068",
+  "descripcion": "DOLOR EN MAMA DER."
+ },
+ {
+  "codigo_origen": "0138",
+  "descripcion": "VPH SEROTIPO 40"
+ },
+ {
+  "codigo_origen": "0140",
+  "descripcion": "CITOLOGIA DE CONTROL R.F"
+ },
+ {
+  "codigo_origen": "0142",
+  "descripcion": "LEER EXAM LABORATORIO"
+ },
+ {
+  "codigo_origen": "0144",
+  "descripcion": "COLPITIS SEVERA"
+ },
+ {
+  "codigo_origen": "0073",
+  "descripcion": "DOLOR ABDOMINAL"
+ },
+ {
+  "codigo_origen": "0146",
+  "descripcion": "ECO PELVICO"
+ },
+ {
+  "codigo_origen": "0074",
+  "descripcion": "HEMORRAGIA UTERINA ANORMAL"
+ },
+ {
+  "codigo_origen": "0115",
+  "descripcion": "VER EXAMENES PEDIDOS"
+ },
+ {
+  "codigo_origen": "0121",
+  "descripcion": "COLOCAR LIQUIDO EN CUPULA"
+ },
+ {
+  "codigo_origen": "0077",
+  "descripcion": "SANGRADO GENITAL"
+ },
+ {
+  "codigo_origen": "0123",
+  "descripcion": "BUENA CICATRIZACION"
+ },
+ {
+  "codigo_origen": "0079",
+  "descripcion": "INFLAMACIÓN PELVICA"
+ },
+ {
+  "codigo_origen": "0125",
+  "descripcion": "DOLOR,ARDOR EN VULVA.-"
+ },
+ {
+  "codigo_origen": "0127",
+  "descripcion": "COLOCAR LIQUIDO CUELLO"
+ },
+ {
+  "codigo_origen": "0082",
+  "descripcion": "LIEAG"
+ },
+ {
+  "codigo_origen": "0129",
+  "descripcion": "CHEQUE R.F. GLANDE"
+ },
+ {
+  "codigo_origen": "0131",
+  "descripcion": "LEER CITOLOGIA"
+ },
+ {
+  "codigo_origen": "0133",
+  "descripcion": "LEER PCR GLANDE"
+ },
+ {
+  "codigo_origen": "0135",
+  "descripcion": "CONSULTA ESPOSO"
+ },
+ {
+  "codigo_origen": "0137",
+  "descripcion": "TOMA DE PCR URETRA"
+ },
+ {
+  "codigo_origen": "0139",
+  "descripcion": "LEER BIOPSIA VAGINA"
+ },
+ {
+  "codigo_origen": "0141",
+  "descripcion": "LEER MAMOGRAFIA"
+ },
+ {
+  "codigo_origen": "0143",
+  "descripcion": "CITOLOGIA DE CONTROL"
+ },
+ {
+  "codigo_origen": "0145",
+  "descripcion": "ATROFIA"
+ },
+ {
+  "codigo_origen": "0147",
+  "descripcion": "LESION VPH VULVA"
+ },
+ {
+  "codigo_origen": "0148",
+  "descripcion": "OVARIOS MULTIFOLICULRES.-"
+ },
+ {
+  "codigo_origen": "0149",
+  "descripcion": "UTERO AUMENTADO DE TAMAÑO"
+ },
+ {
+  "codigo_origen": "0150",
+  "descripcion": "CONSULTA SEÑORITA"
+ },
+ {
+  "codigo_origen": "0151",
+  "descripcion": "ECO TRANVAGINAL"
+ },
+ {
+  "codigo_origen": "0152",
+  "descripcion": "CONTROL DE OVULACION"
+ },
+ {
+  "codigo_origen": "0153",
+  "descripcion": "CUELLO SANO"
+ },
+ {
+  "codigo_origen": "0154",
+  "descripcion": "R.F. CUELLO"
+ },
+ {
+  "codigo_origen": "0183",
+  "descripcion": "LESION PELVI"
+ },
+ {
+  "codigo_origen": "0189",
+  "descripcion": "EBAS"
+ },
+ {
+  "codigo_origen": "0157",
+  "descripcion": "R.F. VULVA"
+ },
+ {
+  "codigo_origen": "0158",
+  "descripcion": "R.F. GLANDE"
+ },
+ {
+  "codigo_origen": "0159",
+  "descripcion": "R.F. VAGINA"
+ },
+ {
+  "codigo_origen": "0160",
+  "descripcion": "R.F. PIEL"
+ },
+ {
+  "codigo_origen": "0161",
+  "descripcion": "COLPITIS LEVE"
+ },
+ {
+  "codigo_origen": "0162",
+  "descripcion": "E.P NORMAL"
+ },
+ {
+  "codigo_origen": "0179",
+  "descripcion": "ECTOPIA"
+ },
+ {
+  "codigo_origen": "0163",
+  "descripcion": "COLPITIS MODERADA"
+ },
+ {
+  "codigo_origen": "0164",
+  "descripcion": "ECOGRAFIA DE MAMA"
+ },
+ {
+  "codigo_origen": "0165",
+  "descripcion": "CONDICION FIBROQUISTDE LA MAMA"
+ },
+ {
+  "codigo_origen": "0166",
+  "descripcion": "TOMA BIOPSIA CUELLO"
+ },
+ {
+  "codigo_origen": "0167",
+  "descripcion": "TOMA PCR FRESCA VULVA"
+ },
+ {
+  "codigo_origen": "0168",
+  "descripcion": "R.F VULVA EXTERNO"
+ },
+ {
+  "codigo_origen": "0169",
+  "descripcion": "BIOPSIA DE VERRUGA"
+ },
+ {
+  "codigo_origen": "0171",
+  "descripcion": "BIOPSIA ENDOMETRIO"
+ },
+ {
+  "codigo_origen": "0172",
+  "descripcion": "LEIOMIOMATOSIS UTERINA"
+ },
+ {
+  "codigo_origen": "0173",
+  "descripcion": "HIPERPLASIA ENDOMETRIAL"
+ },
+ {
+  "codigo_origen": "0174",
+  "descripcion": "LEER DENSITOMETRIA"
+ },
+ {
+  "codigo_origen": "0175",
+  "descripcion": "DATOS SUGESTIVOS VPH"
+ },
+ {
+  "codigo_origen": "0176",
+  "descripcion": "CHEQUEO R.F CUELLO/VULVA.-"
+ },
+ {
+  "codigo_origen": "0177",
+  "descripcion": "CHEQUEO R.F. GLANDE"
+ },
+ {
+  "codigo_origen": "0178",
+  "descripcion": "BIOPSIA CUELLO"
+ },
+ {
+  "codigo_origen": "0180",
+  "descripcion": "CICATRIZACION LENTA.-"
+ },
+ {
+  "codigo_origen": "0181",
+  "descripcion": "PCR VULVA FRESCA.-"
+ },
+ {
+  "codigo_origen": "0182",
+  "descripcion": "LESIONES EN GLANDE"
+ },
+ {
+  "codigo_origen": "0184",
+  "descripcion": "LEER BIOPSIA CUELLO"
+ },
+ {
+  "codigo_origen": "0185",
+  "descripcion": "VPH SEROTIPO 11"
+ },
+ {
+  "codigo_origen": "0186",
+  "descripcion": "VPH SEROTIPO 6"
+ },
+ {
+  "codigo_origen": "0187",
+  "descripcion": "CERVICITIS CRONICA"
+ },
+ {
+  "codigo_origen": "0188",
+  "descripcion": "CITOLOGIA 1ER VEZ"
+ },
+ {
+  "codigo_origen": "0190",
+  "descripcion": "VULVITIS"
+ },
+ {
+  "codigo_origen": "0191",
+  "descripcion": "VAGINITIS"
+ },
+ {
+  "codigo_origen": "0192",
+  "descripcion": "LESIONES VPH URETRA"
+ },
+ {
+  "codigo_origen": "0193",
+  "descripcion": "ECO OBSTETRICO"
+ },
+ {
+  "codigo_origen": "0194",
+  "descripcion": "E I P"
+ },
+ {
+  "codigo_origen": "0195",
+  "descripcion": "EBA EXT.FONDO DE SACO"
+ },
+ {
+  "codigo_origen": "0196",
+  "descripcion": "PCR VULVA"
+ },
+ {
+  "codigo_origen": "0197",
+  "descripcion": "CITOLOGIA POOL VAGINAL"
+ },
+ {
+  "codigo_origen": "0198",
+  "descripcion": "FROTIS VAGINAL"
+ },
+ {
+  "codigo_origen": "0206",
+  "descripcion": "PCR URETRA"
+ },
+ {
+  "codigo_origen": "0199",
+  "descripcion": "LEER ECO PERINATOLOGICO"
+ },
+ {
+  "codigo_origen": "0200",
+  "descripcion": "EMBARAZO"
+ },
+ {
+  "codigo_origen": "0201",
+  "descripcion": "DRENAR GLANDULA DE BARTHOLINO"
+ },
+ {
+  "codigo_origen": "0202",
+  "descripcion": "QUISTE FUNCIONA OVARIO DERECHO"
+ },
+ {
+  "codigo_origen": "0203",
+  "descripcion": "QUISTE FUNCIONAL EN AMBOS OVARIOS.-"
+ },
+ {
+  "codigo_origen": "0204",
+  "descripcion": "DIANES"
+ },
+ {
+  "codigo_origen": "0205",
+  "descripcion": "LEUCORRE INTENSA ESPUMOSA"
+ },
+ {
+  "codigo_origen": "0207",
+  "descripcion": "PCR MULTIPLEX 1"
+ },
+ {
+  "codigo_origen": "0208",
+  "descripcion": "BIOPSIA DE VERRUGA"
+ },
+ {
+  "codigo_origen": "0209",
+  "descripcion": "UTERO INFANTIL"
+ },
+ {
+  "codigo_origen": "0210",
+  "descripcion": "PROLAPSO DE PARED ANTERIOR"
+ },
+ {
+  "codigo_origen": "0211",
+  "descripcion": "PROLAPSO DE PARED POSTERIOR"
+ },
+ {
+  "codigo_origen": "0212",
+  "descripcion": "GRADO I"
+ },
+ {
+  "codigo_origen": "0213",
+  "descripcion": "GRADO II"
+ },
+ {
+  "codigo_origen": "0214",
+  "descripcion": "PRADO III"
+ },
+ {
+  "codigo_origen": "0215",
+  "descripcion": "CHEQUEO DE CONO NIC I"
+ },
+ {
+  "codigo_origen": "0216",
+  "descripcion": "LEER ECOGRAFIA DE MAMA"
+ },
+ {
+  "codigo_origen": "0217",
+  "descripcion": "ECO ABDOMINAL"
+ },
+ {
+  "codigo_origen": "0218",
+  "descripcion": "ARENILLA RENAL BILATERAL"
+ },
+ {
+  "codigo_origen": "0219",
+  "descripcion": "DIU INSITUS"
+ },
+ {
+  "codigo_origen": "0220",
+  "descripcion": "LEER ECO PELVICO"
+ },
+ {
+  "codigo_origen": "0221",
+  "descripcion": "RETIRAR PUNTO HISTERECTOMIA"
+ },
+ {
+  "codigo_origen": "0222",
+  "descripcion": "VAGINA SANA"
+ },
+ {
+  "codigo_origen": "0223",
+  "descripcion": "DRENAR GLANDULA GARNER"
+ },
+ {
+  "codigo_origen": "0224",
+  "descripcion": "E.A. NORMAL"
+ },
+ {
+  "codigo_origen": "0225",
+  "descripcion": "LEEX ESTUDIOS PLAN MUJER"
+ },
+ {
+  "codigo_origen": "0226",
+  "descripcion": "OVARIO IZQUIERDO MULTIFOLICULAR"
+ },
+ {
+  "codigo_origen": "0227",
+  "descripcion": "CONTROL POST RADIOFRECUENCIA"
+ }
+]
