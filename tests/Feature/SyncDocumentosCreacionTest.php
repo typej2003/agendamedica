@@ -4,11 +4,14 @@ namespace Tests\Feature;
 
 use App\Models\ConstanciaObs;
 use App\Models\Consulta;
+use App\Models\Informe;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
+use App\Models\Referencia;
 use App\Models\ReposoPaciente;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -118,5 +121,77 @@ class SyncDocumentosCreacionTest extends TestCase
 
         $this->assertNotEmpty($response->json('rechazados'));
         $this->assertNull(ReposoPaciente::where('nrohistoria', 910001)->first());
+    }
+
+    public function test_crea_la_referencia_a_un_medico_de_la_libreta(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+        DB::table('doctores')->insert([
+            'reg_medico' => $medico->reg_medico,
+            'cedula' => 12345678,
+            'nombres' => 'Carlos',
+            'apellidos' => 'Pérez',
+            'codeespecial' => '002',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertTrue(\App\Models\Doctor::where('reg_medico', $medico->reg_medico)
+            ->where('cedula', 12345678)->exists(), 'El médico de prueba quedó en la libreta');
+
+        $response = $this->sync([[
+            'table' => 'referencia',
+            'operation' => 'created',
+            'temp_id' => -73,
+            'consulta_id' => $consulta->id,
+            'ceduladoctor' => 12345678,
+            'columns' => ['referencia' => 'Evaluación por cardiología.'],
+        ]]);
+        $this->assertEmpty($response->json('rechazados'), json_encode($response->json('rechazados')));
+
+        $fila = Referencia::where('nrohistoria', 910001)->where('ceduladoctor', 12345678)->first();
+        $this->assertNotNull($fila);
+        $this->assertSame('Evaluación por cardiología.', $fila->referencia);
+    }
+
+    public function test_crea_el_informe_con_texto(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->sync([[
+            'table' => 'informe',
+            'operation' => 'created',
+            'temp_id' => -74,
+            'consulta_id' => $consulta->id,
+            'columns' => [
+                'para' => 'Dr. Pérez',
+                'descripcion' => 'Informe médico completo.',
+                'fe_cha' => '2026-10-01',
+            ],
+        ]]);
+
+        $fila = Informe::where('nrohistoria', 910001)->where('nroconsulta', 1)->first();
+        $this->assertNotNull($fila);
+        $this->assertSame('Informe médico completo.', $fila->descripcion);
+        $this->assertSame('Dr. Pérez', $fila->para);
+    }
+
+    public function test_un_informe_sin_texto_se_rechaza(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $response = $this->sync([[
+            'table' => 'informe',
+            'operation' => 'created',
+            'temp_id' => -75,
+            'consulta_id' => $consulta->id,
+            'columns' => ['para' => 'Dr. Pérez', 'descripcion' => '.'],
+        ]]);
+
+        $this->assertNotEmpty($response->json('rechazados'));
+        $this->assertNull(Informe::where('nrohistoria', 910001)->first());
     }
 }

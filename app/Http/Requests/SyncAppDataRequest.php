@@ -82,6 +82,8 @@ class SyncAppDataRequest extends FormRequest
         // ya existe, el sync la corrige por columna con el last-write-wins de siempre.
         'constancia_obs' => ['observacion', 'observacion01', 'titulo'],
         'reposo_paciente' => ['fdesde', 'numdias', 'obser_reposo'],
+        'referencia' => ['referencia'],
+        'informe' => ['para', 'descripcion', 'fe_cha'],
         // ⚠️ Los **cuatro estudios ecográficos** (`eco_pelvico`, `eco_obstetrico`, `eco_obstetrico_tercer_2` y
         // `eco_obstetrico_tercer`, EC-A3 de PLAN-MOVIL.md) **no están acá a propósito**: sus columnas editables
         // son las del mapa del dato de cada estudio —181 nombres entre los cuatro— y duplicarlas en esta lista
@@ -209,9 +211,9 @@ class SyncAppDataRequest extends FormRequest
         // Ola §10: los otros cuatro estudios (Doppler perinatal, mamario, abdominal y ecocardiograma fetal).
         // Las columnas de cada uno salen de su mapa, igual que las de los gineco-obstétricos.
         'eco_doppler', 'ultra_mama', 'ultra_abdominal', 'ecocadiograma_fetal',
-        // Documentos de la consulta (constancia y reposo): el teléfono los crea y, si la consulta ya tiene
-        // la fila que dejó el escritorio, la corrige por columna.
-        'constancia_obs', 'reposo_paciente',
+        // Documentos de la consulta (constancia, reposo, referencia e informe): el teléfono los crea y, si
+        // la consulta ya tiene la fila que dejó el escritorio, la corrige por columna.
+        'constancia_obs', 'reposo_paciente', 'referencia', 'informe',
     ];
 
     /**
@@ -278,9 +280,9 @@ class SyncAppDataRequest extends FormRequest
         // cabecera: el teléfono manda la pareja (cédula y nombre) y sus medicamentos, y el servidor los
         // escribe con la Action de la web (`GuardarRecipeDeLaPareja`), que crea o corrige en el lugar.
         'recipes_pareja',
-        // Documentos de la consulta: la constancia y el reposo se crean en el teléfono y se escriben con las
-        // mismas Actions de la web. Cuelgan de la consulta por su id o por sus números.
-        'constancia_obs', 'reposo_paciente',
+        // Documentos de la consulta: constancia, reposo, referencia e informe se crean en el teléfono y se
+        // escriben con las mismas Actions de la web. Cuelgan de la consulta por su id o por sus números.
+        'constancia_obs', 'reposo_paciente', 'referencia', 'informe',
     ];
 
     /**
@@ -307,9 +309,9 @@ class SyncAppDataRequest extends FormRequest
         // Los cuatro de la ola §10, por el mismo motivo que los ecos: sin esta entrada, `changes.*.table`
         // responde 422 y rechaza el lote entero, incluido el pull.
         'eco_doppler', 'ultra_mama', 'ultra_abdominal', 'ecocadiograma_fetal',
-        // Documentos de la consulta que el teléfono crea (constancia y reposo). Sin esta entrada, el lote
-        // entero se rechaza con 422, incluido el pull.
-        'constancia_obs', 'reposo_paciente',
+        // Documentos de la consulta que el teléfono crea (constancia, reposo, referencia e informe). Sin
+        // esta entrada, el lote entero se rechaza con 422, incluido el pull.
+        'constancia_obs', 'reposo_paciente', 'referencia', 'informe',
     ];
 
     /**

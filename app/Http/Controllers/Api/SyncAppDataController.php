@@ -981,6 +981,8 @@ class SyncAppDataController extends Controller
             // Documentos de la consulta (constancia y reposo): las Actions de la web.
             app(\App\Actions\Consulta\GuardarConstanciaDeLaConsulta::class),
             app(\App\Actions\Consulta\GuardarReposoDeLaConsulta::class),
+            app(\App\Actions\Consulta\GuardarReferenciaDeLaConsulta::class),
+            app(\App\Actions\Consulta\GuardarInformeDeLaConsulta::class),
         );
         $creadosAntes = count($creados);
 
@@ -1584,6 +1586,8 @@ class SyncAppDataController extends Controller
             // Documentos de la consulta: si el teléfono corrige una fila ya subida, se aplica por columna.
             'constancia_obs' => ConstanciaObs::class,
             'reposo_paciente' => ReposoPaciente::class,
+            'referencia' => Referencia::class,
+            'informe' => Informe::class,
         ][$table];
     }
 

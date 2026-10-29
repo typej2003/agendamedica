@@ -15,7 +15,9 @@ use App\Actions\Consulta\GuardarEcoObstetricoSegundo;
 use App\Actions\Consulta\GuardarEcoObstetricoTercero;
 use App\Actions\Consulta\GuardarConstanciaDeLaConsulta;
 use App\Actions\Consulta\GuardarEvaluacionFisica;
+use App\Actions\Consulta\GuardarInformeDeLaConsulta;
 use App\Actions\Consulta\GuardarRecipe;
+use App\Actions\Consulta\GuardarReferenciaDeLaConsulta;
 use App\Actions\Consulta\GuardarReposoDeLaConsulta;
 use App\Actions\Consulta\GuardarRecipeDeLaPareja;
 use App\Actions\Consulta\QuitarMotivoDeLaConsulta;
@@ -37,11 +39,13 @@ use App\Models\Cola;
 use App\Models\ConstanciaObs;
 use App\Models\Consulta;
 use App\Models\Historia;
+use App\Models\Informe;
 use App\Models\Medico;
 use App\Models\MotivoConsulta;
 use App\Models\Recipe;
 use App\Models\RecipeDetalle;
 use App\Models\RecipePareja;
+use App\Models\Referencia;
 use App\Models\ReposoPaciente;
 use App\Models\SyncChange;
 use Carbon\Carbon;
@@ -187,6 +191,8 @@ class CreacionesClinicas
         // (observación y diagnósticos) y el reposo (días, desde y justificación).
         private GuardarConstanciaDeLaConsulta $guardarConstancia,
         private GuardarReposoDeLaConsulta $guardarReposo,
+        private GuardarReferenciaDeLaConsulta $guardarReferencia,
+        private GuardarInformeDeLaConsulta $guardarInforme,
     ) {
     }
 
@@ -243,6 +249,8 @@ class CreacionesClinicas
             // Documentos de la consulta: constancia y reposo.
             'constancia_obs' => $this->crearConstancia($change, $tempId, $rechazar),
             'reposo_paciente' => $this->crearReposo($change, $tempId, $rechazar),
+            'referencia' => $this->crearReferencia($change, $tempId, $rechazar),
+            'informe' => $this->crearInforme($change, $tempId, $rechazar),
         };
         if ($respuesta !== null) {
             $creados[] = $respuesta;
@@ -1129,6 +1137,96 @@ class CreacionesClinicas
         return $this->respuestaDe('reposo_paciente', $tempId, $fila->id);
     }
 
+    /**
+     * **La referencia a otro médico** (WEB-5.3a): una por consulta y por médico referido. El médico tiene
+     * que estar en la libreta del que atiende; la Action de la web hace esa validación.
+     */
+    private function crearReferencia(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if ($consulta === null) {
+            $rechazar('La consulta de la referencia no existe.');
+
+            return null;
+        }
+
+        $columnas = $this->columnasDelCliente($change, 'referencia');
+        $cedula = (int) ($change['ceduladoctor'] ?? 0);
+        try {
+            $this->guardarReferencia->ejecutar(
+                $consulta,
+                $this->registrosMedicos,
+                $cedula,
+                $columnas['referencia'] ?? null,
+                null,
+                'mobile',
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+
+            return null;
+        }
+
+        $fila = Referencia::where('nrohistoria', (int) $consulta->numhistoria)
+            ->where('nroconsulta', (int) $consulta->nroconsulta)
+            ->where('ceduladoctor', $cedula)
+            ->first();
+
+        if ($fila === null) {
+            $rechazar('La referencia no se pudo guardar.');
+
+            return null;
+        }
+
+        $this->anotar('referencia', $fila->id, $tempId, $consulta->reg_medico);
+
+        return $this->respuestaDe('referencia', $tempId, $fila->id);
+    }
+
+    /**
+     * **El informe médico de la consulta** (WEB-5.3a): uno por consulta, con el «Para», el texto y la fecha.
+     * El texto es obligatorio; la Action de la web lo valida y lo escribe.
+     */
+    private function crearInforme(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if ($consulta === null) {
+            $rechazar('La consulta del informe no existe.');
+
+            return null;
+        }
+
+        $columnas = $this->columnasDelCliente($change, 'informe');
+        try {
+            $this->guardarInforme->ejecutar(
+                $consulta,
+                $columnas['para'] ?? null,
+                $columnas['descripcion'] ?? null,
+                $columnas['fe_cha'] ?? null,
+                null,
+                'mobile',
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+
+            return null;
+        }
+
+        $fila = Informe::where('nrohistoria', (int) $consulta->numhistoria)
+            ->where('nroconsulta', (int) $consulta->nroconsulta)
+            ->first();
+
+        if ($fila === null) {
+            $rechazar('El informe no se pudo guardar.');
+
+            return null;
+        }
+
+        $this->anotar('informe', $fila->id, $tempId, $consulta->reg_medico);
+
+        return $this->respuestaDe('informe', $tempId, $fila->id);
+    }
+
     private function yaCreado(string $table, int $tempId): ?int
     {
         return SyncChange::where('table_name', $table)
@@ -1196,7 +1294,7 @@ class CreacionesClinicas
             // no por la clave del legado, igual que en la evaluación física.
             return $this->respuestaEco($table, $tempId, $recordId);
         }
-        if (in_array($table, ['constancia_obs', 'reposo_paciente'], true)) {
+        if (in_array($table, ['constancia_obs', 'reposo_paciente', 'referencia', 'informe'], true)) {
             // Documentos de la consulta: el teléfono sólo necesita el id real de la fila.
             return ['table' => $table, 'temp_id' => $tempId, 'id' => $recordId];
         }
