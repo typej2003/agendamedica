@@ -250,7 +250,10 @@ class BitacoraWebTest extends TestCase
 
         $respuesta->assertOk();
         $this->assertCount(50, $this->filas($respuesta));
-        $this->assertLessThan(40, $consultas, "La página hizo {$consultas} consultas: tiene que ser un número acotado, no uno por línea.");
+        // El tope subió con el plan del consultorio: `AsegurarContextoClinico` consulta el servicio —y su plan— en
+        // todas las pantallas clínicas, para el aviso de «sin impresión» (corte de impresión, 2026-10-28). Lo que este
+        // caso vigila es que no haya una consulta por fila: con 50 filas, 45 sigue sin dejar pasar un N+1.
+        $this->assertLessThan(45, $consultas, "La página hizo {$consultas} consultas: tiene que ser un número acotado, no uno por línea.");
     }
 
     // --------------------------------------------------------------------------------------- Filtros
