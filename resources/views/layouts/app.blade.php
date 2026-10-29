@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @include('layouts._favicon')
     <title>@yield('title', 'Doctorísimo')</title>
+    @hasSection('description')
+    <meta name="description" content="@yield('description')">
+    @endif
+    @hasSection('robots')
+    <meta name="robots" content="@yield('robots')">
+    @endif
+    @hasSection('canonical')
+    <link rel="canonical" href="@yield('canonical')">
+    @endif
     @stack('meta')
 
     <!-- Bootstrap 5 CSS -->

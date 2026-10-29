@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Registro de médicos · Doctorísimo')
+@section('description', 'Regístrate como médico en Doctorísimo: solicita tu acceso, un administrador verifica tus datos y empiezas con un mes de prueba para gestionar tu consultorio.')
 
 @push('estilos')
     <link rel="stylesheet" href="{{ asset('css/paciente.css') }}">

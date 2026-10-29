@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Iniciar sesión · Doctorísimo</title>
+    <meta name="description" content="Inicia sesión en Doctorísimo para gestionar tu consultorio, tu agenda y tus historias clínicas, o para ver y reprogramar tus citas.">
     @include('layouts._favicon')
 
     <!-- Bootstrap 5 CSS -->
