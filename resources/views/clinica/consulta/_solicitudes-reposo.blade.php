@@ -9,6 +9,11 @@
             <x-ui.imprimir-guardando :url="$vm->urlImprimir()" form="reposo-form" documento="reposo" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
             </x-ui.imprimir-guardando>
+            @if ($vm->urlImprimirAbsoluto())
+                <x-ui.imprimir-guardando :url="$vm->urlImprimirAbsoluto()" form="reposo-form" documento="reposo-absoluto" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-printer" aria-hidden="true"></i> Reposo absoluto
+                </x-ui.imprimir-guardando>
+            @endif
         @endif
     </x-slot>
 

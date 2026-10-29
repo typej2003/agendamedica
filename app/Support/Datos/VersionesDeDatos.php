@@ -30,6 +30,13 @@ class VersionesDeDatos
             'catalogos:sembrar-iniciales',
             'catalogos:cargar-a-medicos',
         ],
+        // Medicina interna (MI-1, 2026-10-28): la especialidad y sus módulos, y su catálogo inicial. Con `--reemplazar` la línea
+        // es otra que la de la versión 1 (si fuera igual, el dedupe no la correría) y deja el catálogo de medicina interna
+        // exactamente como su carpeta, que es nueva.
+        2 => [
+            'especialidades:sembrar',
+            'catalogos:sembrar-iniciales --reemplazar=medicina-interna',
+        ],
     ];
 
     /** Todas las versiones declaradas, con sus comandos en orden. */

@@ -1,0 +1,4906 @@
+[
+ {
+  "codigo_origen": "0038",
+  "descripcion": "DOLOR ABDOMINAL A NIVEL UMBILICAL"
+ },
+ {
+  "codigo_origen": "0040",
+  "descripcion": "DIARREA"
+ },
+ {
+  "codigo_origen": "0042",
+  "descripcion": "DOLOR LUMBAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0044",
+  "descripcion": "CEFALEA BIPARIETAL"
+ },
+ {
+  "codigo_origen": "0046",
+  "descripcion": "DISURIA"
+ },
+ {
+  "codigo_origen": "0048",
+  "descripcion": "CEFALEA PARIETAL DERECHA"
+ },
+ {
+  "codigo_origen": "0050",
+  "descripcion": "ADORMECIMIENTO DE AMBAS MANOS"
+ },
+ {
+  "codigo_origen": "0052",
+  "descripcion": "CIFRAS TENSIONALES ELEVADAS"
+ },
+ {
+  "codigo_origen": "0054",
+  "descripcion": "OBSTRUCCIÓN NASAL"
+ },
+ {
+  "codigo_origen": "0056",
+  "descripcion": "ADORMECIMIENTO DE PIERNA IZQ"
+ },
+ {
+  "codigo_origen": "0058",
+  "descripcion": "SENSACIÓN DE PESO"
+ },
+ {
+  "codigo_origen": "0060",
+  "descripcion": "CHEQUEO MEDICO"
+ },
+ {
+  "codigo_origen": "0062",
+  "descripcion": "SENSACIÓN DE INESTABILIDAD"
+ },
+ {
+  "codigo_origen": "0064",
+  "descripcion": "ERITEMA OCULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0224",
+  "descripcion": "DOLOR GENERAL"
+ },
+ {
+  "codigo_origen": "0068",
+  "descripcion": "DOLOR LUMBAR"
+ },
+ {
+  "codigo_origen": "0070",
+  "descripcion": "PRURITO EN AMBAS MANOS Y PIES"
+ },
+ {
+  "codigo_origen": "0001",
+  "descripcion": "CEFALEA FRONTAL"
+ },
+ {
+  "codigo_origen": "0003",
+  "descripcion": "CEFALEA HEMICRANEA DERECHA"
+ },
+ {
+  "codigo_origen": "0005",
+  "descripcion": "FLATULENCIA"
+ },
+ {
+  "codigo_origen": "0007",
+  "descripcion": "LESIÓN EN UÑAS DE LAS MANOS"
+ },
+ {
+  "codigo_origen": "0009",
+  "descripcion": "PÉRDIDA PROGRESIVA DE LA VISIÓN"
+ },
+ {
+  "codigo_origen": "0011",
+  "descripcion": "CEFALEA OCCIPITAL PULSÁTIL"
+ },
+ {
+  "codigo_origen": "0013",
+  "descripcion": "ARTRITIS"
+ },
+ {
+  "codigo_origen": "0015",
+  "descripcion": "HIPERTERMIA"
+ },
+ {
+  "codigo_origen": "0017",
+  "descripcion": "SINDROME  GRIPAL"
+ },
+ {
+  "codigo_origen": "0019",
+  "descripcion": "DOLOR EN TESTICULO IZQ"
+ },
+ {
+  "codigo_origen": "0021",
+  "descripcion": "ESCALOFRIOS"
+ },
+ {
+  "codigo_origen": "0023",
+  "descripcion": "ERITEMA EN PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0225",
+  "descripcion": "DOLOR DE PESTAÑAS"
+ },
+ {
+  "codigo_origen": "0218",
+  "descripcion": "ENSUCIAR"
+ },
+ {
+  "codigo_origen": "0219",
+  "descripcion": "DOLOR DE OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0037",
+  "descripcion": "ANSIEDAD"
+ },
+ {
+  "codigo_origen": "0039",
+  "descripcion": "DOLOR EN CUELO"
+ },
+ {
+  "codigo_origen": "0041",
+  "descripcion": "EX DE INGRESO"
+ },
+ {
+  "codigo_origen": "0043",
+  "descripcion": "DOLOR ABDOMINAL"
+ },
+ {
+  "codigo_origen": "0045",
+  "descripcion": "LESIONES CONDILOMATOSAS VAGINALES"
+ },
+ {
+  "codigo_origen": "0047",
+  "descripcion": "CHEQUEO POST- OPERATORIO"
+ },
+ {
+  "codigo_origen": "0049",
+  "descripcion": "ARTRITIS GENERALIZADA"
+ },
+ {
+  "codigo_origen": "0051",
+  "descripcion": "DECAIMIENTO"
+ },
+ {
+  "codigo_origen": "0053",
+  "descripcion": "SUDORACIÓN"
+ },
+ {
+  "codigo_origen": "0055",
+  "descripcion": "EDEMA DE PIERNA IZQ"
+ },
+ {
+  "codigo_origen": "0057",
+  "descripcion": "TOS CRÓNICA"
+ },
+ {
+  "codigo_origen": "0059",
+  "descripcion": "ADORMECIMIENTO DE ASMSIS"
+ },
+ {
+  "codigo_origen": "0061",
+  "descripcion": "EX- POST VACACIONAL"
+ },
+ {
+  "codigo_origen": "0063",
+  "descripcion": "ODINOFAGIA"
+ },
+ {
+  "codigo_origen": "0065",
+  "descripcion": "DOLOR EN CADERAS"
+ },
+ {
+  "codigo_origen": "0067",
+  "descripcion": "AUSENCIA DE MENSTRUACIÓN"
+ },
+ {
+  "codigo_origen": "0069",
+  "descripcion": "ERITEMA EN AMBAS MANOS Y PIES"
+ },
+ {
+  "codigo_origen": "0071",
+  "descripcion": "VÓMITOS"
+ },
+ {
+  "codigo_origen": "0002",
+  "descripcion": "CEFALEA FRONTO-OCCIPITAL"
+ },
+ {
+  "codigo_origen": "0004",
+  "descripcion": "DIFICULTAD RESPIRATORIA"
+ },
+ {
+  "codigo_origen": "0006",
+  "descripcion": "DOLOR EN MIEMBROS INFERIORES"
+ },
+ {
+  "codigo_origen": "0008",
+  "descripcion": "MAREOS"
+ },
+ {
+  "codigo_origen": "0010",
+  "descripcion": "ACIDEZ GÁSTRICA"
+ },
+ {
+  "codigo_origen": "0012",
+  "descripcion": "ARTRALGIAS"
+ },
+ {
+  "codigo_origen": "0014",
+  "descripcion": "EXAMEN PRE/ VACACIONAL"
+ },
+ {
+  "codigo_origen": "0018",
+  "descripcion": "DOLOR EN FLANCO IZQ"
+ },
+ {
+  "codigo_origen": "0020",
+  "descripcion": "TOS HÚMEDA"
+ },
+ {
+  "codigo_origen": "0022",
+  "descripcion": "LESIÓN FLICTENULAR EN PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0024",
+  "descripcion": "EDEMA EN PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0025",
+  "descripcion": "EDEMA DE AMBOS PIES"
+ },
+ {
+  "codigo_origen": "0026",
+  "descripcion": "SOMNOLENCIA"
+ },
+ {
+  "codigo_origen": "0027",
+  "descripcion": "DEBILIDAD"
+ },
+ {
+  "codigo_origen": "0028",
+  "descripcion": "FUE EVALUADA EN EMERGENCIA DE DIVINO N."
+ },
+ {
+  "codigo_origen": "0029",
+  "descripcion": "DOLOR EN PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0030",
+  "descripcion": "CEFALEA"
+ },
+ {
+  "codigo_origen": "0031",
+  "descripcion": "PALPITACIONES"
+ },
+ {
+  "codigo_origen": "0032",
+  "descripcion": "DOLOR DE ESPALDA"
+ },
+ {
+  "codigo_origen": "0033",
+  "descripcion": "HIPOTENSIÓN"
+ },
+ {
+  "codigo_origen": "0034",
+  "descripcion": "SUDORACIÓN PROFUSA"
+ },
+ {
+  "codigo_origen": "0035",
+  "descripcion": "TAQUICARDIA"
+ },
+ {
+  "codigo_origen": "0036",
+  "descripcion": "SE SIENTE MEJOR"
+ },
+ {
+  "codigo_origen": "0072",
+  "descripcion": "SENSACIÓN DE CALOR"
+ },
+ {
+  "codigo_origen": "0073",
+  "descripcion": "INSOMNIO"
+ },
+ {
+  "codigo_origen": "0074",
+  "descripcion": "RESEQUEDAD ORAL"
+ },
+ {
+  "codigo_origen": "0075",
+  "descripcion": "EXAMEN DE EGRESO"
+ },
+ {
+  "codigo_origen": "0076",
+  "descripcion": "TOS SECA"
+ },
+ {
+  "codigo_origen": "0078",
+  "descripcion": "DOLOR EN ESPALDA"
+ },
+ {
+  "codigo_origen": "0079",
+  "descripcion": "DOLOR  EN REGIÓN SACRO-ILÍACA DERECHA"
+ },
+ {
+  "codigo_origen": "0080",
+  "descripcion": "SENSACIÓN DE ARDOR EN MSIS"
+ },
+ {
+  "codigo_origen": "0081",
+  "descripcion": "SENSACIÓN DE ARDOR EN REGIÓN FACIAL"
+ },
+ {
+  "codigo_origen": "0082",
+  "descripcion": "ERITEMA DE AS MSIS"
+ },
+ {
+  "codigo_origen": "0083",
+  "descripcion": "COLECCIÓN DE PUS SUBUNGUE AL"
+ },
+ {
+  "codigo_origen": "0084",
+  "descripcion": "EVALUACIÓN PRE-OPERATORIA"
+ },
+ {
+  "codigo_origen": "0085",
+  "descripcion": "EDEMA DE AMBAS MANOS"
+ },
+ {
+  "codigo_origen": "0086",
+  "descripcion": "POLIURIA"
+ },
+ {
+  "codigo_origen": "0087",
+  "descripcion": "DOLOR FACIAL"
+ },
+ {
+  "codigo_origen": "0088",
+  "descripcion": "DOLORES ÓSEOS GENERALIZADOS"
+ },
+ {
+  "codigo_origen": "0089",
+  "descripcion": "MIALGIAS"
+ },
+ {
+  "codigo_origen": "0090",
+  "descripcion": "IRREGULARIDAD MENSTRUAL"
+ },
+ {
+  "codigo_origen": "0092",
+  "descripcion": "DOLOR RECTAL"
+ },
+ {
+  "codigo_origen": "0194",
+  "descripcion": "MIASIS"
+ },
+ {
+  "codigo_origen": "0091",
+  "descripcion": "ESTUVO HOSPITALIZADA EN CENTRO MÉDICO"
+ },
+ {
+  "codigo_origen": "0093",
+  "descripcion": "ESTREÑIMIENTO"
+ },
+ {
+  "codigo_origen": "0094",
+  "descripcion": "NAUSEAS"
+ },
+ {
+  "codigo_origen": "0095",
+  "descripcion": "SENSACIÓN DE MASA A NIVEL ANAL"
+ },
+ {
+  "codigo_origen": "0096",
+  "descripcion": "DIARREA CON MOCO"
+ },
+ {
+  "codigo_origen": "0097",
+  "descripcion": "PUJO Y TENESMO RECTAL"
+ },
+ {
+  "codigo_origen": "0098",
+  "descripcion": "DOLOR EN ARTICULACIÓN COXO-FEMORAL IZQ."
+ },
+ {
+  "codigo_origen": "0099",
+  "descripcion": "DIFICULTAD PARA LA ABDUCCIÓN  DE MIIZQ."
+ },
+ {
+  "codigo_origen": "0100",
+  "descripcion": "DOLOR EN HOMBRO DERECHO"
+ },
+ {
+  "codigo_origen": "0101",
+  "descripcion": "CAÍDA DE SUS PIES"
+ },
+ {
+  "codigo_origen": "0102",
+  "descripcion": "VISIÓN BORROSA"
+ },
+ {
+  "codigo_origen": "0103",
+  "descripcion": "LAGUNAS MENTALES"
+ },
+ {
+  "codigo_origen": "0104",
+  "descripcion": "DOLOR DE AMBOS MIEMBROS SUPERIORES"
+ },
+ {
+  "codigo_origen": "0105",
+  "descripcion": "DOLOR EN MUEÑECAS"
+ },
+ {
+  "codigo_origen": "0106",
+  "descripcion": "DOLOR EN MAXILAR INFERIOR"
+ },
+ {
+  "codigo_origen": "0107",
+  "descripcion": "DOLOR OCCIPITAL"
+ },
+ {
+  "codigo_origen": "0108",
+  "descripcion": "EDEMA EN MSIS"
+ },
+ {
+  "codigo_origen": "0109",
+  "descripcion": "HIPOREXIA"
+ },
+ {
+  "codigo_origen": "0110",
+  "descripcion": "DOLOR EPIGÁSTRICO"
+ },
+ {
+  "codigo_origen": "0111",
+  "descripcion": "DOLOR EN MIEMBRO INFERIOR DERECHO"
+ },
+ {
+  "codigo_origen": "0112",
+  "descripcion": "DOLOR EN CADERA DERECHA"
+ },
+ {
+  "codigo_origen": "0113",
+  "descripcion": "DOLOR EN AS MANOS"
+ },
+ {
+  "codigo_origen": "0114",
+  "descripcion": "DOLOR DE MS INFERIORES"
+ },
+ {
+  "codigo_origen": "0115",
+  "descripcion": "DOLOR TORÁCICO"
+ },
+ {
+  "codigo_origen": "0116",
+  "descripcion": "PRURITO"
+ },
+ {
+  "codigo_origen": "0117",
+  "descripcion": "DISARTRIA"
+ },
+ {
+  "codigo_origen": "0118",
+  "descripcion": "DISMINUCIÓN DE LA FUERZA MUSCULAR"
+ },
+ {
+  "codigo_origen": "0119",
+  "descripcion": "PRURITO VAGINAL"
+ },
+ {
+  "codigo_origen": "0121",
+  "descripcion": "ZUMBIDOS"
+ },
+ {
+  "codigo_origen": "0120",
+  "descripcion": "FLUJO BLANCO"
+ },
+ {
+  "codigo_origen": "0122",
+  "descripcion": "OTALGIA BILATERAL"
+ },
+ {
+  "codigo_origen": "0123",
+  "descripcion": "SENSACIÓN DE LÍQUIDO EN OÍDOS"
+ },
+ {
+  "codigo_origen": "0124",
+  "descripcion": "DOLOR EN MIEMBROS SUPERIORES"
+ },
+ {
+  "codigo_origen": "0125",
+  "descripcion": "SENSACIÓN DE ARDOR EN OJOS"
+ },
+ {
+  "codigo_origen": "0126",
+  "descripcion": "ADORMECIMIENTOS TESTÝCULARES"
+ },
+ {
+  "codigo_origen": "0127",
+  "descripcion": "DOLOR OCULAR"
+ },
+ {
+  "codigo_origen": "0128",
+  "descripcion": "EVACUACIONES FÉTIDAS"
+ },
+ {
+  "codigo_origen": "0129",
+  "descripcion": "EVACUACIONES LÍQUIDAS"
+ },
+ {
+  "codigo_origen": "0130",
+  "descripcion": "DOLOR DE MIEMBRO INFERIOR DERECHO"
+ },
+ {
+  "codigo_origen": "0131",
+  "descripcion": "DOLOR DE MIEMBRO SUPERIOR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0132",
+  "descripcion": "DOLOR COCCIGEO"
+ },
+ {
+  "codigo_origen": "0133",
+  "descripcion": "INCONTINENCIA URINARIA"
+ },
+ {
+  "codigo_origen": "0134",
+  "descripcion": "PRURITO EN CUERO CABELLUDO"
+ },
+ {
+  "codigo_origen": "0135",
+  "descripcion": "LESIÓN DESCAMATIVA"
+ },
+ {
+  "codigo_origen": "0136",
+  "descripcion": "MASA PALPABLE"
+ },
+ {
+  "codigo_origen": "0137",
+  "descripcion": "DOLOR DE MIEMBRO INFERIOR IZQ."
+ },
+ {
+  "codigo_origen": "0138",
+  "descripcion": "CHEQUEO CONTROL"
+ },
+ {
+  "codigo_origen": "0139",
+  "descripcion": "ERITEMA GENERALIZADO"
+ },
+ {
+  "codigo_origen": "0140",
+  "descripcion": "ERITEMA ADYACENTE DE OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0141",
+  "descripcion": "FUE HOSPITALIZADO EN CENTRO MÉDICO"
+ },
+ {
+  "codigo_origen": "0142",
+  "descripcion": "SENSACIÓN DE PRESIÓN"
+ },
+ {
+  "codigo_origen": "0143",
+  "descripcion": "SECRECIÓN BRONQUIAL"
+ },
+ {
+  "codigo_origen": "0144",
+  "descripcion": "EDEMA EN MIEMBRO INFERIOR DERECHO"
+ },
+ {
+  "codigo_origen": "0145",
+  "descripcion": "PROLAPSO VESICAL"
+ },
+ {
+  "codigo_origen": "0146",
+  "descripcion": "DOLOR EN GLUTEO IZQ"
+ },
+ {
+  "codigo_origen": "0148",
+  "descripcion": "ADENOMEGALIAS"
+ },
+ {
+  "codigo_origen": "0147",
+  "descripcion": "PÉRDIDA DE PESO"
+ },
+ {
+  "codigo_origen": "0149",
+  "descripcion": "DOLOR EN TESTÍCULO DERECHO"
+ },
+ {
+  "codigo_origen": "0150",
+  "descripcion": "DIFICULTAD PARA LA MICCIÓN"
+ },
+ {
+  "codigo_origen": "0151",
+  "descripcion": "DOLOR EN HOMBRO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0152",
+  "descripcion": "DOLOR DE AMBAS CADERAS"
+ },
+ {
+  "codigo_origen": "0153",
+  "descripcion": "EQUÍMOSIS ESPONTANEA"
+ },
+ {
+  "codigo_origen": "0154",
+  "descripcion": "RINORREA"
+ },
+ {
+  "codigo_origen": "0155",
+  "descripcion": "MONILIASIS"
+ },
+ {
+  "codigo_origen": "0156",
+  "descripcion": "LESIONES FACIALES"
+ },
+ {
+  "codigo_origen": "0157",
+  "descripcion": "DOLOR EN RODILLA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0228",
+  "descripcion": "MAREOS"
+ },
+ {
+  "codigo_origen": "0159",
+  "descripcion": "LESIONES VESICULARES"
+ },
+ {
+  "codigo_origen": "0160",
+  "descripcion": "PARESTESIAS"
+ },
+ {
+  "codigo_origen": "0161",
+  "descripcion": "ICTERICIA"
+ },
+ {
+  "codigo_origen": "0162",
+  "descripcion": "AUMENTO DE VOLUMEN ABDOMINAL"
+ },
+ {
+  "codigo_origen": "0163",
+  "descripcion": "ERUPCIÓN PRURIGINOSA"
+ },
+ {
+  "codigo_origen": "0164",
+  "descripcion": "DISFONIA"
+ },
+ {
+  "codigo_origen": "0165",
+  "descripcion": "DOLOR DE HX DERECHO"
+ },
+ {
+  "codigo_origen": "0166",
+  "descripcion": "VÉRTIGO"
+ },
+ {
+  "codigo_origen": "0167",
+  "descripcion": "SENSACIÓN DE ARDOR"
+ },
+ {
+  "codigo_origen": "0168",
+  "descripcion": "DOLOR EN RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "0169",
+  "descripcion": "CEFALEA OCCIPITAL"
+ },
+ {
+  "codigo_origen": "0170",
+  "descripcion": "GORDURA"
+ },
+ {
+  "codigo_origen": "0171",
+  "descripcion": "DOLOR EPIGASTRICO"
+ },
+ {
+  "codigo_origen": "0172",
+  "descripcion": "ULCERAS VARICOSAS EN MIEMBROS INFERIOR"
+ },
+ {
+  "codigo_origen": "0173",
+  "descripcion": "DIFICULTAD PARA RESPIRAR"
+ },
+ {
+  "codigo_origen": "0174",
+  "descripcion": "HEMATEMESIS"
+ },
+ {
+  "codigo_origen": "0175",
+  "descripcion": "SANGRADO RECTAL"
+ },
+ {
+  "codigo_origen": "0176",
+  "descripcion": "SANGRADO GENITAL"
+ },
+ {
+  "codigo_origen": "0177",
+  "descripcion": "VÓMITOS CON SANGRE"
+ },
+ {
+  "codigo_origen": "0240",
+  "descripcion": "DISARTRIA"
+ },
+ {
+  "codigo_origen": "0179",
+  "descripcion": "EDEMA BIPALPEBRAL"
+ },
+ {
+  "codigo_origen": "0180",
+  "descripcion": "TU. MAMAS"
+ },
+ {
+  "codigo_origen": "0181",
+  "descripcion": "QUEMADURAS"
+ },
+ {
+  "codigo_origen": "0182",
+  "descripcion": "HEMIPLEGIA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0183",
+  "descripcion": "EXAMEN PREEMPLEO"
+ },
+ {
+  "codigo_origen": "0184",
+  "descripcion": "AUMENTO DE VOLUMEN DE PIE DERECHO"
+ },
+ {
+  "codigo_origen": "0185",
+  "descripcion": "AUMENTO DE PESO"
+ },
+ {
+  "codigo_origen": "0187",
+  "descripcion": "PESADEZ EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0188",
+  "descripcion": "HORMIGUEO EN MIEMBROS INFERIORES"
+ },
+ {
+  "codigo_origen": "0189",
+  "descripcion": "CALAMBRES"
+ },
+ {
+  "codigo_origen": "0190",
+  "descripcion": "SOBREPESO"
+ },
+ {
+  "codigo_origen": "0191",
+  "descripcion": "CONTROL DE PESO"
+ },
+ {
+  "codigo_origen": "0192",
+  "descripcion": "CONTROL POR HIPERTENSIÓN ARTERIAL"
+ },
+ {
+  "codigo_origen": "0193",
+  "descripcion": "DOLOR PRECORDIAL"
+ },
+ {
+  "codigo_origen": "0195",
+  "descripcion": "DOLOR EN CADERA"
+ },
+ {
+  "codigo_origen": "0196",
+  "descripcion": "FRACTURA DE CADERA"
+ },
+ {
+  "codigo_origen": "0197",
+  "descripcion": "CONVULSIONES"
+ },
+ {
+  "codigo_origen": "0198",
+  "descripcion": "CAÍDA DEL PELO"
+ },
+ {
+  "codigo_origen": "0227",
+  "descripcion": "DISNEA"
+ },
+ {
+  "codigo_origen": "0200",
+  "descripcion": "DISTENSION ABDOMINAL"
+ },
+ {
+  "codigo_origen": "0201",
+  "descripcion": "LLENURA POST-PANDRIAL."
+ },
+ {
+  "codigo_origen": "0202",
+  "descripcion": "RINOCORT AQUA"
+ },
+ {
+  "codigo_origen": "0203",
+  "descripcion": "DOLOR  DE OÍDO"
+ },
+ {
+  "codigo_origen": "0204",
+  "descripcion": "TRAUMATISMO GENERALIZADO"
+ },
+ {
+  "codigo_origen": "0205",
+  "descripcion": "PERDIDA DEL CONOCIMIENTO"
+ },
+ {
+  "codigo_origen": "0206",
+  "descripcion": "EPISTAXIS"
+ },
+ {
+  "codigo_origen": "0207",
+  "descripcion": "HIPERTENSIÓN ARTERIAL"
+ },
+ {
+  "codigo_origen": "0208",
+  "descripcion": "EPIGASTRALGIA"
+ },
+ {
+  "codigo_origen": "0209",
+  "descripcion": "ERUPCIÓN EN PIEL"
+ },
+ {
+  "codigo_origen": "0211",
+  "descripcion": "FIEBRE"
+ },
+ {
+  "codigo_origen": "0212",
+  "descripcion": "HEMORROIDES TROMBOSADAS"
+ },
+ {
+  "codigo_origen": "0213",
+  "descripcion": "DOLOR DE CABEZA"
+ },
+ {
+  "codigo_origen": "0216",
+  "descripcion": "AUMENTO DE LIPIDOS"
+ },
+ {
+  "codigo_origen": "0217",
+  "descripcion": "PIROSIS"
+ },
+ {
+  "codigo_origen": "0220",
+  "descripcion": "RONCAR"
+ },
+ {
+  "codigo_origen": "0221",
+  "descripcion": "CORRIENTAZO"
+ },
+ {
+  "codigo_origen": "0226",
+  "descripcion": "ARDOR EN PIEL"
+ },
+ {
+  "codigo_origen": "0229",
+  "descripcion": "AUMENTO DE VOLUMEN EN PIERNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0230",
+  "descripcion": "AUMENTO DE VOLUMEN EN PIERNA DERECHA"
+ },
+ {
+  "codigo_origen": "0231",
+  "descripcion": "AUMENTO DE VOLUMEN EN MIEMBROS INFERIORE"
+ },
+ {
+  "codigo_origen": "0232",
+  "descripcion": "DOLOR OCULAR"
+ },
+ {
+  "codigo_origen": "0233",
+  "descripcion": "VISION BORROSA"
+ },
+ {
+  "codigo_origen": "0234",
+  "descripcion": "DOLOR CERVICAL"
+ },
+ {
+  "codigo_origen": "0235",
+  "descripcion": "DOLOR DE GARGANTA"
+ },
+ {
+  "codigo_origen": "0236",
+  "descripcion": "DOLOR PARA TRAGAR"
+ },
+ {
+  "codigo_origen": "0237",
+  "descripcion": "DOLOR DE OIDO"
+ },
+ {
+  "codigo_origen": "0238",
+  "descripcion": "DOLOR LUMBAR"
+ },
+ {
+  "codigo_origen": "0239",
+  "descripcion": "VISION BORROSA"
+ },
+ {
+  "codigo_origen": "0241",
+  "descripcion": "PERDIDA DE LA FUERZA DE HEMICUERPO IZQUI"
+ },
+ {
+  "codigo_origen": "0242",
+  "descripcion": "PERDIDA DE FZA HEMICUERPO DERECHO"
+ },
+ {
+  "codigo_origen": "0243",
+  "descripcion": "VISION DOBLE"
+ },
+ {
+  "codigo_origen": "0244",
+  "descripcion": "CAIDA DEL CABELLO"
+ },
+ {
+  "codigo_origen": "0245",
+  "descripcion": "SANGRADO NASAL"
+ },
+ {
+  "codigo_origen": "0246",
+  "descripcion": "GINGIVORRGIA"
+ },
+ {
+  "codigo_origen": "0247",
+  "descripcion": "DISFONIA"
+ },
+ {
+  "codigo_origen": "0248",
+  "descripcion": "HEMATEMESIS"
+ },
+ {
+  "codigo_origen": "0249",
+  "descripcion": "RECTORRGIA"
+ },
+ {
+  "codigo_origen": "0250",
+  "descripcion": "TOS HEMOPTOICA"
+ },
+ {
+  "codigo_origen": "0251",
+  "descripcion": "FRIALDAD"
+ },
+ {
+  "codigo_origen": "0252",
+  "descripcion": "AUMENTO DE VOLUMEN EN TORAX"
+ },
+ {
+  "codigo_origen": "0253",
+  "descripcion": "EDEMA EN HEMICUERPO IZQ"
+ },
+ {
+  "codigo_origen": "0254",
+  "descripcion": "EDEMA EN HEMICUERPO DERECHO"
+ },
+ {
+  "codigo_origen": "0255",
+  "descripcion": "INTRANQUILIDAD"
+ },
+ {
+  "codigo_origen": "0256",
+  "descripcion": "VERBORREA"
+ },
+ {
+  "codigo_origen": "0257",
+  "descripcion": "MALESTAR GENERAL"
+ },
+ {
+  "codigo_origen": "0258",
+  "descripcion": "MIALGIAS"
+ },
+ {
+  "codigo_origen": "0259",
+  "descripcion": "SENSACION DE CAIDA"
+ },
+ {
+  "codigo_origen": "0260",
+  "descripcion": "ANGUSTIA"
+ },
+ {
+  "codigo_origen": "0261",
+  "descripcion": "MAREOS"
+ },
+ {
+  "codigo_origen": "0262",
+  "descripcion": "HINCHAZON"
+ },
+ {
+  "codigo_origen": "0263",
+  "descripcion": "CANSANCIO"
+ },
+ {
+  "codigo_origen": "0264",
+  "descripcion": "ARDOR PARA ORINAR"
+ },
+ {
+  "codigo_origen": "0265",
+  "descripcion": "LIPOTIMIA"
+ },
+ {
+  "codigo_origen": "0266",
+  "descripcion": "PERDIDA DE PESO"
+ },
+ {
+  "codigo_origen": "0267",
+  "descripcion": "HIPOREXIA"
+ },
+ {
+  "codigo_origen": "0268",
+  "descripcion": "TEMBLO FACIAL"
+ },
+ {
+  "codigo_origen": "0269",
+  "descripcion": "LESIONES EN PIEL"
+ },
+ {
+  "codigo_origen": "0270",
+  "descripcion": "TOS"
+ },
+ {
+  "codigo_origen": "0271",
+  "descripcion": "DOLOR LUMBAR DERECHO"
+ },
+ {
+  "codigo_origen": "0272",
+  "descripcion": "DOLOR EN PIES"
+ },
+ {
+  "codigo_origen": "0273",
+  "descripcion": "CANSANCIO"
+ },
+ {
+  "codigo_origen": "0274",
+  "descripcion": "DOLOR EN HOMBRO DERECHO"
+ },
+ {
+  "codigo_origen": "0275",
+  "descripcion": "REFERIDO POR ESPECIALISTA"
+ },
+ {
+  "codigo_origen": "0276",
+  "descripcion": "AUMENTO DE VOLUMEN EN CARA"
+ },
+ {
+  "codigo_origen": "0277",
+  "descripcion": "EDEMA FACIAL"
+ },
+ {
+  "codigo_origen": "0278",
+  "descripcion": "DOLOR EN EL PECHO"
+ },
+ {
+  "codigo_origen": "0279",
+  "descripcion": "ORINA CON SANGRE"
+ },
+ {
+  "codigo_origen": "0280",
+  "descripcion": "HEMATOMAS MULTIPLES"
+ },
+ {
+  "codigo_origen": "0281",
+  "descripcion": "PERDIDA DE FZA MUSC EN BRAZO DERECHO"
+ },
+ {
+  "codigo_origen": "0282",
+  "descripcion": "LLANTO FACIL"
+ },
+ {
+  "codigo_origen": "0283",
+  "descripcion": "PALIDEZ"
+ },
+ {
+  "codigo_origen": "0284",
+  "descripcion": "COLIITIS"
+ },
+ {
+  "codigo_origen": "0285",
+  "descripcion": "AUMENTO DE VOLUMEN EN PIE IZQ"
+ },
+ {
+  "codigo_origen": "0286",
+  "descripcion": "DOLOR EN HOMBROS BILATERAL"
+ },
+ {
+  "codigo_origen": "0287",
+  "descripcion": "DOLOR EN PIERNA DERECHA"
+ },
+ {
+  "codigo_origen": "0288",
+  "descripcion": "VOMITOS"
+ },
+ {
+  "codigo_origen": "0289",
+  "descripcion": "EVACUACIONES NEGRAS"
+ },
+ {
+  "codigo_origen": "0290",
+  "descripcion": "ENFERMEDAD MULTINFARTO CEREBRAL"
+ },
+ {
+  "codigo_origen": "0291",
+  "descripcion": "DOLOR PELVICO"
+ },
+ {
+  "codigo_origen": "0292",
+  "descripcion": "TINNITUS IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0293",
+  "descripcion": "DOLOR ABDOMINAL"
+ },
+ {
+  "codigo_origen": "0294",
+  "descripcion": "DOLOR DE OIDO DERECHO"
+ },
+ {
+  "codigo_origen": "0295",
+  "descripcion": "DOLOR DE PRECORDIAL"
+ },
+ {
+  "codigo_origen": "0296",
+  "descripcion": "AUMENTO DE VOLUMEN EN TESTICULO"
+ },
+ {
+  "codigo_origen": "0297",
+  "descripcion": "EDEMA GENERALIZADO"
+ },
+ {
+  "codigo_origen": "0298",
+  "descripcion": "TEMBLOR EN MANOS"
+ },
+ {
+  "codigo_origen": "0299",
+  "descripcion": "AUMENTO DE VOLUMEN EN ESPALDA"
+ },
+ {
+  "codigo_origen": "0300",
+  "descripcion": "DOLOR EN PIERNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0301",
+  "descripcion": "SANGRADO OCULAR"
+ },
+ {
+  "codigo_origen": "0302",
+  "descripcion": "LENGUAJE INCOHERENTE"
+ },
+ {
+  "codigo_origen": "0303",
+  "descripcion": "TEMBLOR FINO"
+ },
+ {
+  "codigo_origen": "0304",
+  "descripcion": "TRASTORNOS DE MEMORIA"
+ },
+ {
+  "codigo_origen": "0305",
+  "descripcion": "DOLOR EN RODILLAS"
+ },
+ {
+  "codigo_origen": "0306",
+  "descripcion": "AUMENTO DE VOLUMEN EN RODILLAS"
+ },
+ {
+  "codigo_origen": "0307",
+  "descripcion": "POLIDIPSIA POLIURIA"
+ },
+ {
+  "codigo_origen": "0308",
+  "descripcion": "CEFALEA INTENSA"
+ },
+ {
+  "codigo_origen": "0309",
+  "descripcion": "PUNZADAS EN LA CARNE"
+ },
+ {
+  "codigo_origen": "0310",
+  "descripcion": "AUMENTO DE CIFRAS DE PRESION ARTERIAL"
+ },
+ {
+  "codigo_origen": "0311",
+  "descripcion": "FALTA DE SUEÑO"
+ },
+ {
+  "codigo_origen": "0312",
+  "descripcion": "PRESION EN EL PECHO"
+ },
+ {
+  "codigo_origen": "0313",
+  "descripcion": "AUMENTO DE CIFRAS DE GLICEMIA"
+ },
+ {
+  "codigo_origen": "0314",
+  "descripcion": "INSUFICIENCIA VASCULAR VENOSA"
+ },
+ {
+  "codigo_origen": "0315",
+  "descripcion": "VERTIGOS"
+ },
+ {
+  "codigo_origen": "0316",
+  "descripcion": "DOLOR GENERALIZADO"
+ },
+ {
+  "codigo_origen": "0317",
+  "descripcion": "VERTIGO"
+ },
+ {
+  "codigo_origen": "0318",
+  "descripcion": "AUMENTO DE GLICEMIA"
+ },
+ {
+  "codigo_origen": "0319",
+  "descripcion": "DEPRESION"
+ },
+ {
+  "codigo_origen": "0320",
+  "descripcion": "DISLIPIDEMIA MIXTA"
+ },
+ {
+  "codigo_origen": "0321",
+  "descripcion": "DOLOR EN BAJO VIENTRE"
+ },
+ {
+  "codigo_origen": "0322",
+  "descripcion": "PESO EN LA CABEZA, IRRADIADO A LA ESPALD"
+ },
+ {
+  "codigo_origen": "0323",
+  "descripcion": "NERVIOSISMO"
+ },
+ {
+  "codigo_origen": "0324",
+  "descripcion": "ORNA GRASOSO"
+ },
+ {
+  "codigo_origen": "0325",
+  "descripcion": "DOLOR RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "0326",
+  "descripcion": "VAPORONES"
+ },
+ {
+  "codigo_origen": "0327",
+  "descripcion": "OLEADAS DE CALOR"
+ },
+ {
+  "codigo_origen": "0328",
+  "descripcion": "DOLOR EN HEMIABDOMEN DERECHO"
+ },
+ {
+  "codigo_origen": "0329",
+  "descripcion": "DEBILIDAD EN PIERNAS"
+ },
+ {
+  "codigo_origen": "0330",
+  "descripcion": "POLIFAGIA"
+ },
+ {
+  "codigo_origen": "0331",
+  "descripcion": "PERDIDA DEL SUEÑO"
+ },
+ {
+  "codigo_origen": "0332",
+  "descripcion": "OPRESION RETRO ESTERNAL IZQ"
+ },
+ {
+  "codigo_origen": "0333",
+  "descripcion": "SINDROME EDEMATOSO"
+ },
+ {
+  "codigo_origen": "0334",
+  "descripcion": "DOLOR ARTICULAR"
+ },
+ {
+  "codigo_origen": "0335",
+  "descripcion": "VARICIONES DE CIFRAS TA"
+ },
+ {
+  "codigo_origen": "0336",
+  "descripcion": "DOLOR VENOSO"
+ },
+ {
+  "codigo_origen": "0337",
+  "descripcion": "DOLOR EN TODOS LOS HUESOS"
+ },
+ {
+  "codigo_origen": "0338",
+  "descripcion": "DOLOR LUMBAR"
+ },
+ {
+  "codigo_origen": "0339",
+  "descripcion": "ADENOMEGALIAS CERVICALES"
+ },
+ {
+  "codigo_origen": "0340",
+  "descripcion": "HERPES FACIAL"
+ },
+ {
+  "codigo_origen": "0341",
+  "descripcion": "AGOTAMIENTO"
+ },
+ {
+  "codigo_origen": "0342",
+  "descripcion": "PESO EN PELVIS"
+ },
+ {
+  "codigo_origen": "0343",
+  "descripcion": "CORRIENTAZO EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0344",
+  "descripcion": "APARICION DE DILATACIONES VENOSAS"
+ },
+ {
+  "codigo_origen": "0353",
+  "descripcion": "GINECOMASTIA"
+ },
+ {
+  "codigo_origen": "0345",
+  "descripcion": "ADORMECIMIENTO EN HEMICARA D"
+ },
+ {
+  "codigo_origen": "0346",
+  "descripcion": "PERDIDA DEL APETITO"
+ },
+ {
+  "codigo_origen": "0347",
+  "descripcion": "DOLOR EN EPIGASTRIO"
+ },
+ {
+  "codigo_origen": "0348",
+  "descripcion": "CONTROL DE DIABETES MELLITUS"
+ },
+ {
+  "codigo_origen": "0349",
+  "descripcion": "AUMENTO DE CIRAS DE LIPIDOS"
+ },
+ {
+  "codigo_origen": "0350",
+  "descripcion": "AUMENTO DE VOLUMEN EN OJO D"
+ },
+ {
+  "codigo_origen": "0351",
+  "descripcion": "AUMENTO DE VOLUMEN CERVICAL"
+ },
+ {
+  "codigo_origen": "0352",
+  "descripcion": "RESQUEDAD VAGINAL"
+ },
+ {
+  "codigo_origen": "0354",
+  "descripcion": "DEBILIDAD GENERALIZADA"
+ },
+ {
+  "codigo_origen": "0355",
+  "descripcion": "POLIDIPSIA"
+ },
+ {
+  "codigo_origen": "0356",
+  "descripcion": "SINTOMAS GRIPALES"
+ },
+ {
+  "codigo_origen": "0357",
+  "descripcion": "DOLORRETRO ESTERNAL"
+ },
+ {
+  "codigo_origen": "0358",
+  "descripcion": "SENSACION DE CALENTURAS SISTEMICAS"
+ },
+ {
+  "codigo_origen": "0359",
+  "descripcion": "GASTRITIS"
+ },
+ {
+  "codigo_origen": "0360",
+  "descripcion": "ZUMBIDO  EN OIDO"
+ },
+ {
+  "codigo_origen": "0361",
+  "descripcion": "PIES HINCHADOS"
+ },
+ {
+  "codigo_origen": "0362",
+  "descripcion": "PERDIDA DE FUERZA MUSCULAR CARA IZQ"
+ },
+ {
+  "codigo_origen": "0363",
+  "descripcion": "DOLOR MASTOIDEO DERECHO"
+ },
+ {
+  "codigo_origen": "0364",
+  "descripcion": "TOS"
+ },
+ {
+  "codigo_origen": "0365",
+  "descripcion": "OPRESION"
+ },
+ {
+  "codigo_origen": "0366",
+  "descripcion": "PESO RECTAL"
+ },
+ {
+  "codigo_origen": "0367",
+  "descripcion": "DOLORES GENERALIZADOS"
+ },
+ {
+  "codigo_origen": "0368",
+  "descripcion": "RESEQUEDAD EN LABIOS"
+ },
+ {
+  "codigo_origen": "0369",
+  "descripcion": "VACIO ESTOMACAL"
+ },
+ {
+  "codigo_origen": "0370",
+  "descripcion": "ADORMECIMIENTO EN AMBAS MANOS"
+ },
+ {
+  "codigo_origen": "0371",
+  "descripcion": "DOLOR RETROESTERNAL"
+ },
+ {
+  "codigo_origen": "0372",
+  "descripcion": "SENSACION DE LLENURA"
+ },
+ {
+  "codigo_origen": "0373",
+  "descripcion": "ACUDE A CONTROL"
+ },
+ {
+  "codigo_origen": "0418",
+  "descripcion": "TOS"
+ },
+ {
+  "codigo_origen": "0374",
+  "descripcion": "DOLOR MUSCULAR GENERALIZADO"
+ },
+ {
+  "codigo_origen": "0375",
+  "descripcion": "DOLOR EN TALON DERECHO"
+ },
+ {
+  "codigo_origen": "0376",
+  "descripcion": "SUDORACION"
+ },
+ {
+  "codigo_origen": "0377",
+  "descripcion": "CONGESTION NASAL"
+ },
+ {
+  "codigo_origen": "0378",
+  "descripcion": "CONTROL DE LES"
+ },
+ {
+  "codigo_origen": "0379",
+  "descripcion": "CONTROL DE CA DE PROSTATA"
+ },
+ {
+  "codigo_origen": "0380",
+  "descripcion": "CONTROL DE TROMBOCITOPENIA"
+ },
+ {
+  "codigo_origen": "0381",
+  "descripcion": "TRASTORNO DEL SUEÑO"
+ },
+ {
+  "codigo_origen": "0382",
+  "descripcion": "AUMENTO DE VOLUMEN DE VOLUMEN GANGLIONA"
+ },
+ {
+  "codigo_origen": "0383",
+  "descripcion": "DOLOR EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0384",
+  "descripcion": "EMBARAZO"
+ },
+ {
+  "codigo_origen": "0385",
+  "descripcion": "ANEMIA"
+ },
+ {
+  "codigo_origen": "0386",
+  "descripcion": "DOLOR EN HEMIABDOMEN IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0387",
+  "descripcion": "DOLOR EN LA ESPALDA"
+ },
+ {
+  "codigo_origen": "0388",
+  "descripcion": "DOLOR EN CADERA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0389",
+  "descripcion": "DOLOR EN OIDO"
+ },
+ {
+  "codigo_origen": "0390",
+  "descripcion": "DOLOR EN LA PIERNA DERECHA"
+ },
+ {
+  "codigo_origen": "0391",
+  "descripcion": "SENSACION DE AHOGO"
+ },
+ {
+  "codigo_origen": "0392",
+  "descripcion": "DOLOR INTERESCAPULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0393",
+  "descripcion": "AUMENTO DE VOLUMEN EN CUELLO"
+ },
+ {
+  "codigo_origen": "0394",
+  "descripcion": "ARTROSIS"
+ },
+ {
+  "codigo_origen": "0395",
+  "descripcion": "DOLR EN HEMICARA DERECHA"
+ },
+ {
+  "codigo_origen": "0396",
+  "descripcion": "DOLOR ESOFAGICO"
+ },
+ {
+  "codigo_origen": "0397",
+  "descripcion": "DISTENCION ABDOMINAL"
+ },
+ {
+  "codigo_origen": "0398",
+  "descripcion": "DOLOR EN AMBAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0399",
+  "descripcion": "DOLOR EN CODO"
+ },
+ {
+  "codigo_origen": "0400",
+  "descripcion": "ZUMBIDO EN LA CABEZA"
+ },
+ {
+  "codigo_origen": "0401",
+  "descripcion": "DOLOR EN HEMICOLON"
+ },
+ {
+  "codigo_origen": "0402",
+  "descripcion": "CONTROL DE HIPERTENSION ARTERIAL"
+ },
+ {
+  "codigo_origen": "0403",
+  "descripcion": "DOLOR UMBILICAL"
+ },
+ {
+  "codigo_origen": "0404",
+  "descripcion": "AUMENTO DE VOLUMEN  DE VENAS DEL CUELLO"
+ },
+ {
+  "codigo_origen": "0405",
+  "descripcion": "TOS CON EXPECTORACION"
+ },
+ {
+  "codigo_origen": "0406",
+  "descripcion": "ARDOR DE ESTOMAGO"
+ },
+ {
+  "codigo_origen": "0407",
+  "descripcion": "PICAZON EN TODO EN TODO EL CUERPO"
+ },
+ {
+  "codigo_origen": "0408",
+  "descripcion": "DOLOR EN LA PARRILLA COSTAL"
+ },
+ {
+  "codigo_origen": "0409",
+  "descripcion": "DOLOR FOSA LUMBAR DERECHA"
+ },
+ {
+  "codigo_origen": "0410",
+  "descripcion": "AUMENTO DE CIFRAS DE COLESTEROL"
+ },
+ {
+  "codigo_origen": "0411",
+  "descripcion": "DOLOR TESTICULAR IZQ"
+ },
+ {
+  "codigo_origen": "0412",
+  "descripcion": "DOLOR EN HEMICADERAI IZQ"
+ },
+ {
+  "codigo_origen": "0413",
+  "descripcion": "DOLOR DE RODILLAS"
+ },
+ {
+  "codigo_origen": "0414",
+  "descripcion": "LITIASIS RENAL"
+ },
+ {
+  "codigo_origen": "0415",
+  "descripcion": "SECRECION MUCOIDE POR FOSAS NASALES"
+ },
+ {
+  "codigo_origen": "0416",
+  "descripcion": "ARDOR EN LOS OJOS"
+ },
+ {
+  "codigo_origen": "0417",
+  "descripcion": "CAIDA DE SUS PIES"
+ },
+ {
+  "codigo_origen": "0419",
+  "descripcion": "ARDOR AL ORINAR"
+ },
+ {
+  "codigo_origen": "0420",
+  "descripcion": "NORMAL"
+ },
+ {
+  "codigo_origen": "0421",
+  "descripcion": "DOLOR EN ABDOMEN"
+ },
+ {
+  "codigo_origen": "0422",
+  "descripcion": "EVALUACION MEDICA INTEGRAL"
+ },
+ {
+  "codigo_origen": "0423",
+  "descripcion": "SENSACIONES GIRATORIAS"
+ },
+ {
+  "codigo_origen": "0424",
+  "descripcion": "TARUGO EN LA GARGANTA"
+ },
+ {
+  "codigo_origen": "0425",
+  "descripcion": "PUNZADAS EN TODO EL CUERPO"
+ },
+ {
+  "codigo_origen": "0426",
+  "descripcion": "DOLORES EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0427",
+  "descripcion": "PRESION EN LA CABEZA"
+ },
+ {
+  "codigo_origen": "0428",
+  "descripcion": "DOLOR EN FOSA ILIACA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0429",
+  "descripcion": "DOLORES EN LOS HUESOS"
+ },
+ {
+  "codigo_origen": "0430",
+  "descripcion": "TOS HUMEDA"
+ },
+ {
+  "codigo_origen": "0431",
+  "descripcion": "DOLOR EN LAS MANOS"
+ },
+ {
+  "codigo_origen": "0432",
+  "descripcion": "ADORECIMIENTO DE AMBAS MANOS"
+ },
+ {
+  "codigo_origen": "0433",
+  "descripcion": "ADORMECIMIENTO DE LA LENGUA"
+ },
+ {
+  "codigo_origen": "0434",
+  "descripcion": "DOLORES DE CABEZA"
+ },
+ {
+  "codigo_origen": "0435",
+  "descripcion": "PUNZADAS EN LOS OIDOS"
+ },
+ {
+  "codigo_origen": "0436",
+  "descripcion": "CONTROL DE ALZHEIMER"
+ },
+ {
+  "codigo_origen": "0437",
+  "descripcion": "NARIZ TUPIDA"
+ },
+ {
+  "codigo_origen": "0438",
+  "descripcion": "DOLOR EN LA CADERA"
+ },
+ {
+  "codigo_origen": "0439",
+  "descripcion": "SENSACION DE NO PODER RESPIRAR"
+ },
+ {
+  "codigo_origen": "0440",
+  "descripcion": "SENSACION DE CORRIENTAZO EN LA CABEZA"
+ },
+ {
+  "codigo_origen": "0441",
+  "descripcion": "SENSACION DE CABEZA VACIA"
+ },
+ {
+  "codigo_origen": "0442",
+  "descripcion": "DOLOR DE CADERA"
+ },
+ {
+  "codigo_origen": "0443",
+  "descripcion": "DOLOR EN HEMITORAX IZQ"
+ },
+ {
+  "codigo_origen": "0444",
+  "descripcion": "DOLOR DE ESTOMAGO"
+ },
+ {
+  "codigo_origen": "0445",
+  "descripcion": "DOLOR EN AMBOS BRAZOS"
+ },
+ {
+  "codigo_origen": "0446",
+  "descripcion": "DOLOR EN LOS HUESOS"
+ },
+ {
+  "codigo_origen": "0447",
+  "descripcion": "DIFICULTAD PARA CONCENTRARSE"
+ },
+ {
+  "codigo_origen": "0448",
+  "descripcion": "PERDIDA DE LA MEMORIA"
+ },
+ {
+  "codigo_origen": "0449",
+  "descripcion": "DOLOR  ABDOMINAL"
+ },
+ {
+  "codigo_origen": "0450",
+  "descripcion": "BURBUJAS EN LA PALMA DE LAS MANOS"
+ },
+ {
+  "codigo_origen": "0451",
+  "descripcion": "DECAIMIENTO DEL ESTADO GENERAL"
+ },
+ {
+  "codigo_origen": "0452",
+  "descripcion": "DESVANECIMIENTO"
+ },
+ {
+  "codigo_origen": "0453",
+  "descripcion": "DOLOR EN EL CUELLO"
+ },
+ {
+  "codigo_origen": "0454",
+  "descripcion": "INFECCION URINARIA"
+ },
+ {
+  "codigo_origen": "0455",
+  "descripcion": "DOLORES EN LOS BRAZOS"
+ },
+ {
+  "codigo_origen": "0456",
+  "descripcion": "SUEÑO"
+ },
+ {
+  "codigo_origen": "0457",
+  "descripcion": "DOLOR EM AMBAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0458",
+  "descripcion": "PUNZADAS EN LA CABEZA"
+ },
+ {
+  "codigo_origen": "0459",
+  "descripcion": "MANCHAS  EN LA CARA"
+ },
+ {
+  "codigo_origen": "0460",
+  "descripcion": "AUMENTO DE VOLUMEN TETILLA DERECHA"
+ },
+ {
+  "codigo_origen": "0461",
+  "descripcion": "PERDIDA DE FUERZA MUSCULAR EN HEMICARA D"
+ },
+ {
+  "codigo_origen": "0462",
+  "descripcion": "CONTROL POR ICC"
+ },
+ {
+  "codigo_origen": "0463",
+  "descripcion": "DOLOR DE VIENTRE"
+ },
+ {
+  "codigo_origen": "0464",
+  "descripcion": "CONTROL DE EBPOC"
+ },
+ {
+  "codigo_origen": "0465",
+  "descripcion": "PICAZON EN LA GARGANTA"
+ },
+ {
+  "codigo_origen": "0466",
+  "descripcion": "TENESMO VESICAL"
+ },
+ {
+  "codigo_origen": "0467",
+  "descripcion": "ADORMECIMIENTO EN BRAZO DERECHO"
+ },
+ {
+  "codigo_origen": "0468",
+  "descripcion": "DOLOR EN LA ESPALDA"
+ },
+ {
+  "codigo_origen": "0469",
+  "descripcion": "CONTROL DE GLICEMIA"
+ },
+ {
+  "codigo_origen": "0470",
+  "descripcion": "DESCENSO DE CIFRAS DE TA"
+ },
+ {
+  "codigo_origen": "0471",
+  "descripcion": "PERDIDA DE LA CONSCIENCIA"
+ },
+ {
+  "codigo_origen": "0472",
+  "descripcion": "NODULOS DE GRASA EN LAS NALGAS"
+ },
+ {
+  "codigo_origen": "0473",
+  "descripcion": "DOLOR EN LOS PIES"
+ },
+ {
+  "codigo_origen": "0474",
+  "descripcion": "CONTROL DE INFECCION URINARIA"
+ },
+ {
+  "codigo_origen": "0475",
+  "descripcion": "DISMINUCION DE CIFRAS DE TA"
+ },
+ {
+  "codigo_origen": "0476",
+  "descripcion": "PRENDICIONES"
+ },
+ {
+  "codigo_origen": "0477",
+  "descripcion": "AUMENTO DE VOLUMENEN EL CUELLO"
+ },
+ {
+  "codigo_origen": "0478",
+  "descripcion": "ENFERMEDAD DE PARKINSON"
+ },
+ {
+  "codigo_origen": "0479",
+  "descripcion": "DOLOR EN CARA LATERAL DE CUELLO"
+ },
+ {
+  "codigo_origen": "0480",
+  "descripcion": "SENSACION DE OIDOS TAPADOS"
+ },
+ {
+  "codigo_origen": "0481",
+  "descripcion": "VISION EN BULTO"
+ },
+ {
+  "codigo_origen": "0482",
+  "descripcion": "DOLOR EN OJOS"
+ },
+ {
+  "codigo_origen": "0483",
+  "descripcion": "DOLOR EN MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0484",
+  "descripcion": "CORRENTAZOS"
+ },
+ {
+  "codigo_origen": "0485",
+  "descripcion": "DOLOR TORACICO"
+ },
+ {
+  "codigo_origen": "0486",
+  "descripcion": "HEMOPTISIS"
+ },
+ {
+  "codigo_origen": "0487",
+  "descripcion": "DOLOR EN HEMITORAX DERECHO"
+ },
+ {
+  "codigo_origen": "0488",
+  "descripcion": "DOLOR NASAL"
+ },
+ {
+  "codigo_origen": "0489",
+  "descripcion": "QUISTE EN LA PLANTA DE PIE IZQ"
+ },
+ {
+  "codigo_origen": "0490",
+  "descripcion": "PUNZADAS EN EL PECHO"
+ },
+ {
+  "codigo_origen": "0491",
+  "descripcion": "DOLOR EN FLANCO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0492",
+  "descripcion": "DISPEPSIA"
+ },
+ {
+  "codigo_origen": "0493",
+  "descripcion": "SENSACION DE DEBILIDAD"
+ },
+ {
+  "codigo_origen": "0494",
+  "descripcion": "HERIDA EN PIERNA"
+ },
+ {
+  "codigo_origen": "0495",
+  "descripcion": "DIFICULTAD PARA EL APRENDISAJE"
+ },
+ {
+  "codigo_origen": "0496",
+  "descripcion": "MORETONES"
+ },
+ {
+  "codigo_origen": "0497",
+  "descripcion": "DISMINUCION DE LA AGUDEZA VISUAL"
+ },
+ {
+  "codigo_origen": "0498",
+  "descripcion": "PACIENTE QUIEN SERA IQX POR GLAUCOMA"
+ },
+ {
+  "codigo_origen": "0499",
+  "descripcion": "CONTROL DE ARRITMIA"
+ },
+ {
+  "codigo_origen": "0500",
+  "descripcion": "PACIENTE QUIEN SERA IQX POR HISTERECTOMI"
+ },
+ {
+  "codigo_origen": "0501",
+  "descripcion": "DOLOR INGUINAL DERECHA"
+ },
+ {
+  "codigo_origen": "0502",
+  "descripcion": "PACIENTE FEMENINA QUIEN SERA IQX DE CATA"
+ },
+ {
+  "codigo_origen": "0503",
+  "descripcion": "PACIENTE QUIEN SERA IQ"
+ },
+ {
+  "codigo_origen": "0504",
+  "descripcion": "AUMENTO DE VOLUMEN EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0505",
+  "descripcion": "DOLORES EN LA ESPALDA"
+ },
+ {
+  "codigo_origen": "0506",
+  "descripcion": "SENSACION DE PESO EN LA NUCA"
+ },
+ {
+  "codigo_origen": "0510",
+  "descripcion": "DOLOR EN LOS OJOS"
+ },
+ {
+  "codigo_origen": "0507",
+  "descripcion": "AUMENTO DE VOLUMEN AREA INGUINAL DERECHA"
+ },
+ {
+  "codigo_origen": "0508",
+  "descripcion": "EDEMA DE AMBAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0509",
+  "descripcion": "DOLOR EN LA NUCA"
+ },
+ {
+  "codigo_origen": "0511",
+  "descripcion": "DOLOR ESCAPULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0512",
+  "descripcion": "DOLOR EN LA PIERNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0513",
+  "descripcion": "SENSACIONES PARESTESICAS"
+ },
+ {
+  "codigo_origen": "0514",
+  "descripcion": "SINTOMAS DEPRESIVOS"
+ },
+ {
+  "codigo_origen": "0515",
+  "descripcion": "HORMIGUEO EN LA CARA"
+ },
+ {
+  "codigo_origen": "0516",
+  "descripcion": "DOLOR EN PEQUEÑAS ARTICULACIONES"
+ },
+ {
+  "codigo_origen": "0517",
+  "descripcion": "DOLOR EN HEMICUERPO DERECHO"
+ },
+ {
+  "codigo_origen": "0518",
+  "descripcion": "RONQUERA"
+ },
+ {
+  "codigo_origen": "0519",
+  "descripcion": "AUMENTO DE VOLUMEN MASTOIDE IZQ"
+ },
+ {
+  "codigo_origen": "0520",
+  "descripcion": "DOLOR EN MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0521",
+  "descripcion": "DOLOR  EN TODAS LAS ARTICULACIONES"
+ },
+ {
+  "codigo_origen": "0522",
+  "descripcion": "AUMENTO DE VOLUMEN GEMELAR DERECHA"
+ },
+ {
+  "codigo_origen": "0523",
+  "descripcion": "PUNZADAS EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0524",
+  "descripcion": "CALAMBRES EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0525",
+  "descripcion": "SINTOMAS GASTROINTESTINALES"
+ },
+ {
+  "codigo_origen": "0526",
+  "descripcion": "DOLOR EN TOBILLOS"
+ },
+ {
+  "codigo_origen": "0527",
+  "descripcion": "AUMENTO DE VOLUMEN EN LAS MANOS"
+ },
+ {
+  "codigo_origen": "0528",
+  "descripcion": "DOLOR EN LA CINTURA"
+ },
+ {
+  "codigo_origen": "0529",
+  "descripcion": "CONTROL DE PARKINSON"
+ },
+ {
+  "codigo_origen": "0530",
+  "descripcion": "ADORMECIMIENTO DE LAS MANOS"
+ },
+ {
+  "codigo_origen": "0531",
+  "descripcion": "TRAUMATISMO COSTAL"
+ },
+ {
+  "codigo_origen": "0534",
+  "descripcion": "DOLOR EN TORAX"
+ },
+ {
+  "codigo_origen": "0532",
+  "descripcion": "DOLOR EN LA PLANTA DEL PIE DERECHO"
+ },
+ {
+  "codigo_origen": "0533",
+  "descripcion": "PRESION EN LOS CACHETES"
+ },
+ {
+  "codigo_origen": "0535",
+  "descripcion": "PERDIDA DE LA LIVIDO"
+ },
+ {
+  "codigo_origen": "0536",
+  "descripcion": "TEMBLORES EN LAS MANOS"
+ },
+ {
+  "codigo_origen": "0537",
+  "descripcion": "DOLOR EN FLANCO DERECHO"
+ },
+ {
+  "codigo_origen": "0538",
+  "descripcion": "ADORMECIMIENTO BRAZO DERECHO"
+ },
+ {
+  "codigo_origen": "0539",
+  "descripcion": "SORDERA"
+ },
+ {
+  "codigo_origen": "0540",
+  "descripcion": "AUMENTO DE VOLUMEN EN LA CARA"
+ },
+ {
+  "codigo_origen": "0541",
+  "descripcion": "DOLOR EN BRAZOS"
+ },
+ {
+  "codigo_origen": "0542",
+  "descripcion": "DOLOR EN HEMICUERPO"
+ },
+ {
+  "codigo_origen": "0543",
+  "descripcion": "INQUIETUD"
+ },
+ {
+  "codigo_origen": "0544",
+  "descripcion": "DOLOR POLIARTICULAR"
+ },
+ {
+  "codigo_origen": "0545",
+  "descripcion": "SECRECION NASAL ANTERIOR"
+ },
+ {
+  "codigo_origen": "0546",
+  "descripcion": "CONTROL POR HIPERTIROIDISMO"
+ },
+ {
+  "codigo_origen": "0547",
+  "descripcion": "QUISTE SEBACEO"
+ },
+ {
+  "codigo_origen": "0548",
+  "descripcion": "DOLOR EN DEDO HALLUX"
+ },
+ {
+  "codigo_origen": "0549",
+  "descripcion": "ADORMECIMIENTO DE HEMICUERPO"
+ },
+ {
+  "codigo_origen": "0550",
+  "descripcion": "AMARGURA EN LA BOCA"
+ },
+ {
+  "codigo_origen": "0551",
+  "descripcion": "SENSACION DE PECHO APRETADO"
+ },
+ {
+  "codigo_origen": "0552",
+  "descripcion": "EVACUACIONES DIARREICAS"
+ },
+ {
+  "codigo_origen": "0553",
+  "descripcion": "CAMBIOS DE COLORACION EN LOS PIES"
+ },
+ {
+  "codigo_origen": "0554",
+  "descripcion": "AUMENTO DE VOLUMEN AXILAR"
+ },
+ {
+  "codigo_origen": "0555",
+  "descripcion": "PRESION EN EL CUELLO"
+ },
+ {
+  "codigo_origen": "0556",
+  "descripcion": "DOLOR EN LA VEJIGA"
+ },
+ {
+  "codigo_origen": "0557",
+  "descripcion": "ENFERMEDAD RENAL E 3"
+ },
+ {
+  "codigo_origen": "0558",
+  "descripcion": "ESCOTOMAS"
+ },
+ {
+  "codigo_origen": "0560",
+  "descripcion": "DOLOR EN EL VIENTRE"
+ },
+ {
+  "codigo_origen": "0559",
+  "descripcion": "ENRROJECIMIENTO EN LOS OJOS"
+ },
+ {
+  "codigo_origen": "0561",
+  "descripcion": "DOLOR EN ARTICULACIONES"
+ },
+ {
+  "codigo_origen": "0562",
+  "descripcion": "EXAMEN MEDICO"
+ },
+ {
+  "codigo_origen": "0563",
+  "descripcion": "DOLOR  ARTICULAR"
+ },
+ {
+  "codigo_origen": "0564",
+  "descripcion": "PUNZADAS EN LOS BRAZOS"
+ },
+ {
+  "codigo_origen": "0565",
+  "descripcion": "EVALUACION PREOPERATORIA"
+ },
+ {
+  "codigo_origen": "0566",
+  "descripcion": "DIFICULTAD PARA EVACUAR"
+ },
+ {
+  "codigo_origen": "0567",
+  "descripcion": "DOLOR COSTAL"
+ },
+ {
+  "codigo_origen": "0568",
+  "descripcion": "MORADOS EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0569",
+  "descripcion": "LESION EN PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0570",
+  "descripcion": "ARDOR EN HEMITORAX DERECHO"
+ },
+ {
+  "codigo_origen": "0571",
+  "descripcion": "DISMINUCION DE LA MEMORIA"
+ },
+ {
+  "codigo_origen": "0572",
+  "descripcion": "SENSACION DE FIEBRE"
+ },
+ {
+  "codigo_origen": "0573",
+  "descripcion": "ARDOR RETRO ESTERNAL"
+ },
+ {
+  "codigo_origen": "0574",
+  "descripcion": "DOLOR EN HIPOCONDRIO DERECHO"
+ },
+ {
+  "codigo_origen": "0575",
+  "descripcion": "BOCIO"
+ },
+ {
+  "codigo_origen": "0576",
+  "descripcion": "ARDOR EN EL PECHO"
+ },
+ {
+  "codigo_origen": "0577",
+  "descripcion": "DOLOR EN HEMICRANEO DERECHO"
+ },
+ {
+  "codigo_origen": "0578",
+  "descripcion": "DOLOR EN  FLANCO DERECHO"
+ },
+ {
+  "codigo_origen": "0579",
+  "descripcion": "DOLOR EN LA CARA"
+ },
+ {
+  "codigo_origen": "0580",
+  "descripcion": "DOLOR INGUINAL IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0581",
+  "descripcion": "DOLOR EN DEDE INDICE"
+ },
+ {
+  "codigo_origen": "0582",
+  "descripcion": "GOTEO POSTNASAL"
+ },
+ {
+  "codigo_origen": "0583",
+  "descripcion": "PICAZON EN OIDOS"
+ },
+ {
+  "codigo_origen": "0584",
+  "descripcion": "DIFICULTAD PARA TRAGAR"
+ },
+ {
+  "codigo_origen": "0585",
+  "descripcion": "DIFICULTAD PARA CAMINAR"
+ },
+ {
+  "codigo_origen": "0586",
+  "descripcion": "TEMBLOR EN LAS MANOS"
+ },
+ {
+  "codigo_origen": "0592",
+  "descripcion": "CONTROL ANUAL"
+ },
+ {
+  "codigo_origen": "0587",
+  "descripcion": "DOLOR EN LOS BRAZOS"
+ },
+ {
+  "codigo_origen": "0588",
+  "descripcion": "SENSACION DE CORRIENTAZO EN BRAZOS"
+ },
+ {
+  "codigo_origen": "0589",
+  "descripcion": "AUMENTO DE CIFRAS DE TRIGLICERIDOS"
+ },
+ {
+  "codigo_origen": "0590",
+  "descripcion": "DOLOR EN HEMICOLON IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0591",
+  "descripcion": "DOLOR EN CODO DERECHO"
+ },
+ {
+  "codigo_origen": "0593",
+  "descripcion": "PRENDICION EN LA CABEZA"
+ },
+ {
+  "codigo_origen": "0594",
+  "descripcion": "PICAZON GENERALIZADA"
+ },
+ {
+  "codigo_origen": "0595",
+  "descripcion": "TEMBLOR EN OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0596",
+  "descripcion": "PICAZON EN TODO EL CUERPO"
+ },
+ {
+  "codigo_origen": "0597",
+  "descripcion": "MANCHAS EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0598",
+  "descripcion": "DOLOR TESTICULAR"
+ },
+ {
+  "codigo_origen": "0599",
+  "descripcion": "AUMENTO DE VOLUMEN EN LA BOCA"
+ },
+ {
+  "codigo_origen": "0600",
+  "descripcion": "DOLOR EN LA GARGANTA"
+ },
+ {
+  "codigo_origen": "0601",
+  "descripcion": "DOLOR EN AMBOS PIES"
+ },
+ {
+  "codigo_origen": "0602",
+  "descripcion": "PERDIDA DE LA FUERZA MUSCULAR"
+ },
+ {
+  "codigo_origen": "0603",
+  "descripcion": "MANOS ROJAS"
+ },
+ {
+  "codigo_origen": "0604",
+  "descripcion": "DISFUNCION ERECTIL"
+ },
+ {
+  "codigo_origen": "0605",
+  "descripcion": "AUMENTO DE VOLUMEN GANGLIOS DEL CUELLO"
+ },
+ {
+  "codigo_origen": "0606",
+  "descripcion": "PERDIDA DE LA AUDICION"
+ },
+ {
+  "codigo_origen": "0607",
+  "descripcion": "DOLOR HUMBILICAL"
+ },
+ {
+  "codigo_origen": "0608",
+  "descripcion": "PERDIDA DE LA FUERZA MUSCULAR EN LAS PIE"
+ },
+ {
+  "codigo_origen": "0609",
+  "descripcion": "EVACUACIONES CON SANGRE"
+ },
+ {
+  "codigo_origen": "0610",
+  "descripcion": "LESION EN PIEL"
+ },
+ {
+  "codigo_origen": "0611",
+  "descripcion": "HIPO"
+ },
+ {
+  "codigo_origen": "0612",
+  "descripcion": "ARDOR DE GARGANTA"
+ },
+ {
+  "codigo_origen": "0614",
+  "descripcion": "EVACUACIONES CON MOCO"
+ },
+ {
+  "codigo_origen": "0613",
+  "descripcion": "ADORMECIMIENTO EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0615",
+  "descripcion": "PESADEZ EN LOS HOMBROS"
+ },
+ {
+  "codigo_origen": "0616",
+  "descripcion": "ARDOR EN EL PENE"
+ },
+ {
+  "codigo_origen": "0617",
+  "descripcion": "MANOS AMARILLAS"
+ },
+ {
+  "codigo_origen": "0618",
+  "descripcion": "TRASTORNOS DE CIFRAS DE TA"
+ },
+ {
+  "codigo_origen": "0619",
+  "descripcion": "DOLOR EN CUERO CABELLUDO"
+ },
+ {
+  "codigo_origen": "0620",
+  "descripcion": "DOLOR EN MUSLO DERECHO"
+ },
+ {
+  "codigo_origen": "0621",
+  "descripcion": "ADORMECIMIENTO"
+ },
+ {
+  "codigo_origen": "0622",
+  "descripcion": "PERDIDA DE FUERZA MUSCULAR HEMICUERPO IZ"
+ },
+ {
+  "codigo_origen": "0623",
+  "descripcion": "AUMENTO DE VOLUMEN EN PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0624",
+  "descripcion": "DOLOR EN CUELLO"
+ },
+ {
+  "codigo_origen": "0625",
+  "descripcion": "AUMENTO DE VOLUMEN CODO DERECHO"
+ },
+ {
+  "codigo_origen": "0626",
+  "descripcion": "LESIONES EN CUERO CABELLUDO"
+ },
+ {
+  "codigo_origen": "0627",
+  "descripcion": "DEBILIDAD EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0628",
+  "descripcion": "TRASTORNOS MENSTRUALES"
+ },
+ {
+  "codigo_origen": "0629",
+  "descripcion": "DOLOR EN TALON IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0630",
+  "descripcion": "CONTROL DE HIPERTIROIDISMO"
+ },
+ {
+  "codigo_origen": "0631",
+  "descripcion": "DOLOR EN LA AXILA"
+ },
+ {
+  "codigo_origen": "0632",
+  "descripcion": "DOLOR INTERESCAPULAR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0633",
+  "descripcion": "DEDOS MORADOS"
+ },
+ {
+  "codigo_origen": "0634",
+  "descripcion": "DOLOR EN HOMBRO ZQUIERDO"
+ },
+ {
+  "codigo_origen": "0635",
+  "descripcion": "AUMENTO DE VOLUMEN INGUINAL DERECHA"
+ },
+ {
+  "codigo_origen": "0636",
+  "descripcion": "ADORMECIMIENTO EN HEMICARA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0637",
+  "descripcion": "DOLOR EN SUBESCAPULAR DERECHA."
+ },
+ {
+  "codigo_origen": "0716",
+  "descripcion": "SUSTO"
+ },
+ {
+  "codigo_origen": "0638",
+  "descripcion": "AUMENTO DE VOLUMEN EN TOBILLOS"
+ },
+ {
+  "codigo_origen": "0639",
+  "descripcion": "EDEMA EN AMBAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0640",
+  "descripcion": "ARDOR EN LA LENGUA"
+ },
+ {
+  "codigo_origen": "0641",
+  "descripcion": "DOLOR EN AMBAS MANOS"
+ },
+ {
+  "codigo_origen": "0642",
+  "descripcion": "PICAZON EN LA ESPALDA"
+ },
+ {
+  "codigo_origen": "0643",
+  "descripcion": "DEBILIDAD EN HEMICARA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0644",
+  "descripcion": "AUMENTO DE VOLUMEN EN DEDOS DE LAMANO"
+ },
+ {
+  "codigo_origen": "0645",
+  "descripcion": "DESVIACION DE LA MIRADA"
+ },
+ {
+  "codigo_origen": "0646",
+  "descripcion": "MANOS FRIAS"
+ },
+ {
+  "codigo_origen": "0647",
+  "descripcion": "DIFICULTAD PARA ORINAR"
+ },
+ {
+  "codigo_origen": "0648",
+  "descripcion": "PESO EN LA VEJIGA"
+ },
+ {
+  "codigo_origen": "0649",
+  "descripcion": "NODULO EN MAMAS"
+ },
+ {
+  "codigo_origen": "0650",
+  "descripcion": "ARDOR EN LA FRENTE"
+ },
+ {
+  "codigo_origen": "0651",
+  "descripcion": "DOLOR EN TODO EL CUERPO"
+ },
+ {
+  "codigo_origen": "0652",
+  "descripcion": "DESESPERACION"
+ },
+ {
+  "codigo_origen": "0653",
+  "descripcion": "CAMBIOS DE COLORACION DE LA PIEL"
+ },
+ {
+  "codigo_origen": "0654",
+  "descripcion": "SENSACION DE VACIO EN LA CABEZA"
+ },
+ {
+  "codigo_origen": "0655",
+  "descripcion": "DOLOR DE MUELA"
+ },
+ {
+  "codigo_origen": "0656",
+  "descripcion": "CONTROL DE HIPOTIROIDISMO"
+ },
+ {
+  "codigo_origen": "0657",
+  "descripcion": "FRIALDAD EN PIERNAS"
+ },
+ {
+  "codigo_origen": "0658",
+  "descripcion": "INTOLERANCIA AL EJERCICIO"
+ },
+ {
+  "codigo_origen": "0659",
+  "descripcion": "DOLOR EN HEMICARA DERECHA"
+ },
+ {
+  "codigo_origen": "0660",
+  "descripcion": "AUMENTO DE VOLUMEN OMBLIGO"
+ },
+ {
+  "codigo_origen": "0661",
+  "descripcion": "CANSANCIO FACIL"
+ },
+ {
+  "codigo_origen": "0662",
+  "descripcion": "AUMENTO DE VOLUMEN EN HEMICARA DERECHA"
+ },
+ {
+  "codigo_origen": "0680",
+  "descripcion": "PICAZON INGUINAL"
+ },
+ {
+  "codigo_origen": "0663",
+  "descripcion": "DOLOR EN FOSA ILIACA DERECHA"
+ },
+ {
+  "codigo_origen": "0664",
+  "descripcion": "NERVIOSISMO EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0665",
+  "descripcion": "AUMENTO DE VOLUMEN RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "0666",
+  "descripcion": "AGITACION"
+ },
+ {
+  "codigo_origen": "0667",
+  "descripcion": "PERDIDA DE MUSCULAR HEMICARA"
+ },
+ {
+  "codigo_origen": "0668",
+  "descripcion": "AUMENTO DE VOLUMEN SUBESCAPULAR"
+ },
+ {
+  "codigo_origen": "0669",
+  "descripcion": "HORMIGUEO EN LA ESPALDA"
+ },
+ {
+  "codigo_origen": "0670",
+  "descripcion": "ARDOR EN LOS BRAZOS"
+ },
+ {
+  "codigo_origen": "0671",
+  "descripcion": "PICAZON EN LOS OIDOS"
+ },
+ {
+  "codigo_origen": "0672",
+  "descripcion": "DOLOR EN BRAZO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0673",
+  "descripcion": "SENSACION DE PELOTA EN LA GARGANTA"
+ },
+ {
+  "codigo_origen": "0674",
+  "descripcion": "ORINAS FETIDAS"
+ },
+ {
+  "codigo_origen": "0675",
+  "descripcion": "SUDORACION NOCTURNA"
+ },
+ {
+  "codigo_origen": "0676",
+  "descripcion": "HEMATURIA"
+ },
+ {
+  "codigo_origen": "0677",
+  "descripcion": "SENSACION DE TARUGO EN LA GARGANTA"
+ },
+ {
+  "codigo_origen": "0678",
+  "descripcion": "PERDIDA DE LA FUERZA EN LA CARA"
+ },
+ {
+  "codigo_origen": "0679",
+  "descripcion": "HINCHAZON EN LOS PIES"
+ },
+ {
+  "codigo_origen": "0681",
+  "descripcion": "ULCERAS EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0682",
+  "descripcion": "ARDOR EN CUERO CABELLUDO"
+ },
+ {
+  "codigo_origen": "0683",
+  "descripcion": "EDEMA EN LAS MANOS"
+ },
+ {
+  "codigo_origen": "0684",
+  "descripcion": "HORMIGUEO EN HEMICUERPO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0685",
+  "descripcion": "OIDO IZQUIERDO TAPADO"
+ },
+ {
+  "codigo_origen": "0686",
+  "descripcion": "RELAJACION DE ESFINTERES"
+ },
+ {
+  "codigo_origen": "0687",
+  "descripcion": "TRAUMATISMO CRANEAL"
+ },
+ {
+  "codigo_origen": "0688",
+  "descripcion": "ADORMECIMIENTO DE LA CARA"
+ },
+ {
+  "codigo_origen": "0689",
+  "descripcion": "EXAMEN PRERETIRO"
+ },
+ {
+  "codigo_origen": "0690",
+  "descripcion": "ADENOPATIA CERVICAL"
+ },
+ {
+  "codigo_origen": "0691",
+  "descripcion": "NICTURIA"
+ },
+ {
+  "codigo_origen": "0692",
+  "descripcion": "CAIDA DE PARPADO"
+ },
+ {
+  "codigo_origen": "0693",
+  "descripcion": "ORINAS COLOREADAS"
+ },
+ {
+  "codigo_origen": "0694",
+  "descripcion": "SENSACION DE DESMAYO"
+ },
+ {
+  "codigo_origen": "0695",
+  "descripcion": "AUMENTO DE VOLUMEN MUÑECA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0696",
+  "descripcion": "DOLOR EN LOS OIDOS"
+ },
+ {
+  "codigo_origen": "0697",
+  "descripcion": "SENSACION DE PESO EN EL PECHO"
+ },
+ {
+  "codigo_origen": "0698",
+  "descripcion": "PUNZADA EN OJO"
+ },
+ {
+  "codigo_origen": "0699",
+  "descripcion": "OREJAS ROJAS"
+ },
+ {
+  "codigo_origen": "0700",
+  "descripcion": "OJO ROJO"
+ },
+ {
+  "codigo_origen": "0701",
+  "descripcion": "ADORMECIMIENTO EN MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0702",
+  "descripcion": "TEMBLOR EN LA CARA"
+ },
+ {
+  "codigo_origen": "0703",
+  "descripcion": "EDEMA PALPEBRAL"
+ },
+ {
+  "codigo_origen": "0704",
+  "descripcion": "ARDOR  EN LA GARGANTA"
+ },
+ {
+  "codigo_origen": "0705",
+  "descripcion": "AUMENTO DE VOLUMEN EN HEMICARA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0706",
+  "descripcion": "DESVIACION DE LA CARA"
+ },
+ {
+  "codigo_origen": "0707",
+  "descripcion": "AUMENTO DE VOLUMEN TOBILLO DERECHO"
+ },
+ {
+  "codigo_origen": "0708",
+  "descripcion": "AUMENTO DE VOLUMEN TESTICULO DERECHO"
+ },
+ {
+  "codigo_origen": "0709",
+  "descripcion": "DOLOR EN BRAZO DERECHO"
+ },
+ {
+  "codigo_origen": "0710",
+  "descripcion": "AUMENTO DE VOLUMEN RETROAURICULAR"
+ },
+ {
+  "codigo_origen": "0711",
+  "descripcion": "DOLOR EN DEDO"
+ },
+ {
+  "codigo_origen": "0712",
+  "descripcion": "DEBILIDAD EN LA CARA"
+ },
+ {
+  "codigo_origen": "0713",
+  "descripcion": "AUMENTO DE VOLUMEN MAMA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0714",
+  "descripcion": "AUMENTO DE VOLUMEN LABIOS"
+ },
+ {
+  "codigo_origen": "0715",
+  "descripcion": "PIES FRIOS"
+ },
+ {
+  "codigo_origen": "0717",
+  "descripcion": "ARDOR EN LA ESPALDA"
+ },
+ {
+  "codigo_origen": "0718",
+  "descripcion": "BOCA AMARGA"
+ },
+ {
+  "codigo_origen": "0719",
+  "descripcion": "FRIALDAD EN LOS BRAZOS"
+ },
+ {
+  "codigo_origen": "0720",
+  "descripcion": "AUMENTO DE VOLUMEN EN LOS PIES"
+ },
+ {
+  "codigo_origen": "0721",
+  "descripcion": "HORMIGUEO EN LA GARGANTA"
+ },
+ {
+  "codigo_origen": "0722",
+  "descripcion": "ESCUPIDERA"
+ },
+ {
+  "codigo_origen": "0723",
+  "descripcion": "SENSACION DE NO PODER TRAGAR"
+ },
+ {
+  "codigo_origen": "0724",
+  "descripcion": "AUMENTO DE VOLUMEN PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0725",
+  "descripcion": "PERDIDA DE LA VISION"
+ },
+ {
+  "codigo_origen": "0726",
+  "descripcion": "AUMENTO DE VOLUMEN EN LAS PERNAS"
+ },
+ {
+  "codigo_origen": "0727",
+  "descripcion": "TEMBLOR GENERALIZADO"
+ },
+ {
+  "codigo_origen": "0728",
+  "descripcion": "HORMIGUEO EN LAS MANOS"
+ },
+ {
+  "codigo_origen": "0729",
+  "descripcion": "AUMENTO DE VOLUMEN EN MAMA DERECHA"
+ },
+ {
+  "codigo_origen": "0730",
+  "descripcion": "CAMBIOS DE HUMOR"
+ },
+ {
+  "codigo_origen": "0731",
+  "descripcion": "PICAZON EN OJOS"
+ },
+ {
+  "codigo_origen": "0732",
+  "descripcion": "DEBILIDAD EN HEMICARA DERECHA"
+ },
+ {
+  "codigo_origen": "0733",
+  "descripcion": "HORMIGUEO EN HOMBRO DERECHO"
+ },
+ {
+  "codigo_origen": "0734",
+  "descripcion": "DOLOR EN PERINE"
+ },
+ {
+  "codigo_origen": "0735",
+  "descripcion": "LESIONES VERRUGOSA EN PENA"
+ },
+ {
+  "codigo_origen": "0736",
+  "descripcion": "DOLOR EN EL PULMON"
+ },
+ {
+  "codigo_origen": "0737",
+  "descripcion": "PICAZON EN LA CABEZA"
+ },
+ {
+  "codigo_origen": "0738",
+  "descripcion": "AUMENTO DE VOUMEN DEDO HALLUX IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0739",
+  "descripcion": "SINTOMAS VASOGENICOS"
+ },
+ {
+  "codigo_origen": "0740",
+  "descripcion": "AUMENTO DE VOLUMEN EN LOS LABIOS"
+ },
+ {
+  "codigo_origen": "0749",
+  "descripcion": "ARDOR EN LOS PIES"
+ },
+ {
+  "codigo_origen": "0741",
+  "descripcion": "AUMENTO DE VOLUMEN OREJA DERECHA"
+ },
+ {
+  "codigo_origen": "0742",
+  "descripcion": "DOLOR EN LAS ARTICULACIONES"
+ },
+ {
+  "codigo_origen": "0743",
+  "descripcion": "ARDOR EN BRAZO DERECHO"
+ },
+ {
+  "codigo_origen": "0744",
+  "descripcion": "AUMENTO DEVOLUMEN RODILLA DERECHA"
+ },
+ {
+  "codigo_origen": "0745",
+  "descripcion": "AUMENTO DE VOLUMEN INGUINAL IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0746",
+  "descripcion": "TEMBLOR EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0747",
+  "descripcion": "ULCERA DEDO HALLUX IZQ"
+ },
+ {
+  "codigo_origen": "0748",
+  "descripcion": "ADORMECIMIENTO DE LOS PIES"
+ },
+ {
+  "codigo_origen": "0750",
+  "descripcion": "LESIONES EN LA BOCA"
+ },
+ {
+  "codigo_origen": "0751",
+  "descripcion": "CAIDA DE LAS PESTAÑAS"
+ },
+ {
+  "codigo_origen": "0752",
+  "descripcion": "CALAMBRES GENERALIZADOS"
+ },
+ {
+  "codigo_origen": "0753",
+  "descripcion": "FUGA DE IDEAS"
+ },
+ {
+  "codigo_origen": "0754",
+  "descripcion": "ADORMECIMIENTO EN LA CARA"
+ },
+ {
+  "codigo_origen": "0755",
+  "descripcion": "DOLOR EN LAS RODILLAS"
+ },
+ {
+  "codigo_origen": "0756",
+  "descripcion": "ADORMECIMIENTO EN LAS MANOS"
+ },
+ {
+  "codigo_origen": "0757",
+  "descripcion": "OJOS ROJOS"
+ },
+ {
+  "codigo_origen": "0758",
+  "descripcion": "PICAZON EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0759",
+  "descripcion": "DIFICULTAD PARA DORMIR"
+ },
+ {
+  "codigo_origen": "0760",
+  "descripcion": "HORMIGUEO EN BRAZO DERECHO"
+ },
+ {
+  "codigo_origen": "0761",
+  "descripcion": "DOLOR  PELVIS"
+ },
+ {
+  "codigo_origen": "0762",
+  "descripcion": "PUNZADA EN TALON"
+ },
+ {
+  "codigo_origen": "0763",
+  "descripcion": "SENSACION DE PERSECUCION"
+ },
+ {
+  "codigo_origen": "0764",
+  "descripcion": "PRESION EN LOS OIDOS"
+ },
+ {
+  "codigo_origen": "0765",
+  "descripcion": "MORETONES EN TODO EL CUERPO"
+ },
+ {
+  "codigo_origen": "0766",
+  "descripcion": "NODULOS EN TIROIDES"
+ },
+ {
+  "codigo_origen": "0767",
+  "descripcion": "DOLOR EN GARGANTA"
+ },
+ {
+  "codigo_origen": "0768",
+  "descripcion": "LESIONES EN PIERNA"
+ },
+ {
+  "codigo_origen": "0769",
+  "descripcion": "LESIONES EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0770",
+  "descripcion": "PINCHAZOS EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0771",
+  "descripcion": "LESIONES EN LA PIEL"
+ },
+ {
+  "codigo_origen": "0772",
+  "descripcion": "ERITEMA EN PIERNA DERECHA"
+ },
+ {
+  "codigo_origen": "0773",
+  "descripcion": "HERIDA EN PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0774",
+  "descripcion": "CALAMBRES EN LAS MANOS"
+ },
+ {
+  "codigo_origen": "0775",
+  "descripcion": "ARDOR EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0776",
+  "descripcion": "ARDOR EN GARGANTA"
+ },
+ {
+  "codigo_origen": "0777",
+  "descripcion": "DOLOR EN LAESPALDA"
+ },
+ {
+  "codigo_origen": "0778",
+  "descripcion": "AUMENTO DE VOLUMEN EN OREJAS"
+ },
+ {
+  "codigo_origen": "0779",
+  "descripcion": "CONTROL HIPERPROLACTINEMIA"
+ },
+ {
+  "codigo_origen": "0780",
+  "descripcion": "HORMIGUEO EN LA NUCA"
+ },
+ {
+  "codigo_origen": "0781",
+  "descripcion": "SUDORACION PROFUSA"
+ },
+ {
+  "codigo_origen": "0782",
+  "descripcion": "DOLOR EN LAS VENAS"
+ },
+ {
+  "codigo_origen": "0783",
+  "descripcion": "CELULITIS ABSCEDADA AXILA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0784",
+  "descripcion": "DOLOR MAXILAR"
+ },
+ {
+  "codigo_origen": "0785",
+  "descripcion": "EXAMEN FISICO INTEGRAL"
+ },
+ {
+  "codigo_origen": "0786",
+  "descripcion": "PERDIDA DE SENSIBILIDAD"
+ },
+ {
+  "codigo_origen": "0787",
+  "descripcion": "ENRROJECIMIENTO EN LAS MANOS"
+ },
+ {
+  "codigo_origen": "0788",
+  "descripcion": "ADORMECIMIENTO DE LOS BRAZOS"
+ },
+ {
+  "codigo_origen": "0789",
+  "descripcion": "DOLOR EN HIPOCONDRIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0790",
+  "descripcion": "CONTROL PERIODICO"
+ },
+ {
+  "codigo_origen": "0791",
+  "descripcion": "AUMENTO DE VOLUMEN EN CUELLO"
+ },
+ {
+  "codigo_origen": "0792",
+  "descripcion": "ADORMECIMIENTO MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0795",
+  "descripcion": "HINCAZON EN LOS PIES"
+ },
+ {
+  "codigo_origen": "0793",
+  "descripcion": "DOLOR RETROAURICULAR DERECHO"
+ },
+ {
+  "codigo_origen": "0794",
+  "descripcion": "ADORMECIMIENTO DE HEMICARA"
+ },
+ {
+  "codigo_origen": "0796",
+  "descripcion": "DOLOR EN LA MUÑECA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0797",
+  "descripcion": "MOVIMIENTOS ANORMALES"
+ },
+ {
+  "codigo_origen": "0798",
+  "descripcion": "LESION EN TOBILLO DERECHO"
+ },
+ {
+  "codigo_origen": "0799",
+  "descripcion": "ADORMECIMIENTO DEDO HALLUX"
+ },
+ {
+  "codigo_origen": "0800",
+  "descripcion": "DOLOR EN LOS GANGLIOS"
+ },
+ {
+  "codigo_origen": "0801",
+  "descripcion": "DOLOR EN MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0802",
+  "descripcion": "AUMENTO DE VOLUMEN EN MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0803",
+  "descripcion": "DIFICULTAD PARA ENTENDER"
+ },
+ {
+  "codigo_origen": "0804",
+  "descripcion": "NODULOS EN CUELLO"
+ },
+ {
+  "codigo_origen": "0805",
+  "descripcion": "AUMENTO DE VOLUMEN PIE DERECHO"
+ },
+ {
+  "codigo_origen": "0806",
+  "descripcion": "PICAZON EN EL PALADAR"
+ },
+ {
+  "codigo_origen": "0807",
+  "descripcion": "HORMIGUEO EN HOMBRO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0808",
+  "descripcion": "AUMENTO DE VOLUMEN EN PARPADO DERECHO"
+ },
+ {
+  "codigo_origen": "0809",
+  "descripcion": "MANCHAS EN LA PIEL"
+ },
+ {
+  "codigo_origen": "0810",
+  "descripcion": "AUMENTO DE VOLUMEN EN ANTEBRAZO"
+ },
+ {
+  "codigo_origen": "0811",
+  "descripcion": "DOLOR EN PIE DERECHO"
+ },
+ {
+  "codigo_origen": "0812",
+  "descripcion": "PUJO PARA ORINAR"
+ },
+ {
+  "codigo_origen": "0813",
+  "descripcion": "ARDOR EN MUSLO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0814",
+  "descripcion": "TRAUMATISMO EN DEDO HALLUX IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0815",
+  "descripcion": "SANGRADO MAMARIO"
+ },
+ {
+  "codigo_origen": "0816",
+  "descripcion": "DOLOR EN MUÑECA DERECHA"
+ },
+ {
+  "codigo_origen": "0817",
+  "descripcion": "DEBILIDAD HEMICUERPO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0818",
+  "descripcion": "GANGLIOS INGUINALES"
+ },
+ {
+  "codigo_origen": "0819",
+  "descripcion": "SECRECION URETRAL"
+ },
+ {
+  "codigo_origen": "0820",
+  "descripcion": "NODULOS EN LA PIEL"
+ },
+ {
+  "codigo_origen": "0821",
+  "descripcion": "ADORMCIMIENTO EN ANTEBRAZO DERECHO"
+ },
+ {
+  "codigo_origen": "0822",
+  "descripcion": "AUMENTO DE VOLUMEN PIERNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0823",
+  "descripcion": "AUMENTO DE VOLUMEN EN EL PECHO"
+ },
+ {
+  "codigo_origen": "0824",
+  "descripcion": "AUMENTO DE VOLUMEN EN LA ESPALDA"
+ },
+ {
+  "codigo_origen": "0825",
+  "descripcion": "DOLOR ENCADERA"
+ },
+ {
+  "codigo_origen": "0826",
+  "descripcion": "AUMENTO DE VOLUMEN GANGLIO AXILAR"
+ },
+ {
+  "codigo_origen": "0827",
+  "descripcion": "AUMENTO DE VOLUMEN DE RODILLA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0828",
+  "descripcion": "DOLOR EN LAS ENCIAS"
+ },
+ {
+  "codigo_origen": "0829",
+  "descripcion": "CONTROL ANEMIA DREPANOCITICA"
+ },
+ {
+  "codigo_origen": "0830",
+  "descripcion": "PRESION EN LA CARA"
+ },
+ {
+  "codigo_origen": "0831",
+  "descripcion": "TEMBLOR EN LA BOCA"
+ },
+ {
+  "codigo_origen": "0832",
+  "descripcion": "ADORMECIMIENTO EN LOS BRAZOS"
+ },
+ {
+  "codigo_origen": "0833",
+  "descripcion": "ZUMBIDO EN LOS OIDOS"
+ },
+ {
+  "codigo_origen": "0834",
+  "descripcion": "DEDOS AZULES"
+ },
+ {
+  "codigo_origen": "0835",
+  "descripcion": "ARDOR EN PIE"
+ },
+ {
+  "codigo_origen": "0836",
+  "descripcion": "ADORMECIMIENTO EN MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0837",
+  "descripcion": "ORINAS ESPUMOSAS"
+ },
+ {
+  "codigo_origen": "0838",
+  "descripcion": "DOLOR EN MAMA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0839",
+  "descripcion": "HERIDA EN DEDOS DE LA MANO"
+ },
+ {
+  "codigo_origen": "0840",
+  "descripcion": "ADORMECIMIENTO MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0841",
+  "descripcion": "SENSACION DE QUEMAZON EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0844",
+  "descripcion": "SECRECION  ANAL"
+ },
+ {
+  "codigo_origen": "0842",
+  "descripcion": "AUMENTO DE VOLUMEN EN GLUTEO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0843",
+  "descripcion": "DESCENSO DE GLICEMIA"
+ },
+ {
+  "codigo_origen": "0845",
+  "descripcion": "CELULITIS ABSCEDADA HOMBRO"
+ },
+ {
+  "codigo_origen": "0846",
+  "descripcion": "ORINADERA"
+ },
+ {
+  "codigo_origen": "0847",
+  "descripcion": "ADORMECIMIENTO EN PIERNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0848",
+  "descripcion": "AUMENTO DE CIFRAS DE ACIDO URICO"
+ },
+ {
+  "codigo_origen": "0849",
+  "descripcion": "AUMENTO DE VOLUMEN EN GANGLIOS"
+ },
+ {
+  "codigo_origen": "0850",
+  "descripcion": "HERIDA EN PIE DERECHO"
+ },
+ {
+  "codigo_origen": "0851",
+  "descripcion": "DOLOR EN ANTEBRAZO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0852",
+  "descripcion": "ENRROJECIMIENTO FACIAL"
+ },
+ {
+  "codigo_origen": "0853",
+  "descripcion": "ARDOR GENERALIZADO"
+ },
+ {
+  "codigo_origen": "0854",
+  "descripcion": "HERPES ZOSTER"
+ },
+ {
+  "codigo_origen": "0855",
+  "descripcion": "APARICION DE MORETONES"
+ },
+ {
+  "codigo_origen": "0856",
+  "descripcion": "ARDOR EN LA GARGANTA"
+ },
+ {
+  "codigo_origen": "0857",
+  "descripcion": "LESIONES EN LAS MANOS"
+ },
+ {
+  "codigo_origen": "0858",
+  "descripcion": "AUMENTO DE VOLUMEN EN CARA LATERAL CUELL"
+ },
+ {
+  "codigo_origen": "0859",
+  "descripcion": "SENSACION DE ARDOR EN LA LENGUA"
+ },
+ {
+  "codigo_origen": "0860",
+  "descripcion": "EDEMA EN BRAZO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0861",
+  "descripcion": "LAGRIMEO OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0862",
+  "descripcion": "DOLOR EN HOMBLIGO"
+ },
+ {
+  "codigo_origen": "0863",
+  "descripcion": "DOLOR EN OMBLIGO"
+ },
+ {
+  "codigo_origen": "0864",
+  "descripcion": "PRENDICION EN LAS OREJAS"
+ },
+ {
+  "codigo_origen": "0865",
+  "descripcion": "ERITEMA FACIAL"
+ },
+ {
+  "codigo_origen": "0866",
+  "descripcion": "DOLOR EN DEDO INDICE DERECHO"
+ },
+ {
+  "codigo_origen": "0867",
+  "descripcion": "EVACUACIONES ESPONTANEAS"
+ },
+ {
+  "codigo_origen": "0868",
+  "descripcion": "ADORMECIMIENTO DE MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0869",
+  "descripcion": "AUMENTO DE VOLUMEN EN PIES"
+ },
+ {
+  "codigo_origen": "0870",
+  "descripcion": "ERITEMA EN LOS OJOS"
+ },
+ {
+  "codigo_origen": "0871",
+  "descripcion": "DISMINUCION DEL VOLUMEN URINARIO"
+ },
+ {
+  "codigo_origen": "0872",
+  "descripcion": "INTOLERANCIA AL FRIO"
+ },
+ {
+  "codigo_origen": "0873",
+  "descripcion": "DOLOR EN LOS HOMBROS"
+ },
+ {
+  "codigo_origen": "0874",
+  "descripcion": "TOS PERSISTENTE"
+ },
+ {
+  "codigo_origen": "0875",
+  "descripcion": "ADORMECIMIENTO DE MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0876",
+  "descripcion": "ARDOR EN LA CARA"
+ },
+ {
+  "codigo_origen": "0877",
+  "descripcion": "VOZ TEMBLOROSA"
+ },
+ {
+  "codigo_origen": "0878",
+  "descripcion": "TRAUMATISMO EN PIEL"
+ },
+ {
+  "codigo_origen": "0879",
+  "descripcion": "TEMBLOR EN HEMICUERPO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0880",
+  "descripcion": "AUMENTO DE VOLUMEN EN CODO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0881",
+  "descripcion": "AUMENTO DE VOLUMEN EN OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0882",
+  "descripcion": "DEBILIDAD EN PIERNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0883",
+  "descripcion": "DOLOR EN LA NALGA DERECHA"
+ },
+ {
+  "codigo_origen": "0884",
+  "descripcion": "EXPULSION DE PARASITOS"
+ },
+ {
+  "codigo_origen": "0885",
+  "descripcion": "TEMBLOR EN DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0886",
+  "descripcion": "DOLOR EN GLUTEO DERECHO"
+ },
+ {
+  "codigo_origen": "0887",
+  "descripcion": "LESIONES EN PIE DERECHO"
+ },
+ {
+  "codigo_origen": "0888",
+  "descripcion": "HERIDA EN MANO DERECHA"
+ },
+ {
+  "codigo_origen": "0889",
+  "descripcion": "PIERNAS DORMIDAS"
+ },
+ {
+  "codigo_origen": "0890",
+  "descripcion": "LESIONES EN LA LENGUA"
+ },
+ {
+  "codigo_origen": "0891",
+  "descripcion": "LESION EN PENE"
+ },
+ {
+  "codigo_origen": "0892",
+  "descripcion": "LENGUAJE TORPE"
+ },
+ {
+  "codigo_origen": "1036",
+  "descripcion": "PRUEBA"
+ },
+ {
+  "codigo_origen": "0893",
+  "descripcion": "PELOTA EN LA ESPALDA"
+ },
+ {
+  "codigo_origen": "0894",
+  "descripcion": "HORMIGUEO EN MANO IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0895",
+  "descripcion": "SECRECION VAGINAL"
+ },
+ {
+  "codigo_origen": "0896",
+  "descripcion": "SALIVA OSCURA"
+ },
+ {
+  "codigo_origen": "0897",
+  "descripcion": "SECRECION LACTEA"
+ },
+ {
+  "codigo_origen": "0898",
+  "descripcion": "ADORMECIMIENTO DE LOS LABIOS"
+ },
+ {
+  "codigo_origen": "0899",
+  "descripcion": "TRAUMATISMO DE RODILLA"
+ },
+ {
+  "codigo_origen": "0900",
+  "descripcion": "MORADOS EN LOS PIES"
+ },
+ {
+  "codigo_origen": "0901",
+  "descripcion": "DOLOR EN FOSA POPLITEA"
+ },
+ {
+  "codigo_origen": "0902",
+  "descripcion": "DOLOR EN LOS ANTEBRAZOS"
+ },
+ {
+  "codigo_origen": "0903",
+  "descripcion": "CONTROL DE ARTITIS"
+ },
+ {
+  "codigo_origen": "0904",
+  "descripcion": "DOLOR EN HEMICRANEO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0905",
+  "descripcion": "SALIVACION"
+ },
+ {
+  "codigo_origen": "0906",
+  "descripcion": "PUNZADAS EN PIE"
+ },
+ {
+  "codigo_origen": "0907",
+  "descripcion": "SUDORACION FRIA"
+ },
+ {
+  "codigo_origen": "0908",
+  "descripcion": "CALENTURA EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0909",
+  "descripcion": "EXPULSION DE GASES"
+ },
+ {
+  "codigo_origen": "0910",
+  "descripcion": "DOLOR EN MARCO COLONICO"
+ },
+ {
+  "codigo_origen": "0911",
+  "descripcion": "CAMBIO DE COLORACION EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "0912",
+  "descripcion": "PERDIDA DE MEMORIA"
+ },
+ {
+  "codigo_origen": "0913",
+  "descripcion": "PIERNAS FLOJAS"
+ },
+ {
+  "codigo_origen": "0914",
+  "descripcion": "DOLOR INGUINAL"
+ },
+ {
+  "codigo_origen": "0915",
+  "descripcion": "PICAZON EN EL CUELLO"
+ },
+ {
+  "codigo_origen": "0916",
+  "descripcion": "SENSACION DE SUSTO"
+ },
+ {
+  "codigo_origen": "0917",
+  "descripcion": "AUMENTO DE VOLUMEN EN LOS OJOS"
+ },
+ {
+  "codigo_origen": "0918",
+  "descripcion": "DOLOR COSTAL DERECHO"
+ },
+ {
+  "codigo_origen": "0919",
+  "descripcion": "DOLOR HEMICARA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0943",
+  "descripcion": "DOLOR EN SACRO"
+ },
+ {
+  "codigo_origen": "0920",
+  "descripcion": "PESADEZ EN LOS OJOS"
+ },
+ {
+  "codigo_origen": "0921",
+  "descripcion": "SINTOMAS URINARIOS"
+ },
+ {
+  "codigo_origen": "0922",
+  "descripcion": "SENSACION DE HORMIGUEO"
+ },
+ {
+  "codigo_origen": "0923",
+  "descripcion": "DOLOR EN LOS DIENTES"
+ },
+ {
+  "codigo_origen": "0924",
+  "descripcion": "DESORIENTACION"
+ },
+ {
+  "codigo_origen": "0925",
+  "descripcion": "DIFICULTAD PARA HABLAR"
+ },
+ {
+  "codigo_origen": "0926",
+  "descripcion": "SUDORACION EN LAS MANOS"
+ },
+ {
+  "codigo_origen": "0927",
+  "descripcion": "AUMENTO DE VOLUMEN EN BRAZO"
+ },
+ {
+  "codigo_origen": "0928",
+  "descripcion": "DOLOR EN DEDOS DE LAS MANOS"
+ },
+ {
+  "codigo_origen": "0929",
+  "descripcion": "SENSACION DE VACIO EN ESTOMAGO"
+ },
+ {
+  "codigo_origen": "0930",
+  "descripcion": "ADORMECIMIENTO EN LOS PIES"
+ },
+ {
+  "codigo_origen": "0931",
+  "descripcion": "AUMENTO DE VOLUMEN EN ARTICULACIONES"
+ },
+ {
+  "codigo_origen": "0932",
+  "descripcion": "EVALUACION CARDIOVASCULAR"
+ },
+ {
+  "codigo_origen": "0933",
+  "descripcion": "RESEQUEDAD EN LA NARIZ"
+ },
+ {
+  "codigo_origen": "0934",
+  "descripcion": "AUMENTO EN PIERNA DERECHA"
+ },
+ {
+  "codigo_origen": "0935",
+  "descripcion": "CONGESTION EN LA GARGANTA"
+ },
+ {
+  "codigo_origen": "0936",
+  "descripcion": "ENRROJECIMIENTO DE GARGANTA"
+ },
+ {
+  "codigo_origen": "0937",
+  "descripcion": "DOLOR EN LAS COSTILLAS"
+ },
+ {
+  "codigo_origen": "0938",
+  "descripcion": "AUMENTO DE VOLUMEN GENERALIZADO"
+ },
+ {
+  "codigo_origen": "0939",
+  "descripcion": "INTOLERANCIA A LA VIA ORAL"
+ },
+ {
+  "codigo_origen": "0940",
+  "descripcion": "VOMITOS NEGROS"
+ },
+ {
+  "codigo_origen": "0941",
+  "descripcion": "LIMITACION PARA LA MARCHA"
+ },
+ {
+  "codigo_origen": "0942",
+  "descripcion": "HORMIGUEO EN LOS PIES"
+ },
+ {
+  "codigo_origen": "0944",
+  "descripcion": "AUMENTO DE VOLLUMEN EN PIERNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0945",
+  "descripcion": "SANGRADO URETRAL"
+ },
+ {
+  "codigo_origen": "0946",
+  "descripcion": "COLORACION AMARILLA"
+ },
+ {
+  "codigo_origen": "0947",
+  "descripcion": "HIPERSOMNIA"
+ },
+ {
+  "codigo_origen": "0948",
+  "descripcion": "PRURITO ANAL"
+ },
+ {
+  "codigo_origen": "0949",
+  "descripcion": "CONTROLES REGULARES"
+ },
+ {
+  "codigo_origen": "0950",
+  "descripcion": "AUMENTO DE VOLUMEN EN PIERNAS"
+ },
+ {
+  "codigo_origen": "0951",
+  "descripcion": "CALORONES"
+ },
+ {
+  "codigo_origen": "0952",
+  "descripcion": "DOLOR EN MAMA DERECHA"
+ },
+ {
+  "codigo_origen": "0953",
+  "descripcion": "AUMENTO DE VOLUMEN PIERNA DERECHA"
+ },
+ {
+  "codigo_origen": "0954",
+  "descripcion": "DOLOR EN PENE"
+ },
+ {
+  "codigo_origen": "0955",
+  "descripcion": "ARDOR EN PIERNA DERECHA"
+ },
+ {
+  "codigo_origen": "0956",
+  "descripcion": "ARDOR EN OJO DERCHO"
+ },
+ {
+  "codigo_origen": "0957",
+  "descripcion": "PICAZON EN HEMICARA DERECHA"
+ },
+ {
+  "codigo_origen": "0958",
+  "descripcion": "OBSTRUCCION NASAL"
+ },
+ {
+  "codigo_origen": "0959",
+  "descripcion": "PERDIDA DEL OLFATO"
+ },
+ {
+  "codigo_origen": "0960",
+  "descripcion": "PERDIDA DEL GUSTO"
+ },
+ {
+  "codigo_origen": "0961",
+  "descripcion": "PERDIDA DE OLFATO"
+ },
+ {
+  "codigo_origen": "0962",
+  "descripcion": "HIPERGLICEMIAS"
+ },
+ {
+  "codigo_origen": "0963",
+  "descripcion": "SENSACION DE CALORONES"
+ },
+ {
+  "codigo_origen": "0964",
+  "descripcion": "ARROLLAMIENTO POR VEHICULO AUTOMOTOR"
+ },
+ {
+  "codigo_origen": "0965",
+  "descripcion": "DEBILIDAD EN HEMICUERPO DERECHO"
+ },
+ {
+  "codigo_origen": "0966",
+  "descripcion": "AGOTAMIENTO FACIL"
+ },
+ {
+  "codigo_origen": "0967",
+  "descripcion": "ARDOR EN LOS HOMBROS"
+ },
+ {
+  "codigo_origen": "0968",
+  "descripcion": "PUNZADAS EN LOS OJOS"
+ },
+ {
+  "codigo_origen": "0969",
+  "descripcion": "BOCA SECA"
+ },
+ {
+  "codigo_origen": "0970",
+  "descripcion": "SINTOMAS COVID 19"
+ },
+ {
+  "codigo_origen": "0971",
+  "descripcion": "PERDIDA DE LA SENSIBILIDAD EN MANOS"
+ },
+ {
+  "codigo_origen": "0972",
+  "descripcion": "EVACUACIONES LIQUIDAS"
+ },
+ {
+  "codigo_origen": "0977",
+  "descripcion": "OPRESION EN EL PECHO"
+ },
+ {
+  "codigo_origen": "0973",
+  "descripcion": "DOLOR MUSLO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0974",
+  "descripcion": "AUMENTO DE VOLUMEN EN BRAZO D"
+ },
+ {
+  "codigo_origen": "0975",
+  "descripcion": "SECRECION MAMARIA"
+ },
+ {
+  "codigo_origen": "0976",
+  "descripcion": "HORMIGUEO EN GENERALIZADO"
+ },
+ {
+  "codigo_origen": "0978",
+  "descripcion": "AUMENTO DE VOLUMEN EN PARPADOS"
+ },
+ {
+  "codigo_origen": "0979",
+  "descripcion": "DOLOR EN OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0980",
+  "descripcion": "LESION ESCROTAL"
+ },
+ {
+  "codigo_origen": "0981",
+  "descripcion": "DOLOR EN LA MANDIBULA"
+ },
+ {
+  "codigo_origen": "0982",
+  "descripcion": "CORRIENTAZOS EN LOS PIES"
+ },
+ {
+  "codigo_origen": "0983",
+  "descripcion": "ADORMECIMINTO EN DEDOS DE PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "0984",
+  "descripcion": "DEBILIDAD EN LABIO SUPERIOR DERECHO"
+ },
+ {
+  "codigo_origen": "0985",
+  "descripcion": "DOLOR EN HEMICARA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "0986",
+  "descripcion": "DISTORCION DE LOS SABORES Y OLORES"
+ },
+ {
+  "codigo_origen": "0987",
+  "descripcion": "SENSACION DE PRESION EN EL PECHO"
+ },
+ {
+  "codigo_origen": "0988",
+  "descripcion": "ARDOR EN LA BOCA"
+ },
+ {
+  "codigo_origen": "0989",
+  "descripcion": "SENSACION DE QUEMAZON EN LA BARRIGA"
+ },
+ {
+  "codigo_origen": "0990",
+  "descripcion": "PUNZADAS EN OIDO"
+ },
+ {
+  "codigo_origen": "0991",
+  "descripcion": "CAIDA DE BICICLETA"
+ },
+ {
+  "codigo_origen": "0992",
+  "descripcion": "PERDIDA DE LA FUERZA MSCULAR EN LABIOS"
+ },
+ {
+  "codigo_origen": "0993",
+  "descripcion": "ORINAS LECHOZAS"
+ },
+ {
+  "codigo_origen": "0994",
+  "descripcion": "HEMATOMAS GENERALIZADAS"
+ },
+ {
+  "codigo_origen": "0995",
+  "descripcion": "CARRASPERA EN LA GARGANTA"
+ },
+ {
+  "codigo_origen": "0996",
+  "descripcion": "AUMENTO DE VOLUMEN DE LAS OREJAS"
+ },
+ {
+  "codigo_origen": "1005",
+  "descripcion": "DOLOR EN OJO DERECHO"
+ },
+ {
+  "codigo_origen": "0997",
+  "descripcion": "DIFICULTAD PARA CERRAR LAS MANOS"
+ },
+ {
+  "codigo_origen": "0998",
+  "descripcion": "PRESION EN OIDO IZQUIERD"
+ },
+ {
+  "codigo_origen": "0999",
+  "descripcion": "PICAZON EN LA PIEL"
+ },
+ {
+  "codigo_origen": "1000",
+  "descripcion": "PICAZON EN LAS MANOS"
+ },
+ {
+  "codigo_origen": "1001",
+  "descripcion": "DOLOR INTERGLUTEO"
+ },
+ {
+  "codigo_origen": "1002",
+  "descripcion": "HECES MELENICA"
+ },
+ {
+  "codigo_origen": "1003",
+  "descripcion": "OJOS SECOS"
+ },
+ {
+  "codigo_origen": "1004",
+  "descripcion": "DEBILIDAD EN HEMICUERPO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1006",
+  "descripcion": "FRIALDAD EN BRAZO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1007",
+  "descripcion": "DOLOR EN DEDO MEDIO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1008",
+  "descripcion": "DEBILIDAD  GENERALIZADA"
+ },
+ {
+  "codigo_origen": "1009",
+  "descripcion": "ADORMECIMIENTO DE BRAZO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1010",
+  "descripcion": "DOLOR EN CODO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1011",
+  "descripcion": "CONTROL DE COVID"
+ },
+ {
+  "codigo_origen": "1012",
+  "descripcion": "PESO EN LA CABEZA"
+ },
+ {
+  "codigo_origen": "1013",
+  "descripcion": "DEDOS CONGELADOS"
+ },
+ {
+  "codigo_origen": "1014",
+  "descripcion": "GOTEO NASAL"
+ },
+ {
+  "codigo_origen": "1016",
+  "descripcion": "CALAMBRES EN LOS PIES"
+ },
+ {
+  "codigo_origen": "1017",
+  "descripcion": "DOLOR ARTICULARES"
+ },
+ {
+  "codigo_origen": "1018",
+  "descripcion": "PRENDICION EN LOS PIES"
+ },
+ {
+  "codigo_origen": "1019",
+  "descripcion": "DOLOR EN MANDIBULA"
+ },
+ {
+  "codigo_origen": "1020",
+  "descripcion": "HERIDA EN ANTEBRAZO"
+ },
+ {
+  "codigo_origen": "1021",
+  "descripcion": "CONTROL POST COVID 19"
+ },
+ {
+  "codigo_origen": "1022",
+  "descripcion": "TRAUMATISMO EN DEDO HALLUX DERECHO"
+ },
+ {
+  "codigo_origen": "1023",
+  "descripcion": "PERDIDA DE LA FUERZA EN MANO DERECHA"
+ },
+ {
+  "codigo_origen": "1024",
+  "descripcion": "PERDIDA DE FUERZA MUSCULAR EN H CUERPO D"
+ },
+ {
+  "codigo_origen": "1025",
+  "descripcion": "PROTRUSION DE LA LENGUA"
+ },
+ {
+  "codigo_origen": "1026",
+  "descripcion": "CANGESTION NASAL"
+ },
+ {
+  "codigo_origen": "1027",
+  "descripcion": "DOLOR EN LAS CADERAS"
+ },
+ {
+  "codigo_origen": "1028",
+  "descripcion": "CONTROL COVID"
+ },
+ {
+  "codigo_origen": "1029",
+  "descripcion": "ADORMECIMIENTO DE PIE DERECHO"
+ },
+ {
+  "codigo_origen": "1030",
+  "descripcion": "PIERNAS PESADAS"
+ },
+ {
+  "codigo_origen": "1031",
+  "descripcion": "DOLOR EN MUSLO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1032",
+  "descripcion": "DOLOR LUMBAR BILATERAL"
+ },
+ {
+  "codigo_origen": "1033",
+  "descripcion": "AUMENTO DE VOLUMEN DE GANGLIOS"
+ },
+ {
+  "codigo_origen": "1034",
+  "descripcion": "QUEBRANTOS"
+ },
+ {
+  "codigo_origen": "1035",
+  "descripcion": "LESIONES EN LOS PIES"
+ },
+ {
+  "codigo_origen": "1037",
+  "descripcion": "ADORMECIMIENTO EN LOS DEDOS"
+ },
+ {
+  "codigo_origen": "1038",
+  "descripcion": "PLAQUETOPENIA"
+ },
+ {
+  "codigo_origen": "1039",
+  "descripcion": "DOLOR EN EN AXILA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1040",
+  "descripcion": "ESTORNUDOS"
+ },
+ {
+  "codigo_origen": "1041",
+  "descripcion": "HINCHAZON EN LOS OJOS"
+ },
+ {
+  "codigo_origen": "1042",
+  "descripcion": "FALTA DE AIRE"
+ },
+ {
+  "codigo_origen": "1043",
+  "descripcion": "TOS NOCTURNA"
+ },
+ {
+  "codigo_origen": "1044",
+  "descripcion": "QUEMAZON EN LA CARA"
+ },
+ {
+  "codigo_origen": "1045",
+  "descripcion": "ACUDE POR CONTROL"
+ },
+ {
+  "codigo_origen": "1046",
+  "descripcion": "DOLOR EN LOS TOBILLOS"
+ },
+ {
+  "codigo_origen": "1047",
+  "descripcion": "DOLOR EN VENAS DE LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "1048",
+  "descripcion": "DOLOR EN AXILA DERECHA"
+ },
+ {
+  "codigo_origen": "1049",
+  "descripcion": "ADORMECIMIENTO DE BORDE CUBITAL D"
+ },
+ {
+  "codigo_origen": "1050",
+  "descripcion": "SENSACION DE PIERNAS DORMIDAS"
+ },
+ {
+  "codigo_origen": "1051",
+  "descripcion": "ARDOR EN LA PIERNA"
+ },
+ {
+  "codigo_origen": "1052",
+  "descripcion": "DIFICULTAD PARA DEGLUTIR"
+ },
+ {
+  "codigo_origen": "1062",
+  "descripcion": "DOLOR MOLAR"
+ },
+ {
+  "codigo_origen": "1053",
+  "descripcion": "SENSACION DE QUEMAZON EN EL PECHO"
+ },
+ {
+  "codigo_origen": "1054",
+  "descripcion": "DOLOR EN TESTICULO DERECHO"
+ },
+ {
+  "codigo_origen": "1055",
+  "descripcion": "DOLOR EN ANTEBRAZO DERECHO"
+ },
+ {
+  "codigo_origen": "1056",
+  "descripcion": "AUMENTO DE VOLUMEN EN MAMA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1057",
+  "descripcion": "DOLOR PERIANAL"
+ },
+ {
+  "codigo_origen": "1058",
+  "descripcion": "DILATACION DE VENAS DE LAS MANOS"
+ },
+ {
+  "codigo_origen": "1059",
+  "descripcion": "DOLOR EN PIERNAS"
+ },
+ {
+  "codigo_origen": "1060",
+  "descripcion": "LEUCOCITOSIS"
+ },
+ {
+  "codigo_origen": "1061",
+  "descripcion": "QUEMAZON EN ESTOMAGO"
+ },
+ {
+  "codigo_origen": "1063",
+  "descripcion": "PESO EN PERINE"
+ },
+ {
+  "codigo_origen": "1064",
+  "descripcion": "DOLOR ABDMINAL"
+ },
+ {
+  "codigo_origen": "1065",
+  "descripcion": "RESEQUEDAD EN LA GARGANTA"
+ },
+ {
+  "codigo_origen": "1066",
+  "descripcion": "CONTROL MEDICO"
+ },
+ {
+  "codigo_origen": "1067",
+  "descripcion": "LOE ABDOMINAL"
+ },
+ {
+  "codigo_origen": "1068",
+  "descripcion": "SINTOMAS RESPIRATORIOS"
+ },
+ {
+  "codigo_origen": "1069",
+  "descripcion": "LESION EN LA LENGUA"
+ },
+ {
+  "codigo_origen": "1070",
+  "descripcion": "MOVIMENTOS ANORMALES"
+ },
+ {
+  "codigo_origen": "1071",
+  "descripcion": "IMPOSIBILIDAD PARA CAMINAR"
+ },
+ {
+  "codigo_origen": "1072",
+  "descripcion": "REACCION ALERGICA"
+ },
+ {
+  "codigo_origen": "1073",
+  "descripcion": "QUEMAZON EN ABDOMEN"
+ },
+ {
+  "codigo_origen": "1074",
+  "descripcion": "DOLOR EN LA PIERNAS"
+ },
+ {
+  "codigo_origen": "1075",
+  "descripcion": "PARPADEO OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1076",
+  "descripcion": "LESION EN PIE DERECHO"
+ },
+ {
+  "codigo_origen": "1077",
+  "descripcion": "SENSACION DE PRESION EN ABDOMEN"
+ },
+ {
+  "codigo_origen": "1078",
+  "descripcion": "ENRROJECIMIENTO EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "1079",
+  "descripcion": "MANOS CALIENTES"
+ },
+ {
+  "codigo_origen": "1081",
+  "descripcion": "CONTROL POR COVID"
+ },
+ {
+  "codigo_origen": "1080",
+  "descripcion": "PERDIDA DE LA FUERZA EN BRAZO DERECHO"
+ },
+ {
+  "codigo_origen": "1082",
+  "descripcion": "DOLOR EN SENOS PARANASALES"
+ },
+ {
+  "codigo_origen": "1083",
+  "descripcion": "CONTROL POR ANEURISMA"
+ },
+ {
+  "codigo_origen": "1084",
+  "descripcion": "FRIALDAD EN LOS PIES"
+ },
+ {
+  "codigo_origen": "1085",
+  "descripcion": "HINCHAZON EN LA PIERNA"
+ },
+ {
+  "codigo_origen": "1086",
+  "descripcion": "DOLOR DE GAGANTA"
+ },
+ {
+  "codigo_origen": "1087",
+  "descripcion": "PUNZADA EN HOMBRO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1088",
+  "descripcion": "TEMBLOR EN OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1089",
+  "descripcion": "PERDIDA DE LA UÑAS"
+ },
+ {
+  "codigo_origen": "1090",
+  "descripcion": "PERDIDA DE SUEÑO"
+ },
+ {
+  "codigo_origen": "1091",
+  "descripcion": "PICAZON EN BRAZO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1092",
+  "descripcion": "AUMENTO DE VOLUMEN DE LABIOS"
+ },
+ {
+  "codigo_origen": "1093",
+  "descripcion": "ACORTAMIENTO DE PIERNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1094",
+  "descripcion": "DEBILIDAD EN BRAZO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1095",
+  "descripcion": "AUMENTO DE VOLUMEN EN PIE DERECHO"
+ },
+ {
+  "codigo_origen": "1096",
+  "descripcion": "ADORMECIMIENTO EN AMBOS PIES"
+ },
+ {
+  "codigo_origen": "1097",
+  "descripcion": "LESION EN PIERNA DERECHA"
+ },
+ {
+  "codigo_origen": "1098",
+  "descripcion": "ARDOR EN LA PIEL"
+ },
+ {
+  "codigo_origen": "1099",
+  "descripcion": "CONTROL DE EMBARAZO"
+ },
+ {
+  "codigo_origen": "1100",
+  "descripcion": "CALAMBRE EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "1101",
+  "descripcion": "MORDEDURA POR PERRO"
+ },
+ {
+  "codigo_origen": "1102",
+  "descripcion": "DOLOR GLUTEO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1103",
+  "descripcion": "ORINAS COLURICAS"
+ },
+ {
+  "codigo_origen": "1104",
+  "descripcion": "SANGRADO AL TOSER"
+ },
+ {
+  "codigo_origen": "1105",
+  "descripcion": "TEMBLOR EN CUELLO"
+ },
+ {
+  "codigo_origen": "1107",
+  "descripcion": "ZUMBIDO EN OIDOS"
+ },
+ {
+  "codigo_origen": "1106",
+  "descripcion": "CONTROL POR HEMORRAGIA DIGESTIVA SUPERIO"
+ },
+ {
+  "codigo_origen": "1108",
+  "descripcion": "ADORMECIMIENTO ANTEBRAZO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1109",
+  "descripcion": "DOLOR EN EN CUELLO"
+ },
+ {
+  "codigo_origen": "1110",
+  "descripcion": "DOLOR EN BRZO DERECHO"
+ },
+ {
+  "codigo_origen": "1111",
+  "descripcion": "PERDIDA DE AUDICION OIDO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1112",
+  "descripcion": "TEMBLOR EN HEMICARA DERECHA"
+ },
+ {
+  "codigo_origen": "1113",
+  "descripcion": "AUMENTO DE VOLUMEN GANGLIONAR"
+ },
+ {
+  "codigo_origen": "1114",
+  "descripcion": "DOLOR EN OIDO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1115",
+  "descripcion": "PRESION EN OJO DERECHO"
+ },
+ {
+  "codigo_origen": "1116",
+  "descripcion": "PRURITO EN LA GARGANTA"
+ },
+ {
+  "codigo_origen": "1117",
+  "descripcion": "DOLOR EN ARTICULACION DE CADERA"
+ },
+ {
+  "codigo_origen": "1118",
+  "descripcion": "AUMENTO DE CIRCUNFERENCIA ABDOMINAL"
+ },
+ {
+  "codigo_origen": "1119",
+  "descripcion": "ARDOR EN VIENTRE"
+ },
+ {
+  "codigo_origen": "1120",
+  "descripcion": "CAMBIOS DE COLORACION HOMBRO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1121",
+  "descripcion": "HORMIGUEO EN TODO EL CUERPO"
+ },
+ {
+  "codigo_origen": "1122",
+  "descripcion": "HORMIGUEO EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "1123",
+  "descripcion": "DOLOR LUMAR DERECHO"
+ },
+ {
+  "codigo_origen": "1124",
+  "descripcion": "AUMNTO DE VOLUMEN EN EPIGASTRIO"
+ },
+ {
+  "codigo_origen": "1125",
+  "descripcion": "DEBILIDAD EN PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1126",
+  "descripcion": "DOLOR EN AMIGDALAS"
+ },
+ {
+  "codigo_origen": "1127",
+  "descripcion": "PESADEZ EN ESTOMAGO"
+ },
+ {
+  "codigo_origen": "1128",
+  "descripcion": "PESADEZ EN EL PECHO"
+ },
+ {
+  "codigo_origen": "1129",
+  "descripcion": "PICAZON GENITALES"
+ },
+ {
+  "codigo_origen": "1130",
+  "descripcion": "PERDIDA DE ATENCION"
+ },
+ {
+  "codigo_origen": "1131",
+  "descripcion": "INESTABILIDAD PARACAMINAR"
+ },
+ {
+  "codigo_origen": "1132",
+  "descripcion": "SENSACION DE PESO EN LA VISTA"
+ },
+ {
+  "codigo_origen": "1133",
+  "descripcion": "DOLOR GENERALIIZADO"
+ },
+ {
+  "codigo_origen": "1134",
+  "descripcion": "DIFICULTAD PARA LA MARCHA"
+ },
+ {
+  "codigo_origen": "1135",
+  "descripcion": "HORMIGUEO EN PIERNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1136",
+  "descripcion": "ADORMECIMIENTO EN MUSLO DERECHO"
+ },
+ {
+  "codigo_origen": "1137",
+  "descripcion": "AUMENTO DEL NUMERO DE MICCIONES"
+ },
+ {
+  "codigo_origen": "1138",
+  "descripcion": "INESTABILIDAD PARA CAMINAR"
+ },
+ {
+  "codigo_origen": "1139",
+  "descripcion": "MORETONES EN MANO DERECHA"
+ },
+ {
+  "codigo_origen": "1140",
+  "descripcion": "VACIO EN EL ESTAGO"
+ },
+ {
+  "codigo_origen": "1141",
+  "descripcion": "ARDOR EN HEMICARA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1142",
+  "descripcion": "DIFICULTAD PARA RESPIRAR"
+ },
+ {
+  "codigo_origen": "1143",
+  "descripcion": "DOLOR EN HEMICUERPO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1144",
+  "descripcion": "ADORMECIMIENTO EN ANTEBRAZO DERECHO"
+ },
+ {
+  "codigo_origen": "1145",
+  "descripcion": "ADORMECIMIENTO PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1146",
+  "descripcion": "DOLOR EN VIAS REPIRATORIAS"
+ },
+ {
+  "codigo_origen": "1147",
+  "descripcion": "PICAZON EN LAS AXILAS"
+ },
+ {
+  "codigo_origen": "1148",
+  "descripcion": "COMEDERA DE HIELO"
+ },
+ {
+  "codigo_origen": "1149",
+  "descripcion": "HINCHAZON EN LAS MANOS"
+ },
+ {
+  "codigo_origen": "1150",
+  "descripcion": "DOLOR EN IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1151",
+  "descripcion": "TEMBLOR DISTAL"
+ },
+ {
+  "codigo_origen": "1152",
+  "descripcion": "DOLOR EN HIPOGASTRIO"
+ },
+ {
+  "codigo_origen": "1153",
+  "descripcion": "CAIDA DE ESCALERA"
+ },
+ {
+  "codigo_origen": "1154",
+  "descripcion": "DOLOR EN OIDO DERECHO"
+ },
+ {
+  "codigo_origen": "1156",
+  "descripcion": "SENSACION DE EMBOTAMIENTO"
+ },
+ {
+  "codigo_origen": "1155",
+  "descripcion": "DOLOR EN PECTORAL MAYOR IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1157",
+  "descripcion": "LESIONES EN EL PENE"
+ },
+ {
+  "codigo_origen": "1158",
+  "descripcion": "DOLOR ESCAPULAR DERECHO"
+ },
+ {
+  "codigo_origen": "1159",
+  "descripcion": "HOMBRO CONGELADO"
+ },
+ {
+  "codigo_origen": "1160",
+  "descripcion": "HINCHAZON EN OREJA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1161",
+  "descripcion": "DOLOR EN TRAYECTOS VENOSOS"
+ },
+ {
+  "codigo_origen": "1162",
+  "descripcion": "QUEMAZON EN LOS PIES"
+ },
+ {
+  "codigo_origen": "1163",
+  "descripcion": "SENSACION DE PRESION EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "1164",
+  "descripcion": "PESADILLAS"
+ },
+ {
+  "codigo_origen": "1165",
+  "descripcion": "FRIALDAD EN PIERNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1166",
+  "descripcion": "DOLOR LUMABAR"
+ },
+ {
+  "codigo_origen": "1167",
+  "descripcion": "VACIO EN EL ESTOMAGO"
+ },
+ {
+  "codigo_origen": "1168",
+  "descripcion": "DOLOR EN HOPOCONDRIO DERECHO"
+ },
+ {
+  "codigo_origen": "1169",
+  "descripcion": "CANSANCIO EN LAS PIERNAS"
+ },
+ {
+  "codigo_origen": "1170",
+  "descripcion": "DOLOR EN PELVIS"
+ },
+ {
+  "codigo_origen": "1171",
+  "descripcion": "LESION PERIANAL"
+ },
+ {
+  "codigo_origen": "1172",
+  "descripcion": "DOLOR DETRAS DE OREJA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1173",
+  "descripcion": "DOLOR Y AUMENTO DE VOLUMEN EN RODILLA IZ"
+ },
+ {
+  "codigo_origen": "1174",
+  "descripcion": "CONTROL PREMEDICACION"
+ },
+ {
+  "codigo_origen": "1175",
+  "descripcion": "FRIALDA GENERALIZADA"
+ },
+ {
+  "codigo_origen": "1176",
+  "descripcion": "DESORINTACION"
+ },
+ {
+  "codigo_origen": "1177",
+  "descripcion": "DIFICULTAD PARA ORINAR"
+ },
+ {
+  "codigo_origen": "1178",
+  "descripcion": "FACICULACIONES"
+ },
+ {
+  "codigo_origen": "1179",
+  "descripcion": "DORMIDERA"
+ },
+ {
+  "codigo_origen": "1180",
+  "descripcion": "ORESION EN OIDO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1181",
+  "descripcion": "DOLOR EN COSTILLAS"
+ },
+ {
+  "codigo_origen": "1182",
+  "descripcion": "PROTEINURIA"
+ },
+ {
+  "codigo_origen": "1183",
+  "descripcion": "ATURDIMIENTO"
+ },
+ {
+  "codigo_origen": "1184",
+  "descripcion": "ERUPTOS"
+ },
+ {
+  "codigo_origen": "1185",
+  "descripcion": "PERDIDA DE LA FUERZA EN PIERNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1186",
+  "descripcion": "AUMENTO DE VOLUMEN DEDO INDICE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1187",
+  "descripcion": "AUMENTO DE VOLUMEN OIDO DERECHO"
+ },
+ {
+  "codigo_origen": "1188",
+  "descripcion": "PERDIDA DE LA FUERZA EN HEMICUERPO DEREC"
+ },
+ {
+  "codigo_origen": "1189",
+  "descripcion": "MANOS HINCHADAS"
+ },
+ {
+  "codigo_origen": "1190",
+  "descripcion": "ARDOR EN HEMICRANEO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1191",
+  "descripcion": "AUMENTO DE VOLUMEN EN LOS BRAZOS"
+ },
+ {
+  "codigo_origen": "1192",
+  "descripcion": "AUMENTO DE VOLUMEN EN REGION INGUINAL"
+ },
+ {
+  "codigo_origen": "1193",
+  "descripcion": "ORINAS OSCURAS"
+ },
+ {
+  "codigo_origen": "1194",
+  "descripcion": "PUNZADAS EN OJO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1195",
+  "descripcion": "AUMENTO DE VOLUMEN DE ARTICULACIONES"
+ },
+ {
+  "codigo_origen": "1196",
+  "descripcion": "VOMITOS CON SANGRE"
+ },
+ {
+  "codigo_origen": "1197",
+  "descripcion": "INESTABILIDAD PARA LA MARCHA"
+ },
+ {
+  "codigo_origen": "1198",
+  "descripcion": "DESCAMACION EN PIEL DE LAS MANOS"
+ },
+ {
+  "codigo_origen": "1199",
+  "descripcion": "PALPITACIONES EN OIDO"
+ },
+ {
+  "codigo_origen": "1200",
+  "descripcion": "PERDIDA DE LA FUERZA MUSCULAR EN LA CARA"
+ },
+ {
+  "codigo_origen": "1201",
+  "descripcion": "AUMENTO DE GLOBULOS BLANCOS"
+ },
+ {
+  "codigo_origen": "1202",
+  "descripcion": "AGOTAMINENTO"
+ },
+ {
+  "codigo_origen": "1203",
+  "descripcion": "RESEQUEDAD EN LA BOCA"
+ },
+ {
+  "codigo_origen": "1204",
+  "descripcion": "SENSACION VACIO EN EL ESTOMAGO"
+ },
+ {
+  "codigo_origen": "1205",
+  "descripcion": "MORDEDURA DE LA LENGUA"
+ },
+ {
+  "codigo_origen": "1211",
+  "descripcion": "MIEDO"
+ },
+ {
+  "codigo_origen": "1206",
+  "descripcion": "DOLOR EN TRAYECTO CIATICO"
+ },
+ {
+  "codigo_origen": "1207",
+  "descripcion": "ADORMECIMIENTO DE LA BOCA"
+ },
+ {
+  "codigo_origen": "1208",
+  "descripcion": "ADORMECIMIENTO DEDOS DE PIE IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1209",
+  "descripcion": "ADORMECIMIENTO DE PIERNA IZQUIERDA"
+ },
+ {
+  "codigo_origen": "1210",
+  "descripcion": "PICAZON EN GARGANTA"
+ },
+ {
+  "codigo_origen": "1212",
+  "descripcion": "PRESION EN LA GARGANTA"
+ },
+ {
+  "codigo_origen": "1213",
+  "descripcion": "PERDIDA DE LA FUERZA MUSCULAR PIERNA D"
+ },
+ {
+  "codigo_origen": "1214",
+  "descripcion": "CONTROL VERTIGOS"
+ },
+ {
+  "codigo_origen": "1215",
+  "descripcion": "DOLOR EN LAS NALGAS"
+ },
+ {
+  "codigo_origen": "1216",
+  "descripcion": "DOLOR EN LOS MUSLOS"
+ },
+ {
+  "codigo_origen": "1217",
+  "descripcion": "ARDOR EN OIDO DERECHO"
+ },
+ {
+  "codigo_origen": "1218",
+  "descripcion": "AUMENTO CIFRAS DE TRIGLICERIDOS"
+ },
+ {
+  "codigo_origen": "1219",
+  "descripcion": "DOLOR OIDO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1220",
+  "descripcion": "SILVIDOEN EL PECHO"
+ },
+ {
+  "codigo_origen": "1221",
+  "descripcion": "BISMUTOL"
+ },
+ {
+  "codigo_origen": "1222",
+  "descripcion": "PRESION EN TESTICULOS"
+ },
+ {
+  "codigo_origen": "1223",
+  "descripcion": "DOLOR EN LOS CODOS"
+ },
+ {
+  "codigo_origen": "1224",
+  "descripcion": "DOLOR OSTEOMUSCULAR GENERALIZADO"
+ },
+ {
+  "codigo_origen": "1225",
+  "descripcion": "ADORMECIMIENTO EN LA CABEZA"
+ },
+ {
+  "codigo_origen": "1226",
+  "descripcion": "SENSACION DE HORMIGUEO EN LA CABEZA"
+ },
+ {
+  "codigo_origen": "1227",
+  "descripcion": "DOLOR EN COSTADO IZQUIERDO"
+ },
+ {
+  "codigo_origen": "1228",
+  "descripcion": "PERDIDA DEL EQUILIBRIO"
+ },
+ {
+  "codigo_origen": "1229",
+  "descripcion": "SALIDA DE HEMORROIDES"
+ },
+ {
+  "codigo_origen": "1230",
+  "descripcion": "ESFUERZO AL ORINAR"
+ },
+ {
+  "codigo_origen": "1231",
+  "descripcion": "APARICION DE VELLOS"
+ },
+ {
+  "codigo_origen": "1232",
+  "descripcion": "EXPULSION DE CALCULOS"
+ },
+ {
+  "codigo_origen": "1233",
+  "descripcion": "SENSACION DE QUEMAZON EN LOS PIES"
+ },
+ {
+  "codigo_origen": "1234",
+  "descripcion": "PINCHAZOS EN TODO EL CUERPO"
+ },
+ {
+  "codigo_origen": "1235",
+  "descripcion": "DISMUNICION DEL CAMPO VISUAL"
+ },
+ {
+  "codigo_origen": "1236",
+  "descripcion": "SANGRADO CON SALIVACION"
+ },
+ {
+  "codigo_origen": "1237",
+  "descripcion": "COLORACION NEGRA EN PIE DERECHO"
+ },
+ {
+  "codigo_origen": "1238",
+  "descripcion": "PERDIDA FUGAZ DEL HABLA"
+ },
+ {
+  "codigo_origen": "1239",
+  "descripcion": "ADORMECIMIENTO DE BRAZO DERECHO"
+ }
+]
