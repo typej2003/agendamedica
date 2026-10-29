@@ -1211,7 +1211,9 @@ solo mensual), el monto fijo o **por asiento** (`precio_asiento_usd`, `secretari
 4) son **filas editables**: ninguna regla mira el `codigo`. **Un plan puede ofrecer las dos frecuencias**: al contratar
 se elige mes (1 mes) o año (12 meses); el anual de un plan por asiento se calcula como el mensual del equipo ×
 `meses_cobrados_anual` (10 por defecto, o sea paga 10 y recibe 12), y el de un plan fijo usa `precio_anual_usd`. El pago
-guarda `pagos.meses` (1 o 12) y `ConfirmarPagoDePlan` renueva con esos meses. **Compatibilidad**: una fila anual vieja
+guarda `pagos.meses` (1 o 12) y `ConfirmarPagoDePlan` renueva con esos meses. En `/clinica/plan` el **selector global**
+arranca en anual (precio del año y ahorro) y permite pasar a mensual; la **portada pública** muestra un solo precio
+mensual, el anual dividido 12 (`intdiv`, sin redondear hacia arriba), como cambio visual. **Compatibilidad**: una fila anual vieja
 (`frecuencia = anual`, `precio_anual_usd = null`) sigue siendo solo anual y guarda el precio del año en `precio_usd`; los
 `Premium` mensual/anual que ya existen no se migran solos. `App\Services\CupoDelPlan` cuenta médicos (ficha dueña
 no-centro + vinculados; los centros no cuentan) y secretarías (solo rol `Secretaria`, sin ficha de médico), aplica los

@@ -48,6 +48,11 @@ class PlanController extends Controller
             ->orderBy('id')
             ->get();
 
+        $frecuencia = (string) $request->query('frecuencia', Plan::ANUAL);
+        if (! in_array($frecuencia, [Plan::MENSUAL, Plan::ANUAL], true)) {
+            $frecuencia = Plan::ANUAL;
+        }
+
         $conteo = $cupos->conteo($regMedico);
         $precios = [];
         $preciosAnuales = [];
@@ -77,6 +82,7 @@ class PlanController extends Controller
                 $preciosAnuales,
                 $ahorrosAnuales,
                 $detallesAnuales,
+                $frecuencia,
             ),
         ]);
     }
@@ -107,15 +113,16 @@ class PlanController extends Controller
 
         $conteo = $cupos->conteo($regMedico);
 
-        $frecuencia = (string) $request->query('frecuencia', $plan->frecuenciaPorDefecto());
+        // Al elegir un plan, el médico arranca en anual si el plan lo ofrece; puede cambiar a mensual.
+        $frecuencia = (string) $request->query('frecuencia', '');
+        if (! in_array($frecuencia, [Plan::MENSUAL, Plan::ANUAL], true)) {
+            $frecuencia = $plan->ofreceAnual() ? Plan::ANUAL : Plan::MENSUAL;
+        }
         if ($frecuencia === Plan::ANUAL && ! $plan->ofreceAnual()) {
-            return redirect()->route('clinica.plan.elegir', $plan)->with('error', 'Este plan no tiene precio anual.');
+            $frecuencia = Plan::MENSUAL;
         }
         if ($frecuencia === Plan::MENSUAL && ! $plan->ofreceMensual()) {
-            return redirect()->route('clinica.plan.elegir', $plan)->with('error', 'Este plan no tiene precio mensual.');
-        }
-        if (! in_array($frecuencia, [Plan::MENSUAL, Plan::ANUAL], true)) {
-            $frecuencia = $plan->frecuenciaPorDefecto();
+            $frecuencia = Plan::ANUAL;
         }
 
         $precioMensualE2 = $cupos->precioUsdE2($plan, $conteo, Plan::MENSUAL);
@@ -163,7 +170,7 @@ class PlanController extends Controller
             return back()->with('error', 'Ese método de pago no está disponible.');
         }
 
-        $frecuencia = (string) ($datos['frecuencia'] ?? $plan->frecuenciaPorDefecto());
+        $frecuencia = (string) ($datos['frecuencia'] ?? ($plan->ofreceAnual() ? Plan::ANUAL : Plan::MENSUAL));
 
         try {
             $pago = $cobros->crearParaPlan($regMedico, $plan, $metodo, $request->user()->id, $frecuencia);

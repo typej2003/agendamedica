@@ -95,12 +95,11 @@ class LandingWebTest extends TestCase
             ->assertSee('id="planes"', false)
             ->assertSee('Plan Portada Visible')
             ->assertSee('$25')
-            ->assertSee('Ahorras $5')
             ->assertDontSee('Plan Portada Oculto')
             ->assertDontSee('Plan Portada Inactivo');
     }
 
-    public function test_un_plan_con_precio_anual_muestra_los_dos_y_el_ahorro(): void
+    public function test_un_plan_con_precio_anual_muestra_el_mensual_equivalente(): void
     {
         $sufijo = substr(uniqid(), -6);
         $this->plan('portada-anual-' . $sufijo, 'Plan Portada Anual', [
@@ -111,10 +110,9 @@ class LandingWebTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('Plan Portada Anual')
-            ->assertSee('$20')
-            ->assertSee('$200')
-            ->assertSee('ahorras $40')
-            ->assertSee('2 meses');
+            ->assertSee('$16.66')
+            ->assertDontSee('$200')
+            ->assertDontSee('ahorras $40');
     }
 
     public function test_sin_planes_visibles_no_sale_la_seccion(): void

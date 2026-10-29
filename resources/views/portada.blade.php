@@ -246,44 +246,25 @@
                     @foreach ($planes as $plan)
                         @php
                             $porAsiento = $plan->cobraPorAsiento();
-                            $ofreceMensual = $plan->ofreceMensual();
-                            $ofreceAnual = $plan->ofreceAnual();
-                            $ahorro = $porAsiento ? 0.0 : $plan->ahorroUsd();
                             $maxMedicos = $plan->restricciones->maxMedicos();
                             $maxSecretarias = $plan->restricciones->maxSecretarias();
                             $maxHistorico = $plan->restricciones->maxHistoricoMeses();
-                            $precioMensual = \App\Pagos\Centavos::aDecimal($preciosDesdeE2[$plan->id] ?? 0);
-                            $precioAnual = \App\Pagos\Centavos::aDecimal($preciosAnualesDesdeE2[$plan->id] ?? 0);
-                            $ahorroAnual = \App\Pagos\Centavos::aDecimal($ahorrosAnualesE2[$plan->id] ?? 0);
-                            $mesesAhorro = $precioMensual > 0 ? (int) round($ahorroAnual / $precioMensual) : 0;
-                            $precioMostrar = $ofreceMensual ? $precioMensual : $precioAnual;
+                            // En la portada se muestra un solo precio mensual: el anual dividido 12 (sin redondear
+                            // hacia arriba, para no prometer un centavo de más). Es sólo visual: se cobra el anual.
+                            $precioMes = $plan->ofreceAnual()
+                                ? intdiv((int) ($preciosAnualesDesdeE2[$plan->id] ?? 0), 12)
+                                : (int) ($preciosDesdeE2[$plan->id] ?? 0);
+                            $precioMostrar = \App\Pagos\Centavos::aDecimal($precioMes);
                         @endphp
                         <div class="col-md-6 col-lg-4">
-                            <article class="portada-plan {{ $ahorro > 0 ? 'portada-plan-destacado' : '' }}">
-                                @if ($ahorro > 0)
-                                    <span class="portada-plan-sello">Ahorras {{ $precio($ahorro) }}</span>
-                                @endif
+                            <article class="portada-plan">
                                 <h3>{{ $plan->nombre }}</h3>
                                 @if ($plan->descripcion)
                                     <p class="portada-plan-descripcion">{{ $plan->descripcion }}</p>
                                 @endif
                                 <p class="portada-plan-precio">
-                                    @if ($ahorro > 0)
-                                        <del>{{ $precio($plan->precio_tachado_usd) }}</del>
-                                    @endif
-                                    <strong class="tnum">{{ $porAsiento && $ofreceMensual ? 'desde ' : '' }}{{ $precio($precioMostrar) }}</strong>
-                                    <span>USD / {{ $ofreceMensual ? 'mes' : 'año' }}</span>
-                                    @if ($ofreceMensual && $ofreceAnual)
-                                        <span class="d-block small mt-1">
-                                            o <strong class="tnum">{{ $porAsiento ? 'desde ' : '' }}{{ $precio($precioAnual) }}</strong> USD / año
-                                            @if ($ahorroAnual > 0)
-                                                · ahorras {{ $precio($ahorroAnual) }}
-                                                @if ($mesesAhorro > 0)
-                                                    ({{ $mesesAhorro }} {{ $mesesAhorro === 1 ? 'mes' : 'meses' }})
-                                                @endif
-                                            @endif
-                                        </span>
-                                    @endif
+                                    <strong class="tnum">{{ $porAsiento ? 'desde ' : '' }}{{ $precio($precioMostrar) }}</strong>
+                                    <span>USD / mes</span>
                                 </p>
                                 <ul>
                                     <li><i class="bi bi-check2" aria-hidden="true"></i> Agenda, historia clínica y récipes</li>
@@ -306,7 +287,7 @@
                                         <li><i class="bi bi-check2" aria-hidden="true"></i> Histórico de {{ $maxHistorico }} {{ $maxHistorico === 1 ? 'mes' : 'meses' }}</li>
                                     @endif
                                 </ul>
-                                <a href="{{ route('medico.registro') }}" class="btn {{ $ahorro > 0 ? 'btn-primary' : 'btn-outline-primary' }} w-100">{{ $textoCta }}</a>
+                                <a href="{{ route('medico.registro') }}" class="btn btn-outline-primary w-100">{{ $textoCta }}</a>
                             </article>
                         </div>
                     @endforeach
