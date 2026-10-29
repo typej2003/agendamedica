@@ -151,6 +151,67 @@ class SeoPublicoTest extends TestCase
         $this->assertStringContainsString('<link rel="canonical" href="' . e($canonica) . '">', $buscada);
     }
 
+    private function h1(string $html): string
+    {
+        $this->assertSame(1, preg_match('/<h1[^>]*>(.*?)<\/h1>/s', $html, $m));
+
+        return trim(html_entity_decode(strip_tags($m[1])));
+    }
+
+    /** El texto visible de la página, sin cabecera, scripts ni estilos y con los espacios colapsados. */
+    private function textoVisible(string $html): string
+    {
+        $html = preg_replace('#<(script|style|head).*?</>#is', ' ', $html);
+
+        return trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5)));
+    }
+
+    public function test_cada_variante_del_catalogo_tiene_su_h1_y_su_texto(): void
+    {
+        $this->especialidad->update(['description' => 'Atención de prueba para los buscadores.']);
+
+        $general = $this->get('/reservar')->assertOk()->getContent();
+        $variante = $this->get('/reservar?especialidad=' . $this->especialidad->slug)->assertOk()->getContent();
+
+        $this->assertSame('Reserva tu cita', $this->h1($general));
+        $this->assertSame('Reserva tu cita de ' . $this->especialidad->name, $this->h1($variante));
+
+        // La bajada y el encabezado de la lista nombran la especialidad y cuentan los médicos.
+        $texto = $this->textoVisible($variante);
+        $this->assertStringContainsString('Atención de prueba para los buscadores.', $texto);
+        $this->assertStringContainsString('Hay 1 médico de ' . $this->especialidad->name . ' con agenda publicada', $texto);
+        $this->assertStringContainsString('Médicos de ' . $this->especialidad->name, $texto);
+
+        // Y nada de eso está en `/reservar`, que no puede ser copia de la variante.
+        $textoGeneral = $this->textoVisible($general);
+        $this->assertStringNotContainsString('Atención de prueba para los buscadores.', $textoGeneral);
+        $this->assertStringNotContainsString('con agenda publicada: elige al tuyo', $textoGeneral);
+    }
+
+    public function test_dos_especialidades_no_comparten_h1_ni_bajada(): void
+    {
+        $otra = Specialty::create(['name' => 'Otra ' . substr(uniqid(), -6), 'activo' => true, 'description' => 'Descripción de la otra.']);
+        $this->medico->specialties()->attach($otra);
+
+        $a = $this->get('/reservar?especialidad=' . $this->especialidad->slug)->assertOk()->getContent();
+        $b = $this->get('/reservar?especialidad=' . $otra->slug)->assertOk()->getContent();
+
+        $this->assertNotSame($this->h1($a), $this->h1($b));
+        $this->assertNotSame($this->descripcion($a), $this->descripcion($b));
+        $this->assertStringContainsString('Descripción de la otra.', $this->textoVisible($b));
+        $this->assertStringNotContainsString('Descripción de la otra.', $this->textoVisible($a));
+    }
+
+    public function test_la_busqueda_dentro_de_una_especialidad_no_promete_una_cuenta_de_medicos(): void
+    {
+        $html = $this->get('/reservar?especialidad=' . $this->especialidad->slug . '&buscar=Sara')->assertOk()->getContent();
+        $texto = $this->textoVisible($html);
+
+        $this->assertStringContainsString('que coinciden con «Sara»', $texto);
+        $this->assertStringNotContainsString('Hay 1 médico', $texto);
+        $this->assertSame('Reserva tu cita de ' . $this->especialidad->name, $this->h1($html));
+    }
+
     public function test_la_ficha_del_medico_nombra_al_medico_y_su_especialidad(): void
     {
         $html = $this->get('/reservar/' . $this->medico->id)->assertOk()->getContent();
