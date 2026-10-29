@@ -37,6 +37,9 @@ class TablasLegado
         'informe' => 'nrohistoria',
         'referencia' => 'nrohistoria',
         'reposo_paciente' => 'nrohistoria',
+        // Hospitalización y dieta (WEB-5.3b): la dieta llama `histroria` a la historia.
+        'hospitalizacion' => 'nrohistoria',
+        'dieta_paciente' => 'histroria',
         'diagnostico_paciente' => 'nrohistoria',
         'motivo_consulta_paciente' => 'nrohistoria',
         // Ojo con esta: el legado la llama `nrohistoria` y el API la tiene como `historia`, porque el

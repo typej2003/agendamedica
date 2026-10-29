@@ -1,6 +1,18 @@
 @extends('layouts.app')
 
-@section('title', 'Reservar cita · Doctorísimo')
+@php
+    // Con `?especialidad=` el título y la descripción nombran la especialidad (si no, todas las variantes del
+    // catálogo compartirían el mismo título) y la dirección canónica es la de la especialidad sin el texto buscado.
+    $nombreEspecialidad = $especialidad !== '' ? $especialidades->firstWhere('slug', $especialidad)?->name : null;
+@endphp
+@section('title', $nombreEspecialidad ? 'Reservar cita de ' . $nombreEspecialidad . ' · Doctorísimo' : 'Reservar cita · Doctorísimo')
+@section('description', $nombreEspecialidad
+    ? 'Reserva en línea tu cita de ' . $nombreEspecialidad . ': mira los médicos disponibles, sus próximos horarios y confirma con un código en tu teléfono.'
+    : 'Reserva tu cita médica en línea en Doctorísimo: elige especialidad y médico, mira los próximos horarios y confirma con un código en tu teléfono, sin cuenta.')
+@section('canonical', $nombreEspecialidad ? route('reservas.catalogo', ['especialidad' => $especialidad]) : route('reservas.catalogo'))
+@if ($buscar !== '')
+    @section('robots', 'noindex, follow')
+@endif
 
 @push('estilos')
     <link rel="stylesheet" href="{{ asset('css/reservas.css') }}">

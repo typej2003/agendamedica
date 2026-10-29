@@ -13,8 +13,15 @@ use App\Actions\Consulta\GuardarEcoMamario;
 use App\Actions\Consulta\GuardarEcoObstetrico;
 use App\Actions\Consulta\GuardarEcoObstetricoSegundo;
 use App\Actions\Consulta\GuardarEcoObstetricoTercero;
+use App\Actions\Consulta\GuardarConstanciaDeLaConsulta;
+use App\Actions\Consulta\EliminarRecipe;
+use App\Actions\Consulta\GuardarDietaDeLaConsulta;
 use App\Actions\Consulta\GuardarEvaluacionFisica;
+use App\Actions\Consulta\GuardarHospitalizacionDeLaConsulta;
+use App\Actions\Consulta\GuardarInformeDeLaConsulta;
 use App\Actions\Consulta\GuardarRecipe;
+use App\Actions\Consulta\GuardarReferenciaDeLaConsulta;
+use App\Actions\Consulta\GuardarReposoDeLaConsulta;
 use App\Actions\Consulta\GuardarRecipeDeLaPareja;
 use App\Actions\Consulta\QuitarMotivoDeLaConsulta;
 use App\Actions\Pacientes\AgregarAntecedenteAlPaciente;
@@ -32,13 +39,19 @@ use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\FechaDelConsultorio;
 use App\Http\Requests\SyncAppDataRequest;
 use App\Models\Cola;
+use App\Models\ConstanciaObs;
 use App\Models\Consulta;
+use App\Models\DietaPaciente;
 use App\Models\Historia;
+use App\Models\Hospitalizacion;
+use App\Models\Informe;
 use App\Models\Medico;
 use App\Models\MotivoConsulta;
 use App\Models\Recipe;
 use App\Models\RecipeDetalle;
 use App\Models\RecipePareja;
+use App\Models\Referencia;
+use App\Models\ReposoPaciente;
 use App\Models\SyncChange;
 use Carbon\Carbon;
 use DateTime;
@@ -179,6 +192,15 @@ class CreacionesClinicas
         // WEB-5.1b: una por consulta, sin cabecera, y crea o corrige en el lugar comparando por
         // `codemedicina`. Es la misma Action que usa la pestaña de la consulta de la web.
         private GuardarRecipeDeLaPareja $guardarRecipeDeLaPareja,
+        // Documentos de la consulta que el teléfono crea con las mismas Actions de la web: la constancia
+        // (observación y diagnósticos) y el reposo (días, desde y justificación).
+        private GuardarConstanciaDeLaConsulta $guardarConstancia,
+        private GuardarReposoDeLaConsulta $guardarReposo,
+        private GuardarReferenciaDeLaConsulta $guardarReferencia,
+        private GuardarInformeDeLaConsulta $guardarInforme,
+        private GuardarHospitalizacionDeLaConsulta $guardarHospitalizacion,
+        private GuardarDietaDeLaConsulta $guardarDieta,
+        private EliminarRecipe $eliminarRecipe,
     ) {
     }
 
@@ -232,6 +254,14 @@ class CreacionesClinicas
             'ultra_mama' => $this->crearEco($change, $tempId, $rechazar),
             'ultra_abdominal' => $this->crearEco($change, $tempId, $rechazar),
             'ecocadiograma_fetal' => $this->crearEco($change, $tempId, $rechazar),
+            // Documentos de la consulta: constancia y reposo.
+            'constancia_obs' => $this->crearConstancia($change, $tempId, $rechazar),
+            'reposo_paciente' => $this->crearReposo($change, $tempId, $rechazar),
+            'referencia' => $this->crearReferencia($change, $tempId, $rechazar),
+            'informe' => $this->crearInforme($change, $tempId, $rechazar),
+            'hospitalizacion' => $this->crearHospitalizacion($change, $tempId, $rechazar),
+            'dieta_paciente' => $this->crearDieta($change, $tempId, $rechazar),
+            'recipes_ediciones' => $this->aplicarEdicionDeRecipe($change, $tempId, $rechazar),
         };
         if ($respuesta !== null) {
             $creados[] = $respuesta;
@@ -1028,6 +1058,320 @@ class CreacionesClinicas
         return $fecha && $fecha->format('Y-m-d') === $valor ? $valor : null;
     }
 
+    /**
+     * **La constancia de la consulta** (WEB-5.3a): el teléfono manda la observación y el servidor la escribe
+     * con la misma Action de la web. Si la consulta ya tenía la fila del escritorio, la corrige en el lugar;
+     * si no, la crea. La constancia es una por consulta.
+     */
+    private function crearConstancia(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if ($consulta === null) {
+            $rechazar('La consulta de la constancia no existe.');
+
+            return null;
+        }
+
+        $columnas = $this->columnasDelCliente($change, 'constancia_obs');
+        try {
+            $this->guardarConstancia->ejecutar(
+                $consulta,
+                null,
+                $columnas['observacion01'] ?? null,
+                null,
+                'mobile',
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+
+            return null;
+        }
+
+        $fila = ConstanciaObs::where('reg_medico', $consulta->reg_medico)
+            ->where('numhistoria', (int) $consulta->numhistoria)
+            ->where('numconsulta', (int) $consulta->nroconsulta)
+            ->first();
+
+        if ($fila === null) {
+            $rechazar('La constancia necesita su observación.');
+
+            return null;
+        }
+
+        $this->anotar('constancia_obs', $fila->id, $tempId, $fila->reg_medico);
+
+        return $this->respuestaDe('constancia_obs', $tempId, $fila->id);
+    }
+
+    /**
+     * **El reposo de la consulta** (WEB-5.3a): días, fecha de inicio y justificación. Una por consulta; la
+     * Action rechaza el reposo de un día sin justificación y el rechazo llega al teléfono como tal.
+     */
+    private function crearReposo(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if ($consulta === null) {
+            $rechazar('La consulta del reposo no existe.');
+
+            return null;
+        }
+
+        $columnas = $this->columnasDelCliente($change, 'reposo_paciente');
+        try {
+            $this->guardarReposo->ejecutar(
+                $consulta,
+                (int) ($columnas['numdias'] ?? 0),
+                $columnas['fdesde'] ?? '',
+                $columnas['obser_reposo'] ?? null,
+                null,
+                'mobile',
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+
+            return null;
+        }
+
+        $fila = ReposoPaciente::where('reg_medico', $consulta->reg_medico)
+            ->where('nrohistoria', (int) $consulta->numhistoria)
+            ->where('nroconsulta', (int) $consulta->nroconsulta)
+            ->first();
+
+        if ($fila === null) {
+            $rechazar('El reposo no se pudo guardar.');
+
+            return null;
+        }
+
+        $this->anotar('reposo_paciente', $fila->id, $tempId, $fila->reg_medico);
+
+        return $this->respuestaDe('reposo_paciente', $tempId, $fila->id);
+    }
+
+    /**
+     * **La referencia a otro médico** (WEB-5.3a): una por consulta y por médico referido. El médico tiene
+     * que estar en la libreta del que atiende; la Action de la web hace esa validación.
+     */
+    private function crearReferencia(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if ($consulta === null) {
+            $rechazar('La consulta de la referencia no existe.');
+
+            return null;
+        }
+
+        $columnas = $this->columnasDelCliente($change, 'referencia');
+        $cedula = (int) ($change['ceduladoctor'] ?? 0);
+        try {
+            $this->guardarReferencia->ejecutar(
+                $consulta,
+                $this->registrosMedicos,
+                $cedula,
+                $columnas['referencia'] ?? null,
+                null,
+                'mobile',
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+
+            return null;
+        }
+
+        $fila = Referencia::where('nrohistoria', (int) $consulta->numhistoria)
+            ->where('nroconsulta', (int) $consulta->nroconsulta)
+            ->where('ceduladoctor', $cedula)
+            ->first();
+
+        if ($fila === null) {
+            $rechazar('La referencia no se pudo guardar.');
+
+            return null;
+        }
+
+        $this->anotar('referencia', $fila->id, $tempId, $consulta->reg_medico);
+
+        return $this->respuestaDe('referencia', $tempId, $fila->id);
+    }
+
+    /**
+     * **El informe médico de la consulta** (WEB-5.3a): uno por consulta, con el «Para», el texto y la fecha.
+     * El texto es obligatorio; la Action de la web lo valida y lo escribe.
+     */
+    private function crearInforme(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if ($consulta === null) {
+            $rechazar('La consulta del informe no existe.');
+
+            return null;
+        }
+
+        $columnas = $this->columnasDelCliente($change, 'informe');
+        try {
+            $this->guardarInforme->ejecutar(
+                $consulta,
+                $columnas['para'] ?? null,
+                $columnas['descripcion'] ?? null,
+                $columnas['fe_cha'] ?? null,
+                null,
+                'mobile',
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+
+            return null;
+        }
+
+        $fila = Informe::where('nrohistoria', (int) $consulta->numhistoria)
+            ->where('nroconsulta', (int) $consulta->nroconsulta)
+            ->first();
+
+        if ($fila === null) {
+            $rechazar('El informe no se pudo guardar.');
+
+            return null;
+        }
+
+        $this->anotar('informe', $fila->id, $tempId, $consulta->reg_medico);
+
+        return $this->respuestaDe('informe', $tempId, $fila->id);
+    }
+
+    /**
+     * **La orden de hospitalización** (WEB-5.3b): una por consulta, con el lugar, el diagnóstico provisional y
+     * las recomendaciones. La Action de la web exige que haya al menos un texto.
+     */
+    private function crearHospitalizacion(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if ($consulta === null) {
+            $rechazar('La consulta de la hospitalización no existe.');
+
+            return null;
+        }
+
+        $columnas = $this->columnasDelCliente($change, 'hospitalizacion');
+        try {
+            $this->guardarHospitalizacion->ejecutar(
+                $consulta,
+                $columnas['hospital'] ?? null,
+                $columnas['diagprev'] ?? null,
+                $columnas['dieta'] ?? null,
+                null,
+                'mobile',
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+
+            return null;
+        }
+
+        $fila = Hospitalizacion::where('nrohistoria', (int) $consulta->numhistoria)
+            ->where('nroconsulta', (int) $consulta->nroconsulta)
+            ->first();
+
+        if ($fila === null) {
+            $rechazar('La hospitalización no se pudo guardar.');
+
+            return null;
+        }
+
+        $this->anotar('hospitalizacion', $fila->id, $tempId, $consulta->reg_medico);
+
+        return $this->respuestaDe('hospitalizacion', $tempId, $fila->id);
+    }
+
+    /**
+     * **La dieta / recomendaciones** (WEB-5.3b): una por consulta, con el título opcional y el texto
+     * obligatorio. La tabla del legado llama `histroria` a la historia y `consulta` a la consulta.
+     */
+    private function crearDieta(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if ($consulta === null) {
+            $rechazar('La consulta de la dieta no existe.');
+
+            return null;
+        }
+
+        $columnas = $this->columnasDelCliente($change, 'dieta_paciente');
+        try {
+            $this->guardarDieta->ejecutar(
+                $consulta,
+                $columnas['dieta'] ?? null,
+                $columnas['descripcion'] ?? null,
+                null,
+                'mobile',
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+
+            return null;
+        }
+
+        $fila = DietaPaciente::where('histroria', (int) $consulta->numhistoria)
+            ->where('consulta', (int) $consulta->nroconsulta)
+            ->first();
+
+        if ($fila === null) {
+            $rechazar('La dieta no se pudo guardar.');
+
+            return null;
+        }
+
+        $this->anotar('dieta_paciente', $fila->id, $tempId, $consulta->reg_medico);
+
+        return $this->respuestaDe('dieta_paciente', $tempId, $fila->id);
+    }
+
+    /**
+     * **Editar o eliminar un récipe ya subido** (v22): la operación viaja como una creación de
+     * `recipes_ediciones` y acá se aplica con las mismas Actions de la web. `accion = eliminar` borra el
+     * récipe entero; cualquier otra cosa lo corrige con `GuardarRecipe`.
+     */
+    private function aplicarEdicionDeRecipe(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if ($consulta === null) {
+            $rechazar('La consulta del récipe no existe.');
+
+            return null;
+        }
+
+        $numero = (int) ($change['numero'] ?? 0);
+        if ($numero < 1) {
+            $rechazar('El récipe no tiene número.');
+
+            return null;
+        }
+
+        $accion = (string) ($change['accion'] ?? 'editar');
+        try {
+            if ($accion === 'eliminar') {
+                $this->eliminarRecipe->ejecutar($consulta, $numero, null, 'mobile');
+            } else {
+                $items = $change['items'] ?? [];
+                $this->guardarRecipe->ejecutar(
+                    $consulta,
+                    is_array($items) ? $items : [],
+                    null,
+                    $numero,
+                    null,
+                    'mobile',
+                );
+            }
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+
+            return null;
+        }
+
+        $this->anotar('recipes_ediciones', max(1, $numero), $tempId, $consulta->reg_medico);
+
+        return ['table' => 'recipes_ediciones', 'temp_id' => $tempId, 'id' => max(1, $numero)];
+    }
+
     private function yaCreado(string $table, int $tempId): ?int
     {
         return SyncChange::where('table_name', $table)
@@ -1094,6 +1438,10 @@ class CreacionesClinicas
             // escribir ni duplicar. Se busca por el id que anotó el rastro (es el que el teléfono guardó) y
             // no por la clave del legado, igual que en la evaluación física.
             return $this->respuestaEco($table, $tempId, $recordId);
+        }
+        if (in_array($table, ['constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'hospitalizacion', 'dieta_paciente'], true)) {
+            // Documentos de la consulta: el teléfono sólo necesita el id real de la fila.
+            return ['table' => $table, 'temp_id' => $tempId, 'id' => $recordId];
         }
         $detalle = RecipeDetalle::find($recordId);
         if (!$detalle) {

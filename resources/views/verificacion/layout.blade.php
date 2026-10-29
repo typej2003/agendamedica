@@ -7,6 +7,9 @@
     <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="referrer" content="no-referrer">
     <title>@yield('titulo') · Doctorisimo.app</title>
+    @hasSection('descripcion')
+    <meta name="description" content="@yield('descripcion')">
+    @endif
     @include('layouts._favicon')
     {{-- Sólo lo propio: los tokens y la tipografía de `gineco.css` y la hoja de esta página. Sin scripts ni CDN. --}}
     <link rel="stylesheet" href="{{ asset('css/gineco.css') }}">

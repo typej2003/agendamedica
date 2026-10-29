@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', 'Crear cuenta de paciente · Doctorísimo')
+@section('description', 'Crea tu cuenta de paciente en Doctorísimo para ver, cancelar y reprogramar tus citas médicas. Confirmas tu teléfono con un código.')
+@section('robots', 'noindex, follow')
 
 @push('estilos')
     <link rel="stylesheet" href="{{ asset('css/paciente.css') }}">

@@ -36,6 +36,8 @@ use App\Models\Evolucion;
 use App\Models\ExamenFisico;
 use App\Models\FormatoPrint;
 use App\Models\Historia;
+use App\Models\DietaPaciente;
+use App\Models\Hospitalizacion;
 use App\Models\Informe;
 use App\Models\Medico;
 use App\Models\MedicalCenter;
@@ -456,6 +458,8 @@ class SyncAppDataController extends Controller
             'referencia' => ['consulta' => $porConsulta(Referencia::class, 'referencia'), 'columna' => 'id'],
             'informe' => ['consulta' => $porConsulta(Informe::class, 'informe', fn ($q) => $q
                 ->whereRaw("TRIM(COALESCE(descripcion, '')) NOT IN ('', '.')")), 'columna' => 'id'],
+            'hospitalizacion' => ['consulta' => $porConsulta(Hospitalizacion::class, 'hospitalizacion'), 'columna' => 'id'],
+            'dieta_paciente' => ['consulta' => $porConsulta(DietaPaciente::class, 'dieta_paciente'), 'columna' => 'id'],
             'diagnostico_paciente' => ['consulta' => $porConsulta(DiagnosticoPaciente::class, 'diagnostico_paciente'), 'columna' => 'id'],
             // **Los antecedentes del paciente** (A4b de PLAN-MOVIL.md). Son del paciente y no de la
             // consulta: se llavean por `numhistoria` + `codeantecedente` y no tienen columna de consulta,
@@ -671,6 +675,8 @@ class SyncAppDataController extends Controller
             'referencia' => Referencia::whereIn('reg_medico', $registrosMedicos)->where($de('referencia'), $numHistoria)->get(),
             'informe' => Informe::whereIn('reg_medico', $registrosMedicos)->where($de('informe'), $numHistoria)
                 ->whereRaw("TRIM(COALESCE(descripcion, '')) NOT IN ('', '.')")->get(),
+            'hospitalizacion' => Hospitalizacion::whereIn('reg_medico', $registrosMedicos)->where($de('hospitalizacion'), $numHistoria)->get(),
+            'dieta_paciente' => DietaPaciente::whereIn('reg_medico', $registrosMedicos)->where($de('dieta_paciente'), $numHistoria)->get(),
             'diagnostico_paciente' => DiagnosticoPaciente::whereIn('reg_medico', $registrosMedicos)
                 ->where($de('diagnostico_paciente'), $numHistoria)->get(),
             // La evaluación física de la consulta (A4a de PLAN-MOVIL.md). Se sumó acá porque este pedido
@@ -978,6 +984,14 @@ class SyncAppDataController extends Controller
             // Y la del **récipe de la pareja** (ola §9 de PLAN-MOVIL.md): una por consulta, sin cabecera,
             // crea o corrige en el lugar. Es la misma Action de la pestaña de la web (WEB-5.1b).
             app(\App\Actions\Consulta\GuardarRecipeDeLaPareja::class),
+            // Documentos de la consulta (constancia y reposo): las Actions de la web.
+            app(\App\Actions\Consulta\GuardarConstanciaDeLaConsulta::class),
+            app(\App\Actions\Consulta\GuardarReposoDeLaConsulta::class),
+            app(\App\Actions\Consulta\GuardarReferenciaDeLaConsulta::class),
+            app(\App\Actions\Consulta\GuardarInformeDeLaConsulta::class),
+            app(\App\Actions\Consulta\GuardarHospitalizacionDeLaConsulta::class),
+            app(\App\Actions\Consulta\GuardarDietaDeLaConsulta::class),
+            app(\App\Actions\Consulta\EliminarRecipe::class),
         );
         $creadosAntes = count($creados);
 
@@ -1578,6 +1592,13 @@ class SyncAppDataController extends Controller
             'ultra_mama' => UltraMama::class,
             'ultra_abdominal' => UltraAbdominal::class,
             'ecocadiograma_fetal' => EcoCardiogramaFetal::class,
+            // Documentos de la consulta: si el teléfono corrige una fila ya subida, se aplica por columna.
+            'constancia_obs' => ConstanciaObs::class,
+            'reposo_paciente' => ReposoPaciente::class,
+            'referencia' => Referencia::class,
+            'informe' => Informe::class,
+            'hospitalizacion' => Hospitalizacion::class,
+            'dieta_paciente' => DietaPaciente::class,
         ][$table];
     }
 
