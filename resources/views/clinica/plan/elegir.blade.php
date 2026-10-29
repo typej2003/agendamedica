@@ -22,8 +22,33 @@
                         <dd class="col-6 text-end">{{ $vm->frecuencia() }}</dd>
 
                         <dt class="col-6 fw-normal text-muted">Precio</dt>
-                        <dd class="col-6 text-end fw-semibold">{{ $vm->precioUsdTexto() }}</dd>
+                        <dd class="col-6 text-end fw-semibold">
+                            {{ $vm->precioUsdTexto() }}
+                            <small class="text-muted fw-normal">{{ $vm->esAnual() ? 'por año' : 'por mes' }}</small>
+                        </dd>
+
+                        @if ($vm->esAnual() && $vm->ahorroE2 > 0)
+                            <dt class="col-6 fw-normal text-muted">Ahorro</dt>
+                            <dd class="col-6 text-end text-success fw-semibold">{{ $vm->ahorroTexto() }}</dd>
+                        @endif
                     </dl>
+
+                    @if ($vm->desglose())
+                        <p class="small text-muted mt-2 mb-0">{{ $vm->desglose() }}</p>
+                    @endif
+
+                    <ul class="list-unstyled small mt-3 mb-0">
+                        <li>
+                            <i class="bi bi-people text-success" aria-hidden="true"></i>
+                            {{ $vm->plan->restricciones->maxMedicos() === null ? 'Médicos sin límite' : $vm->plan->restricciones->maxMedicos() . ' médico' . ($vm->plan->restricciones->maxMedicos() === 1 ? '' : 's') }}
+                            y
+                            {{ $vm->plan->restricciones->maxSecretarias() === null ? 'secretarías sin límite' : $vm->plan->restricciones->maxSecretarias() . ' secretaría' . ($vm->plan->restricciones->maxSecretarias() === 1 ? '' : 's') }}
+                        </li>
+                        <li>
+                            <i class="bi {{ $vm->plan->caracteristicas->impresionReportes() ? 'bi-printer text-success' : 'bi-printer text-muted' }}" aria-hidden="true"></i>
+                            {{ $vm->plan->caracteristicas->impresionReportes() ? 'Impresión de reportes y PDF incluida' : 'Sin impresión de reportes' }}
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -38,10 +63,42 @@
                         </div>
                     @endif
 
+                    @if ($vm->ofreceMensual() && $vm->ofreceAnual())
+                        <div class="mb-3">
+                            <div class="small text-muted mb-1">Frecuencia</div>
+                            <div class="btn-group w-100" role="group" aria-label="Frecuencia de pago">
+                                <a href="{{ $vm->urlMensual() }}"
+                                   class="btn {{ $vm->esAnual() ? 'btn-outline-primary' : 'btn-primary' }}">
+                                    Mensual<br><small>{{ $vm->precioMensualUsdTexto() }} por mes</small>
+                                </a>
+                                <a href="{{ $vm->urlAnual() }}"
+                                   class="btn {{ $vm->esAnual() ? 'btn-primary' : 'btn-outline-primary' }}">
+                                    Anual<br><small>{{ $vm->precioAnualUsdTexto() }} por año</small>
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if ($vm->ofreceAnual() && $vm->ahorroE2 > 0)
+                        <div class="alert alert-success py-2 small" role="status">
+                            <i class="bi bi-piggy-bank me-1" aria-hidden="true"></i>
+                            @if ($vm->esAnual())
+                                Tienes 12 meses de servicio: ahorras {{ $vm->ahorroTexto() }}
+                            @else
+                                Si pagas el año, ahorras {{ $vm->ahorroTexto() }}
+                            @endif
+                            @if ($vm->mesesDeAhorro() > 0)
+                                ({{ $vm->mesesDeAhorro() }} {{ $vm->mesesDeAhorro() === 1 ? 'mes' : 'meses' }})
+                            @endif
+                            .
+                        </div>
+                    @endif
+
                     @if ($vm->metodos->isNotEmpty())
                         <form method="POST" action="{{ route('clinica.plan.comprar') }}">
                             @csrf
                             <input type="hidden" name="plan_id" value="{{ $vm->plan->id }}">
+                            <input type="hidden" name="frecuencia" value="{{ $vm->frecuenciaElegida }}">
 
                             @foreach ($vm->metodos as $metodo)
                                 <div class="form-check card mb-2">

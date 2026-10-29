@@ -109,7 +109,10 @@ class ServicioPlanesTest extends TestCase
         $this->assertNull($r->maxHistoricoMeses()); // no estaba guardada: sin límite
 
         $this->assertNull(RestriccionesPlan::desde(null)->maxMedicos());
-        $this->assertSame(['max_medicos' => null, 'max_historico_meses' => null], RestriccionesPlan::desde('')->toArray());
+        $this->assertSame(
+            ['max_medicos' => null, 'max_secretarias' => null, 'max_historico_meses' => null],
+            RestriccionesPlan::desde('')->toArray()
+        );
     }
 
     public function test_una_fila_vieja_sin_la_restriccion_nueva_sigue_funcionando(): void
@@ -186,7 +189,50 @@ class ServicioPlanesTest extends TestCase
 
         $this->assertSame(2, $s->fresh()->restricciones->maxMedicos());
         $this->assertSame(6, $s->fresh()->restricciones->maxHistoricoMeses());
-        $this->assertSame(['max_medicos' => 2, 'max_historico_meses' => 6], $this->servicio()->estado($reg)['restricciones']);
+        $this->assertSame(
+            ['max_medicos' => 2, 'max_secretarias' => null, 'max_historico_meses' => 6],
+            $this->servicio()->estado($reg)['restricciones']
+        );
+    }
+
+    public function test_el_servicio_copia_las_caracteristicas_y_las_usa_para_imprimir(): void
+    {
+        $plan = Plan::create([
+            'codigo' => 'sin-impresion-t', 'nombre' => 'Sin impresión', 'frecuencia' => 'mensual', 'precio_usd' => 10,
+            'caracteristicas' => ['impresion_reportes' => false],
+        ]);
+        $reg = 'srv-carac-' . substr(uniqid(), -6);
+        $s = $this->servicio()->renovar($reg, $plan);
+        $plan->update(['caracteristicas' => ['impresion_reportes' => true]]); // editar el plan no cambia lo contratado
+
+        $this->assertFalse($s->fresh()->caracteristicas->impresionReportes());
+        $this->assertFalse($this->servicio()->estado($reg)['permite_imprimir']);
+        $this->assertFalse($this->servicio()->estado($reg)['caracteristicas']['impresion_reportes']);
+    }
+
+    public function test_los_planes_de_ejemplo_quedaron_sembrados_con_sus_limites(): void
+    {
+        $uno = Plan::porCodigo('equipo-1');
+        $dos = Plan::porCodigo('equipo-2');
+        $tres = Plan::porCodigo('equipo-3');
+        $asiento = Plan::porCodigo('equipo-por-asiento');
+
+        $this->assertSame(20.0, (float) $uno->precio_usd);
+        $this->assertSame(1, $uno->restricciones->maxMedicos());
+        $this->assertSame(1, $uno->restricciones->maxSecretarias());
+        $this->assertSame(2, $dos->restricciones->maxMedicos());
+        $this->assertSame(3, $tres->restricciones->maxMedicos());
+
+        $this->assertNull($asiento->restricciones->maxMedicos());
+        $this->assertSame(12.0, $asiento->caracteristicas->precioAsientoUsd());
+        $this->assertSame(1, $asiento->caracteristicas->secretariasIncluidas());
+        $this->assertSame(4, $asiento->caracteristicas->minimoAsientos());
+        $this->assertSame(4800, app(\App\Services\CupoDelPlan::class)->precioDesdeUsdE2($asiento));
+
+        // La prueba gratuita alcanza para 1 médico y 1 secretaría.
+        $prueba = Plan::porDefecto();
+        $this->assertSame(1, $prueba->restricciones->maxMedicos());
+        $this->assertSame(1, $prueba->restricciones->maxSecretarias());
     }
 
     /* ------------------------------ estados ------------------------------ */

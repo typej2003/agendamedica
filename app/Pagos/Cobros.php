@@ -12,8 +12,10 @@ use App\Models\PagoEvento;
 use App\Models\Plan;
 use App\Models\TasaDeCambio;
 use App\Models\User;
+use App\Services\CupoDelPlan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Throwable;
 
@@ -29,14 +31,28 @@ use Throwable;
  */
 final class Cobros
 {
+    public function __construct(private readonly CupoDelPlan $cupos)
+    {
+    }
+
     /**
      * Crea la intención de pago de un plan. No cobra: deja el pago en `pendiente`, con la tasa y el monto
      * en VES congelados, para que el médico pague con el método elegido.
      *
-     * @throws RuntimeException si falta la tasa, el método no está activo o el plan no tiene precio
+     * `$frecuencia` elige mensual (1 mes) o anual (12 meses, con el precio anual del plan). El pago guarda
+     * `meses` para que la aprobación cree el período correcto.
+     *
+     * @throws RuntimeException si falta la tasa, el método no está activo, el plan no tiene precio, no
+     *                          cubre al equipo actual (salvo que sea la renovación del mismo plan) o no
+     *                          ofrece la frecuencia elegida
      */
-    public function crearParaPlan(string $regMedico, Plan $plan, MetodoPago $metodo, ?int $usuarioId = null): Pago
-    {
+    public function crearParaPlan(
+        string $regMedico,
+        Plan $plan,
+        MetodoPago $metodo,
+        ?int $usuarioId = null,
+        string $frecuencia = Plan::MENSUAL
+    ): Pago {
         $regMedico = trim($regMedico);
         if ($regMedico === '') {
             throw new RuntimeException('Falta el consultorio del médico.');
@@ -45,7 +61,22 @@ final class Cobros
             throw new RuntimeException('El método de pago elegido no está disponible.');
         }
 
-        $montoUsdE2 = Centavos::deDecimal((string) $plan->precio_usd);
+        $frecuencia = $frecuencia === Plan::ANUAL ? Plan::ANUAL : Plan::MENSUAL;
+        if ($frecuencia === Plan::ANUAL && ! $plan->ofreceAnual()) {
+            throw new RuntimeException('Este plan no tiene precio anual.');
+        }
+        if ($frecuencia === Plan::MENSUAL && ! $plan->ofreceMensual()) {
+            throw new RuntimeException('Este plan no tiene precio mensual.');
+        }
+
+        try {
+            $this->cupos->exigirQueCubra($plan, $regMedico);
+        } catch (ValidationException $e) {
+            throw new RuntimeException($e->errors()['plan'][0] ?? $e->getMessage());
+        }
+
+        $conteo = $this->cupos->conteo($regMedico);
+        $montoUsdE2 = $this->cupos->precioUsdE2($plan, $conteo, $frecuencia);
         if ($montoUsdE2 <= 0) {
             throw new RuntimeException('Este plan es gratuito: no hay nada que cobrar.');
         }
@@ -83,7 +114,9 @@ final class Cobros
             'canal' => Pago::CANAL_PLAN,
             'pagable_tipo' => Pago::PAGABLE_PLAN,
             'pagable_id' => $plan->id,
-            'concepto' => 'Plan ' . $plan->nombre . ' · ' . ($plan->frecuencia === Plan::ANUAL ? 'anual' : 'mensual'),
+            'concepto' => 'Plan ' . $plan->nombre . ' · ' . ($frecuencia === Plan::ANUAL ? 'anual' : 'mensual')
+                . ($plan->cobraPorAsiento() ? ' · ' . $this->cupos->asientos($plan, $conteo) . ' asientos' : ''),
+            'meses' => $plan->meses($frecuencia),
             'metodo_pago_id' => $metodo->id,
             'cuenta_bancaria_id' => $metodo->cuenta_bancaria_id,
             'moneda' => $moneda,

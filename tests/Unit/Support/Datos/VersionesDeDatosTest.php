@@ -33,18 +33,34 @@ class VersionesDeDatosTest extends TestCase
         $registro = new VersionesDeDatos();
 
         $this->assertSame([
-            1 => [
-                'catalogos:sembrar-iniciales',
-                'catalogos:cargar-a-medicos',
-            ],
-        ], $registro->todas());
+            'catalogos:sembrar-iniciales',
+            'catalogos:cargar-a-medicos',
+        ], $registro->todas()[1]);
 
         $this->assertSame([
-            1 => [
-                'catalogos:sembrar-iniciales',
-                'catalogos:cargar-a-medicos',
-            ],
-        ], $registro->pendientes(0));
+            'catalogos:sembrar-iniciales',
+            'catalogos:cargar-a-medicos',
+        ], $registro->pendientes(0)[1]);
+    }
+
+    public function test_la_version_2_siembra_medicina_interna_y_no_la_saltea_el_dedupe(): void
+    {
+        $registro = new VersionesDeDatos();
+
+        // La línea con `--reemplazar` no es la de la versión 1: el dedupe no la descarta.
+        $this->assertSame([
+            'especialidades:sembrar',
+            'catalogos:sembrar-iniciales --reemplazar=medicina-interna',
+        ], $registro->pendientes(0)[2]);
+        $this->assertSame([
+            'especialidades:sembrar',
+            'catalogos:sembrar-iniciales --reemplazar=medicina-interna',
+        ], $registro->pendientes(1)[2]);
+    }
+
+    public function test_la_version_3_siembra_solo_los_motivos_de_cita(): void
+    {
+        $this->assertSame([3 => ['catalogos:sembrar-iniciales --solo=motivos-cita']], (new VersionesDeDatos())->pendientes(2));
     }
 
     public function test_solo_devuelve_las_versiones_mayores_que_la_actual_y_en_orden(): void

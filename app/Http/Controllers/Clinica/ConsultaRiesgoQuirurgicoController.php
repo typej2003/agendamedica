@@ -52,10 +52,13 @@ class ConsultaRiesgoQuirurgicoController extends Controller
             'web',
         );
 
+        // En medicina interna (MI-5, 2026-10-28) el riesgo operatorio es una pestaña de su evaluación pre-operatoria: se vuelve ahí.
+        $internista = \App\Clinica\Consulta\AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug)->esMedicinaInterna();
+
         $destino = redirect()->route('clinica.consulta', [
             $consulta->id,
-            'seccion' => ConsultaShellVista::SECCION_QUIRURGICO,
-            'pestana' => QuirurgicoVista::RIESGO,
+            'seccion' => $internista ? \App\Clinica\Consulta\Interna\MapaDelInternista::SECCION_PREOPERATORIA : ConsultaShellVista::SECCION_QUIRURGICO,
+            'pestana' => $internista ? \App\Clinica\Consulta\Interna\MapaDelInternista::PESTANA_RIESGO : QuirurgicoVista::RIESGO,
         ]);
 
         if ($resultado['marcadas'] === 0 && $resultado['columnas'] === 0) {

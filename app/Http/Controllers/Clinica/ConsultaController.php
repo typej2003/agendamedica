@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Pacientes\SembrarTiposDeAntecedente;
+use App\Clinica\Agenda\ArmadorDeAgenda;
+use App\Clinica\Agenda\MotivosDeCita;
+use App\Clinica\Agenda\ParametrosDeAgenda;
 use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\CitaDeLaConsulta;
@@ -43,6 +46,7 @@ use App\Clinica\Consulta\PlantillasDelTexto;
 use App\Clinica\Consulta\MapaDelEstudio;
 use App\Clinica\Consulta\RecipeDeLaPareja;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
+use App\Clinica\Consulta\Vistas\ProximaCitaVista;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\Vistas\ConstanciaVista;
@@ -130,6 +134,7 @@ use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
 use App\Models\Medico;
+use App\Models\Office;
 use App\Models\PrenaExamenB;
 use App\Models\PreNatalDesarrolloFino;
 use Carbon\Carbon;
@@ -173,6 +178,8 @@ class ConsultaController extends Controller
         private ProximaCitaDelRecipe $proximaCita,
         private VerificacionesDeLaConsulta $verificaciones,
         private MedicoQueFirma $firma,
+        private ArmadorDeAgenda $armador,
+        private MotivosDeCita $motivosDeCita,
     ) {
     }
 
@@ -246,6 +253,16 @@ class ConsultaController extends Controller
                 'solicitud' => PestanasDeSolicitudes::IMAGENES,
                 'alcance' => $request->query('alcance'),
             ]));
+        }
+
+        // **Medicina interna** (MI-2, 2026-10-28): su evaluación física es otra pantalla (el escritorio guarda el laboratorio en las
+        // columnas que en ginecología son las circunferencias). Un enlace a la de ginecología lleva a la suya.
+        if ($this->alcance()->esMedicinaInterna()
+            && (string) $request->query('seccion', '') === ConsultaShellVista::SECCION_EVALUACION) {
+            return redirect()->route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => \App\Clinica\Consulta\Interna\MapaDelInternista::SECCION_FISICO,
+            ]);
         }
 
         // El día de la consulta, ya interpretado una sola vez: es lo que muestra el encabezado y lo que
@@ -403,6 +420,94 @@ class ConsultaController extends Controller
         return route('clinica.consulta.examen.escanear', [$consulta->id, $solapa]);
     }
 
+    /**
+     * **Una sección del internista** (MI-2 a MI-5): sus pestañas, los valores de la pestaña abierta, la hoja para imprimir (EKG,
+     * análisis evolutivo y evaluación pre-operatoria) y, en el análisis evolutivo, la evolución de la historia. El riesgo
+     * operatorio reusa el de cirugía pediátrica (`riesgo`, `riesgo_paciente`, `riesgo_paciente_opera`).
+     */
+    private function seccionDelInternista(string $seccion, Consulta $consulta): \App\Clinica\Consulta\Vistas\InternistaVista
+    {
+        $mapa = \App\Clinica\Consulta\Interna\MapaDelInternista::class;
+        $datos = new \App\Clinica\Consulta\Interna\DatosDelInternista();
+        $riesgoLectura = new RiesgoQuirurgico();
+
+        $pestana = $mapa::pestana($seccion, (string) request()->query('pestana', ''));
+        $url = fn (?string $clave = null) => route('clinica.consulta', array_filter([
+            $consulta->id,
+            'seccion' => $seccion,
+            'pestana' => $clave,
+        ]));
+
+        $pestanas = [];
+        foreach ($mapa::PESTANAS[$seccion] ?? [] as $clave => $texto) {
+            $pestanas[] = [
+                'clave' => $clave,
+                'texto' => $texto,
+                'url' => $url($clave),
+                'activa' => $clave === $pestana,
+                'cargada' => $clave === $mapa::PESTANA_RIESGO
+                    ? $riesgoLectura->marcados($consulta)->isNotEmpty()
+                    : $datos->tieneDatos($consulta, $clave),
+            ];
+        }
+
+        $documento = match (true) {
+            $seccion === $mapa::SECCION_PLAN && $pestana === 'ekg' => \App\Clinica\Impresion\DocumentoImpreso::EKG,
+            $seccion === $mapa::SECCION_ANALISIS => \App\Clinica\Impresion\DocumentoImpreso::ANALISIS_EVOLUTIVO,
+            $seccion === $mapa::SECCION_PREOPERATORIA => \App\Clinica\Impresion\DocumentoImpreso::EVALUACION_PREOPERATORIA,
+            default => null,
+        };
+
+        $riesgo = null;
+        if ($pestana === $mapa::PESTANA_RIESGO) {
+            $marcadas = $riesgoLectura->descripcionesMarcadas($consulta);
+            $resumen = $riesgoLectura->de($consulta);
+            $grupos = [];
+
+            foreach ($riesgoLectura->catalogo()->groupBy('sub_tipo') as $subTipo => $factores) {
+                $grupos[] = [
+                    'titulo' => $subTipo !== null && $subTipo !== '' ? (string) $subTipo : 'Factores',
+                    'factores' => $factores->map(fn ($factor) => [
+                        'descripcion' => (string) $factor->descripcion,
+                        'puntos' => (int) $factor->puntos,
+                        'marcado' => in_array((string) $factor->descripcion, $marcadas, true),
+                    ])->all(),
+                ];
+            }
+
+            $camposRiesgo = [];
+            foreach (RiesgoQuirurgico::camposDelResumen() as $clave => $campo) {
+                $camposRiesgo[] = [
+                    'clave' => $clave,
+                    'etiqueta' => $campo['etiqueta'],
+                    'clase' => $campo['clase'],
+                    'valor' => (string) old($clave, $resumen[$clave] ?? ''),
+                ];
+            }
+
+            $riesgo = new RiesgoQuirurgicoVista(
+                $grupos,
+                $camposRiesgo,
+                $riesgoLectura->puntos($consulta),
+                route('clinica.consulta.riesgo.guardar', $consulta->id),
+                $url($pestana),
+            );
+        }
+
+        return new \App\Clinica\Consulta\Vistas\InternistaVista(
+            $seccion,
+            $pestana,
+            $pestanas,
+            $seccion === $mapa::SECCION_ANALISIS ? [] : $datos->valores($consulta, $pestana),
+            route('clinica.consulta.internista.guardar', $consulta->id),
+            $url($pestana),
+            (array) old(),
+            $documento === null ? null : route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => $documento]),
+            $seccion === $mapa::SECCION_ANALISIS ? $datos->evolucion($consulta)->all() : [],
+            $riesgo,
+        );
+    }
+
     private function alcance(): AlcanceDeLaEspecialidad
     {
         return AlcanceDeLaEspecialidad::de(request()->attributes->get('contexto_clinico')['specialty']?->slug);
@@ -507,6 +612,11 @@ class ConsultaController extends Controller
         EcoAbdominal $ecoAbdominal,
         DoctoresDelMedico $doctores,
     ): ?object {
+        // **Las secciones del internista** (MI-2 a MI-5, 2026-10-28): las arma `seccionDelInternista`.
+        if ($this->alcance()->esMedicinaInterna() && \App\Clinica\Consulta\Interna\MapaDelInternista::esSeccion($seccion)) {
+            return $this->seccionDelInternista($seccion, $consulta);
+        }
+
         $numero = (int) $consulta->numhistoria;
         $nroconsulta = (int) $consulta->nroconsulta;
 
@@ -1518,7 +1628,9 @@ class ConsultaController extends Controller
                 // documento, no la de la consulta que se está editando. Se puede cambiar (un reposo que empieza
                 // mañana) y una fecha guardada manda.
                 FechaDelConsultorio::hoy()->toDateString(),
-                ['guardar' => route('clinica.consulta.reposo.guardar', $id), 'eliminar' => route('clinica.consulta.reposo.eliminar', $id), 'imprimir' => $imprimir('reposo')],
+                ['guardar' => route('clinica.consulta.reposo.guardar', $id), 'eliminar' => route('clinica.consulta.reposo.eliminar', $id), 'imprimir' => $imprimir('reposo')]
+                    // El reposo absoluto: la casilla «absoluto» de la pestaña Reposos del escritorio de medicina interna (MI-6).
+                    + ($this->alcance()->esMedicinaInterna() ? ['imprimir_absoluto' => $imprimir(\App\Clinica\Impresion\DocumentoImpreso::REPOSO_ABSOLUTO)] : []),
                 $old,
             );
         } elseif ($activa === PestanasDeSolicitudes::REFERENCIAS) {
@@ -1872,6 +1984,7 @@ class ConsultaController extends Controller
                 // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                 (array) old(),
             ))->conImpresion($this->impresion($consulta, $pacienteId, $medico))
+                ->conAgendar($this->agendaDeLaProximaCita($consulta, $pacienteId, $medico))
                 ->conVerificaciones($this->estadoDeLasVerificaciones($consulta));
         }
 
@@ -1904,6 +2017,7 @@ class ConsultaController extends Controller
             (array) old(),
             $pestanas,
         ))->conImpresion($this->impresion($consulta, $pacienteId, $medico))
+            ->conAgendar($this->agendaDeLaProximaCita($consulta, $pacienteId, $medico))
             ->conVerificaciones($this->estadoDeLasVerificaciones($consulta));
     }
 
@@ -1949,6 +2063,51 @@ class ConsultaController extends Controller
             'imprimir' => fn (int $numero) => route('clinica.consulta.recipes.imprimir', [$id, $numero]),
             'imprimirPareja' => route('clinica.consulta.recipe-pareja.imprimir', $id),
         ];
+    }
+
+    /**
+     * **El formulario mínimo para agendar la próxima cita desde la consulta** (2026-10-28): las sedes vigentes del
+     * médico, el catálogo de motivos de la sede elegida y la fecha mínima. Es lo que la franja de la próxima cita
+     * ofrece para no salir a la agenda entera.
+     *
+     * No agrega ninguna regla: el formulario postea a `clinica.agenda.crear` (el alta de siempre) y el servidor
+     * hace lo mismo que con «Hacer cita» —la cita pendiente se pregunta, la jornada y el número los decide
+     * `AgendamientoDeCitas`, `volver_consulta` trae de vuelta a esta sección—.
+     *
+     * La sede es la del contexto (o la única del médico); la consulta **no tiene sede** (`consultas` no guarda
+     * `medical_center_id`), así que cuando atiende en varias se elige y se muestra el `<select>`.
+     */
+    private function agendaDeLaProximaCita(Consulta $consulta, int $pacienteId, Medico $medico): ProximaCitaVista
+    {
+        $regMedico = (string) $consulta->reg_medico;
+        $sedes = $this->armador->sedes($regMedico, $medico->id !== null ? (int) $medico->id : null);
+
+        // La misma regla con la que abre el formulario de la cita (O-03b): la del contexto y, sin ella, la única.
+        $contexto = (array) request()->attributes->get('contexto_clinico', []);
+        $pedida = ParametrosDeAgenda::sedeDelFormulario(request(), $contexto);
+        $elegida = $sedes->firstWhere('id', $pedida) ?? ($sedes->count() === 1 ? $sedes->first() : null);
+        $porHora = fn (Office $sede) => $sede->modalidad === Office::MODALIDAD_HORA;
+
+        return new ProximaCitaVista(
+            sedes: $sedes->map(fn (Office $sede) => [
+                'valor' => (string) $sede->id,
+                'texto' => (string) ($sede->medicalCenter?->nombre ?? ('Consultorio ' . $sede->office_number)),
+            ])->values()->all(),
+            motivos: $this->motivosDeCita->de($regMedico, $elegida)
+                ->map(fn ($motivo) => [
+                    'valor' => (string) $motivo->codigo,
+                    'texto' => (string) ($motivo->tipo_atencion !== null && $motivo->tipo_atencion !== '' ? $motivo->tipo_atencion : $motivo->codigo),
+                ])->values()->all(),
+            sedeElegida: $elegida !== null ? (string) $elegida->id : null,
+            pideHora: $sedes->contains($porHora),
+            horaObligatoria: $elegida !== null && $porHora($elegida),
+            url: route('clinica.agenda.crear'),
+            pacienteId: $pacienteId,
+            consultaId: (int) $consulta->id,
+            // La hoja imprime la próxima cita de **mañana en adelante** (`ProximaCitaDelRecipe`): agendar hoy o antes
+            // dejaría la hoja sin la línea, así que el formulario no lo ofrece y el request lo rechaza.
+            fechaMinima: FechaDelConsultorio::hoy()->addDay()->toDateString(),
+        );
     }
 
     /**

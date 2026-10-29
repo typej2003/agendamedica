@@ -853,7 +853,7 @@ class SyncAppDataController extends Controller
             // Estado del servicio contratado, para que el app muestre el vencimiento y avise antes de que
             // venza (y no intente sincronizar cuando ya venció).
             'servicio' => collect($estadoServicio)->only(
-                ['estado', 'plan', 'vence_el', 'dias_restantes', 'gracia_hasta', 'restricciones']
+                ['estado', 'plan', 'vence_el', 'dias_restantes', 'gracia_hasta', 'restricciones', 'caracteristicas', 'permite_imprimir']
             )->all(),
             'eliminados' => $eliminados,
             // Mapeo id temporal del cliente → id real, para que pueda soltar su fila provisional.

@@ -83,6 +83,9 @@ final class HistoriaDelPaciente
 
         $motivos = $this->motivosPorConsulta($regMedico, $numero);
         $diagnosticos = $this->diagnosticosPorConsulta($regMedico, $numero);
+        // Las conclusiones del EKG (medicina interna, `d_ekg_reporte`): la hoja del internista las imprime por consulta.
+        $ekg = DB::table('ekg')->where('reg_medico', $regMedico)->where('numhistoria', $numero)->whereNotNull('conclusiones')
+            ->orderBy('id')->pluck('conclusiones', 'numconsulta');
 
         return DB::table('consultas')
             ->where('reg_medico', $regMedico)
@@ -106,11 +109,12 @@ final class HistoriaDelPaciente
                 'cuello',
                 'otros',
             ])
-            ->map(function ($consulta) use ($motivos, $diagnosticos) {
+            ->map(function ($consulta) use ($motivos, $diagnosticos, $ekg) {
                 $nroconsulta = (int) $consulta->nroconsulta;
 
                 $consulta->motivos = $motivos[$nroconsulta] ?? [];
                 $consulta->diagnosticos = $diagnosticos[$nroconsulta] ?? [];
+                $consulta->ekg = $ekg[$nroconsulta] ?? null;
 
                 return $consulta;
             });

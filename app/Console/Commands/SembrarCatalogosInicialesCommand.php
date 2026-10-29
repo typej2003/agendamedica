@@ -11,14 +11,15 @@ use Illuminate\Console\Command;
  * `database/catalogos-iniciales/<especialidad>/` y marca a qué especialidades aplica cada fila. La regla vive en `SembrarCatalogosIniciales`.
  *
  * Es idempotente (sólo agrega lo que falta), pero **se corre a mano, no en cada despliegue**: una fila que el administrador quitó vuelve a aparecer si se siembra
- * otra vez. `--simular` informa qué haría sin escribir nada. `--reemplazar=pediatria` deja el catálogo inicial de esa especialidad igual a su carpeta (ver la Action). Necesita las especialidades sembradas antes (`php artisan especialidades:sembrar`).
+ * otra vez. `--simular` informa qué haría sin escribir nada. `--reemplazar=pediatria` deja el catálogo inicial de esa especialidad igual a su carpeta y `--solo=motivos-cita` siembra sólo ese catálogo (ver la Action). La carpeta `general` trae lo que recibe cualquier especialidad. Necesita las especialidades sembradas antes (`php artisan especialidades:sembrar`).
  */
 class SembrarCatalogosInicialesCommand extends Command
 {
     protected $signature = 'catalogos:sembrar-iniciales
         {--simular : informa qué agregaría, sin escribir nada}
         {--carpeta= : otra carpeta de archivos (por defecto database/catalogos-iniciales)}
-        {--reemplazar=* : especialidad (slug) cuyo catálogo inicial pasa a ser exactamente el de su carpeta: se le quita lo que su archivo ya no trae}';
+        {--reemplazar=* : especialidad (slug) cuyo catálogo inicial pasa a ser exactamente el de su carpeta: se le quita lo que su archivo ya no trae}
+        {--solo=* : catálogo a sembrar (motivos-cita, diagnosticos…), con los que referencia; sin la opción, todos}';
 
     protected $description = 'Carga el catálogo inicial de cada especialidad desde los archivos del escritorio (sólo agrega lo que falta)';
 
@@ -27,7 +28,7 @@ class SembrarCatalogosInicialesCommand extends Command
         $simular = (bool) $this->option('simular');
         $carpeta = $this->option('carpeta') ?: database_path('catalogos-iniciales');
 
-        $informe = $sembrar->ejecutar($carpeta, $simular, array_values(array_filter((array) $this->option('reemplazar'))));
+        $informe = $sembrar->ejecutar($carpeta, $simular, array_values(array_filter((array) $this->option('reemplazar'))), array_values(array_filter((array) $this->option('solo'))));
 
         $this->line(($simular ? '<comment>Simulación</comment> — ' : '') . 'Especialidades: <info>' . implode(', ', array_keys($informe['especialidades'])) . '</info>');
         foreach ($informe['sin_especialidad'] as $slug) {

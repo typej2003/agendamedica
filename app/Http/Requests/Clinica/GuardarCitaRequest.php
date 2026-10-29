@@ -26,6 +26,16 @@ class GuardarCitaRequest extends FormRequest
         return AlcanceDeLaEspecialidad::de($this->attributes->get('contexto_clinico')['specialty']?->slug ?? null)->esPediatria();
     }
 
+    /**
+     * ¿El POST viene del formulario mínimo de la próxima cita de un récipe? Es lo único que agrega la regla
+     * «mañana en adelante»: el formulario completo de la agenda —también el que se abre con «Hacer cita»— sigue
+     * pudiendo agendar para hoy, que es como se atiende a alguien que llega sin cita.
+     */
+    private function vieneDeLaProximaCitaDelRecipe(): bool
+    {
+        return $this->input('origen') === 'proxima-cita';
+    }
+
     /** @return array<string,array<int,mixed>> */
     public function rules(): array
     {
@@ -33,7 +43,14 @@ class GuardarCitaRequest extends FormRequest
 
         return [
             'sede'            => ['nullable', 'integer'],
-            'fecha'           => ['required', 'date_format:Y-m-d'],
+            // El formulario mínimo de la próxima cita (2026-10-28) manda `origen=proxima-cita`: desde ahí la cita es
+            // de **mañana en adelante**, porque la hoja del récipe imprime la próxima cita con `fecha > hoy`
+            // (`ProximaCitaDelRecipe`) y agendar hoy dejaría la hoja sin esa línea.
+            'fecha'           => array_merge(
+                ['required', 'date_format:Y-m-d'],
+                $this->vieneDeLaProximaCitaDelRecipe() ? ['after:' . FechaDelConsultorio::hoyComoTexto()] : [],
+            ),
+            'origen'          => ['nullable', 'string', 'max:30'],
             'hora'            => ['nullable', 'regex:/^\d{1,2}:\d{2}(:\d{2})?$/'],
             'bloque'          => ['nullable', 'integer', 'min:0'],
             'motivo'          => ['nullable', 'string', 'max:50'],
@@ -80,6 +97,7 @@ class GuardarCitaRequest extends FormRequest
             'sede.integer'                  => 'La sede elegida no es válida.',
             'fecha.required'                => 'Elige el día de la cita.',
             'fecha.date_format'             => 'El día de la cita no tiene un formato válido.',
+            'fecha.after'                   => 'La próxima cita del récipe es a partir de mañana: elige un día posterior a hoy.',
             'hora.regex'                    => 'La hora no tiene un formato válido: escríbela con AM/PM (por ejemplo, 9:30 AM).',
             'bloque.integer'                => 'El bloque de horario elegido no es válido.',
             'bloque.min'                    => 'El bloque de horario elegido no es válido.',

@@ -12,10 +12,17 @@
             <strong>Tu servicio</strong>
         </div>
         <div class="card-body">
+            <p class="mb-2 text-muted">{{ $vm->uso() }}</p>
+
             @if ($vm->tieneServicio())
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                     <span class="fs-5 fw-semibold">{{ $vm->planActual() }}</span>
                     <span class="badge bg-{{ $vm->estadoTono() }}">{{ $vm->estadoLegible() }}</span>
+                    @if ($vm->estado['permite_imprimir'] ?? false)
+                        <span class="badge bg-success">Impresión incluida</span>
+                    @else
+                        <span class="badge bg-secondary">Sin impresión</span>
+                    @endif
                 </div>
                 @if ($vm->venceEl())
                     <p class="mb-1">
@@ -31,11 +38,11 @@
                 @endif
                 @if ($vm->estado['estado'] === 'gracia')
                     <p class="text-warning-emphasis small mb-0">
-                        Estás en los días de gracia: todavía sincroniza, pero el servicio ya figura vencido.
+                        Estás en los días de gracia: todavía sincroniza e imprime, pero el servicio ya figura vencido.
                     </p>
                 @elseif ($vm->estado['estado'] === 'vencido')
                     <p class="text-danger small mb-0">
-                        El servicio venció: la sincronización está suspendida hasta que renueves.
+                        El servicio venció: la sincronización y la impresión están suspendidas hasta que renueves.
                     </p>
                 @endif
             @else
@@ -51,9 +58,20 @@
     @endif
 
     <div class="card">
-        <div class="card-header bg-white py-3">
-            <strong>Renovar o cambiar de plan</strong>
-            <span class="text-muted small ms-2">Si todavía no venció, el período nuevo empieza donde termina el actual.</span>
+        <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <strong>Renovar o cambiar de plan</strong>
+                <span class="text-muted small ms-2">Si todavía no venció, el período nuevo empieza donde termina el actual.</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="small text-muted">Ver precios:</span>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Frecuencia de pago">
+                    <a href="{{ $vm->urlFrecuencia('anual') }}"
+                       class="btn {{ $vm->esAnual() ? 'btn-primary' : 'btn-outline-primary' }}">Anual</a>
+                    <a href="{{ $vm->urlFrecuencia('mensual') }}"
+                       class="btn {{ $vm->esAnual() ? 'btn-outline-primary' : 'btn-primary' }}">Mensual</a>
+                </div>
+            </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -61,32 +79,76 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Plan</th>
-                            <th>Frecuencia</th>
-                            <th class="text-end">Precio</th>
-                            <th class="text-end">Pagar</th>
+                            <th>Incluye</th>
+                            <th class="text-end">Precio para tu equipo</th>
+                            <th class="text-end">Contratar</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($vm->planes as $plan)
                             <tr>
                                 <td>
-                                    <div class="fw-semibold">{{ $plan->nombre }}</div>
+                                    <div class="fw-semibold">
+                                        {{ $plan->nombre }}
+                                        @if ($vm->esElPlanActual($plan))
+                                            <span class="badge bg-primary ms-1">Tu plan actual</span>
+                                        @endif
+                                    </div>
                                     @if ($plan->descripcion)
                                         <small class="text-muted">{{ $plan->descripcion }}</small>
                                     @endif
-                                    @if ($plan->precio_tachado_usd && (float) $plan->precio_tachado_usd > (float) $plan->precio_usd)
+                                    @if ($vm->periodoDeLaFila($plan) === 'mes'
+                                        && ! $vm->esPorAsiento($plan)
+                                        && $plan->precio_tachado_usd
+                                        && (float) $plan->precio_tachado_usd > (float) $plan->precio_usd)
                                         <div class="small">
                                             <del class="text-muted">{{ $vm->precioTachadoUsdTexto($plan) }}</del>
                                             <span class="text-success ms-1">ahorras {{ $vm->ahorroTexto($plan) }}</span>
                                         </div>
                                     @endif
                                 </td>
-                                <td>{{ $plan->frecuencia === \App\Models\Plan::ANUAL ? 'Anual (12 meses)' : 'Mensual' }}</td>
-                                <td class="text-end fw-semibold">{{ $vm->precioUsdTexto($plan) }}</td>
+                                <td>
+                                    <ul class="list-unstyled small mb-0">
+                                        @foreach ($vm->incluye($plan) as $item)
+                                            <li><i class="bi bi-check2 text-success" aria-hidden="true"></i> {{ $item }}</li>
+                                        @endforeach
+                                    </ul>
+                                </td>
                                 <td class="text-end">
-                                    <a href="{{ route('clinica.plan.elegir', $plan) }}" class="btn btn-primary btn-sm text-nowrap">
-                                        <i class="bi bi-credit-card me-1" aria-hidden="true"></i> Pagar
-                                    </a>
+                                    @if (! $plan->ofreceMensual() && ! $plan->ofreceAnual())
+                                        <span class="fw-semibold">Gratis</span>
+                                    @else
+                                        <div class="fw-semibold">
+                                            {{ $vm->precioDeLaFila($plan) }}
+                                            <small class="text-muted fw-normal">/{{ $vm->periodoDeLaFila($plan) }}</small>
+                                        </div>
+                                        @if ($vm->ahorroDeLaFila($plan))
+                                            <small class="text-success d-block">
+                                                Ahorras {{ $vm->ahorroDeLaFila($plan) }}
+                                                @if ($vm->mesesDeAhorroDeLaFila($plan) > 0)
+                                                    ({{ $vm->mesesDeAhorroDeLaFila($plan) }} {{ $vm->mesesDeAhorroDeLaFila($plan) === 1 ? 'mes' : 'meses' }})
+                                                @endif
+                                            </small>
+                                        @endif
+                                        @if ($vm->detalleDeLaFila($plan))
+                                            <small class="text-muted d-block">{{ $vm->detalleDeLaFila($plan) }}</small>
+                                        @endif
+                                    @endif
+                                </td>
+                                <td class="text-end">
+                                    @if ($vm->puedeContratar($plan))
+                                        <a href="{{ $vm->urlComoPagar($plan) }}" class="btn btn-primary btn-sm text-nowrap">
+                                            <i class="bi bi-credit-card me-1" aria-hidden="true"></i>
+                                            {{ $plan->ofreceMensual() && $plan->ofreceAnual() ? 'Cómo pagar' : ($vm->esElPlanActual($plan) ? 'Renovar' : 'Pagar') }}
+                                        </a>
+                                    @else
+                                        <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap" disabled
+                                                title="{{ $vm->motivoNoContratable($plan) }}">
+                                            <i class="bi bi-lock me-1" aria-hidden="true"></i> No cabe tu equipo
+                                        </button>
+                                        <small class="text-muted d-block mt-1">{{ $vm->motivoNoContratable($plan) }}</small>
+                                        <a class="small" href="{{ route('clinica.equipo') }}">Ver el equipo</a>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

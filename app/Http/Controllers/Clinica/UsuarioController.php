@@ -6,8 +6,10 @@ use App\Clinica\Usuarios\Vistas\UsuariosVista;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\CupoDelPlan;
 use App\Services\CuentaService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * **Usuarios del consultorio** (WEB-8.5): el médico gestiona a su secretaria desde `/clinica/usuarios`, sin pasar por el panel
@@ -23,14 +25,17 @@ class UsuarioController extends Controller
 {
     use ResuelveLosRegistrosDelMedico;
 
-    public function __construct(private CuentaService $cuentas)
+    public function __construct(private CuentaService $cuentas, private CupoDelPlan $cupos)
     {
     }
 
     public function index(Request $request)
     {
-        $medico = $request->attributes->get('contexto_clinico')['medico'];
+        $contexto = $request->attributes->get('contexto_clinico');
+        $medico = $contexto['medico'];
         $registros = $this->registrosDelMedico($medico);
+        $regMedico = (string) $contexto['reg_medico'];
+        $puedeAgregar = $this->cupos->puedeAgregarSecretaria($regMedico);
 
         return view('clinica.usuarios.index', ['vm' => new UsuariosVista(
             $this->cuentas->secretariasDe($registros),
@@ -39,6 +44,9 @@ class UsuarioController extends Controller
             trim(($medico->prefix ? $medico->prefix . ' ' : '') . $medico->name . ' ' . $medico->lastname),
             $this->urls(),
             $request->boolean('nueva'),
+            $puedeAgregar,
+            $puedeAgregar ? null : $this->motivoDeCupo($regMedico),
+            $puedeAgregar ? null : route('clinica.plan'),
         )]);
     }
 
@@ -119,6 +127,18 @@ class UsuarioController extends Controller
         abort_unless($cuenta && $this->cuentas->esSecretariaDe($cuenta, $this->registros($request)), 404);
 
         return $cuenta;
+    }
+
+    /** El mensaje de “mejora el plan” para la pantalla, sin lanzar la excepción. */
+    private function motivoDeCupo(string $regMedico): ?string
+    {
+        try {
+            $this->cupos->exigirCupoSecretaria($regMedico);
+
+            return null;
+        } catch (ValidationException $e) {
+            return $e->errors()['secretaria'][0] ?? $e->getMessage();
+        }
     }
 
     /** Vuelve a la lista con la clave temporal en la sesión flash: se pinta una vez y se pierde al recargar. */

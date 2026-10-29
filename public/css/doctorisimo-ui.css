@@ -3070,6 +3070,31 @@ body.auth-pagina {
 
 .recipe-proxima-cita-texto { display: flex; align-items: center; gap: .5rem; min-width: 0; }
 
+/* Agendar la próxima cita en el lugar (2026-10-28): el `<details>` de la franja, sin JavaScript. El resumen se ve
+   como un botón y el formulario abre debajo, a todo el ancho de la franja. */
+.recipe-proxima-cita-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+
+.recipe-agendar { position: relative; }
+
+.recipe-agendar > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+/* Sin el triángulo del navegador: el botón ya dice lo que hace. */
+.recipe-agendar > summary::-webkit-details-marker { display: none; }
+.recipe-agendar > summary::marker { content: ''; }
+
+.recipe-agendar[open] {
+    flex-basis: 100%;
+}
+
+.recipe-agendar-form {
+    margin-top: .75rem;
+    padding-top: .75rem;
+    border-top: 1px solid var(--ds-borde);
+}
+
 /* Solicitudes de la consulta (WEB-5.3a): el texto base de la constancia y las fechas calculadas del reposo. */
 .solicitud-texto-base {
     margin: 0 0 1rem;
@@ -4044,3 +4069,9 @@ body.panel .main-content { padding: 1rem 1.25rem 1.25rem; }
 
 /* Un campo cuyo rótulo repite el título del grupo (2026-10-23): el rótulo queda sólo para lectores de pantalla. */
 .campo.etiqueta-oculta > .form-label { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; padding: 0; margin: -1px; }
+
+/* El análisis evolutivo del internista (MI-4): una línea por valor, dibujada en un SVG del tamaño de la celda. */
+.grafica-evolucion { width: 160px; height: 44px; display: block; }
+.grafica-evolucion polyline { fill: none; stroke: var(--ds-info); stroke-width: 2; }
+.grafica-evolucion circle { fill: var(--ds-info); }
+.tabla-evolucion th[scope="row"] { white-space: nowrap; }

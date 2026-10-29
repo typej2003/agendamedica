@@ -245,25 +245,26 @@
                 <div class="row g-4 justify-content-center">
                     @foreach ($planes as $plan)
                         @php
-                            $ahorro = $plan->ahorroUsd();
+                            $porAsiento = $plan->cobraPorAsiento();
                             $maxMedicos = $plan->restricciones->maxMedicos();
+                            $maxSecretarias = $plan->restricciones->maxSecretarias();
                             $maxHistorico = $plan->restricciones->maxHistoricoMeses();
+                            // En la portada se muestra un solo precio mensual: el anual dividido 12 (sin redondear
+                            // hacia arriba, para no prometer un centavo de más). Es sólo visual: se cobra el anual.
+                            $precioMes = $plan->ofreceAnual()
+                                ? intdiv((int) ($preciosAnualesDesdeE2[$plan->id] ?? 0), 12)
+                                : (int) ($preciosDesdeE2[$plan->id] ?? 0);
+                            $precioMostrar = \App\Pagos\Centavos::aDecimal($precioMes);
                         @endphp
                         <div class="col-md-6 col-lg-4">
-                            <article class="portada-plan {{ $ahorro > 0 ? 'portada-plan-destacado' : '' }}">
-                                @if ($ahorro > 0)
-                                    <span class="portada-plan-sello">Ahorras {{ $precio($ahorro) }}</span>
-                                @endif
+                            <article class="portada-plan">
                                 <h3>{{ $plan->nombre }}</h3>
                                 @if ($plan->descripcion)
                                     <p class="portada-plan-descripcion">{{ $plan->descripcion }}</p>
                                 @endif
                                 <p class="portada-plan-precio">
-                                    @if ($ahorro > 0)
-                                        <del>{{ $precio($plan->precio_tachado_usd) }}</del>
-                                    @endif
-                                    <strong class="tnum">{{ $precio($plan->precio_usd) }}</strong>
-                                    <span>USD / {{ $plan->frecuencia === \App\Models\Plan::ANUAL ? 'año' : 'mes' }}</span>
+                                    <strong class="tnum">{{ $porAsiento ? 'desde ' : '' }}{{ $precio($precioMostrar) }}</strong>
+                                    <span>USD / mes</span>
                                 </p>
                                 <ul>
                                     <li><i class="bi bi-check2" aria-hidden="true"></i> Agenda, historia clínica y récipes</li>
@@ -271,11 +272,22 @@
                                     <li><i class="bi bi-check2" aria-hidden="true"></i>
                                         {{ $maxMedicos ? 'Hasta ' . $maxMedicos . ' ' . ($maxMedicos === 1 ? 'médico' : 'médicos') : 'Médicos sin límite' }}
                                     </li>
+                                    <li><i class="bi bi-check2" aria-hidden="true"></i>
+                                        {{ $maxSecretarias === null ? 'Secretarías sin límite' : 'Hasta ' . $maxSecretarias . ' ' . ($maxSecretarias === 1 ? 'secretaría' : 'secretarías') }}
+                                    </li>
+                                    @if ($plan->caracteristicas->impresionReportes())
+                                        <li><i class="bi bi-check2" aria-hidden="true"></i> Impresión de reportes y PDF</li>
+                                    @endif
+                                    @if ($porAsiento)
+                                        <li><i class="bi bi-check2" aria-hidden="true"></i>
+                                            {{ $precio($plan->caracteristicas->precioAsientoUsd()) }} por médico o secretaría; 1 secretaría incluida
+                                        </li>
+                                    @endif
                                     @if ($maxHistorico)
                                         <li><i class="bi bi-check2" aria-hidden="true"></i> Histórico de {{ $maxHistorico }} {{ $maxHistorico === 1 ? 'mes' : 'meses' }}</li>
                                     @endif
                                 </ul>
-                                <a href="{{ route('medico.registro') }}" class="btn {{ $ahorro > 0 ? 'btn-primary' : 'btn-outline-primary' }} w-100">{{ $textoCta }}</a>
+                                <a href="{{ route('medico.registro') }}" class="btn btn-outline-primary w-100">{{ $textoCta }}</a>
                             </article>
                         </div>
                     @endforeach

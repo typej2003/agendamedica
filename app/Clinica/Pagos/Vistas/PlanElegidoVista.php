@@ -19,11 +19,18 @@ final class PlanElegidoVista
 {
     /**
      * @param  Collection<int,MetodoPago>  $metodos
+     * @param  int  $precioE2  el precio ya calculado para el equipo actual, en centavos de USD
      */
     public function __construct(
         public readonly Plan $plan,
         public readonly Collection $metodos,
         public readonly ?TasaDeCambio $tasa,
+        public readonly int $precioE2 = 0,
+        public readonly ?string $desglose = null,
+        public readonly string $frecuenciaElegida = Plan::MENSUAL,
+        public readonly ?int $precioMensualE2 = null,
+        public readonly ?int $precioAnualE2 = null,
+        public readonly int $ahorroE2 = 0,
     ) {
     }
 
@@ -40,6 +47,68 @@ final class PlanElegidoVista
     public function precioUsdTexto(): string
     {
         return Centavos::formatear($this->precioUsdE2(), 'USD');
+    }
+
+    /** “4 asientos × USD 12,00 · 1 secretaría incluida”, o null si el plan es de precio fijo. */
+    public function desglose(): ?string
+    {
+        return $this->desglose;
+    }
+
+    public function esAnual(): bool
+    {
+        return $this->frecuenciaElegida === Plan::ANUAL;
+    }
+
+    public function frecuencia(): string
+    {
+        return $this->esAnual() ? 'Anual (12 meses)' : 'Mensual';
+    }
+
+    public function ofreceMensual(): bool
+    {
+        return $this->plan->ofreceMensual();
+    }
+
+    public function ofreceAnual(): bool
+    {
+        return $this->plan->ofreceAnual();
+    }
+
+    public function precioMensualUsdTexto(): string
+    {
+        $centavos = $this->precioMensualE2 ?? $this->precioUsdE2();
+
+        return Centavos::formatear($centavos, 'USD');
+    }
+
+    public function precioAnualUsdTexto(): string
+    {
+        $centavos = $this->precioAnualE2 ?? 0;
+
+        return Centavos::formatear($centavos, 'USD');
+    }
+
+    public function ahorroTexto(): string
+    {
+        return Centavos::formatear($this->ahorroE2, 'USD');
+    }
+
+    public function mesesDeAhorro(): int
+    {
+        $mensual = (int) ($this->precioMensualE2 ?? 0);
+
+        return $mensual > 0 ? max(0, (int) round($this->ahorroE2 / $mensual)) : 0;
+    }
+
+    public function urlMensual(): string
+    {
+        return route('clinica.plan.elegir', [$this->plan, 'frecuencia' => Plan::MENSUAL]);
+    }
+
+    public function urlAnual(): string
+    {
+        return route('clinica.plan.elegir', [$this->plan, 'frecuencia' => Plan::ANUAL]);
     }
 
     /** El monto que se cobra con ese método, en su moneda; `null` si falta la tasa o la moneda no se maneja. */
@@ -98,13 +167,10 @@ final class PlanElegidoVista
         return $this->metodos->isNotEmpty() && $this->aviso() === null;
     }
 
-    public function frecuencia(): string
-    {
-        return $this->plan->frecuencia === Plan::ANUAL ? 'Anual (12 meses)' : 'Mensual';
-    }
-
     private function precioUsdE2(): int
     {
-        return Centavos::deDecimal((string) $this->plan->precio_usd);
+        return $this->precioE2 > 0
+            ? $this->precioE2
+            : Centavos::deDecimal((string) $this->plan->precio_usd);
     }
 }

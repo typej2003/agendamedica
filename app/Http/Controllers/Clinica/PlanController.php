@@ -15,6 +15,7 @@ use App\Pagos\CatalogoDePasarelas;
 use App\Pagos\Cobros;
 use App\Pagos\RefrescarPagoDePlan;
 use App\Pagos\UltimoPagoDelDoctor;
+use App\Services\CupoDelPlan;
 use App\Services\ServicioService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -37,7 +38,7 @@ use RuntimeException;
  */
 class PlanController extends Controller
 {
-    public function index(Request $request, ServicioService $servicios)
+    public function index(Request $request, ServicioService $servicios, CupoDelPlan $cupos)
     {
         $regMedico = $this->regMedicoDelContexto($request);
 
@@ -47,18 +48,57 @@ class PlanController extends Controller
             ->orderBy('id')
             ->get();
 
+        $frecuencia = (string) $request->query('frecuencia', Plan::ANUAL);
+        if (! in_array($frecuencia, [Plan::MENSUAL, Plan::ANUAL], true)) {
+            $frecuencia = Plan::ANUAL;
+        }
+
+        $conteo = $cupos->conteo($regMedico);
+        $precios = [];
+        $preciosAnuales = [];
+        $ahorrosAnuales = [];
+        $detalles = [];
+        $detallesAnuales = [];
+        $motivos = [];
+
+        foreach ($planes as $plan) {
+            $precios[$plan->id] = $cupos->precioUsdE2($plan, $conteo, Plan::MENSUAL);
+            $preciosAnuales[$plan->id] = $cupos->precioUsdE2($plan, $conteo, Plan::ANUAL);
+            $ahorrosAnuales[$plan->id] = $plan->ofreceMensual() ? $cupos->ahorroAnualUsdE2($plan, $conteo) : 0;
+            $detalles[$plan->id] = $cupos->desglose($plan, $conteo, Plan::MENSUAL);
+            $detallesAnuales[$plan->id] = $cupos->desglose($plan, $conteo, Plan::ANUAL);
+            $motivos[$plan->id] = $cupos->motivoNoCabe($plan, $regMedico);
+        }
+
         return view('clinica.plan.index', [
-            'vm' => new PlanVista($regMedico, $servicios->estado($regMedico), $planes),
+            'vm' => new PlanVista(
+                $regMedico,
+                $servicios->estado($regMedico),
+                $planes,
+                $conteo,
+                $precios,
+                $detalles,
+                $motivos,
+                $preciosAnuales,
+                $ahorrosAnuales,
+                $detallesAnuales,
+                $frecuencia,
+            ),
         ]);
     }
 
     /** La pantalla del plan elegido: método de pago y monto en su moneda. */
-    public function elegir(Request $request, Plan $plan)
+    public function elegir(Request $request, Plan $plan, CupoDelPlan $cupos)
     {
-        $this->regMedicoDelContexto($request);
+        $regMedico = $this->regMedicoDelContexto($request);
 
         // Sólo se puede pagar un plan del catálogo vigente.
         $plan = Plan::where('activo', true)->where('visible', true)->findOrFail($plan->id);
+
+        $motivo = $cupos->motivoNoCabe($plan, $regMedico);
+        if ($motivo !== null) {
+            return redirect()->route('clinica.plan')->with('error', $motivo);
+        }
 
         $metodos = MetodoPago::deLaPlataforma()
             ->activos()
@@ -71,8 +111,35 @@ class PlanController extends Controller
                 && $metodo->estaConfigurado())
             ->values();
 
+        $conteo = $cupos->conteo($regMedico);
+
+        // Al elegir un plan, el médico arranca en anual si el plan lo ofrece; puede cambiar a mensual.
+        $frecuencia = (string) $request->query('frecuencia', '');
+        if (! in_array($frecuencia, [Plan::MENSUAL, Plan::ANUAL], true)) {
+            $frecuencia = $plan->ofreceAnual() ? Plan::ANUAL : Plan::MENSUAL;
+        }
+        if ($frecuencia === Plan::ANUAL && ! $plan->ofreceAnual()) {
+            $frecuencia = Plan::MENSUAL;
+        }
+        if ($frecuencia === Plan::MENSUAL && ! $plan->ofreceMensual()) {
+            $frecuencia = Plan::ANUAL;
+        }
+
+        $precioMensualE2 = $cupos->precioUsdE2($plan, $conteo, Plan::MENSUAL);
+        $precioAnualE2 = $cupos->precioUsdE2($plan, $conteo, Plan::ANUAL);
+
         return view('clinica.plan.elegir', [
-            'vm' => new PlanElegidoVista($plan, $metodos, TasaDeCambio::actual()),
+            'vm' => new PlanElegidoVista(
+                $plan,
+                $metodos,
+                TasaDeCambio::actual(),
+                $cupos->precioUsdE2($plan, $conteo, $frecuencia),
+                $cupos->desglose($plan, $conteo, $frecuencia),
+                $frecuencia,
+                $precioMensualE2,
+                $precioAnualE2,
+                $cupos->ahorroAnualUsdE2($plan, $conteo),
+            ),
         ]);
     }
 
@@ -84,7 +151,10 @@ class PlanController extends Controller
         $datos = $request->validate([
             'plan_id' => ['required', 'integer'],
             'metodo_pago_id' => ['required', 'integer'],
-        ], [], ['plan_id' => 'plan', 'metodo_pago_id' => 'método de pago']);
+            'frecuencia' => ['nullable', Rule::in([Plan::MENSUAL, Plan::ANUAL])],
+        ], [
+            'frecuencia.in' => 'Elige pagar por mes o por año.',
+        ], ['plan_id' => 'plan', 'metodo_pago_id' => 'método de pago', 'frecuencia' => 'frecuencia']);
 
         $plan = Plan::where('activo', true)->where('visible', true)->find($datos['plan_id']);
         if (! $plan) {
@@ -100,8 +170,10 @@ class PlanController extends Controller
             return back()->with('error', 'Ese método de pago no está disponible.');
         }
 
+        $frecuencia = (string) ($datos['frecuencia'] ?? ($plan->ofreceAnual() ? Plan::ANUAL : Plan::MENSUAL));
+
         try {
-            $pago = $cobros->crearParaPlan($regMedico, $plan, $metodo, $request->user()->id);
+            $pago = $cobros->crearParaPlan($regMedico, $plan, $metodo, $request->user()->id, $frecuencia);
         } catch (RuntimeException $e) {
             return back()->with('error', $e->getMessage());
         }

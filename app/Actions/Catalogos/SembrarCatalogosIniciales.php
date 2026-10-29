@@ -18,8 +18,13 @@ use InvalidArgumentException;
  *    queda una sola fila con las dos marcas.
  *  - **General**: lo que aparece en `UMBRAL_GENERAL` especialidades o más queda sin marca (lo recibe cualquier médico). Con las cinco bases del escritorio, «en todas»
  *    no daba casi nada: medido el 2026-10-21, ningún medicamento con su presentación estaba en las cinco.
- *  - **Sólo agrega**: una fila que ya existe no se edita. Si ya tiene marcas se le suman las que falten; si es general (sin marcas) queda general. Las filas nuevas
+ *  - **La carpeta `general`** (`CARPETA_GENERAL`, 2026-10-29: «Primera vez» y «Consulta» como motivos de cita de todas las especialidades) no es una especialidad:
+ *    lo que trae queda **general** siempre, y si la fila ya existía con marcas, se le quitan (pasa a general). Es la única excepción a «sólo agrega».
+ *  - **Sólo agrega**: una fila que ya existe no se edita. Si ya tiene marcas se le suman las que falten —también cuando llega al umbral de general: hasta el
+ *    2026-10-29 se quedaba con las marcas viejas y la especialidad nueva no la recibía—; si es general (sin marcas) queda general. Las filas nuevas
  *    reciben el siguiente código inicial. Correrla dos veces no cambia nada.
+ *  - **Sólo algunos catálogos** (`$solo`): siembra ésos y los que referencian (el tipo de un examen, el medicamento de un tratamiento), para que una versión de datos
+ *    no vuelva a crear lo que el administrador quitó de los demás.
  *  - El tipo de un examen viene con el código **de la base de origen** y se traduce al código inicial de la fila que quedó con esa identidad.
  *  - **La línea de un tratamiento no usa ningún código del escritorio** (2026-10-26): trae el nombre y la presentación de su medicamento —el texto que el
  *    escritorio copia al récipe— y se vincula a la fila inicial con **exactamente esa identidad**. El preparador (`preparar-catalogos-iniciales.py`) agrega al
@@ -35,6 +40,9 @@ final class SembrarCatalogosIniciales
 {
     public const UMBRAL_GENERAL = 3;
 
+    /** La carpeta de lo general: lo que trae lo recibe el médico de cualquier especialidad. */
+    public const CARPETA_GENERAL = 'general';
+
     /** Las dependencias primero: el examen apunta a su tipo y la línea de un tratamiento a su medicamento. */
     private const ORDEN = ['tipos-examen', 'medicamentos', 'diagnosticos', 'motivos-consulta', 'motivos-cita', 'plantillas-texto', 'dietas', 'antecedentes', 'examenes', 'tratamientos'];
 
@@ -49,10 +57,18 @@ final class SembrarCatalogosIniciales
 
     /**
      * @param  array<int,string>  $reemplazar  especialidades (slug) cuyo catálogo inicial pasa a ser exactamente el de su carpeta (ver arriba)
+     * @param  array<int,string>  $solo  catálogos a sembrar (con los que referencian); vacío = todos
      * @return array{especialidades: array<string,int>, sin_especialidad: array<int,string>, catalogos: array<string,array{nuevas:int, generales:int, marcas:int, lineas:int}>, retiradas: array<string,array<string,array{quitadas:int, desmarcadas:int, conservadas:int}>>, omitidas: array<int,string>}
      */
-    public function ejecutar(string $carpeta, bool $simular = false, array $reemplazar = []): array
+    public function ejecutar(string $carpeta, bool $simular = false, array $reemplazar = [], array $solo = []): array
     {
+        foreach ($solo as $catalogo) {
+            if (! in_array($catalogo, self::ORDEN, true)) {
+                throw new InvalidArgumentException('«' . $catalogo . '» no es un catálogo que se siembre (' . implode(', ', self::ORDEN) . ').');
+            }
+        }
+        $catalogos = $solo === [] ? self::ORDEN : $this->conSusReferencias($solo);
+
         if (! is_dir($carpeta)) {
             throw new InvalidArgumentException('No existe la carpeta ' . $carpeta . '.');
         }
@@ -62,6 +78,9 @@ final class SembrarCatalogosIniciales
 
         foreach (glob(rtrim($carpeta, '/\\') . '/*', GLOB_ONLYDIR) as $dir) {
             $slug = basename($dir);
+            if ($slug === self::CARPETA_GENERAL) {
+                continue;
+            }
             $id = DB::table('specialties')->where('slug', $slug)->value('id');
             if ($id === null) {
                 $informe['sin_especialidad'][] = $slug;
@@ -85,7 +104,7 @@ final class SembrarCatalogosIniciales
             }
             $this->mapa = $this->identidades = [];
 
-            foreach (self::ORDEN as $catalogo) {
+            foreach ($catalogos as $catalogo) {
                 $informe['catalogos'][$catalogo] = $this->sembrar($catalogo, $carpeta, $informe['especialidades'], $informe['omitidas']);
             }
             $simular ? DB::rollBack() : DB::commit();
@@ -131,8 +150,22 @@ final class SembrarCatalogosIniciales
             }
         }
 
+        // Lo de la carpeta general: general siempre (ver «La carpeta `general`» arriba).
+        foreach ($this->leer($carpeta, self::CARPETA_GENERAL, $catalogo) as $fila) {
+            $fila = $this->normalizarFila($def, $catalogo, $fila);
+            if ($fila === null) {
+                continue;
+            }
+            $clave = $this->identidadDeOrigen($def, self::CARPETA_GENERAL, $fila);
+            $this->identidades[$catalogo][self::CARPETA_GENERAL][(string) ($fila['codigo_origen'] ?? '')] = $clave;
+            $grupos[$clave]['fila'] ??= [self::CARPETA_GENERAL, $fila];
+            $grupos[$clave]['forzada'] = true;
+        }
+
         foreach ($grupos as $clave => $grupo) {
-            $general = count($grupo['especialidades']) >= self::UMBRAL_GENERAL;
+            $grupo['especialidades'] ??= [];
+            $forzada = $grupo['forzada'] ?? false;
+            $general = $forzada || count($grupo['especialidades']) >= self::UMBRAL_GENERAL;
             $existente = $existentes[$clave] ?? null;
 
             if ($existente === null) {
@@ -159,8 +192,13 @@ final class SembrarCatalogosIniciales
                 if ($catalogo === 'tratamientos') {
                     $cuenta['lineas'] += $this->lineas($slug, $fila, $codigo, $omitidas);
                 }
-            } elseif (! $general && EspecialidadesDelCatalogoInicial::de($catalogo, [(int) $existente->id]) !== []) {
-                $cuenta['marcas'] += EspecialidadesDelCatalogoInicial::agregar($catalogo, (int) $existente->id, array_values($grupo['especialidades']));
+            } elseif (EspecialidadesDelCatalogoInicial::de($catalogo, [(int) $existente->id]) !== []) {
+                if ($forzada) {
+                    EspecialidadesDelCatalogoInicial::asignar($catalogo, (int) $existente->id, []);
+                    $cuenta['generales']++;
+                } else {
+                    $cuenta['marcas'] += EspecialidadesDelCatalogoInicial::agregar($catalogo, (int) $existente->id, array_values($grupo['especialidades']));
+                }
             }
         }
 
@@ -238,6 +276,32 @@ final class SembrarCatalogosIniciales
         }
 
         return $cuenta;
+    }
+
+    /**
+     * Los catálogos pedidos y los que referencian (el tipo de un examen, el medicamento de la línea de un tratamiento), en el orden de siembra.
+     *
+     * @param  array<int,string>  $solo
+     * @return array<int,string>
+     */
+    private function conSusReferencias(array $solo): array
+    {
+        $pendientes = $solo;
+        $todos = [];
+
+        while ($pendientes !== []) {
+            $catalogo = array_shift($pendientes);
+            if (isset($todos[$catalogo])) {
+                continue;
+            }
+            $todos[$catalogo] = true;
+            $def = CatalogosIniciales::de($catalogo);
+            foreach (array_merge(array_values($def['refs'] ?? []), ...array_map(fn ($hijo) => array_values($hijo['refs'] ?? []), $def['hijos'] ?? [])) as $referido) {
+                $pendientes[] = $referido;
+            }
+        }
+
+        return array_values(array_filter(self::ORDEN, fn ($catalogo) => isset($todos[$catalogo])));
     }
 
     /** @return array<int,array<string,mixed>> */

@@ -247,6 +247,28 @@ trait ComparteElEditorDeRecipes
         return $this->impresion['imprimirPareja'] ?? '';
     }
 
+    // ------------------------------------------------- Agendar la próxima cita acá (2026-10-28)
+
+    /**
+     * El formulario mínimo para agendar la próxima cita **sin salir de la consulta**, o `null` si la sección no lo
+     * recibe (las pruebas unitarias del ViewModel que no lo necesitan). Aparte del constructor, como
+     * `conImpresion`: no cambia el modo de la sección, es un `<details>` adentro de la franja.
+     */
+    private ?ProximaCitaVista $agendar = null;
+
+    public function conAgendar(?ProximaCitaVista $agendar): static
+    {
+        $this->agendar = $agendar;
+
+        return $this;
+    }
+
+    /** Lo que el formulario de la próxima cita necesita (sedes, motivos, fecha mínima), o `null`. */
+    public function agendar(): ?ProximaCitaVista
+    {
+        return $this->agendar;
+    }
+
     // ------------------------------------------------------- Verificación pública del récipe (WEB-5.6)
 
     /**

@@ -102,6 +102,12 @@ final class ReposoVista
         return $this->urls['imprimir'];
     }
 
+    /** La hoja del **reposo absoluto** (medicina interna, MI-6), o `null` si la especialidad no la tiene. */
+    public function urlImprimirAbsoluto(): ?string
+    {
+        return $this->urls['imprimir_absoluto'] ?? null;
+    }
+
     /** @return array{tono:string, icono:string, texto:string, titulo:string} */
     public function estado(): array
     {

@@ -246,6 +246,61 @@ final class SeccionesDeLaConsulta
     ];
 
     /**
+     * **El catálogo de la consulta de medicina interna** (MedicReport, olas MI-2 a MI-5, 2026-10-28): el árbol del escritorio de
+     * medicina interna en su orden (`fuentes-cirugia/ventana_consulta/w_consulta_principal.srw`, evento `ue_populate`; ver
+     * `Docs/Web/relevamiento-medicina-interna.md`). Los ítems propios del internista son los de `MapaDelInternista` y los arma
+     * `InternistaVista`: su **evaluación física** no es la de ginecología, porque el escritorio de medicina interna guarda el
+     * laboratorio en columnas de `consultas` que en ginecología son las circunferencias.
+     *
+     * No tiene «Tratamiento» (el escritorio de medicina interna no lo ofrece) ni los ítems ocultos de su fuente (Indicadores,
+     * I.Q., Nutrición): lo que no está en el árbol del escritorio se omite (decisión del usuario, 2026-10-28).
+     */
+    private const ITEMS_MEDICINA_INTERNA = [
+        ['numero' => 1, 'grupo' => 'Consulta', 'titulo' => 'Motivos de consulta', 'icono' => 'bi-list-check',
+            'detalle' => 'Catálogo del médico, varios por consulta.', 'tarea' => 'WEB-4.2', 'estado' => 'listo',
+            'seccion' => self::SECCION_MOTIVOS],
+        ['numero' => 2, 'grupo' => 'Consulta', 'titulo' => 'Enfermedad actual', 'icono' => 'bi-file-text',
+            'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.2', 'estado' => 'listo',
+            'seccion' => self::SECCION_ENFERMEDAD],
+        ['numero' => 3, 'grupo' => 'Consulta', 'titulo' => 'Antecedentes', 'icono' => 'bi-clipboard2-pulse',
+            'detalle' => 'Del paciente, por categorías, con la casilla de alerta.', 'tarea' => 'WEB-4.4', 'estado' => 'listo',
+            'seccion' => self::SECCION_ANTECEDENTES],
+        ['numero' => 4, 'grupo' => 'Consulta', 'titulo' => 'Evaluación física', 'icono' => 'bi-heart-pulse',
+            'detalle' => 'Signos vitales, examen funcional, examen físico y resumen.', 'tarea' => 'MI-2', 'estado' => 'listo',
+            'seccion' => Interna\MapaDelInternista::SECCION_FISICO],
+        ['numero' => 5, 'grupo' => 'Consulta', 'titulo' => 'Plan de diagnóstico', 'icono' => 'bi-clipboard2-pulse',
+            'detalle' => 'E.K.G., Rx de tórax y laboratorio.', 'tarea' => 'MI-3', 'estado' => 'listo',
+            'seccion' => Interna\MapaDelInternista::SECCION_PLAN],
+        ['numero' => 6, 'grupo' => 'Consulta', 'titulo' => 'Diagnóstico', 'icono' => 'bi-clipboard2-check',
+            'detalle' => 'Catálogo del médico; se propaga a constancias y presupuesto.', 'tarea' => 'WEB-4.5', 'estado' => 'listo',
+            'seccion' => self::SECCION_DIAGNOSTICO],
+        ['numero' => 7, 'grupo' => 'Consulta', 'titulo' => 'Evolución', 'icono' => 'bi-activity',
+            'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.6', 'estado' => 'listo',
+            'seccion' => self::SECCION_EVOLUCION],
+        ['numero' => 8, 'grupo' => 'Consulta', 'titulo' => 'Observaciones', 'icono' => 'bi-journal-text',
+            'detalle' => 'Las observaciones de la consulta.', 'tarea' => 'MI-2', 'estado' => 'listo',
+            'seccion' => Interna\MapaDelInternista::SECCION_OBSERVACIONES],
+        ['numero' => 9, 'grupo' => 'Documentos', 'titulo' => 'Récipes', 'icono' => 'bi-prescription2',
+            'detalle' => 'Varios por consulta, por medicamento o por tratamiento.', 'tarea' => 'WEB-5.1', 'estado' => 'listo',
+            'seccion' => self::SECCION_RECIPES],
+        ['numero' => 10, 'grupo' => 'Documentos', 'titulo' => 'Solicitudes', 'icono' => 'bi-send',
+            'detalle' => 'Laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe médico y dieta / recomendaciones.', 'tarea' => 'WEB-5.3a', 'estado' => 'listo',
+            'seccion' => self::SECCION_SOLICITUDES],
+        ['numero' => 11, 'grupo' => 'Consulta', 'titulo' => 'Análisis evolutivo', 'icono' => 'bi-graph-up',
+            'detalle' => 'Los signos y el laboratorio de cada consulta de la historia.', 'tarea' => 'MI-4', 'estado' => 'listo',
+            'seccion' => Interna\MapaDelInternista::SECCION_ANALISIS],
+        ['numero' => 12, 'grupo' => 'Documentos', 'titulo' => 'Datos personales', 'icono' => 'bi-person-vcard',
+            'detalle' => 'La filiación y el contacto del paciente, para completar sin salir de la consulta.', 'tarea' => 'WEB-11.25', 'estado' => 'listo',
+            'seccion' => self::SECCION_DATOS],
+        ['numero' => 13, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
+            'detalle' => 'Los conceptos que se cobran por la consulta, del catálogo del consultorio, con su total.', 'tarea' => 'F9', 'estado' => 'listo',
+            'seccion' => self::SECCION_PREFACTURA],
+        ['numero' => 14, 'grupo' => 'Documentos', 'titulo' => 'Evaluación pre-operatoria', 'icono' => 'bi-scissors',
+            'detalle' => 'Estimaciones (ASA, trombosis, infección, espirometría, situaciones especiales) y riesgo operatorio.', 'tarea' => 'MI-5', 'estado' => 'listo',
+            'seccion' => Interna\MapaDelInternista::SECCION_PREOPERATORIA],
+    ];
+
+    /**
      * **Las secciones que agrega un postgrado** cuando el médico lo tiene (2026-10-19). No están en el catálogo
      * base de ninguna especialidad: se insertan después del ítem que dice `despues_de`, con la numeración del
      * legado.
@@ -307,7 +362,10 @@ final class SeccionesDeLaConsulta
     {
         $alcance = AlcanceDeLaEspecialidad::de($especialidad);
 
-        if (self::esPediatria($especialidad)) {
+        if ($alcance->esMedicinaInterna()) {
+            $base = self::ITEMS_MEDICINA_INTERNA;
+            $extras = [];
+        } elseif (self::esPediatria($especialidad)) {
             $base = self::ITEMS_PEDIATRIA;
             $extras = array_values(array_filter(array_map(
                 fn (string $clave) => self::EXTRA[$clave] ?? null,

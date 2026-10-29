@@ -96,6 +96,25 @@ final class AlcanceDeLaEspecialidad
         return ! $this->esGinecologia() && ! $this->esPediatria();
     }
 
+    /**
+     * **¿Es medicina interna?** (MedicReport, 2026-10-28). Sigue siendo del **modo medicina general** —no ve nada de ginecología
+     * ni de pediatría— pero su consulta tiene su propio árbol (`SeccionesDeLaConsulta`), con la evaluación física, el plan de
+     * diagnóstico, el análisis evolutivo y la evaluación pre-operatoria del escritorio de medicina interna.
+     */
+    public function esMedicinaInterna(): bool
+    {
+        return $this->slug === 'medicina-interna';
+    }
+
+    /**
+     * **¿El registro es de un internista?** Para lo que se arma sin el contexto clínico a mano (las hojas impresas, el resumen médico):
+     * mira las especialidades del médico dueño del `reg_medico`.
+     */
+    public static function esDeMedicinaInterna(string $regMedico): bool
+    {
+        return (bool) \App\Models\Medico::where('reg_medico', $regMedico)->first()?->specialties->contains('slug', 'medicina-interna');
+    }
+
     /** ¿Se ofrece el ítem 6 del panel (control de embarazo, gestas, FUR)? */
     public function muestraElEmbarazo(): bool
     {
