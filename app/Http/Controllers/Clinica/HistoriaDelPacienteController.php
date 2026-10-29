@@ -126,6 +126,7 @@ class HistoriaDelPacienteController extends Controller
                 FechaDelConsultorio::hoy(),
                 // En pediatría tres columnas del examen físico son los textos de *Exámenes/Estudios* (2026-10-19).
                 AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null)->esPediatria(),
+                AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null)->esMedicinaInterna(),
             ),
         ]);
     }
