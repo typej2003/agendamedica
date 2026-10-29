@@ -13,8 +13,10 @@ use App\Actions\Consulta\GuardarEcoMamario;
 use App\Actions\Consulta\GuardarEcoObstetrico;
 use App\Actions\Consulta\GuardarEcoObstetricoSegundo;
 use App\Actions\Consulta\GuardarEcoObstetricoTercero;
+use App\Actions\Consulta\GuardarConstanciaDeLaConsulta;
 use App\Actions\Consulta\GuardarEvaluacionFisica;
 use App\Actions\Consulta\GuardarRecipe;
+use App\Actions\Consulta\GuardarReposoDeLaConsulta;
 use App\Actions\Consulta\GuardarRecipeDeLaPareja;
 use App\Actions\Consulta\QuitarMotivoDeLaConsulta;
 use App\Actions\Pacientes\AgregarAntecedenteAlPaciente;
@@ -32,6 +34,7 @@ use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\FechaDelConsultorio;
 use App\Http\Requests\SyncAppDataRequest;
 use App\Models\Cola;
+use App\Models\ConstanciaObs;
 use App\Models\Consulta;
 use App\Models\Historia;
 use App\Models\Medico;
@@ -39,6 +42,7 @@ use App\Models\MotivoConsulta;
 use App\Models\Recipe;
 use App\Models\RecipeDetalle;
 use App\Models\RecipePareja;
+use App\Models\ReposoPaciente;
 use App\Models\SyncChange;
 use Carbon\Carbon;
 use DateTime;
@@ -179,6 +183,10 @@ class CreacionesClinicas
         // WEB-5.1b: una por consulta, sin cabecera, y crea o corrige en el lugar comparando por
         // `codemedicina`. Es la misma Action que usa la pestaña de la consulta de la web.
         private GuardarRecipeDeLaPareja $guardarRecipeDeLaPareja,
+        // Documentos de la consulta que el teléfono crea con las mismas Actions de la web: la constancia
+        // (observación y diagnósticos) y el reposo (días, desde y justificación).
+        private GuardarConstanciaDeLaConsulta $guardarConstancia,
+        private GuardarReposoDeLaConsulta $guardarReposo,
     ) {
     }
 
@@ -232,6 +240,9 @@ class CreacionesClinicas
             'ultra_mama' => $this->crearEco($change, $tempId, $rechazar),
             'ultra_abdominal' => $this->crearEco($change, $tempId, $rechazar),
             'ecocadiograma_fetal' => $this->crearEco($change, $tempId, $rechazar),
+            // Documentos de la consulta: constancia y reposo.
+            'constancia_obs' => $this->crearConstancia($change, $tempId, $rechazar),
+            'reposo_paciente' => $this->crearReposo($change, $tempId, $rechazar),
         };
         if ($respuesta !== null) {
             $creados[] = $respuesta;
@@ -1028,6 +1039,96 @@ class CreacionesClinicas
         return $fecha && $fecha->format('Y-m-d') === $valor ? $valor : null;
     }
 
+    /**
+     * **La constancia de la consulta** (WEB-5.3a): el teléfono manda la observación y el servidor la escribe
+     * con la misma Action de la web. Si la consulta ya tenía la fila del escritorio, la corrige en el lugar;
+     * si no, la crea. La constancia es una por consulta.
+     */
+    private function crearConstancia(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if ($consulta === null) {
+            $rechazar('La consulta de la constancia no existe.');
+
+            return null;
+        }
+
+        $columnas = $this->columnasDelCliente($change, 'constancia_obs');
+        try {
+            $this->guardarConstancia->ejecutar(
+                $consulta,
+                null,
+                $columnas['observacion01'] ?? null,
+                null,
+                'mobile',
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+
+            return null;
+        }
+
+        $fila = ConstanciaObs::where('reg_medico', $consulta->reg_medico)
+            ->where('numhistoria', (int) $consulta->numhistoria)
+            ->where('numconsulta', (int) $consulta->nroconsulta)
+            ->first();
+
+        if ($fila === null) {
+            $rechazar('La constancia necesita su observación.');
+
+            return null;
+        }
+
+        $this->anotar('constancia_obs', $fila->id, $tempId, $fila->reg_medico);
+
+        return $this->respuestaDe('constancia_obs', $tempId, $fila->id);
+    }
+
+    /**
+     * **El reposo de la consulta** (WEB-5.3a): días, fecha de inicio y justificación. Una por consulta; la
+     * Action rechaza el reposo de un día sin justificación y el rechazo llega al teléfono como tal.
+     */
+    private function crearReposo(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if ($consulta === null) {
+            $rechazar('La consulta del reposo no existe.');
+
+            return null;
+        }
+
+        $columnas = $this->columnasDelCliente($change, 'reposo_paciente');
+        try {
+            $this->guardarReposo->ejecutar(
+                $consulta,
+                (int) ($columnas['numdias'] ?? 0),
+                $columnas['fdesde'] ?? '',
+                $columnas['obser_reposo'] ?? null,
+                null,
+                'mobile',
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+
+            return null;
+        }
+
+        $fila = ReposoPaciente::where('reg_medico', $consulta->reg_medico)
+            ->where('nrohistoria', (int) $consulta->numhistoria)
+            ->where('nroconsulta', (int) $consulta->nroconsulta)
+            ->first();
+
+        if ($fila === null) {
+            $rechazar('El reposo no se pudo guardar.');
+
+            return null;
+        }
+
+        $this->anotar('reposo_paciente', $fila->id, $tempId, $fila->reg_medico);
+
+        return $this->respuestaDe('reposo_paciente', $tempId, $fila->id);
+    }
+
     private function yaCreado(string $table, int $tempId): ?int
     {
         return SyncChange::where('table_name', $table)
@@ -1094,6 +1195,10 @@ class CreacionesClinicas
             // escribir ni duplicar. Se busca por el id que anotó el rastro (es el que el teléfono guardó) y
             // no por la clave del legado, igual que en la evaluación física.
             return $this->respuestaEco($table, $tempId, $recordId);
+        }
+        if (in_array($table, ['constancia_obs', 'reposo_paciente'], true)) {
+            // Documentos de la consulta: el teléfono sólo necesita el id real de la fila.
+            return ['table' => $table, 'temp_id' => $tempId, 'id' => $recordId];
         }
         $detalle = RecipeDetalle::find($recordId);
         if (!$detalle) {

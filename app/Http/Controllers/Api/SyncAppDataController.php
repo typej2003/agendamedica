@@ -978,6 +978,9 @@ class SyncAppDataController extends Controller
             // Y la del **récipe de la pareja** (ola §9 de PLAN-MOVIL.md): una por consulta, sin cabecera,
             // crea o corrige en el lugar. Es la misma Action de la pestaña de la web (WEB-5.1b).
             app(\App\Actions\Consulta\GuardarRecipeDeLaPareja::class),
+            // Documentos de la consulta (constancia y reposo): las Actions de la web.
+            app(\App\Actions\Consulta\GuardarConstanciaDeLaConsulta::class),
+            app(\App\Actions\Consulta\GuardarReposoDeLaConsulta::class),
         );
         $creadosAntes = count($creados);
 
@@ -1578,6 +1581,9 @@ class SyncAppDataController extends Controller
             'ultra_mama' => UltraMama::class,
             'ultra_abdominal' => UltraAbdominal::class,
             'ecocadiograma_fetal' => EcoCardiogramaFetal::class,
+            // Documentos de la consulta: si el teléfono corrige una fila ya subida, se aplica por columna.
+            'constancia_obs' => ConstanciaObs::class,
+            'reposo_paciente' => ReposoPaciente::class,
         ][$table];
     }
 
