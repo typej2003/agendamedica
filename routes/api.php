@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ComentarioController;
 use App\Http\Controllers\Api\LoginAppController;
 use App\Http\Controllers\Api\CambiarPasswordController;
 use App\Http\Controllers\Api\NotificacionCitaController;
+use App\Http\Controllers\Api\RecipeVerificacionController;
 use App\Http\Controllers\Api\RefreshAppController;
 use App\Http\Controllers\Api\SyncAppDataController;
 use App\Http\Controllers\Api\ConfiguracionMedicoController;
@@ -129,6 +130,11 @@ Route::middleware(['auth:api', 'account.active'])->post('/app/cambiar-password',
 Route::middleware(['auth:api', 'account.active', 'password.changed'])->group(function () {
     Route::post('/app/refresh-data', [RefreshAppController::class, 'refreshData']);
     Route::post('/app/sync-app-data', [SyncAppDataController::class, 'sync']);
+
+    // El QR de verificación de un récipe (WEB-5.6) se pide al imprimir: es online-only y usa la misma
+    // Action de la web, así que reimprimir devuelve el mismo token.
+    Route::post('/app/recipes/verificacion', [RecipeVerificacionController::class, 'obtener'])
+        ->middleware('throttle:60,1');
 
     // Notificar al paciente de una cita. No va por `sync-app-data` a propósito: mandar un
     // mensaje es irreversible y la cola de sync reintenta — ver NotificacionCitaController.

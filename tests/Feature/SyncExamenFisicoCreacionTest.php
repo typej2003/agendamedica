@@ -28,7 +28,7 @@ use Tests\TestCase;
  *  2. Que una consulta creada en el **mismo lote** (`consulta_temp_id`) se resuelva al número real.
  *  3. Que el reintento con el mismo `temp_id` **no duplique** la fila.
  *  4. Que una consulta de **otro** médico se rechace sin escribir nada ni trabar el resto del lote.
- *  5. Que lo que no está en la lista blanca (`total_f`, los resúmenes del escritorio) se descarte.
+ *  5. Que lo que no está en la lista blanca (`colposcopia`, que es de la solapa de texto) se descarte.
  *  6. Que el rastro quede `source = mobile`, con el `reg_medico` de la consulta.
  *
  * `DatabaseTransactions`: los tests no limpian la base (ver MedicAPI/AGENTS.md).
@@ -245,8 +245,9 @@ class SyncExamenFisicoCreacionTest extends TestCase
     }
 
     /**
-     * `total_f` es el resumen narrativo del escritorio (§7.6): existe en la tabla, pero **no** está en
-     * `WRITABLE_COLUMNS`. Se descarta sin trabar el lote y el resto de las columnas se guarda.
+     * `colposcopia` es la copia del examen que escribe la solapa de texto, y **no** está en
+     * `WRITABLE_COLUMNS` de esta tabla. Se descarta sin trabar el lote y el resto de las columnas se
+     * guarda. `total_f` sí se acepta desde WEB-11.8 (el móvil lo compone y lo deja editable).
      */
     public function test_una_columna_fuera_de_la_lista_blanca_se_descarta_y_el_resto_se_guarda(): void
     {
@@ -259,7 +260,7 @@ class SyncExamenFisicoCreacionTest extends TestCase
             'temp_id' => -44,
             'consulta_id' => $consulta->id,
             'columns' => [
-                'total_f' => 'RESUMEN QUE ARMA EL ESCRITORIO',
+                'total_f' => 'RESUMEN QUE ARMA EL TELEFONO',
                 'colposcopia' => 'TEXTO DE OTRA SECCION',
                 'tension' => '130/085',
                 'neurologico' => 'CONSCIENTE, ORIENTADA',
@@ -269,7 +270,7 @@ class SyncExamenFisicoCreacionTest extends TestCase
         $this->assertSame([], $response->json('rechazados'), 'la creación igual entra');
         $fila = $this->fila($medico, $consulta);
         $this->assertNotNull($fila);
-        $this->assertNull($fila->total_f, 'el resumen del escritorio no se escribe');
+        $this->assertSame('RESUMEN QUE ARMA EL TELEFONO', $fila->total_f);
         $this->assertNull($fila->colposcopia, 'ni lo que es de otra sección');
         $this->assertSame('130/085', $fila->tension);
         $this->assertSame('CONSCIENTE, ORIENTADA', $fila->neurologico);

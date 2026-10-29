@@ -44,17 +44,25 @@ class SyncAppDataRequest extends FormRequest
         // ya escribe la web por sus Actions: enfermedad actual y evolución
         // (`GuardarEnfermedadActual`, `GuardarEvolucionDeLaConsulta`), las medidas y los hallazgos de
         // la evaluación física (`GuardarEvaluacionFisica`) y el texto de tratamiento, que en el legado
-        // es `consultas.laringe` (WEB-5.7). No están los resúmenes narrativos del examen (`total_f`,
-        // `total_g`: los arma el escritorio, trampa de PLAN-MOVIL.md §7.6) ni columnas de otra
-        // especialidad.
+        // es `consultas.laringe` (WEB-5.7). Los resúmenes narrativos del examen (`total_f`, `total_g`)
+        // están en `examen_fisico_nuevo`: el app los compone con la misma cuenta del botón «Actualizar»
+        // y los deja editables. No están las columnas de otra especialidad.
         'consultas' => [
             'enfermedadactual', 'evolucion', 'laringe',
+            // Las solapas de texto del examen ginecológico (WEB-6.5): el teléfono las escribe con la
+            // misma regla de columna y el mismo last-write-wins que las tres de arriba. `observaciones`
+            // es la colposcopía, `faringe` la citología, `cuello` la histeroscopía y `oido` el resultado
+            // de exámenes (en pediatría las dos últimas significan otra cosa; no se renombran).
+            'observaciones', 'faringe', 'cuello', 'oido',
             'peso', 'talla', 'fc', 'pp', 'circcefalica', 'circtoraxica', 'circabdominal',
         ],
         'examen_fisico_nuevo' => [
             'tension', 'general', 'cardiopulmonar', 'tiroides', 'mamas', 'mama_derecha',
             'abdomen', 'extremidades', 'neurologico', 'genitales_externos', 'especulos',
             'tacto_vaginal', 'tacto_rectal',
+            // Los resúmenes narrativos que arma «Actualizar» (WEB-11.8). El escritorio también los
+            // escribe; el teléfono los compone con los mismos campos y los deja editables.
+            'total_f', 'total_g',
         ],
         // A4b de PLAN-MOVIL.md: el detalle y la casilla de **Alerta** (`tipo2`) del antecedente, que es
         // lo único que la sección deja editar de una fila que ya existe (el DataWindow del escritorio
@@ -69,6 +77,15 @@ class SyncAppDataRequest extends FormRequest
         // `nrohistoria` y `nroconsulta` **no** están: cambiar de diagnóstico, de consulta o de paciente
         // no es una edición de la fila, es otra fila (se quita una y se agrega la otra).
         'diagnostico_paciente' => ['detalle_diagnostco', 'orden'],
+        // Los documentos de la consulta que el teléfono ya puede crear (constancia y reposo). La constancia
+        // es una sola fila por consulta —su texto fijo sale de la consulta— y el reposo también; si la fila
+        // ya existe, el sync la corrige por columna con el last-write-wins de siempre.
+        'constancia_obs' => ['observacion', 'observacion01', 'titulo'],
+        'reposo_paciente' => ['fdesde', 'numdias', 'obser_reposo'],
+        'referencia' => ['referencia'],
+        'informe' => ['para', 'descripcion', 'fe_cha'],
+        'hospitalizacion' => ['hospital', 'diagprev', 'dieta'],
+        'dieta_paciente' => ['dieta', 'descripcion'],
         // ⚠️ Los **cuatro estudios ecográficos** (`eco_pelvico`, `eco_obstetrico`, `eco_obstetrico_tercer_2` y
         // `eco_obstetrico_tercer`, EC-A3 de PLAN-MOVIL.md) **no están acá a propósito**: sus columnas editables
         // son las del mapa del dato de cada estudio —181 nombres entre los cuatro— y duplicarlas en esta lista
@@ -196,6 +213,9 @@ class SyncAppDataRequest extends FormRequest
         // Ola §10: los otros cuatro estudios (Doppler perinatal, mamario, abdominal y ecocardiograma fetal).
         // Las columnas de cada uno salen de su mapa, igual que las de los gineco-obstétricos.
         'eco_doppler', 'ultra_mama', 'ultra_abdominal', 'ecocadiograma_fetal',
+        // Documentos de la consulta (constancia, reposo, referencia e informe): el teléfono los crea y, si
+        // la consulta ya tiene la fila que dejó el escritorio, la corrige por columna.
+        'constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'hospitalizacion', 'dieta_paciente',
     ];
 
     /**
@@ -262,6 +282,12 @@ class SyncAppDataRequest extends FormRequest
         // cabecera: el teléfono manda la pareja (cédula y nombre) y sus medicamentos, y el servidor los
         // escribe con la Action de la web (`GuardarRecipeDeLaPareja`), que crea o corrige en el lugar.
         'recipes_pareja',
+        // Documentos de la consulta: constancia, reposo, referencia e informe se crean en el teléfono y se
+        // escriben con las mismas Actions de la web. Cuelgan de la consulta por su id o por sus números.
+        'constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'hospitalizacion', 'dieta_paciente',
+        // Edición o baja de un récipe ya subido: la operación entera viaja como una creación y el servidor
+        // aplica `GuardarRecipe` o `EliminarRecipe`.
+        'recipes_ediciones',
     ];
 
     /**
@@ -288,6 +314,11 @@ class SyncAppDataRequest extends FormRequest
         // Los cuatro de la ola §10, por el mismo motivo que los ecos: sin esta entrada, `changes.*.table`
         // responde 422 y rechaza el lote entero, incluido el pull.
         'eco_doppler', 'ultra_mama', 'ultra_abdominal', 'ecocadiograma_fetal',
+        // Documentos de la consulta que el teléfono crea (constancia, reposo, referencia e informe). Sin
+        // esta entrada, el lote entero se rechaza con 422, incluido el pull.
+        'constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'hospitalizacion', 'dieta_paciente',
+        // La edición/baja de un récipe ya subido viaja como creación de esta tabla de operaciones.
+        'recipes_ediciones',
     ];
 
     /**
