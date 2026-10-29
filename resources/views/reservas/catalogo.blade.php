@@ -3,7 +3,8 @@
 @php
     // Con `?especialidad=` el título y la descripción nombran la especialidad (si no, todas las variantes del
     // catálogo compartirían el mismo título) y la dirección canónica es la de la especialidad sin el texto buscado.
-    $nombreEspecialidad = $especialidad !== '' ? $especialidades->firstWhere('slug', $especialidad)?->name : null;
+    $especialidadActual = $especialidad !== '' ? $especialidades->firstWhere('slug', $especialidad) : null;
+    $nombreEspecialidad = $especialidadActual?->name;
 @endphp
 @section('title', $nombreEspecialidad ? 'Reservar cita de ' . $nombreEspecialidad . ' · Doctorísimo' : 'Reservar cita · Doctorísimo')
 @section('description', $nombreEspecialidad
@@ -22,11 +23,27 @@
     <section class="reservas-hero">
         <div class="container">
             <span class="reservas-etiqueta"><i class="bi bi-calendar2-check" aria-hidden="true"></i> Reserva en línea</span>
-            <h1 class="reservas-titulo">Reserva tu cita</h1>
-            <p class="reservas-bajada">
-                Elige especialidad y médico, mira los próximos horarios y confirma con un código en tu teléfono.
-                Sin crear una cuenta.
-            </p>
+            {{-- Cada variante del catálogo dice algo propio (título, bajada y encabezado de la lista): si no, los buscadores
+                 las leen como copias de `/reservar`, que lista a los mismos médicos. --}}
+            @if ($especialidadActual)
+                <h1 class="reservas-titulo">Reserva tu cita de {{ $nombreEspecialidad }}</h1>
+                <p class="reservas-bajada">
+                    @if (filled($especialidadActual->description)){{ rtrim($especialidadActual->description, '. ') }}.@endif
+                    @if ($buscar === '')
+                        {{ trans_choice('{0} Por ahora no hay médicos|{1} Hay :count médico|[2,*] Hay :count médicos', $medicos->count()) }}
+                        de {{ $nombreEspecialidad }} con agenda publicada: elige al tuyo, mira sus próximos horarios y confirma
+                        con un código en tu teléfono. Sin crear una cuenta.
+                    @else
+                        Estos son los médicos de {{ $nombreEspecialidad }} que coinciden con «{{ $buscar }}».
+                    @endif
+                </p>
+            @else
+                <h1 class="reservas-titulo">Reserva tu cita</h1>
+                <p class="reservas-bajada">
+                    Elige especialidad y médico, mira los próximos horarios y confirma con un código en tu teléfono.
+                    Sin crear una cuenta.
+                </p>
+            @endif
 
             <form method="GET" action="{{ route('reservas.catalogo') }}" class="reservas-buscador" role="search">
                 @if ($especialidad !== '')
@@ -58,7 +75,11 @@
             @endforeach
         </div>
 
-        <h2 class="visually-hidden" id="reservas-medicos-titulo">Médicos con agenda publicada</h2>
+        @if ($especialidadActual)
+            <h2 class="reservas-lista-titulo h4 mb-3" id="reservas-medicos-titulo">Médicos de {{ $nombreEspecialidad }}</h2>
+        @else
+            <h2 class="visually-hidden" id="reservas-medicos-titulo">Médicos con agenda publicada</h2>
+        @endif
 
         @if ($medicos->isEmpty())
             <div class="reservas-vacio">
