@@ -255,6 +255,16 @@ class ConsultaController extends Controller
             ]));
         }
 
+        // **Medicina interna** (MI-2, 2026-10-28): su evaluación física es otra pantalla (el escritorio guarda el laboratorio en las
+        // columnas que en ginecología son las circunferencias). Un enlace a la de ginecología lleva a la suya.
+        if ($this->alcance()->esMedicinaInterna()
+            && (string) $request->query('seccion', '') === ConsultaShellVista::SECCION_EVALUACION) {
+            return redirect()->route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => \App\Clinica\Consulta\Interna\MapaDelInternista::SECCION_FISICO,
+            ]);
+        }
+
         // El día de la consulta, ya interpretado una sola vez: es lo que muestra el encabezado y lo que
         // elige la agenda a la que se vuelve.
         $dia = $consulta->fecha ? Carbon::parse($consulta->fecha) : FechaDelConsultorio::hoy();
@@ -410,6 +420,94 @@ class ConsultaController extends Controller
         return route('clinica.consulta.examen.escanear', [$consulta->id, $solapa]);
     }
 
+    /**
+     * **Una sección del internista** (MI-2 a MI-5): sus pestañas, los valores de la pestaña abierta, la hoja para imprimir (EKG,
+     * análisis evolutivo y evaluación pre-operatoria) y, en el análisis evolutivo, la evolución de la historia. El riesgo
+     * operatorio reusa el de cirugía pediátrica (`riesgo`, `riesgo_paciente`, `riesgo_paciente_opera`).
+     */
+    private function seccionDelInternista(string $seccion, Consulta $consulta): \App\Clinica\Consulta\Vistas\InternistaVista
+    {
+        $mapa = \App\Clinica\Consulta\Interna\MapaDelInternista::class;
+        $datos = new \App\Clinica\Consulta\Interna\DatosDelInternista();
+        $riesgoLectura = new RiesgoQuirurgico();
+
+        $pestana = $mapa::pestana($seccion, (string) request()->query('pestana', ''));
+        $url = fn (?string $clave = null) => route('clinica.consulta', array_filter([
+            $consulta->id,
+            'seccion' => $seccion,
+            'pestana' => $clave,
+        ]));
+
+        $pestanas = [];
+        foreach ($mapa::PESTANAS[$seccion] ?? [] as $clave => $texto) {
+            $pestanas[] = [
+                'clave' => $clave,
+                'texto' => $texto,
+                'url' => $url($clave),
+                'activa' => $clave === $pestana,
+                'cargada' => $clave === $mapa::PESTANA_RIESGO
+                    ? $riesgoLectura->marcados($consulta)->isNotEmpty()
+                    : $datos->tieneDatos($consulta, $clave),
+            ];
+        }
+
+        $documento = match (true) {
+            $seccion === $mapa::SECCION_PLAN && $pestana === 'ekg' => \App\Clinica\Impresion\DocumentoImpreso::EKG,
+            $seccion === $mapa::SECCION_ANALISIS => \App\Clinica\Impresion\DocumentoImpreso::ANALISIS_EVOLUTIVO,
+            $seccion === $mapa::SECCION_PREOPERATORIA => \App\Clinica\Impresion\DocumentoImpreso::EVALUACION_PREOPERATORIA,
+            default => null,
+        };
+
+        $riesgo = null;
+        if ($pestana === $mapa::PESTANA_RIESGO) {
+            $marcadas = $riesgoLectura->descripcionesMarcadas($consulta);
+            $resumen = $riesgoLectura->de($consulta);
+            $grupos = [];
+
+            foreach ($riesgoLectura->catalogo()->groupBy('sub_tipo') as $subTipo => $factores) {
+                $grupos[] = [
+                    'titulo' => $subTipo !== null && $subTipo !== '' ? (string) $subTipo : 'Factores',
+                    'factores' => $factores->map(fn ($factor) => [
+                        'descripcion' => (string) $factor->descripcion,
+                        'puntos' => (int) $factor->puntos,
+                        'marcado' => in_array((string) $factor->descripcion, $marcadas, true),
+                    ])->all(),
+                ];
+            }
+
+            $camposRiesgo = [];
+            foreach (RiesgoQuirurgico::camposDelResumen() as $clave => $campo) {
+                $camposRiesgo[] = [
+                    'clave' => $clave,
+                    'etiqueta' => $campo['etiqueta'],
+                    'clase' => $campo['clase'],
+                    'valor' => (string) old($clave, $resumen[$clave] ?? ''),
+                ];
+            }
+
+            $riesgo = new RiesgoQuirurgicoVista(
+                $grupos,
+                $camposRiesgo,
+                $riesgoLectura->puntos($consulta),
+                route('clinica.consulta.riesgo.guardar', $consulta->id),
+                $url($pestana),
+            );
+        }
+
+        return new \App\Clinica\Consulta\Vistas\InternistaVista(
+            $seccion,
+            $pestana,
+            $pestanas,
+            $seccion === $mapa::SECCION_ANALISIS ? [] : $datos->valores($consulta, $pestana),
+            route('clinica.consulta.internista.guardar', $consulta->id),
+            $url($pestana),
+            (array) old(),
+            $documento === null ? null : route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => $documento]),
+            $seccion === $mapa::SECCION_ANALISIS ? $datos->evolucion($consulta)->all() : [],
+            $riesgo,
+        );
+    }
+
     private function alcance(): AlcanceDeLaEspecialidad
     {
         return AlcanceDeLaEspecialidad::de(request()->attributes->get('contexto_clinico')['specialty']?->slug);
@@ -514,6 +612,11 @@ class ConsultaController extends Controller
         EcoAbdominal $ecoAbdominal,
         DoctoresDelMedico $doctores,
     ): ?object {
+        // **Las secciones del internista** (MI-2 a MI-5, 2026-10-28): las arma `seccionDelInternista`.
+        if ($this->alcance()->esMedicinaInterna() && \App\Clinica\Consulta\Interna\MapaDelInternista::esSeccion($seccion)) {
+            return $this->seccionDelInternista($seccion, $consulta);
+        }
+
         $numero = (int) $consulta->numhistoria;
         $nroconsulta = (int) $consulta->nroconsulta;
 
@@ -1525,7 +1628,9 @@ class ConsultaController extends Controller
                 // documento, no la de la consulta que se está editando. Se puede cambiar (un reposo que empieza
                 // mañana) y una fecha guardada manda.
                 FechaDelConsultorio::hoy()->toDateString(),
-                ['guardar' => route('clinica.consulta.reposo.guardar', $id), 'eliminar' => route('clinica.consulta.reposo.eliminar', $id), 'imprimir' => $imprimir('reposo')],
+                ['guardar' => route('clinica.consulta.reposo.guardar', $id), 'eliminar' => route('clinica.consulta.reposo.eliminar', $id), 'imprimir' => $imprimir('reposo')]
+                    // El reposo absoluto: la casilla «absoluto» de la pestaña Reposos del escritorio de medicina interna (MI-6).
+                    + ($this->alcance()->esMedicinaInterna() ? ['imprimir_absoluto' => $imprimir(\App\Clinica\Impresion\DocumentoImpreso::REPOSO_ABSOLUTO)] : []),
                 $old,
             );
         } elseif ($activa === PestanasDeSolicitudes::REFERENCIAS) {

@@ -312,6 +312,18 @@ final class SolicitudesParaImprimir
             ];
         }
 
+        // **Medicina interna** (MI-3, MI-4 y MI-6, 2026-10-28): el EKG si tiene algo cargado, el análisis evolutivo si la historia
+        // tiene valores y el reposo absoluto si la consulta tiene reposo y el médico es internista (la casilla «absoluto» del escritorio).
+        foreach ($this->documentosDelInternista($consulta) as $clave => $resumenDelDocumento) {
+            $disponibles[] = [
+                'clave' => $clave,
+                'tipo' => $clave,
+                'titulo' => DocumentoImpreso::TITULOS[$clave][1],
+                'resumen' => $resumenDelDocumento,
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
         $examenes = $this->laboratorios->filas($consulta);
         if ($this->laboratorios->esReal($examenes, $this->laboratorios->observacion($consulta))) {
             $disponibles[] = [
@@ -560,6 +572,20 @@ final class SolicitudesParaImprimir
             return $this->elEcoAbdominalEsDocumento($estudio)
                 ? $this->conInformeDeEco($this->ecoAbdominal($paciente, $estudio, $fechaDeLaConsulta, $registros), $consulta, $estudio, EcoAbdominal::grupos(), TiposDeEstudio::ABDOMINAL)
                 : null;
+        }
+
+        if ($clave === DocumentoImpreso::EKG) {
+            return $this->ekg($consulta, $paciente, $fechaDeLaConsulta);
+        }
+
+        if ($clave === DocumentoImpreso::ANALISIS_EVOLUTIVO) {
+            return $this->analisisEvolutivo($consulta, $paciente, $fechaDeLaConsulta);
+        }
+
+        if ($clave === DocumentoImpreso::REPOSO_ABSOLUTO) {
+            $reposo = $this->reposos->fila($consulta);
+
+            return $this->reposos->esReal($reposo) ? $this->reposoAbsoluto($paciente, $reposo, $fechaDeLaConsulta) : null;
         }
 
         if ($clave === DocumentoImpreso::EVALUACION_PREOPERATORIA) {
@@ -1419,6 +1445,177 @@ final class SolicitudesParaImprimir
      * Junta lo que el escritorio imprime en `d_pre_pre_operatoria`: la intervención, la evaluación pre-anestésica
      * (tipo, resultado y emergencia), el riesgo con sus puntos y su clase, y la conclusión.
      */
+    /**
+     * **Los documentos de medicina interna que la consulta puede imprimir** (MI-3, MI-4 y MI-6): clave => resumen para la lista.
+     *
+     * @return array<string,string>
+     */
+    private function documentosDelInternista(Consulta $consulta): array
+    {
+        $datos = new \App\Clinica\Consulta\Interna\DatosDelInternista();
+        $documentos = [];
+
+        if ($datos->tieneDatos($consulta, 'ekg')) {
+            $documentos[DocumentoImpreso::EKG] = 'Informe del electrocardiograma';
+        }
+
+        if (\Illuminate\Support\Facades\Schema::hasTable('datos_grafica') && $datos->evolucion($consulta)->isNotEmpty()) {
+            $documentos[DocumentoImpreso::ANALISIS_EVOLUTIVO] = 'Valores de la historia, consulta por consulta';
+        }
+
+        if ($this->esDeMedicinaInterna($consulta) && $this->reposos->esReal($this->reposos->fila($consulta))) {
+            $documentos[DocumentoImpreso::REPOSO_ABSOLUTO] = 'Reposo médico absoluto';
+        }
+
+        return $documentos;
+    }
+
+    /** ¿El médico de la consulta es internista? El reposo absoluto sólo existe en su escritorio. */
+    private function esDeMedicinaInterna(Consulta $consulta): bool
+    {
+        return (bool) \App\Models\Medico::where('reg_medico', $consulta->reg_medico)->first()
+            ?->specialties->contains('slug', 'medicina-interna');
+    }
+
+    /** **El EKG** (MI-3): la hoja de `d_dd_akg_print`, con las medidas, los bloqueos marcados, los hallazgos y las conclusiones. */
+    private function ekg(Consulta $consulta, Paciente $paciente, string $fecha): ?DocumentoImpreso
+    {
+        $datos = new \App\Clinica\Consulta\Interna\DatosDelInternista();
+
+        if (! $datos->tieneDatos($consulta, 'ekg')) {
+            return null;
+        }
+
+        $valores = $datos->valores($consulta, 'ekg');
+        $fijos = [];
+        $bloqueos = [];
+        $parrafos = [];
+
+        foreach (\App\Clinica\Consulta\Interna\MapaDelInternista::deLaPestana('ekg') as $campo) {
+            $valor = $valores[$campo['clave']] ?? null;
+
+            if ($valor === null) {
+                continue;
+            }
+
+            match ($campo['tipo']) {
+                'texto' => $fijos[] = ['etiqueta' => $campo['etiqueta'] . ':', 'valor' => $valor],
+                'si_no' => $valor === 'S' ? $bloqueos[] = $campo['etiqueta'] : null,
+                default => $parrafos = array_merge($parrafos, DocumentoImpreso::parrafosDe($campo['etiqueta'] . ': ' . $valor)),
+            };
+        }
+
+        if ($bloqueos !== []) {
+            array_unshift($parrafos, ...DocumentoImpreso::parrafosDe('Bloqueos: ' . implode(', ', $bloqueos) . '.'));
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::EKG,
+            DocumentoImpreso::EKG,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::EKG][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::EKG][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            $fijos,
+            $parrafos,
+        );
+    }
+
+    /**
+     * **El análisis evolutivo** (MI-4): la hoja de `d_reporte_garficas`. El escritorio la imprime con gráficas; la web imprime
+     * cada valor con su serie por consulta (la gráfica está en la pantalla).
+     */
+    private function analisisEvolutivo(Consulta $consulta, Paciente $paciente, string $fecha): ?DocumentoImpreso
+    {
+        $evolucion = (new \App\Clinica\Consulta\Interna\DatosDelInternista())->evolucion($consulta);
+
+        if ($evolucion->isEmpty()) {
+            return null;
+        }
+
+        $parrafos = [];
+
+        foreach (\App\Clinica\Consulta\Interna\DatosDelInternista::camposDeLaEvolucion() as $campo) {
+            $serie = $evolucion
+                ->filter(fn (array $fila) => ($fila['valores'][$campo['clave']] ?? null) !== null)
+                ->map(fn (array $fila) => \App\Clinica\Consulta\Interna\DatosDelInternista::numeroLegible($fila['valores'][$campo['clave']])
+                    . ' (' . ($fila['fecha'] ? FechaClinica::formato($fila['fecha']) : 'N.º ' . $fila['nroconsulta']) . ')')
+                ->values()->all();
+
+            if ($serie === []) {
+                continue;
+            }
+
+            $etiqueta = $campo['etiqueta'] . (($campo['unidad'] ?? null) ? ' (' . $campo['unidad'] . ')' : '');
+            $parrafos = array_merge($parrafos, DocumentoImpreso::parrafosDe($etiqueta . ': ' . implode(DocumentoImpreso::SEPARADOR_DE_ITEMS, $serie)));
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::ANALISIS_EVOLUTIVO,
+            DocumentoImpreso::ANALISIS_EVOLUTIVO,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ANALISIS_EVOLUTIVO][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ANALISIS_EVOLUTIVO][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            [],
+            $parrafos,
+        );
+    }
+
+    /**
+     * **El reposo absoluto** (MI-6): el mismo reposo, con la frase de `d_reposo_adsoluto` («DEBE GUARDAR REPOSO ABSOLUTO POR
+     * PRESENTAR») antes de la justificación.
+     */
+    private function reposoAbsoluto(Paciente $paciente, object $reposo, string $fechaDeLaConsulta): DocumentoImpreso
+    {
+        $base = $this->reposo($paciente, $reposo, $fechaDeLaConsulta);
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::REPOSO_ABSOLUTO,
+            DocumentoImpreso::REPOSO_ABSOLUTO,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::REPOSO_ABSOLUTO][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::REPOSO_ABSOLUTO][1],
+            $base->fecha,
+            $base->persona,
+            $base->fijos,
+            array_merge(DocumentoImpreso::parrafosDe('DEBE GUARDAR REPOSO ABSOLUTO POR PRESENTAR:'), $base->parrafos),
+        );
+    }
+
+    /**
+     * Las escalas de las estimaciones pre-operatorias de medicina interna (MI-5) como líneas del informe, o `[]` si no hay.
+     *
+     * @return array<int,string>
+     */
+    private function escalasDelInternista(Consulta $consulta): array
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('pre_trombo')) {
+            return [];
+        }
+
+        $datos = new \App\Clinica\Consulta\Interna\DatosDelInternista();
+        $valores = $datos->valores($consulta, 'estimaciones');
+        $lineas = [];
+
+        foreach ([
+            'pre_trombo' => 'Riesgo de trombosis venosa y tromboembolismo',
+            'pre_infec' => 'Infección de heridas operatorias',
+            'pre_espiro' => 'Espirometría',
+            'pre_espec' => 'Situaciones especiales',
+        ] as $tabla => $titulo) {
+            $tipo = \App\Clinica\Consulta\Interna\MapaDelInternista::textoDeOpcion($tabla . '_tipo', $valores[$tabla . '_tipo'] ?? null);
+            $resultado = $valores[$tabla . '_resultado'] ?? null;
+
+            if ($tipo === null && $resultado === null) {
+                continue;
+            }
+
+            $lineas[] = $titulo . ': ' . trim(($tipo ?? '') . ($tipo !== null && $resultado !== null ? '. ' : '') . ($resultado ?? '')) . '.';
+        }
+
+        return $lineas;
+    }
+
     private function textoDeLaCirugia(Consulta $consulta): ?string
     {
         $preoperatoria = new EvaluacionPreoperatoria();
@@ -1431,7 +1628,8 @@ final class SolicitudesParaImprimir
         $puntos = $riesgo->puntos($consulta);
 
         if (! $preoperatoria->tieneDatos($consulta) && $puntos === 0 && $lista->isEmpty()
-            && array_filter(array_map('trim', array_map('strval', $resumen))) === []) {
+            && array_filter(array_map('trim', array_map('strval', $resumen))) === []
+            && $this->escalasDelInternista($consulta) === []) {
             return null;
         }
 
@@ -1447,7 +1645,8 @@ final class SolicitudesParaImprimir
             $linea = 'Evaluación pre-anestésica';
 
             if (($evaluacion['tipo'] ?? '') !== '') {
-                $linea .= ': ' . $evaluacion['tipo'];
+                // Los radio del escritorio guardan una letra (`d_pre_aneste`: A = clase I … E = clase V).
+                $linea .= ': ' . \App\Clinica\Consulta\Interna\MapaDelInternista::textoDeOpcion('pre_aneste_tipo', $evaluacion['tipo']);
             }
 
             if (($evaluacion['resultado'] ?? '') !== '') {
@@ -1462,6 +1661,9 @@ final class SolicitudesParaImprimir
 
             $partes[] = $linea;
         }
+
+        // Las otras escalas de las estimaciones de medicina interna (MI-5): trombosis, infección, espirometría y situaciones especiales.
+        array_push($partes, ...$this->escalasDelInternista($consulta));
 
         $lineaRiesgo = 'Riesgo quirúrgico: ' . $puntos . ' puntos';
 

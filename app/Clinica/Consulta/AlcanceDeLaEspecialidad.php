@@ -96,6 +96,16 @@ final class AlcanceDeLaEspecialidad
         return ! $this->esGinecologia() && ! $this->esPediatria();
     }
 
+    /**
+     * **¿Es medicina interna?** (MedicReport, 2026-10-28). Sigue siendo del **modo medicina general** —no ve nada de ginecología
+     * ni de pediatría— pero su consulta tiene su propio árbol (`SeccionesDeLaConsulta`), con la evaluación física, el plan de
+     * diagnóstico, el análisis evolutivo y la evaluación pre-operatoria del escritorio de medicina interna.
+     */
+    public function esMedicinaInterna(): bool
+    {
+        return $this->slug === 'medicina-interna';
+    }
+
     /** ¿Se ofrece el ítem 6 del panel (control de embarazo, gestas, FUR)? */
     public function muestraElEmbarazo(): bool
     {

@@ -143,6 +143,11 @@ final class DocumentoImpreso
     public const EVALUACION_PREOPERATORIA = 'evaluacion-preoperatoria';
     public const INDICADORES_INCIDENTES = 'indicadores-incidentes';
     public const ECO_RENAL = 'eco-renal';
+    // Medicina interna (MI-3, MI-4 y MI-6, 2026-10-28): el EKG (`d_dd_akg_print`), el análisis evolutivo (`d_reporte_garficas`)
+    // y el reposo absoluto (`d_reposo_adsoluto`, el reposo con la casilla «absoluto» de la pestaña Reposos).
+    public const EKG = 'ekg';
+    public const ANALISIS_EVOLUTIVO = 'analisis-evolutivo';
+    public const REPOSO_ABSOLUTO = 'reposo-absoluto';
 
     /**
      * El **resumen médico** (WEB-5.3c): la hoja que el escritorio arma sola con los datos de **toda** la
@@ -206,6 +211,10 @@ final class DocumentoImpreso
         self::EVALUACION_PREOPERATORIA => ['EVALUACIÓN PRE-OPERATORIA', 'Evaluación pre-operatoria'],
         self::INDICADORES_INCIDENTES => ['INDICADORES INCIDENTES', 'Indicadores incidentes (laboratorio)'],
         self::ECO_RENAL => ['INFORME ECOSONOGRÁFICO RENAL', 'Eco renal'],
+        // Los de medicina interna: el título de sus ventanas de impresión (`w_visualizar_solicitudes_lekg`, `_grafica`, `_reposos_a`).
+        self::EKG => ['E.K.G.', 'Electrocardiograma'],
+        self::ANALISIS_EVOLUTIVO => ['ANÁLISIS EVOLUTIVO', 'Análisis evolutivo'],
+        self::REPOSO_ABSOLUTO => ['REPOSO MÉDICO', 'Reposo absoluto'],
         // El del resumen médico: el título del radio del escritorio; el DataWindow no imprime un título
         // propio (su encabezado es el membrete), así que la hoja de la web lleva el nombre del documento.
         self::RESUMEN_MEDICO => ['RESUMEN MÉDICO', 'Resumen médico'],

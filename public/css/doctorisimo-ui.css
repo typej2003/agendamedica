@@ -4069,3 +4069,9 @@ body.panel .main-content { padding: 1rem 1.25rem 1.25rem; }
 
 /* Un campo cuyo rótulo repite el título del grupo (2026-10-23): el rótulo queda sólo para lectores de pantalla. */
 .campo.etiqueta-oculta > .form-label { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; padding: 0; margin: -1px; }
+
+/* El análisis evolutivo del internista (MI-4): una línea por valor, dibujada en un SVG del tamaño de la celda. */
+.grafica-evolucion { width: 160px; height: 44px; display: block; }
+.grafica-evolucion polyline { fill: none; stroke: var(--ds-info); stroke-width: 2; }
+.grafica-evolucion circle { fill: var(--ds-info); }
+.tabla-evolucion th[scope="row"] { white-space: nowrap; }
