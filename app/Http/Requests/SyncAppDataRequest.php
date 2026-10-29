@@ -44,9 +44,9 @@ class SyncAppDataRequest extends FormRequest
         // ya escribe la web por sus Actions: enfermedad actual y evolución
         // (`GuardarEnfermedadActual`, `GuardarEvolucionDeLaConsulta`), las medidas y los hallazgos de
         // la evaluación física (`GuardarEvaluacionFisica`) y el texto de tratamiento, que en el legado
-        // es `consultas.laringe` (WEB-5.7). No están los resúmenes narrativos del examen (`total_f`,
-        // `total_g`: los arma el escritorio, trampa de PLAN-MOVIL.md §7.6) ni columnas de otra
-        // especialidad.
+        // es `consultas.laringe` (WEB-5.7). Los resúmenes narrativos del examen (`total_f`, `total_g`)
+        // están en `examen_fisico_nuevo`: el app los compone con la misma cuenta del botón «Actualizar»
+        // y los deja editables. No están las columnas de otra especialidad.
         'consultas' => [
             'enfermedadactual', 'evolucion', 'laringe',
             // Las solapas de texto del examen ginecológico (WEB-6.5): el teléfono las escribe con la
@@ -60,6 +60,9 @@ class SyncAppDataRequest extends FormRequest
             'tension', 'general', 'cardiopulmonar', 'tiroides', 'mamas', 'mama_derecha',
             'abdomen', 'extremidades', 'neurologico', 'genitales_externos', 'especulos',
             'tacto_vaginal', 'tacto_rectal',
+            // Los resúmenes narrativos que arma «Actualizar» (WEB-11.8). El escritorio también los
+            // escribe; el teléfono los compone con los mismos campos y los deja editables.
+            'total_f', 'total_g',
         ],
         // A4b de PLAN-MOVIL.md: el detalle y la casilla de **Alerta** (`tipo2`) del antecedente, que es
         // lo único que la sección deja editar de una fila que ya existe (el DataWindow del escritorio
