@@ -67,6 +67,23 @@ class CupoDelPlanTest extends TestCase
         app(ServicioService::class)->reemplazar($reg, Plan::porCodigo($codigo), 0, 'prueba');
     }
 
+    public function test_el_anual_de_un_plan_fijo_y_de_uno_por_asiento_cobra_diez_meses(): void
+    {
+        $this->doctor('anual-a');
+        $conteo = ['medicos' => 1, 'secretarias' => 0];
+
+        $fijo = Plan::porCodigo('equipo-1');
+        $this->assertSame(2000, $this->cupos()->precioUsdE2($fijo, $conteo, Plan::MENSUAL));
+        $this->assertSame(20000, $this->cupos()->precioUsdE2($fijo, $conteo, Plan::ANUAL));
+        $this->assertSame(4000, $this->cupos()->ahorroAnualUsdE2($fijo, $conteo));
+
+        $asiento = Plan::porCodigo('equipo-por-asiento');
+        $equipo = ['medicos' => 4, 'secretarias' => 1];
+        $this->assertSame(4800, $this->cupos()->precioUsdE2($asiento, $equipo, Plan::MENSUAL));
+        $this->assertSame(48000, $this->cupos()->precioUsdE2($asiento, $equipo, Plan::ANUAL));
+        $this->assertSame(9600, $this->cupos()->ahorroAnualUsdE2($asiento, $equipo));
+    }
+
     public function test_cuenta_la_ficha_duenia_y_los_vinculados_y_no_cuenta_los_centros(): void
     {
         $a = $this->doctor('equipo-a');

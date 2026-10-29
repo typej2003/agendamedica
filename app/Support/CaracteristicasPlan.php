@@ -29,6 +29,8 @@ class CaracteristicasPlan implements JsonSerializable
         'secretarias_incluidas' => 0,
         // Piso de asientos que se cobran aunque el equipo sea más chico.
         'minimo_asientos' => 0,
+        // En un plan por asiento, cuántos meses se cobran al año (12 de servicio). 10 = dos de regalo.
+        'meses_cobrados_anual' => 10,
     ];
 
     /** @var array<string, mixed> */
@@ -84,6 +86,12 @@ class CaracteristicasPlan implements JsonSerializable
     public function minimoAsientos(): int
     {
         return max(0, (int) ($this->valores['minimo_asientos'] ?? 0));
+    }
+
+    /** Meses que se cobran en la modalidad anual de un plan por asiento (12 de servicio). */
+    public function mesesCobradosAnual(): int
+    {
+        return max(0, (int) ($this->valores['meses_cobrados_anual'] ?? 10));
     }
 
     /** Una copia con algunas características cambiadas. */

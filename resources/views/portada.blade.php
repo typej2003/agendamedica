@@ -246,13 +246,17 @@
                     @foreach ($planes as $plan)
                         @php
                             $porAsiento = $plan->cobraPorAsiento();
+                            $ofreceMensual = $plan->ofreceMensual();
+                            $ofreceAnual = $plan->ofreceAnual();
                             $ahorro = $porAsiento ? 0.0 : $plan->ahorroUsd();
                             $maxMedicos = $plan->restricciones->maxMedicos();
                             $maxSecretarias = $plan->restricciones->maxSecretarias();
                             $maxHistorico = $plan->restricciones->maxHistoricoMeses();
-                            $precioMostrar = $porAsiento
-                                ? \App\Pagos\Centavos::aDecimal($preciosDesdeE2[$plan->id] ?? 0)
-                                : $plan->precio_usd;
+                            $precioMensual = \App\Pagos\Centavos::aDecimal($preciosDesdeE2[$plan->id] ?? 0);
+                            $precioAnual = \App\Pagos\Centavos::aDecimal($preciosAnualesDesdeE2[$plan->id] ?? 0);
+                            $ahorroAnual = \App\Pagos\Centavos::aDecimal($ahorrosAnualesE2[$plan->id] ?? 0);
+                            $mesesAhorro = $precioMensual > 0 ? (int) round($ahorroAnual / $precioMensual) : 0;
+                            $precioMostrar = $ofreceMensual ? $precioMensual : $precioAnual;
                         @endphp
                         <div class="col-md-6 col-lg-4">
                             <article class="portada-plan {{ $ahorro > 0 ? 'portada-plan-destacado' : '' }}">
@@ -267,8 +271,19 @@
                                     @if ($ahorro > 0)
                                         <del>{{ $precio($plan->precio_tachado_usd) }}</del>
                                     @endif
-                                    <strong class="tnum">{{ $porAsiento ? 'desde ' : '' }}{{ $precio($precioMostrar) }}</strong>
-                                    <span>USD / {{ $plan->frecuencia === \App\Models\Plan::ANUAL ? 'año' : 'mes' }}</span>
+                                    <strong class="tnum">{{ $porAsiento && $ofreceMensual ? 'desde ' : '' }}{{ $precio($precioMostrar) }}</strong>
+                                    <span>USD / {{ $ofreceMensual ? 'mes' : 'año' }}</span>
+                                    @if ($ofreceMensual && $ofreceAnual)
+                                        <span class="d-block small mt-1">
+                                            o <strong class="tnum">{{ $porAsiento ? 'desde ' : '' }}{{ $precio($precioAnual) }}</strong> USD / año
+                                            @if ($ahorroAnual > 0)
+                                                · ahorras {{ $precio($ahorroAnual) }}
+                                                @if ($mesesAhorro > 0)
+                                                    ({{ $mesesAhorro }} {{ $mesesAhorro === 1 ? 'mes' : 'meses' }})
+                                                @endif
+                                            @endif
+                                        </span>
+                                    @endif
                                 </p>
                                 <ul>
                                     <li><i class="bi bi-check2" aria-hidden="true"></i> Agenda, historia clínica y récipes</li>

@@ -27,6 +27,10 @@ final class PlanElegidoVista
         public readonly ?TasaDeCambio $tasa,
         public readonly int $precioE2 = 0,
         public readonly ?string $desglose = null,
+        public readonly string $frecuenciaElegida = Plan::MENSUAL,
+        public readonly ?int $precioMensualE2 = null,
+        public readonly ?int $precioAnualE2 = null,
+        public readonly int $ahorroE2 = 0,
     ) {
     }
 
@@ -49,6 +53,62 @@ final class PlanElegidoVista
     public function desglose(): ?string
     {
         return $this->desglose;
+    }
+
+    public function esAnual(): bool
+    {
+        return $this->frecuenciaElegida === Plan::ANUAL;
+    }
+
+    public function frecuencia(): string
+    {
+        return $this->esAnual() ? 'Anual (12 meses)' : 'Mensual';
+    }
+
+    public function ofreceMensual(): bool
+    {
+        return $this->plan->ofreceMensual();
+    }
+
+    public function ofreceAnual(): bool
+    {
+        return $this->plan->ofreceAnual();
+    }
+
+    public function precioMensualUsdTexto(): string
+    {
+        $centavos = $this->precioMensualE2 ?? $this->precioUsdE2();
+
+        return Centavos::formatear($centavos, 'USD');
+    }
+
+    public function precioAnualUsdTexto(): string
+    {
+        $centavos = $this->precioAnualE2 ?? 0;
+
+        return Centavos::formatear($centavos, 'USD');
+    }
+
+    public function ahorroTexto(): string
+    {
+        return Centavos::formatear($this->ahorroE2, 'USD');
+    }
+
+    public function mesesDeAhorro(): int
+    {
+        $mensual = (int) ($this->precioMensualE2 ?? 0);
+
+        return $mensual > 0 ? max(0, (int) round($this->ahorroE2 / $mensual)) : 0;
+    }
+
+    public function urlMensual(): string
+    {
+        return route('clinica.plan.elegir', [$this->plan, 'frecuencia' => Plan::MENSUAL]);
+    }
+
+    public function urlAnual(): string
+    {
+        return route('clinica.plan.elegir', [$this->plan, 'frecuencia' => Plan::ANUAL]);
     }
 
     /** El monto que se cobra con ese método, en su moneda; `null` si falta la tasa o la moneda no se maneja. */
@@ -105,11 +165,6 @@ final class PlanElegidoVista
     public function puedeContinuar(): bool
     {
         return $this->metodos->isNotEmpty() && $this->aviso() === null;
-    }
-
-    public function frecuencia(): string
-    {
-        return $this->plan->frecuencia === Plan::ANUAL ? 'Anual (12 meses)' : 'Mensual';
     }
 
     private function precioUsdE2(): int

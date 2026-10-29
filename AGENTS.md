@@ -1202,17 +1202,23 @@ puede ser de pago) y la prueba quedó en **1 médico + 1 secretaría**; quien si
 gratis una sola vez** (evento `EscritorioSincronizo`, plan `powerbuilder`). Se opera con
 `php artisan servicio ver|renovar|planes`; configuración en `config/servicios.php`.
 
-**Planes personalizables.** El panel (`/admin/servicios`, `Admin\Servicios`, Root o Administrador) edita frecuencia,
-monto fijo o **por asiento** (`precio_asiento_usd`, `secretarias_incluidas`, `minimo_asientos`), tachado, orden,
-visible, activo, predeterminado, **límites del equipo** (`max_medicos`, `max_secretarias`) y la característica
-**`impresion_reportes`**. Los cuatro planes de ejemplo (`equipo-1` 20 USD 1/1, `equipo-2` 35 USD 2/1, `equipo-3` 45
-USD 3/1 y `equipo-por-asiento` 12 USD/asiento con 1 secretaría incluida y mínimo 4) son **filas editables**: ninguna
-regla mira el `codigo`. `App\Services\CupoDelPlan` cuenta médicos (ficha dueña no-centro + vinculados; los centros no
-cuentan) y secretarías (solo rol `Secretaria`, sin ficha de médico), aplica los cupos en `CuentaService::crearSecretaria`
-y `asignarRegistro`, calcula el precio por asiento (en centavos) y rechaza con `ValidationException` un plan que no
-cubra al equipo. **El downgrade se bloquea, no expulsa a nadie**: el dueño quita a un médico del equipo (solo el
-vínculo) o una secretaría, y recién entonces puede contratar el plan más chico; **renovar el mismo plan se permite**
-aunque el equipo esté por encima.
+**Planes personalizables.** El panel (`/admin/servicios`, `Admin\Servicios`, Root o Administrador) edita la frecuencia
+principal, el **precio mensual** (`precio_usd`) y el **precio anual opcional** (`precio_anual_usd`: vacío = el plan es
+solo mensual), el monto fijo o **por asiento** (`precio_asiento_usd`, `secretarias_incluidas`, `minimo_asientos`,
+`meses_cobrados_anual`), tachado, orden, visible, activo, predeterminado, **límites del equipo** (`max_medicos`,
+`max_secretarias`) y la característica **`impresion_reportes`**. Los cuatro planes de ejemplo (`equipo-1` 20 USD 1/1,
+`equipo-2` 35 USD 2/1, `equipo-3` 45 USD 3/1 y `equipo-por-asiento` 12 USD/asiento con 1 secretaría incluida y mínimo
+4) son **filas editables**: ninguna regla mira el `codigo`. **Un plan puede ofrecer las dos frecuencias**: al contratar
+se elige mes (1 mes) o año (12 meses); el anual de un plan por asiento se calcula como el mensual del equipo ×
+`meses_cobrados_anual` (10 por defecto, o sea paga 10 y recibe 12), y el de un plan fijo usa `precio_anual_usd`. El pago
+guarda `pagos.meses` (1 o 12) y `ConfirmarPagoDePlan` renueva con esos meses. **Compatibilidad**: una fila anual vieja
+(`frecuencia = anual`, `precio_anual_usd = null`) sigue siendo solo anual y guarda el precio del año en `precio_usd`; los
+`Premium` mensual/anual que ya existen no se migran solos. `App\Services\CupoDelPlan` cuenta médicos (ficha dueña
+no-centro + vinculados; los centros no cuentan) y secretarías (solo rol `Secretaria`, sin ficha de médico), aplica los
+cupos en `CuentaService::crearSecretaria` y `asignarRegistro`, calcula el precio mensual/anual (en centavos) y rechaza
+con `ValidationException` un plan que no cubra al equipo. **El downgrade se bloquea, no expulsa a nadie**: el dueño quita
+a un médico del equipo (solo el vínculo) o una secretaría, y recién entonces puede contratar el plan más chico;
+**renovar el mismo plan se permite** aunque el equipo esté por encima.
 
 **Equipo e invitaciones.** El equipo es el `reg_medico`; no hay tabla de equipos. `InvitacionesDeEquipo` crea una
 `invitaciones_de_medico` (token, correo, vencimiento 30 días, estados), envía `InvitacionAlEquipo` y **solo al aceptar**

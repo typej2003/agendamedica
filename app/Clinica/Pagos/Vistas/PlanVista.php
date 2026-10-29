@@ -20,8 +20,11 @@ final class PlanVista
      * @param  Collection<int,Plan>  $planes
      * @param  array{medicos:int,secretarias:int}  $conteo
      * @param  array<int,int>  $preciosE2  plan id => precio en centavos para el equipo actual
-     * @param  array<int,?string>  $detalles  plan id => desglose por asiento (null si es fijo)
+     * @param  array<int,?string>  $detalles  plan id => desglose mensual por asiento (null si es fijo)
      * @param  array<int,?string>  $motivos  plan id => por qué no cubre al equipo (null si lo cubre o es el actual)
+     * @param  array<int,int>  $preciosAnualesE2  plan id => precio anual para el equipo actual
+     * @param  array<int,int>  $ahorrosAnualesE2  plan id => ahorro del anual frente a 12 meses
+     * @param  array<int,?string>  $detallesAnuales  plan id => desglose del anual
      */
     public function __construct(
         public readonly string $regMedico,
@@ -31,6 +34,9 @@ final class PlanVista
         public readonly array $preciosE2 = [],
         public readonly array $detalles = [],
         public readonly array $motivos = [],
+        public readonly array $preciosAnualesE2 = [],
+        public readonly array $ahorrosAnualesE2 = [],
+        public readonly array $detallesAnuales = [],
     ) {
     }
 
@@ -137,6 +143,41 @@ final class PlanVista
     public function precioTachadoUsdTexto(Plan $plan): string
     {
         return Centavos::formatear(Centavos::deDecimal((string) $plan->precio_tachado_usd), 'USD');
+    }
+
+    public function ofreceAnual(Plan $plan): bool
+    {
+        return $plan->ofreceAnual();
+    }
+
+    public function precioAnualUsdTexto(Plan $plan): string
+    {
+        $centavos = $this->preciosAnualesE2[$plan->id] ?? Centavos::deDecimal((string) $plan->precio_anual_usd);
+
+        return Centavos::formatear($centavos, 'USD');
+    }
+
+    public function ahorroAnualTexto(Plan $plan): string
+    {
+        $centavos = $this->ahorrosAnualesE2[$plan->id] ?? Centavos::deDecimal((string) $plan->ahorroAnualUsd());
+
+        return Centavos::formatear($centavos, 'USD');
+    }
+
+    public function detallePrecioAnual(Plan $plan): ?string
+    {
+        return $this->detallesAnuales[$plan->id] ?? null;
+    }
+
+    /** Cuántos meses de mensualidad representa el ahorro del anual (2 en el caso normal). */
+    public function mesesDeAhorro(Plan $plan): int
+    {
+        $mensual = (int) ($this->preciosE2[$plan->id] ?? 0);
+        if ($mensual <= 0) {
+            return 0;
+        }
+
+        return max(0, (int) round(((int) ($this->ahorrosAnualesE2[$plan->id] ?? 0)) / $mensual));
     }
 
     public function ahorroTexto(Plan $plan): string

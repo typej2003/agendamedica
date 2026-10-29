@@ -59,6 +59,7 @@ class Servicios extends Component
     public $descripcion = '';
     public $frecuencia = Plan::MENSUAL;
     public $precio_usd = '';
+    public $precio_anual_usd = '';
     public $precio_tachado_usd = '';
     public $orden = 0;
     public $visible = true;
@@ -72,6 +73,7 @@ class Servicios extends Component
     public $precio_asiento_usd = '';
     public $secretarias_incluidas = 0;
     public $minimo_asientos = 0;
+    public $meses_cobrados_anual = 10;
 
     public function hydrate()
     {
@@ -234,22 +236,31 @@ class Servicios extends Component
     private function aplicarPlan(?Plan $plan, ?Medico $medico = null): void
     {
         $this->planElegido = $plan?->id;
-        $this->meses = $plan?->meses() ?? 1;
 
         if ($plan === null) {
+            $this->meses = 1;
             $this->monto = 0;
 
             return;
         }
 
+        $frecuencia = $plan->frecuenciaPorDefecto();
+        $this->meses = $plan->meses($frecuencia);
+
         if ($plan->cobraPorAsiento() && $medico !== null) {
             $cupos = app(CupoDelPlan::class);
-            $this->monto = Centavos::aDecimal($cupos->precioUsdE2($plan, $cupos->conteo((string) $medico->reg_medico)));
+            $this->monto = Centavos::aDecimal($cupos->precioUsdE2(
+                $plan,
+                $cupos->conteo((string) $medico->reg_medico),
+                $frecuencia,
+            ));
 
             return;
         }
 
-        $this->monto = (float) $plan->precio_usd;
+        $this->monto = $frecuencia === Plan::ANUAL
+            ? (float) ($plan->precio_anual_usd ?? ($plan->frecuencia === Plan::ANUAL ? $plan->precio_usd : 0))
+            : (float) $plan->precio_usd;
     }
 
     /** El plan elegido tiene que cubrir al equipo (salvo que sea la renovación del mismo plan). */
@@ -408,7 +419,7 @@ class Servicios extends Component
     {
         $this->resetErrorBag();
         $this->reset([
-            'planId', 'codigo', 'nombre', 'descripcion', 'precio_usd', 'precio_tachado_usd', 'orden', 'es_default',
+            'planId', 'codigo', 'nombre', 'descripcion', 'precio_usd', 'precio_anual_usd', 'precio_tachado_usd', 'orden', 'es_default',
             'max_medicos', 'max_secretarias', 'precio_asiento_usd',
         ]);
         $this->frecuencia = Plan::MENSUAL;
@@ -417,6 +428,7 @@ class Servicios extends Component
         $this->impresion_reportes = true;
         $this->secretarias_incluidas = 0;
         $this->minimo_asientos = 0;
+        $this->meses_cobrados_anual = 10;
         $this->orden = (int) Plan::max('orden') + 1;
         $this->modal = 'plan';
     }
@@ -431,6 +443,7 @@ class Servicios extends Component
         $this->descripcion = (string) $plan->descripcion;
         $this->frecuencia = $plan->frecuencia;
         $this->precio_usd = (string) $plan->precio_usd;
+        $this->precio_anual_usd = $plan->precio_anual_usd === null ? '' : (string) $plan->precio_anual_usd;
         $this->precio_tachado_usd = $plan->precio_tachado_usd === null ? '' : (string) $plan->precio_tachado_usd;
         $this->orden = (int) $plan->orden;
         $this->visible = (bool) $plan->visible;
@@ -442,15 +455,17 @@ class Servicios extends Component
         $this->precio_asiento_usd = $plan->caracteristicas->precioAsientoUsd();
         $this->secretarias_incluidas = $plan->caracteristicas->secretariasIncluidas();
         $this->minimo_asientos = $plan->caracteristicas->minimoAsientos();
+        $this->meses_cobrados_anual = $plan->caracteristicas->mesesCobradosAnual();
         $this->modal = 'plan';
     }
 
     public function guardarPlan()
     {
-        // Los campos vacíos significan “sin límite” / “precio fijo”.
+        // Los campos vacíos significan “sin límite” / “precio fijo” / “sin precio anual”.
         $this->max_medicos = $this->max_medicos === '' ? null : $this->max_medicos;
         $this->max_secretarias = $this->max_secretarias === '' ? null : $this->max_secretarias;
         $this->precio_asiento_usd = $this->precio_asiento_usd === '' ? null : $this->precio_asiento_usd;
+        $this->precio_anual_usd = $this->precio_anual_usd === '' ? null : $this->precio_anual_usd;
 
         $this->validate([
             'codigo' => ['required', 'string', 'max:40', 'regex:/^[a-z0-9_-]+$/', Rule::unique('planes', 'codigo')->ignore($this->planId)],
@@ -458,6 +473,7 @@ class Servicios extends Component
             'descripcion' => 'nullable|string|max:255',
             'frecuencia' => ['required', Rule::in([Plan::MENSUAL, Plan::ANUAL])],
             'precio_usd' => 'required|numeric|min:0|max:99999',
+            'precio_anual_usd' => 'nullable|numeric|min:0.01|max:99999',
             'precio_tachado_usd' => 'nullable|numeric|min:0|max:99999',
             'orden' => 'required|integer|min:0|max:9999',
             'max_medicos' => 'nullable|integer|min:1|max:999',
@@ -466,17 +482,41 @@ class Servicios extends Component
             'precio_asiento_usd' => 'nullable|numeric|min:0.01|max:9999',
             'secretarias_incluidas' => 'required|integer|min:0|max:999',
             'minimo_asientos' => 'required|integer|min:0|max:999',
+            'meses_cobrados_anual' => 'required|integer|min:0|max:12',
         ], [
             'codigo.regex' => 'Solo minúsculas, números, guion y guion bajo (sin espacios).',
             'codigo.unique' => 'Ya hay un plan con ese código.',
             'max_medicos.min' => 'El plan tiene que permitir al menos 1 médico (vacío = sin límite).',
             'precio_asiento_usd.min' => 'El precio por asiento tiene que ser mayor que cero (vacío = precio fijo).',
+            'precio_anual_usd.min' => 'El precio anual tiene que ser mayor que cero (vacío = sin anual).',
         ], [
-            'codigo' => 'código', 'nombre' => 'nombre', 'precio_usd' => 'monto', 'precio_tachado_usd' => 'monto tachado',
+            'codigo' => 'código', 'nombre' => 'nombre', 'precio_usd' => 'monto mensual', 'precio_anual_usd' => 'monto anual',
+            'precio_tachado_usd' => 'monto tachado',
             'max_medicos' => 'máximo de médicos', 'max_secretarias' => 'máximo de secretarías',
             'precio_asiento_usd' => 'precio por asiento', 'secretarias_incluidas' => 'secretarías incluidas',
-            'minimo_asientos' => 'mínimo de asientos',
+            'minimo_asientos' => 'mínimo de asientos', 'meses_cobrados_anual' => 'meses que se cobran al año',
         ]);
+
+        $esPorAsiento = $this->precio_asiento_usd !== null;
+        $tieneMensual = $esPorAsiento || (
+            ! ($this->frecuencia === Plan::ANUAL && $this->precio_anual_usd === null)
+            && (float) $this->precio_usd > 0
+        );
+        $tieneAnual = $esPorAsiento
+            ? (int) $this->meses_cobrados_anual > 0
+            : (
+                ($this->precio_anual_usd !== null && (float) $this->precio_anual_usd > 0)
+                || ($this->frecuencia === Plan::ANUAL && (float) $this->precio_usd > 0)
+            );
+
+        // La frecuencia principal se ajusta a lo que el plan realmente ofrece (un plan gratuito no se toca).
+        if ($tieneMensual || $tieneAnual) {
+            if ($this->frecuencia === Plan::ANUAL && ! $tieneAnual) {
+                $this->frecuencia = Plan::MENSUAL;
+            } elseif ($this->frecuencia === Plan::MENSUAL && ! $tieneMensual) {
+                $this->frecuencia = Plan::ANUAL;
+            }
+        }
 
         $actual = $this->planId ? Plan::findOrFail($this->planId) : null;
 
@@ -499,6 +539,7 @@ class Servicios extends Component
             'descripcion' => trim((string) $this->descripcion) ?: null,
             'frecuencia' => $this->frecuencia,
             'precio_usd' => (float) $this->precio_usd,
+            'precio_anual_usd' => $this->precio_anual_usd === null ? null : (float) $this->precio_anual_usd,
             'precio_tachado_usd' => $this->precio_tachado_usd === '' || $this->precio_tachado_usd === null ? null : (float) $this->precio_tachado_usd,
             'orden' => (int) $this->orden,
             'visible' => (bool) $this->visible,
@@ -513,6 +554,7 @@ class Servicios extends Component
                 'precio_asiento_usd' => $this->precio_asiento_usd === null ? null : (float) $this->precio_asiento_usd,
                 'secretarias_incluidas' => (int) $this->secretarias_incluidas,
                 'minimo_asientos' => (int) $this->minimo_asientos,
+                'meses_cobrados_anual' => (int) $this->meses_cobrados_anual,
             ])->toArray(),
         ];
 
