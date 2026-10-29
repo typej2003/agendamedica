@@ -35,7 +35,6 @@
         <div class="card login-card">
             <div class="mb-4">
                 <h1 class="auth-titulo">Iniciar sesión</h1>
-                <p class="text-muted small mb-0">Ingresa con tu correo y tu contraseña. No tienes que elegir un tipo de usuario.</p>
             </div>
 
             {{-- El aviso que deja el restablecimiento de contraseña. --}}
