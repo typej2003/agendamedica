@@ -38,8 +38,13 @@ class CatalogosIniciales extends Component
 
     public $search = '';
 
-    /** El filtro de especialidad: '' = todas, 'general' = sin marca, o el id de una especialidad. */
+    /**
+     * El filtro de especialidad: '' = todas, 'general' = sin marca, o el id de una especialidad. Se recuerda en la sesión (`FILTRO_EN_SESION`) al pasar de un
+     * catálogo a otro (2026-10-29).
+     */
     public $especialidad = '';
+
+    private const FILTRO_EN_SESION = 'admin.catalogo-inicial.especialidad';
 
     /** @var array<int,string> las especialidades a las que aplica la fila del formulario (ninguna = general) */
     public $aplica = [];
@@ -79,6 +84,9 @@ class CatalogosIniciales extends Component
         abort_unless(Registro::existe($catalogo), 404);
         $this->catalogo = $catalogo;
         $this->f = $this->vacio();
+
+        $recordado = (string) session(self::FILTRO_EN_SESION, '');
+        $this->especialidad = $recordado === 'general' || ((int) $recordado > 0 && DB::table('specialties')->where('id', (int) $recordado)->exists()) ? $recordado : '';
     }
 
     private function autorizar(): void
@@ -95,6 +103,11 @@ class CatalogosIniciales extends Component
     public function updatingEspecialidad()
     {
         $this->resetPage();
+    }
+
+    public function updatedEspecialidad()
+    {
+        session([self::FILTRO_EN_SESION => (string) $this->especialidad]);
     }
 
     public function render()

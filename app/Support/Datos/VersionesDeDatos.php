@@ -37,6 +37,11 @@ class VersionesDeDatos
             'especialidades:sembrar',
             'catalogos:sembrar-iniciales --reemplazar=medicina-interna',
         ],
+        // Motivos de cita generales (2026-10-29): «Primera vez» y «Consulta» para todas las especialidades, desde la carpeta `general`. Sólo ese catálogo, para no
+        // volver a crear lo que el administrador haya quitado de los otros.
+        3 => [
+            'catalogos:sembrar-iniciales --solo=motivos-cita',
+        ],
     ];
 
     /** Todas las versiones declaradas, con sus comandos en orden. */

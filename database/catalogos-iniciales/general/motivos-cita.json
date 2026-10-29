@@ -1,0 +1,10 @@
+[
+ {
+  "codigo_origen": "01",
+  "tipo_atencion": "PRIMERA VEZ"
+ },
+ {
+  "codigo_origen": "02",
+  "tipo_atencion": "CONSULTA"
+ }
+]
