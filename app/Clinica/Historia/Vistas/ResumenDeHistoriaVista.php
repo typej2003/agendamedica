@@ -21,6 +21,11 @@ use Illuminate\Support\Collection;
  * configurable). Esa hoja pertenece a la pantalla de la consulta (F4) y al motor de impresión de
  * documentos (WEB-5.5), y no se duplica acá.
  *
+ * **Medicina interna** (2026-10-29): las columnas del examen físico **son otra cosa** en su escritorio (trampa 181: `faringe` es la
+ * Rx de tórax y `otros` el LDL), así que no se rotulan como examen. Su hoja `d_historia_clinica_ver` imprime en el examen físico el
+ * **resumen físico** (`resultadoexamencomp`), y después las conclusiones del **E.K.G.** (`d_ekg_reporte`) y los **radiológicos**
+ * (`d_rx_torax_reporte_3`, `faringe`): son las tres secciones que la web suma por consulta.
+ *
  * El resumen no recorta los textos: una impresión es el documento, no un listado. El membrete lo imprime
  * la vista con el nombre del médico y la fecha del resumen (`FechaDelConsultorio::hoy()`, la fecha del
  * consultorio y no la del servidor).
@@ -30,6 +35,7 @@ final class ResumenDeHistoriaVista
     /**
      * @param  Collection<int, object>  $consultas  lo que devolvió `HistoriaDelPaciente::consultas()`
      * @param  bool  $pediatria  en pediatría tres columnas del examen físico significan otra cosa (ver `examenFisico()`)
+     * @param  bool  $medicinaInterna  en medicina interna el examen es el resumen físico, con el EKG y la Rx de tórax (ver arriba)
      */
     public function __construct(
         private object $ficha,
@@ -37,6 +43,7 @@ final class ResumenDeHistoriaVista
         private Collection $consultas,
         private CarbonInterface $fecha,
         private bool $pediatria = false,
+        private bool $medicinaInterna = false,
     ) {
     }
 
@@ -96,7 +103,13 @@ final class ResumenDeHistoriaVista
             $this->agregar($secciones, 'Enfermedad actual', $consulta->enfermedadactual ?? null);
             $this->agregar($secciones, 'Diagnóstico', implode(' · ', $diagnosticos) ?: null);
             $this->agregar($secciones, 'Evolución', $consulta->evolucion ?? null);
-            $this->agregar($secciones, 'Examen físico', $this->examenFisico($consulta));
+            if ($this->medicinaInterna) {
+                $this->agregar($secciones, 'Examen físico', $consulta->resultadoexamencomp ?? null);
+                $this->agregar($secciones, 'E.K.G.', $consulta->ekg ?? null);
+                $this->agregar($secciones, 'Rx de tórax', $consulta->faringe ?? null);
+            } else {
+                $this->agregar($secciones, 'Examen físico', $this->examenFisico($consulta));
+            }
 
             return [
                 'fecha'     => FechaClinica::formato($consulta->fecha),

@@ -284,4 +284,36 @@ class ConsultaMedicinaInternaWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->get($this->seccion($consulta, 'plan-diagnostico'))
             ->assertOk()->assertDontSee('id="internista-form"', false);
     }
+
+    public function test_el_resumen_medico_y_la_historia_impresa_son_los_del_internista(): void
+    {
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+        // En su escritorio `faringe` es la Rx de tórax y `otros` el LDL (trampa 181).
+        $consulta->forceFill(['resultadoexamencomp' => 'Paciente en buenas condiciones generales.', 'faringe' => 'Índice cardiotorácico normal.', 'otros' => '130'])->save();
+        Ekg::create(['reg_medico' => $medico->reg_medico, 'numhistoria' => 2001, 'numconsulta' => 1, 'ritmo' => 'SINUSAL', 'conclusiones' => 'EKG dentro de límites normales.']);
+
+        // Resumen médico: «EXAMEN FÍSICO» es el resumen físico.
+        $this->conContexto($user, $medico, $mi)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'resumen-medico']))
+            ->assertOk()->assertSee('EXAMEN FÍSICO:')->assertSee('Paciente en buenas condiciones generales.');
+
+        // Historia impresa: el examen, el EKG y la Rx con sus nombres; nada de «Faringe» ni «Otros».
+        $paciente = (int) MedicoPaciente::where('reg_medico', $medico->reg_medico)->value('paciente_id');
+        $this->conContexto($user, $medico, $mi)->get(route('clinica.pacientes.historia.imprimir', $paciente))
+            ->assertOk()
+            ->assertSeeInOrder(['Examen físico', 'Paciente en buenas condiciones generales.', 'E.K.G.', 'EKG dentro de límites normales.', 'Rx de tórax', 'Índice cardiotorácico normal.'])
+            ->assertDontSee('Faringe:')->assertDontSee('Otros: 130');
+    }
+
+    public function test_la_historia_impresa_de_ginecologia_conserva_sus_rotulos(): void
+    {
+        [$user, $medico, $gineco] = $this->medico('ginecologia-y-obstetricia');
+        $consulta = $this->consulta($medico);
+        $consulta->forceFill(['faringe' => 'Normal.'])->save();
+
+        $paciente = (int) MedicoPaciente::where('reg_medico', $medico->reg_medico)->value('paciente_id');
+        $this->conContexto($user, $medico, $gineco)->get(route('clinica.pacientes.historia.imprimir', $paciente))
+            ->assertOk()->assertSee('Faringe: Normal.')->assertDontSee('Rx de tórax');
+    }
 }

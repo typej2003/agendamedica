@@ -106,6 +106,15 @@ final class AlcanceDeLaEspecialidad
         return $this->slug === 'medicina-interna';
     }
 
+    /**
+     * **¿El registro es de un internista?** Para lo que se arma sin el contexto clínico a mano (las hojas impresas, el resumen médico):
+     * mira las especialidades del médico dueño del `reg_medico`.
+     */
+    public static function esDeMedicinaInterna(string $regMedico): bool
+    {
+        return (bool) \App\Models\Medico::where('reg_medico', $regMedico)->first()?->specialties->contains('slug', 'medicina-interna');
+    }
+
     /** ¿Se ofrece el ítem 6 del panel (control de embarazo, gestas, FUR)? */
     public function muestraElEmbarazo(): bool
     {

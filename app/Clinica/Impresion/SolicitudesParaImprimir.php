@@ -27,6 +27,7 @@ use App\Clinica\Consulta\ReferenciasDeLaConsulta;
 use App\Clinica\Consulta\PreFacturaDeLaConsulta;
 use App\Clinica\Consulta\ReposoDeLaConsulta;
 use App\Clinica\Consulta\ResumenMedico;
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\ResumenMedicoDeLaConsulta;
 use App\Clinica\Consulta\TextoDeLaConsulta;
 use App\Clinica\Embarazo\InformePrenatal;
@@ -1473,8 +1474,7 @@ final class SolicitudesParaImprimir
     /** ¿El médico de la consulta es internista? El reposo absoluto sólo existe en su escritorio. */
     private function esDeMedicinaInterna(Consulta $consulta): bool
     {
-        return (bool) \App\Models\Medico::where('reg_medico', $consulta->reg_medico)->first()
-            ?->specialties->contains('slug', 'medicina-interna');
+        return AlcanceDeLaEspecialidad::esDeMedicinaInterna((string) $consulta->reg_medico);
     }
 
     /** **El EKG** (MI-3): la hoja de `d_dd_akg_print`, con las medidas, los bloqueos marcados, los hallazgos y las conclusiones. */

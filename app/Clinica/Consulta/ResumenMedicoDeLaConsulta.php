@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\DB;
  * `nroconsulta`, y `historia` + `consulta` en `examen_fisico_nuevo`, que es la que usa la evaluación
  * física (ver `ExamenFisicoDeLaConsulta::filaDe`)— acotada al `reg_medico` de la consulta.
  *
+ * **Medicina interna** (2026-10-29): su `d_resumen_medico_gra` imprime en «EXAMEN FÍSICO» el **resumen físico**
+ * (`consultas.resultadoexamencomp`, `d_reporte_resumen_medi_g.srd`): el internista no usa `examen_fisico_nuevo`.
+ *
  * Es de **sólo lectura**: no crea ni modifica ninguna fila.
  */
 final class ResumenMedicoDeLaConsulta
@@ -45,7 +48,7 @@ final class ResumenMedicoDeLaConsulta
             ->where('numhistoria', $historia)
             ->where('nroconsulta', $nroconsulta)
             ->orderBy('id')
-            ->first(self::COLUMNAS_DE_LA_CONSULTA);
+            ->first([...self::COLUMNAS_DE_LA_CONSULTA, 'resultadoexamencomp']);
 
         // La cabecera del resumen es la del informe de esa consulta (`informe.para` en la caja y
         // `informe.fe_cha` como fecha): si no hay informe, los dos quedan vacíos y la hoja usa la fecha de
@@ -74,7 +77,9 @@ final class ResumenMedicoDeLaConsulta
                 ResumenMedico::MOTIVO_DE_CONSULTA => $this->motivos($regMedico, $historia, $nroconsulta),
                 ResumenMedico::ENFERMEDAD_ACTUAL => $deLaConsulta->enfermedadactual ?? null,
                 ResumenMedico::MEDICIONES => $this->mediciones($regMedico, $historia, $nroconsulta),
-                ResumenMedico::EXAMEN_FISICO => TextoDeLaConsulta::limpio($examen->total_f ?? null) ?? ($pediatrico->fisico_resumen ?? null),
+                ResumenMedico::EXAMEN_FISICO => AlcanceDeLaEspecialidad::esDeMedicinaInterna($regMedico)
+                    ? ($deLaConsulta->resultadoexamencomp ?? null)
+                    : (TextoDeLaConsulta::limpio($examen->total_f ?? null) ?? ($pediatrico->fisico_resumen ?? null)),
                 ResumenMedico::CUESTIONARIO => $this->cuestionario($regMedico, $historia, $nroconsulta),
                 ResumenMedico::EXAMEN_GINECOLOGICO => $examen->total_g ?? null,
                 ResumenMedico::RESULTADO_DE_EXAMENES => $deLaConsulta->oido ?? null,
@@ -163,6 +168,16 @@ final class ResumenMedicoDeLaConsulta
             ->where(fn ($q) => $q->whereNotNull('peso')->orWhereNotNull('talla')->orWhereNotNull('c_cefalica'))
             ->distinct()
             ->pluck('hconsulta'));
+
+        // Medicina interna: el examen físico de su resumen es el resumen físico de la consulta.
+        if (AlcanceDeLaEspecialidad::esDeMedicinaInterna($regMedico)) {
+            $this->sumar($numeros, DB::table('consultas')
+                ->where('reg_medico', $regMedico)
+                ->where('numhistoria', $numero)
+                ->where(fn ($q) => $this->conTexto($q, ['resultadoexamencomp']))
+                ->distinct()
+                ->pluck('nroconsulta'));
+        }
 
         $numeros = array_map('intval', array_keys($numeros));
         sort($numeros);
