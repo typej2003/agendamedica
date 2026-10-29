@@ -70,6 +70,8 @@ use App\Http\Controllers\Clinica\ConsultaRecipesController;
 use App\Http\Controllers\Clinica\ConsultorioController;
 use App\Http\Controllers\Clinica\ContextoController;
 use App\Http\Controllers\Clinica\CumpleanosController;
+use App\Http\Controllers\Clinica\EquipoController;
+use App\Http\Controllers\Clinica\InvitacionesController;
 use App\Http\Controllers\Clinica\HistoriaDelPacienteController;
 use App\Http\Controllers\Clinica\HistoriaPediatricaController;
 use App\Http\Controllers\Clinica\HorarioController;
@@ -114,6 +116,16 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
         Route::get('/contexto', [ContextoController::class, 'editar'])->name('contexto');
         Route::post('/contexto', [ContextoController::class, 'guardar'])->name('contexto.guardar');
         Route::delete('/contexto', [ContextoController::class, 'salir'])->name('contexto.salir');
+
+        // **Invitaciones al equipo** (2026-10-28): no exigen contexto clínico. Un médico recién registrado,
+        // todavía sin consultorio elegido, tiene que poder aceptar la invitación que le llegó por correo.
+        Route::middleware('role:Root|Medico')->group(function () {
+            Route::get('/invitaciones', [InvitacionesController::class, 'index'])->name('invitaciones');
+            Route::post('/invitaciones/{invitacion}/aceptar', [InvitacionesController::class, 'aceptar'])
+                ->whereNumber('invitacion')->middleware('throttle:20,1')->name('invitaciones.aceptar');
+            Route::post('/invitaciones/{invitacion}/rechazar', [InvitacionesController::class, 'rechazar'])
+                ->whereNumber('invitacion')->middleware('throttle:20,1')->name('invitaciones.rechazar');
+        });
 
         // **El latido de la sesión** (2026-10-19): un GET vacío que el JS de la web clínica llama cada pocos
         // minutos mientras la pantalla está a la vista, para que la sesión no se venza con la consulta
@@ -215,7 +227,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // va aparte de la ficha porque es otra responsabilidad: la ficha es la filiación y el contacto,
             // la historia es lo que pasó en las consultas. Un paciente de otro médico da 404.
             Route::get('/pacientes/{paciente}/historia', [HistoriaDelPacienteController::class, 'ver'])->name('pacientes.historia');
-            Route::get('/pacientes/{paciente}/historia/imprimir', [HistoriaDelPacienteController::class, 'imprimir'])->name('pacientes.historia.imprimir');
+            Route::get('/pacientes/{paciente}/historia/imprimir', [HistoriaDelPacienteController::class, 'imprimir'])->middleware('clinica.plan.impresion')->name('pacientes.historia.imprimir');
             // El representante del paciente (WEB-3.4): el adulto que responde por él y el que presta el
             // teléfono para el recordatorio. Es un **upsert por historia** (la tabla legada tiene una fila
             // por `numhistoria`), así que cargar y editar son el mismo POST; el formulario vive en el
@@ -267,12 +279,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // La entrada del módulo Vacunas en el menú (WEB-7.4.4e): como el crecimiento, es de un paciente; manda a elegirlo.
                 Route::get('/vacunas', [VacunasDelPacienteController::class, 'entrada'])->name('vacunas');
                 Route::get('/pacientes/{paciente}/crecimiento', [CrecimientoController::class, 'ver'])->name('pacientes.crecimiento');
-                Route::get('/pacientes/{paciente}/crecimiento/imprimir', [CrecimientoController::class, 'imprimir'])->name('pacientes.crecimiento.imprimir');
+                Route::get('/pacientes/{paciente}/crecimiento/imprimir', [CrecimientoController::class, 'imprimir'])->middleware('clinica.plan.impresion')->name('pacientes.crecimiento.imprimir');
                 // **El calendario de vacunas de un niño** (WEB-7.4.4a): sólo lectura; las dosis salen del catálogo del médico.
                 Route::get('/pacientes/{paciente}/vacunas', [VacunasDelPacienteController::class, 'ver'])->name('pacientes.vacunas');
                 // **La historia pediátrica imprimible** (WEB-12.5): familia, antecedentes, mediciones y vacunas del niño. Es clínica: sólo del médico.
-                Route::get('/pacientes/{paciente}/historia-pediatrica', [HistoriaPediatricaController::class, 'imprimir'])->name('pacientes.historia-pediatrica');
-                Route::get('/pacientes/{paciente}/vacunas/carnet', [VacunasDelPacienteController::class, 'carnet'])->name('pacientes.vacunas.carnet');
+                Route::get('/pacientes/{paciente}/historia-pediatrica', [HistoriaPediatricaController::class, 'imprimir'])->middleware('clinica.plan.impresion')->name('pacientes.historia-pediatrica');
+                Route::get('/pacientes/{paciente}/vacunas/carnet', [VacunasDelPacienteController::class, 'carnet'])->middleware('clinica.plan.impresion')->name('pacientes.vacunas.carnet');
                 Route::post('/pacientes/{paciente}/vacunas', [VacunasDelPacienteController::class, 'registrar'])->name('pacientes.vacunas.registrar');
 
                 // «Anterior» (WEB-11.4): copia motivos, diagnósticos o récipes de la consulta anterior de la historia.
@@ -494,8 +506,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // **misma hoja** que imprime la secretaría desde la agenda (más abajo): acá sólo cambia por dónde
                 // se entra, y como la consulta es del médico estas dos van en su grupo.
                 Route::get('/consulta/{consulta}/recipes/{numero}/imprimir', [ImpresionDeRecipeController::class, 'delPaciente'])
-                    ->whereNumber('numero')->name('consulta.recipes.imprimir');
-                Route::get('/consulta/{consulta}/recipe-pareja/imprimir', [ImpresionDeRecipeController::class, 'dePareja'])->name('consulta.recipe-pareja.imprimir');
+                    ->whereNumber('numero')->middleware('clinica.plan.impresion')->name('consulta.recipes.imprimir');
+                Route::get('/consulta/{consulta}/recipe-pareja/imprimir', [ImpresionDeRecipeController::class, 'dePareja'])->middleware('clinica.plan.impresion')->name('consulta.recipe-pareja.imprimir');
 
                 // **El QR de verificación del récipe** (WEB-5.6): el médico puede anular el QR de un récipe ya impreso (la página
                 // pública pasa a decir «Anulado por el médico») y reactivarlo. El QR se crea al imprimir, no acá: un récipe que
@@ -551,7 +563,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/consulta/{consulta}/referencias/{cedula}', [ConsultaReferenciasController::class, 'guardar'])->whereNumber('cedula')->name('consulta.referencias.guardar');
                 Route::delete('/consulta/{consulta}/referencias/{cedula}', [ConsultaReferenciasController::class, 'eliminar'])->whereNumber('cedula')->name('consulta.referencias.eliminar');
                 // La hoja impresa de un documento (o de «todos»): `?documento=reposo`. La misma que imprime la secretaría desde la cita.
-                Route::get('/consulta/{consulta}/documentos/imprimir', [ImpresionDeDocumentosController::class, 'delaConsulta'])->name('consulta.documentos.imprimir');
+                Route::get('/consulta/{consulta}/documentos/imprimir', [ImpresionDeDocumentosController::class, 'delaConsulta'])->middleware('clinica.plan.impresion')->name('consulta.documentos.imprimir');
 
                 // **Terminar la consulta** (WEB-4.8): la acción primaria del shell. "Cerrar" **no crea un
                 // estado nuevo** (PLAN-WEB.md §3.13): es terminar la atención —dejar la cita de la agenda
@@ -646,6 +658,16 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // **Usuarios del consultorio** (WEB-8.5): el médico gestiona a su secretaria (alta con clave temporal, restablecer la clave,
                 // bloquear, desbloquear y quitar el acceso). Sólo del médico: la secretaría recibe 403. `{usuario}` es una cuenta
                 // solo-secretaría vinculada a los registros del médico del contexto; cualquier otra responde 404.
+                // **Equipo del consultorio** (2026-10-28): médicos, invitaciones y cupo del plan. Sólo el
+                // dueño del `reg_medico` (o Root) gestiona; un médico afiliado puede ver.
+                Route::get('/equipo', [EquipoController::class, 'index'])->name('equipo');
+                Route::post('/equipo/invitar', [EquipoController::class, 'invitar'])
+                    ->middleware('throttle:10,1')->name('equipo.invitar');
+                Route::post('/equipo/invitaciones/{invitacion}/revocar', [EquipoController::class, 'revocar'])
+                    ->whereNumber('invitacion')->middleware('throttle:20,1')->name('equipo.revocar');
+                Route::delete('/equipo/medicos/{medico}', [EquipoController::class, 'quitar'])
+                    ->whereNumber('medico')->middleware('throttle:20,1')->name('equipo.quitar');
+
                 Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios');
                 Route::post('/usuarios', [UsuarioController::class, 'crear'])->name('usuarios.crear');
                 Route::post('/usuarios/{usuario}/restablecer', [UsuarioController::class, 'restablecer'])->whereNumber('usuario')->name('usuarios.restablecer');
@@ -662,7 +684,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // `w_reportes_consultas.srw:449`) y los otros dos de la tarea suman su lectura y su ViewModel sin
                 // tocar estas dos rutas. Sólo el médico: son reportes de su consulta, así que la secretaría recibe
                 // **403** (mismo grupo que la consulta y los catálogos clínicos).
-                Route::get('/listados/imprimir', [ListadosController::class, 'imprimir'])->name('listados.imprimir');
+                Route::get('/listados/imprimir', [ListadosController::class, 'imprimir'])->middleware('clinica.plan.impresion')->name('listados.imprimir');
                 Route::get('/listados', [ListadosController::class, 'index'])->name('listados');
             });
 
@@ -674,7 +696,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // `{cola}`: si no, `envio`/`imprimir` entrarían como id de cita.
             Route::get('/agenda/envio', [RecordatorioController::class, 'envio'])->name('agenda.envio');
             Route::post('/agenda/envio', [RecordatorioController::class, 'enviarMasivo'])->name('agenda.envio.enviar');
-            Route::get('/agenda/imprimir', [AgendaController::class, 'imprimir'])->name('agenda.imprimir');
+            Route::get('/agenda/imprimir', [AgendaController::class, 'imprimir'])->middleware('clinica.plan.impresion')->name('agenda.imprimir');
 
             // Días no laborables (WEB-2.8): el ABM que el escritorio tiene en `w_horarios` (feriados,
             // congresos, otro consultorio, quirófano). Son parte de la agenda —la secretaria los mueve
@@ -700,7 +722,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // Desde WEB-5.3a es «Imprimir documentos»: la lista lleva los récipes **y** la constancia, el reposo, las referencias y el
             // informe de esa consulta (`?documento=recipe-1|reposo|referencia-3|todos`).
             Route::get('/agenda/{cola}/documentos', [ImpresionDeDocumentosController::class, 'listaDeLaCita'])->name('agenda.documentos');
-            Route::get('/agenda/{cola}/documentos/imprimir', [ImpresionDeDocumentosController::class, 'imprimirDeLaCita'])->name('agenda.documentos.imprimir');
+            Route::get('/agenda/{cola}/documentos/imprimir', [ImpresionDeDocumentosController::class, 'imprimirDeLaCita'])->middleware('clinica.plan.impresion')->name('agenda.documentos.imprimir');
             // Cómo sale la hoja (modo y nombre del medicamento) es **del médico del contexto**: lo guarda quien
             // imprime —el médico o su asistente— y los dos ven lo mismo la próxima vez.
             Route::post('/recipes/opciones-de-impresion', [ImpresionDeRecipeController::class, 'guardarOpciones'])->name('recipes.opciones');
@@ -752,7 +774,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             Route::get('/formato/vista-previa', [FormatoDeImpresionController::class, 'vistaPrevia'])->name('formato.vista-previa');
             // **Formatos en blanco** (WEB-5.5b): cada documento sin datos de paciente, para rellenar a mano. Sólo lee; la clave la acota el `where`.
             // El guion entra en la clave (`eco-obstetrico` y su hermano del 3.er trimestre, WEB-6.2): con `[a-z]+` la ruta no matcheaba y salía un 404 antes de llegar al controlador.
-            Route::get('/formato/en-blanco/{formato}', [FormatosEnBlancoController::class, 'ver'])->where('formato', '[a-z][a-z-]*')->name('formato.en-blanco');
+            Route::get('/formato/en-blanco/{formato}', [FormatosEnBlancoController::class, 'ver'])->where('formato', '[a-z][a-z-]*')->middleware('clinica.plan.impresion')->name('formato.en-blanco');
             Route::post('/formato/membrete', [FormatoDeImpresionGuardarController::class, 'membrete'])->name('formato.membrete');
             Route::post('/formato/logo', [FormatoDeImpresionGuardarController::class, 'logo'])->name('formato.logo');
             Route::post('/formato/estilo', [FormatoDeImpresionGuardarController::class, 'estilo'])->name('formato.estilo');

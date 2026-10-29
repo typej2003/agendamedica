@@ -31,6 +31,10 @@ class CuentaService
 {
     public const LARGO_MINIMO_CLAVE = 8;
 
+    public function __construct(private readonly CupoDelPlan $cupos)
+    {
+    }
+
     /**
      * Habilidad del token Sanctum emitido en un login con clave temporal: prueba que quien lo usa acaba de
      * escribir esa clave, así que `POST /api/app/cambiar-password` no se la vuelve a pedir. Se le quita al
@@ -619,6 +623,9 @@ class CuentaService
             throw ValidationException::withMessages(['regNuevo' => 'Este médico ya tiene acceso a ese reg_medico.']);
         }
 
+        // El plan del consultorio que recibe al médico manda: si no queda cupo, se pide mejorar el plan.
+        $this->cupos->exigirCupoMedico($regMedico);
+
         DB::transaction(function () use ($medico, $regMedico) {
             MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $regMedico]);
         });
@@ -712,6 +719,9 @@ class CuentaService
         if ($regMedico === '' || ! (Medico::where('reg_medico', $regMedico)->exists() || MedicoRegistro::where('reg_medico', $regMedico)->exists())) {
             throw ValidationException::withMessages(['reg_medico' => 'Ese consultorio no existe.']);
         }
+
+        // El plan del consultorio manda: si no queda cupo de secretaría, se pide mejorar el plan.
+        $this->cupos->exigirCupoSecretaria($regMedico);
 
         $email = $this->normalizarCorreo($email);
         try {

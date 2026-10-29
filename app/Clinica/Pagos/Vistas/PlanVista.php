@@ -7,22 +7,30 @@ use App\Pagos\Centavos;
 use Illuminate\Support\Collection;
 
 /**
- * La pantalla **«Mi plan»** del médico: qué servicio tiene, hasta cuándo, y el catálogo para renovarlo.
+ * La pantalla **«Mi plan»** del médico: qué servicio tiene, hasta cuándo, el equipo actual y el catálogo
+ * para renovarlo.
  *
- * No decide nada: el estado sale de `ServicioService` (el mismo que bloquea el sync) y los planes del
- * catálogo visible. **No muestra la tasa ni los métodos de pago**: eso se elige en la pantalla siguiente,
- * cuando el médico ya eligió el plan.
+ * No decide nada: el estado sale de `ServicioService` y los precios/cupos de `CupoDelPlan` (los recibe ya
+ * calculados). **No muestra la tasa ni los métodos de pago**: eso se elige en la pantalla siguiente.
  */
 final class PlanVista
 {
     /**
      * @param  array<string,mixed>  $estado  el de `ServicioService::estado()`
      * @param  Collection<int,Plan>  $planes
+     * @param  array{medicos:int,secretarias:int}  $conteo
+     * @param  array<int,int>  $preciosE2  plan id => precio en centavos para el equipo actual
+     * @param  array<int,?string>  $detalles  plan id => desglose por asiento (null si es fijo)
+     * @param  array<int,?string>  $motivos  plan id => por qué no cubre al equipo (null si lo cubre o es el actual)
      */
     public function __construct(
         public readonly string $regMedico,
         public readonly array $estado,
         public readonly Collection $planes,
+        public readonly array $conteo = ['medicos' => 0, 'secretarias' => 0],
+        public readonly array $preciosE2 = [],
+        public readonly array $detalles = [],
+        public readonly array $motivos = [],
     ) {
     }
 
@@ -83,9 +91,46 @@ final class PlanVista
             : null;
     }
 
+    public function medicos(): int
+    {
+        return (int) ($this->conteo['medicos'] ?? 0);
+    }
+
+    public function secretarias(): int
+    {
+        return (int) ($this->conteo['secretarias'] ?? 0);
+    }
+
+    /** “Tu equipo: 2 médicos y 1 secretaría.” */
+    public function uso(): string
+    {
+        return 'Tu equipo: ' . $this->medicos() . ' médico' . ($this->medicos() === 1 ? '' : 's')
+            . ' y ' . $this->secretarias() . ' secretaría' . ($this->secretarias() === 1 ? '' : 's') . '.';
+    }
+
+    /** ¿El plan del catálogo es el que ya está contratado? */
+    public function esElPlanActual(Plan $plan): bool
+    {
+        $actual = $this->estado['plan_id'] ?? null;
+
+        if ($actual !== null) {
+            return (int) $actual === (int) $plan->id;
+        }
+
+        return trim((string) ($this->estado['plan'] ?? '')) === trim((string) $plan->nombre);
+    }
+
     public function precioUsdTexto(Plan $plan): string
     {
-        return Centavos::formatear(Centavos::deDecimal((string) $plan->precio_usd), 'USD');
+        $centavos = $this->preciosE2[$plan->id] ?? Centavos::deDecimal((string) $plan->precio_usd);
+
+        return Centavos::formatear($centavos, 'USD');
+    }
+
+    /** El “desde” del plan por asiento, para la fila de precio. */
+    public function precioDesdeTexto(Plan $plan): string
+    {
+        return $this->precioUsdTexto($plan);
     }
 
     /** El precio anterior, el que se muestra tachado cuando el plan tiene descuento. */
@@ -97,5 +142,53 @@ final class PlanVista
     public function ahorroTexto(Plan $plan): string
     {
         return Centavos::formatear(Centavos::deDecimal((string) $plan->ahorroUsd()), 'USD');
+    }
+
+    public function esPorAsiento(Plan $plan): bool
+    {
+        return $plan->cobraPorAsiento();
+    }
+
+    public function detallePrecio(Plan $plan): ?string
+    {
+        return $this->detalles[$plan->id] ?? null;
+    }
+
+    /** Por qué este plan no cubre al equipo; null si lo cubre o si es el actual (que se puede renovar). */
+    public function motivoNoContratable(Plan $plan): ?string
+    {
+        if ($this->esElPlanActual($plan)) {
+            return null;
+        }
+
+        return $this->motivos[$plan->id] ?? null;
+    }
+
+    public function puedeContratar(Plan $plan): bool
+    {
+        return $this->motivoNoContratable($plan) === null;
+    }
+
+    /** @return array<int,string> lo que incluye el plan, en texto corto para la tabla */
+    public function incluye(Plan $plan): array
+    {
+        $maxMedicos = $plan->restricciones->maxMedicos();
+        $maxSecretarias = $plan->restricciones->maxSecretarias();
+
+        $items = [
+            $maxMedicos === null ? 'Médicos sin límite' : $maxMedicos . ' médico' . ($maxMedicos === 1 ? '' : 's'),
+            $maxSecretarias === null ? 'Secretarías sin límite' : $maxSecretarias . ' secretaría' . ($maxSecretarias === 1 ? '' : 's'),
+            $plan->caracteristicas->impresionReportes()
+                ? 'Impresión de reportes y PDF'
+                : 'Sin impresión de reportes',
+        ];
+
+        if ($plan->cobraPorAsiento()) {
+            $items[] = 'Cobro por asiento: '
+                . Centavos::formatear(Centavos::deDecimal((string) $plan->caracteristicas->precioAsientoUsd()), 'USD')
+                . ' por médico o secretaría';
+        }
+
+        return $items;
     }
 }

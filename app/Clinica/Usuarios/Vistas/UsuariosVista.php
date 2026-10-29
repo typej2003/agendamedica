@@ -29,6 +29,9 @@ final class UsuariosVista
         private string $nombreDelMedico,
         private array $urls,
         private bool $abrirNueva = false,
+        private bool $puedeAgregar = true,
+        private ?string $motivoNoPuedeAgregar = null,
+        private ?string $urlPlan = null,
     ) {
     }
 
@@ -49,6 +52,22 @@ final class UsuariosVista
     public function abrirAlCargar(): bool
     {
         return $this->abrirNueva;
+    }
+
+    /** ¿El plan del consultorio deja crear otra secretaría? */
+    public function puedeAgregarSecretaria(): bool
+    {
+        return $this->puedeAgregar;
+    }
+
+    public function motivoNoPuedeAgregar(): ?string
+    {
+        return $this->motivoNoPuedeAgregar;
+    }
+
+    public function urlPlan(): ?string
+    {
+        return $this->urlPlan;
     }
 
     public function estaVacio(): bool

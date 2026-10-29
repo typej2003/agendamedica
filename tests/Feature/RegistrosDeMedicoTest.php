@@ -7,8 +7,10 @@ use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\Paciente;
+use App\Models\Plan;
 use App\Models\User;
 use App\Services\CuentaService;
+use App\Services\ServicioService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
@@ -53,6 +55,9 @@ class RegistrosDeMedicoTest extends TestCase
             'name' => $prefijo, 'lastname' => 'Test', 'email' => "{$prefijo}-{$sufijo}@example.com", 'reg_medico' => "test-{$prefijo}-{$sufijo}",
         ], 'Clave12345');
         $r['user']->forceFill(['must_change_password' => false])->save();
+
+        // Esta prueba es de registros, no de cupos: el consultorio "real" tiene plan para 3 médicos.
+        app(ServicioService::class)->renovar($r['medico']->reg_medico, Plan::porCodigo('equipo-3'));
 
         if ($conPaciente) {
             $r['paciente'] = Paciente::create(['nombres' => 'Paciente', 'apellidos' => $prefijo]);

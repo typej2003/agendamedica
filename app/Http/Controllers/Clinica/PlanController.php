@@ -15,6 +15,7 @@ use App\Pagos\CatalogoDePasarelas;
 use App\Pagos\Cobros;
 use App\Pagos\RefrescarPagoDePlan;
 use App\Pagos\UltimoPagoDelDoctor;
+use App\Services\CupoDelPlan;
 use App\Services\ServicioService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -37,7 +38,7 @@ use RuntimeException;
  */
 class PlanController extends Controller
 {
-    public function index(Request $request, ServicioService $servicios)
+    public function index(Request $request, ServicioService $servicios, CupoDelPlan $cupos)
     {
         $regMedico = $this->regMedicoDelContexto($request);
 
@@ -47,18 +48,34 @@ class PlanController extends Controller
             ->orderBy('id')
             ->get();
 
+        $conteo = $cupos->conteo($regMedico);
+        $precios = [];
+        $detalles = [];
+        $motivos = [];
+
+        foreach ($planes as $plan) {
+            $precios[$plan->id] = $cupos->precioUsdE2($plan, $conteo);
+            $detalles[$plan->id] = $cupos->desglose($plan, $conteo);
+            $motivos[$plan->id] = $cupos->motivoNoCabe($plan, $regMedico);
+        }
+
         return view('clinica.plan.index', [
-            'vm' => new PlanVista($regMedico, $servicios->estado($regMedico), $planes),
+            'vm' => new PlanVista($regMedico, $servicios->estado($regMedico), $planes, $conteo, $precios, $detalles, $motivos),
         ]);
     }
 
     /** La pantalla del plan elegido: método de pago y monto en su moneda. */
-    public function elegir(Request $request, Plan $plan)
+    public function elegir(Request $request, Plan $plan, CupoDelPlan $cupos)
     {
-        $this->regMedicoDelContexto($request);
+        $regMedico = $this->regMedicoDelContexto($request);
 
         // Sólo se puede pagar un plan del catálogo vigente.
         $plan = Plan::where('activo', true)->where('visible', true)->findOrFail($plan->id);
+
+        $motivo = $cupos->motivoNoCabe($plan, $regMedico);
+        if ($motivo !== null) {
+            return redirect()->route('clinica.plan')->with('error', $motivo);
+        }
 
         $metodos = MetodoPago::deLaPlataforma()
             ->activos()
@@ -71,8 +88,16 @@ class PlanController extends Controller
                 && $metodo->estaConfigurado())
             ->values();
 
+        $conteo = $cupos->conteo($regMedico);
+
         return view('clinica.plan.elegir', [
-            'vm' => new PlanElegidoVista($plan, $metodos, TasaDeCambio::actual()),
+            'vm' => new PlanElegidoVista(
+                $plan,
+                $metodos,
+                TasaDeCambio::actual(),
+                $cupos->precioUsdE2($plan, $conteo),
+                $cupos->desglose($plan, $conteo),
+            ),
         ]);
     }
 

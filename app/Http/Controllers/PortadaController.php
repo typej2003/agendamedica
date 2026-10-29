@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Plan;
 use App\Reservas\CatalogoDeMedicos;
+use App\Services\CupoDelPlan;
 use Illuminate\Http\Request;
 
 /**
@@ -24,9 +25,14 @@ class PortadaController extends Controller
             return redirect()->route('reservas.catalogo', ['especialidad' => $especialidad]);
         }
 
+        $planes = Plan::where('activo', true)->where('visible', true)->orderBy('orden')->orderBy('id')->get();
+        $cupos = app(CupoDelPlan::class);
+
         return view('portada', [
             // Los mismos planes que el médico ve en `/clinica/plan`: si no hay ninguno visible, la sección no sale.
-            'planes' => Plan::where('activo', true)->where('visible', true)->orderBy('orden')->orderBy('id')->get(),
+            'planes' => $planes,
+            // El “desde” del plan por asiento (o el precio fijo), en centavos.
+            'preciosDesdeE2' => $planes->mapWithKeys(fn (Plan $plan) => [$plan->id => $cupos->precioDesdeUsdE2($plan)])->all(),
             'mesesDePrueba' => max(0, (int) config('servicios.prueba_meses')),
             // Sólo las especialidades con médicos **con agenda publicada** (las mismas del catálogo de reservas):
             // un enlace a una lista vacía no ayuda a nadie.

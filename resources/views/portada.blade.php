@@ -245,9 +245,14 @@
                 <div class="row g-4 justify-content-center">
                     @foreach ($planes as $plan)
                         @php
-                            $ahorro = $plan->ahorroUsd();
+                            $porAsiento = $plan->cobraPorAsiento();
+                            $ahorro = $porAsiento ? 0.0 : $plan->ahorroUsd();
                             $maxMedicos = $plan->restricciones->maxMedicos();
+                            $maxSecretarias = $plan->restricciones->maxSecretarias();
                             $maxHistorico = $plan->restricciones->maxHistoricoMeses();
+                            $precioMostrar = $porAsiento
+                                ? \App\Pagos\Centavos::aDecimal($preciosDesdeE2[$plan->id] ?? 0)
+                                : $plan->precio_usd;
                         @endphp
                         <div class="col-md-6 col-lg-4">
                             <article class="portada-plan {{ $ahorro > 0 ? 'portada-plan-destacado' : '' }}">
@@ -262,7 +267,7 @@
                                     @if ($ahorro > 0)
                                         <del>{{ $precio($plan->precio_tachado_usd) }}</del>
                                     @endif
-                                    <strong class="tnum">{{ $precio($plan->precio_usd) }}</strong>
+                                    <strong class="tnum">{{ $porAsiento ? 'desde ' : '' }}{{ $precio($precioMostrar) }}</strong>
                                     <span>USD / {{ $plan->frecuencia === \App\Models\Plan::ANUAL ? 'año' : 'mes' }}</span>
                                 </p>
                                 <ul>
@@ -271,6 +276,17 @@
                                     <li><i class="bi bi-check2" aria-hidden="true"></i>
                                         {{ $maxMedicos ? 'Hasta ' . $maxMedicos . ' ' . ($maxMedicos === 1 ? 'médico' : 'médicos') : 'Médicos sin límite' }}
                                     </li>
+                                    <li><i class="bi bi-check2" aria-hidden="true"></i>
+                                        {{ $maxSecretarias === null ? 'Secretarías sin límite' : 'Hasta ' . $maxSecretarias . ' ' . ($maxSecretarias === 1 ? 'secretaría' : 'secretarías') }}
+                                    </li>
+                                    @if ($plan->caracteristicas->impresionReportes())
+                                        <li><i class="bi bi-check2" aria-hidden="true"></i> Impresión de reportes y PDF</li>
+                                    @endif
+                                    @if ($porAsiento)
+                                        <li><i class="bi bi-check2" aria-hidden="true"></i>
+                                            {{ $precio($plan->caracteristicas->precioAsientoUsd()) }} por médico o secretaría; 1 secretaría incluida
+                                        </li>
+                                    @endif
                                     @if ($maxHistorico)
                                         <li><i class="bi bi-check2" aria-hidden="true"></i> Histórico de {{ $maxHistorico }} {{ $maxHistorico === 1 ? 'mes' : 'meses' }}</li>
                                     @endif

@@ -158,6 +158,11 @@ final class ArmazonVista
             $accesos[] = ['texto' => 'Cambiar consultorio', 'icono' => 'bi-arrow-repeat', 'url' => route('clinica.contexto'), 'primario' => false];
         }
 
+        // Las invitaciones a otros equipos son del médico: la secretaría no recibe ni acepta invitaciones.
+        if ($this->trabajaLaConsulta) {
+            $accesos[] = ['texto' => 'Invitaciones', 'icono' => 'bi-envelope-paper', 'url' => route('clinica.invitaciones'), 'primario' => false];
+        }
+
         if ($this->esAdministrador) {
             $accesos[] = ['texto' => 'Panel', 'icono' => 'bi-speedometer2', 'url' => route('dashboard'), 'primario' => true];
         }
@@ -307,6 +312,7 @@ final class ArmazonVista
                     ['clinica.plan', 'Mi plan', 'bi-credit-card'],
                     ['clinica.formato', 'Formato de impresión', 'bi-printer'],
                     ['clinica.mensajes', 'Mensajes a pacientes', 'bi-chat-text'],
+                    ['clinica.equipo', 'Equipo', 'bi-person-plus'],
                     ['clinica.usuarios', 'Usuarios', 'bi-people'],
                     ['clinica.bitacora', 'Bitácora', 'bi-clock-history'],
                 ] as [$ruta, $texto, $icono]) {
