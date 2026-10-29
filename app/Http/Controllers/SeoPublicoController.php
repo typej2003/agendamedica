@@ -14,10 +14,16 @@ use Illuminate\Support\Facades\Cache;
  */
 class SeoPublicoController extends Controller
 {
-    /** Lo que ningún buscador tiene que recorrer: el consultorio, el panel, el API y las cuentas. */
+    /**
+     * Lo que ningún buscador tiene que recorrer: el consultorio, el panel, el API y las cuentas, y los pasos del código de
+     * verificación (`/reservar/{id}/codigo`, `/registro/codigo`, `/registro/medico/codigo`): son el `action` de un formulario,
+     * y un `GET` sin reserva o registro en curso redirige (302) a su formulario, que es lo correcto y no tiene nada que indexar.
+     * El comodín `*` no alcanza a `/reservar/{id}` ni a `/registro/medico`: ambas rutas terminan antes de `/codigo`.
+     */
     private const PRIVADO = [
         '/admin', '/clinica', '/dashboard', '/api', '/livewire', '/pulse',
         '/mis-citas', '/agendar', '/users', '/cambiar-password', '/elegir-panel',
+        '/reservar/*/codigo', '/registro/codigo', '/registro/medico/codigo',
     ];
 
     public function robots()

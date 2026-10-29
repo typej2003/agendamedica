@@ -11,6 +11,7 @@ use App\Actions\Agenda\ReordenarCola;
 use App\Actions\Pacientes\CrearPaciente;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SyncAppDataRequest;
+use App\Sync\Escritorio\TablasDelSync;
 use App\Sync\Escritorio\TablasLegado;
 use App\Http\Resources\ConfiguracionMedicoResource;
 use App\Http\Resources\RecipeFormatoResource;
@@ -856,6 +857,12 @@ class SyncAppDataController extends Controller
             // motivo que `configuracion`: son pocas filas y el filtro de agenda los necesita todos,
             // no por delta.
             'medicos' => $this->medicosDelTenant($registrosMedicos),
+            // **Las especialidades del médico con la sesión** (2026-10-29): son los `slug` del pivote
+            // `medico_specialty`, los mismos que usa la web para su contexto. El app los necesita para
+            // enseñar sólo los módulos que le tocan —los ecos y lo ginecológico no se le muestran a un
+            // pediatra—; sin ellos, el teléfono se queda con el núcleo general de cualquier especialidad.
+            // Va acá y no en `configuracion` porque no es un dato de `evolucion`: el pivote es de AppDDR.
+            'especialidades' => app(TablasDelSync::class)->especialidadesDe($medicoModel),
             // Estado del servicio contratado, para que el app muestre el vencimiento y avise antes de que
             // venza (y no intente sincronizar cuando ya venció).
             'servicio' => collect($estadoServicio)->only(
