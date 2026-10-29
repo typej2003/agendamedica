@@ -25,6 +25,7 @@ final class PlanVista
      * @param  array<int,int>  $preciosAnualesE2  plan id => precio anual para el equipo actual
      * @param  array<int,int>  $ahorrosAnualesE2  plan id => ahorro del anual frente a 12 meses
      * @param  array<int,?string>  $detallesAnuales  plan id => desglose del anual
+     * @param  string  $frecuenciaElegida  la del selector global (anual por defecto)
      */
     public function __construct(
         public readonly string $regMedico,
@@ -37,6 +38,7 @@ final class PlanVista
         public readonly array $preciosAnualesE2 = [],
         public readonly array $ahorrosAnualesE2 = [],
         public readonly array $detallesAnuales = [],
+        public readonly string $frecuenciaElegida = Plan::ANUAL,
     ) {
     }
 
@@ -148,6 +150,74 @@ final class PlanVista
     public function ofreceAnual(Plan $plan): bool
     {
         return $plan->ofreceAnual();
+    }
+
+    public function esAnual(): bool
+    {
+        return $this->frecuenciaElegida === Plan::ANUAL;
+    }
+
+    public function urlFrecuencia(string $frecuencia): string
+    {
+        return route('clinica.plan', ['frecuencia' => $frecuencia]);
+    }
+
+    /**
+     * La frecuencia con la que se muestra esa fila: la global si el plan la ofrece; si no, la otra.
+     * Así un plan sólo mensual sigue mostrando un precio aunque el selector esté en anual.
+     */
+    public function frecuenciaDeLaFila(Plan $plan): string
+    {
+        if ($this->frecuenciaElegida === Plan::ANUAL && $plan->ofreceAnual()) {
+            return Plan::ANUAL;
+        }
+        if ($this->frecuenciaElegida === Plan::MENSUAL && $plan->ofreceMensual()) {
+            return Plan::MENSUAL;
+        }
+
+        return $plan->ofreceAnual() ? Plan::ANUAL : Plan::MENSUAL;
+    }
+
+    public function precioDeLaFila(Plan $plan): string
+    {
+        return $this->frecuenciaDeLaFila($plan) === Plan::ANUAL
+            ? $this->precioAnualUsdTexto($plan)
+            : $this->precioUsdTexto($plan);
+    }
+
+    public function periodoDeLaFila(Plan $plan): string
+    {
+        return $this->frecuenciaDeLaFila($plan) === Plan::ANUAL ? 'año' : 'mes';
+    }
+
+    public function detalleDeLaFila(Plan $plan): ?string
+    {
+        return $this->frecuenciaDeLaFila($plan) === Plan::ANUAL
+            ? $this->detallePrecioAnual($plan)
+            : $this->detallePrecio($plan);
+    }
+
+    /** El ahorro del anual, sólo cuando la fila se muestra en anual y el plan también tiene mensual. */
+    public function ahorroDeLaFila(Plan $plan): ?string
+    {
+        if ($this->frecuenciaDeLaFila($plan) !== Plan::ANUAL || ! $plan->ofreceMensual()) {
+            return null;
+        }
+
+        return $this->ahorroAnualTexto($plan);
+    }
+
+    public function mesesDeAhorroDeLaFila(Plan $plan): int
+    {
+        return $this->ahorroDeLaFila($plan) === null ? 0 : $this->mesesDeAhorro($plan);
+    }
+
+    public function urlComoPagar(Plan $plan): string
+    {
+        return route('clinica.plan.elegir', [
+            $plan,
+            'frecuencia' => $this->frecuenciaDeLaFila($plan),
+        ]);
     }
 
     public function precioAnualUsdTexto(Plan $plan): string

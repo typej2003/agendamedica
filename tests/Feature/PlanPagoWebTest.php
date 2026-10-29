@@ -761,10 +761,15 @@ class PlanPagoWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get(route('clinica.plan'))
             ->assertOk()
-            ->assertSee('USD 20,00')
             ->assertSee('USD 200,00')
             ->assertSee('Ahorras USD 40,00')
             ->assertSee('2 meses');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.plan', ['frecuencia' => 'mensual']))
+            ->assertOk()
+            ->assertSee('USD 20,00')
+            ->assertDontSee('Ahorras USD 40,00');
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get(route('clinica.plan.elegir', [$plan, 'frecuencia' => 'anual']))
