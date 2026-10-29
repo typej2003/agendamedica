@@ -2,6 +2,9 @@
  * **El aviso de cambios sin guardar de las secciones del internista** (MI-2 a MI-5): el formulario `[data-consulta-internista]`
  * muestra `#internista-form-sin-guardar` en cuanto cambia algún campo, pregunta antes de «Cancelar» y avisa al cerrar la
  * página. A diferencia del aviso de `consulta.js`, que mira un solo texto, éste compara **todos** los campos del formulario.
+ *
+ * Desde el 2026-10-29 también escucha `consulta:guardado`: «Guardar todo» del diálogo de salida guarda por `fetch` y, sin
+ * enterarse, el aviso seguía encendido y el diálogo no avanzaba.
  */
 (function () {
     'use strict';
@@ -18,11 +21,11 @@
             .join('&');
     }
 
-    const guardado = estado();
+    let lineaBase = estado();
     let enviando = false;
 
     function sucio() {
-        return !enviando && estado() !== guardado;
+        return !enviando && estado() !== lineaBase;
     }
 
     function pintarAviso() {
@@ -32,6 +35,14 @@
     formulario.addEventListener('input', pintarAviso);
     formulario.addEventListener('change', pintarAviso);
     formulario.addEventListener('submit', function () { enviando = true; });
+
+    // «Guardar todo» del diálogo de salida (`consulta-salida.js`) guarda este formulario por `fetch`, sin recargar la
+    // página: el nuevo punto de partida es lo que hay ahora. Sin esto el aviso de `beforeunload` seguía diciendo que
+    // había cambios, y el diálogo no avanzaba aunque el servidor ya lo hubiera guardado (Alexander, 2026-10-29).
+    formulario.addEventListener('consulta:guardado', function () {
+        lineaBase = estado();
+        pintarAviso();
+    });
 
     const cancelar = formulario.querySelector('a[href]');
     if (cancelar) {

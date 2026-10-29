@@ -467,6 +467,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // **Medicina interna** (MI-2 a MI-5, 2026-10-28): una pestaña de sus secciones propias (la pestaña viaja en el cuerpo).
                 Route::post('/consulta/{consulta}/internista', [\App\Http\Controllers\Clinica\ConsultaInternistaController::class, 'guardar'])
                     ->name('consulta.internista.guardar');
+                // «Actualizar» del resumen físico (Alexander, 2026-10-29): arma el texto con los signos y el examen guardados.
+                Route::post('/consulta/{consulta}/internista/resumen', [\App\Http\Controllers\Clinica\ConsultaInternistaController::class, 'resumen'])
+                    ->name('consulta.internista.resumen');
 
                 // Exámenes e imágenes de la consulta (WEB-4.7): el ítem 7 del panel. La sección **lee**
                 // los exámenes de laboratorio de la consulta (`examen_paciente`, que escribe el

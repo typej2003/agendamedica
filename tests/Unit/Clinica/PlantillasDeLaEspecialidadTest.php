@@ -18,14 +18,15 @@ class PlantillasDeLaEspecialidadTest extends TestCase
 {
     private const GINECO = 'ginecologia-y-obstetricia';
 
-    public function test_ginecologia_ofrece_todos_los_tipos_conocidos_menos_los_de_pediatria(): void
+    public function test_ginecologia_ofrece_todos_los_tipos_conocidos_menos_los_de_pediatria_y_el_examen_funcional(): void
     {
-        // Las tres de *Exámenes/Estudios* son de la consulta pediátrica (2026-10-19): sólo se ocultan ésas.
-        $this->assertSame(['EX', 'IG', 'EE'], PlantillasDeLaEspecialidad::ocultos(self::GINECO));
+        // Las tres de *Exámenes/Estudios* son de la consulta pediátrica (2026-10-19) y el examen funcional (`EF`) es del
+        // internista (2026-10-29): sólo se ocultan ésos.
+        $this->assertSame(['EF', 'EX', 'IG', 'EE'], PlantillasDeLaEspecialidad::ocultos(self::GINECO));
 
         $nombres = PlantillasDeLaEspecialidad::nombres(self::GINECO);
         $this->assertSame(
-            array_values(array_diff(array_keys(TiposDePlantillaDeTexto::nombres()), ['EX', 'IG', 'EE'])),
+            array_values(array_diff(array_keys(TiposDePlantillaDeTexto::nombres()), ['EF', 'EX', 'IG', 'EE'])),
             array_values(array_keys($nombres)),
         );
     }
@@ -34,7 +35,7 @@ class PlantillasDeLaEspecialidadTest extends TestCase
     {
         $codigos = PlantillasDeLaEspecialidad::codigos('pediatria');
 
-        foreach (['CO', 'CI', 'HI', 'RE', 'EG', 'UG', 'O1', 'O2', 'O3', 'ED', 'UM', 'UA', 'EM', 'ER'] as $tipo) {
+        foreach (['CO', 'CI', 'HI', 'RE', 'EG', 'UG', 'O1', 'O2', 'O3', 'ED', 'UM', 'UA', 'EM', 'ER', 'EF'] as $tipo) {
             $this->assertNotContains($tipo, $codigos, 'Pediatría no ofrece ' . $tipo . '.');
         }
 

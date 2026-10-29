@@ -36,6 +36,10 @@ final class InternistaVista
         private ?string $urlImprimir = null,
         private array $evolucion = [],
         private ?RiesgoQuirurgicoVista $riesgo = null,
+        // Las plantillas del **examen funcional** (`formato_print` tipo `EF`, Alexander 2026-10-29).
+        private array $plantillas = [],
+        // La URL del «Actualizar» del resumen físico (el `ue_resume` del escritorio), o `null`.
+        private ?string $urlResumen = null,
     ) {
     }
 
@@ -75,6 +79,56 @@ final class InternistaVista
     public function esRiesgo(): bool
     {
         return $this->pestana === MapaDelInternista::PESTANA_RIESGO;
+    }
+
+    /** ¿Es la solapa del **resumen físico**, la que arma «Actualizar» con los signos y el examen? */
+    public function esResumen(): bool
+    {
+        return $this->pestana === 'resumen';
+    }
+
+    /**
+     * **¿La pestaña ofrece plantillas de texto?** Sólo el examen funcional (tipo `EF`): las plantillas se copian a su
+     * campo, como en las solapas de texto de la consulta y en el resumen del examen físico.
+     */
+    public function ofrecePlantillas(): bool
+    {
+        return $this->pestana === 'funcional';
+    }
+
+    /**
+     * Las plantillas `formato_print` del médico para el examen funcional (tipo `EF`), listas para pintar.
+     *
+     * @return array<int,array{titulo:string, texto:string}>
+     */
+    public function plantillas(): array
+    {
+        return array_map(
+            fn (object $plantilla) => ['titulo' => (string) $plantilla->titulo, 'texto' => (string) $plantilla->texto],
+            $this->plantillas,
+        );
+    }
+
+    /** El campo al que se copian las plantillas del examen funcional (`#interna-funcionae`). */
+    public function campoDePlantillas(): string
+    {
+        $campos = MapaDelInternista::deLaPestana($this->pestana);
+
+        return 'interna-' . ($campos[0]['clave'] ?? 'funcionae');
+    }
+
+    public function tipoDePlantillas(): string
+    {
+        return 'EF';
+    }
+
+    /**
+     * **La URL de «Actualizar» del resumen físico** (el `ue_resume` del escritorio): arma el texto con los signos y el
+     * examen ya guardados. `null` en las demás pestañas.
+     */
+    public function urlResumen(): ?string
+    {
+        return $this->urlResumen;
     }
 
     /** El riesgo operatorio (reusa la solapa de cirugía pediátrica: `_quirurgico-riesgo` lo lee con `riesgo()`). */

@@ -53,4 +53,16 @@ class EdadEnTextoTest extends TestCase
         $this->assertSame('0 días', EdadEnTexto::entre('2026-05-04', '2026-05-04'));
         $this->assertNull(EdadEnTexto::entre('2026-05-05', '2026-05-04'));
     }
+
+    public function test_la_edad_del_encabezado_es_detallada_hasta_los_seis_anios_y_despues_solo_anios(): void
+    {
+        // Alexander, 2026-10-29: la edad en la barra de la consulta, en cualquier especialidad.
+        $this->assertSame('5 días', EdadEnTexto::aLaFecha('2026-04-29', '2026-05-04'));
+        $this->assertSame('3 meses 12 días', EdadEnTexto::aLaFecha('2024-07-02', '2024-10-14'));
+        $this->assertSame('5 años 4 meses 3 días', EdadEnTexto::aLaFecha('2021-01-01', '2026-05-04'));
+        $this->assertSame('6 años', EdadEnTexto::aLaFecha('2020-05-04', '2026-05-04'));
+        $this->assertSame('36 años', EdadEnTexto::aLaFecha('1990-05-10', '2026-10-05'));
+        $this->assertNull(EdadEnTexto::aLaFecha('2026-05-05', '2026-05-04'));
+        $this->assertNull(EdadEnTexto::aLaFecha(null, '2026-05-04'));
+    }
 }

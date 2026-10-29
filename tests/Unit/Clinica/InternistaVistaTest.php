@@ -56,6 +56,34 @@ class InternistaVistaTest extends TestCase
         $this->assertNull(GuardarDatosDelInternista::imc(80, null));
     }
 
+    public function test_el_examen_funcional_ofrece_sus_plantillas_y_el_resumen_su_actualizar(): void
+    {
+        $funcional = new InternistaVista(
+            MapaDelInternista::SECCION_FISICO, 'funcional',
+            [['clave' => 'funcional', 'texto' => 'Examen funcional', 'url' => '/f', 'activa' => true, 'cargada' => false]],
+            ['funcionae' => 'Disnea de esfuerzo.'], '/guardar', '/volver',
+            [], null, [], null,
+            [(object) ['titulo' => 'NORMAL', 'texto' => 'Sin disnea.']],
+        );
+
+        $this->assertTrue($funcional->ofrecePlantillas());
+        $this->assertSame('EF', $funcional->tipoDePlantillas());
+        $this->assertSame('interna-funcionae', $funcional->campoDePlantillas());
+        $this->assertSame([['titulo' => 'NORMAL', 'texto' => 'Sin disnea.']], $funcional->plantillas());        $this->assertFalse($funcional->esResumen());
+        $this->assertNull($funcional->urlResumen());
+
+        $resumen = new InternistaVista(
+            MapaDelInternista::SECCION_FISICO, 'resumen',
+            [['clave' => 'resumen', 'texto' => 'Resumen físico', 'url' => '/r', 'activa' => true, 'cargada' => false]],
+            ['resultadoexamencomp' => 'PESO: 80 kg.'], '/guardar', '/volver',
+            [], null, [], null, [], '/resumen',
+        );
+
+        $this->assertTrue($resumen->esResumen());
+        $this->assertSame('/resumen', $resumen->urlResumen());
+        $this->assertFalse($resumen->ofrecePlantillas());
+    }
+
     public function test_la_normalizacion_de_cada_tipo(): void
     {
         $numero = ['tipo' => 'numero'];

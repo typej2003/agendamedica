@@ -36,6 +36,28 @@ final class EdadEnTexto
     }
 
     /**
+     * **La edad del encabezado de la consulta**, para cualquier especialidad (Alexander, 2026-10-29): a los menores de
+     * 6 años con meses y días, como la lee un pediatra; de ahí en adelante, sólo los años cumplidos («36 años»), que es
+     * lo que importa en un adulto. Se cuenta **a la fecha de la consulta**, no a hoy.
+     *
+     * `null` si falta alguna fecha, no se entiende, o la segunda es anterior al nacimiento.
+     */
+    public static function aLaFecha(?string $nacimiento, ?string $fecha): ?string
+    {
+        $d = self::diferencia($nacimiento, $fecha);
+
+        if ($d === null) {
+            return null;
+        }
+
+        if ($d->y >= 6) {
+            return $d->y . ' años';
+        }
+
+        return self::entre($nacimiento, $fecha);
+    }
+
+    /**
      * La edad **compacta** del impreso del escritorio de pediatría: «21A 10M 16D» (años, meses y días). Es la de la
      * cabecera del récipe —`EDAD: 21A 10M 16D`— y no reemplaza a `entre()`, que es el texto largo de la consulta.
      *
