@@ -52,10 +52,15 @@ class VersionesDeDatosTest extends TestCase
             'especialidades:sembrar',
             'catalogos:sembrar-iniciales --reemplazar=medicina-interna',
         ], $registro->pendientes(0)[2]);
-        $this->assertSame([2 => [
+        $this->assertSame([
             'especialidades:sembrar',
             'catalogos:sembrar-iniciales --reemplazar=medicina-interna',
-        ]], $registro->pendientes(1));
+        ], $registro->pendientes(1)[2]);
+    }
+
+    public function test_la_version_3_siembra_solo_los_motivos_de_cita(): void
+    {
+        $this->assertSame([3 => ['catalogos:sembrar-iniciales --solo=motivos-cita']], (new VersionesDeDatos())->pendientes(2));
     }
 
     public function test_solo_devuelve_las_versiones_mayores_que_la_actual_y_en_orden(): void

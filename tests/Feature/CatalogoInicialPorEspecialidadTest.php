@@ -548,4 +548,86 @@ class CatalogoInicialPorEspecialidadTest extends TestCase
         $this->assertSame('es un centro médico', app(CargarCatalogosInicialesAlMedico::class)->ejecutar($centro->fresh())['saltado']);
         $this->assertSame([], $this->propias('diagnosticos', $centro, 'descripcion'));
     }
+
+    public function test_la_carpeta_general_deja_general_y_la_marca_nueva_llega_aunque_alcance_el_umbral(): void
+    {
+        $ped = $this->esp('pediatria');
+        $oft = $this->esp('oftalmologia');
+        $int = $this->esp('medicina-interna');
+        // Lo que ya estaba sembrado de pediatría y oftalmología.
+        $consulta = $this->ini('motivo_cita', ['codigo' => '01', 'tipo_atencion' => 'CONSULTA'], [$ped, $oft]);
+        $control = $this->ini('motivo_cita', ['codigo' => '02', 'tipo_atencion' => 'CONTROL'], [$ped, $oft]);
+        $this->ini('diagnosticos', ['codediagnostico' => '0001', 'descripcion' => 'FIEBRE'], [$ped]);
+
+        $carpeta = $this->archivos([
+            'general' => ['motivos-cita' => [['codigo_origen' => '01', 'tipo_atencion' => 'Primera vez'], ['codigo_origen' => '02', 'tipo_atencion' => 'CONSULTA']]],
+            'pediatria' => ['motivos-cita' => [['codigo_origen' => '1', 'tipo_atencion' => 'CONTROL'], ['codigo_origen' => '2', 'tipo_atencion' => 'CONSULTA']]],
+            'oftalmologia' => ['motivos-cita' => [['codigo_origen' => '1', 'tipo_atencion' => 'CONTROL']]],
+            'medicina-interna' => [
+                'motivos-cita' => [['codigo_origen' => '1', 'tipo_atencion' => 'CONTROL']],
+                'diagnosticos' => [['codigo_origen' => '1', 'descripcion' => 'HIPERTENSION']],
+            ],
+        ]);
+
+        $r = app(SembrarCatalogosIniciales::class)->ejecutar($carpeta, false, [], ['motivos-cita']);
+
+        // `general` no es una especialidad, y con `--solo` los diagnósticos no se tocan.
+        $this->assertSame([], $r['sin_especialidad']);
+        $this->assertSame(['motivos-cita'], array_keys($r['catalogos']));
+        $this->assertSame(0, DB::table('diagnosticos')->whereNull('reg_medico')->where('descripcion', 'HIPERTENSION')->count());
+
+        // PRIMERA VEZ nace general; CONSULTA estaba marcada y pasa a general.
+        $primera = (int) DB::table('motivo_cita')->whereNull('reg_medico')->where('tipo_atencion', 'PRIMERA VEZ')->value('id');
+        $this->assertNotSame(0, $primera);
+        $this->assertSame([], Marcas::de('motivos-cita', [$primera, $consulta]));
+
+        // CONTROL ya llegaba a tres especialidades: no queda general, pero medicina interna se suma a sus marcas.
+        $this->assertEqualsCanonicalizing([$ped->id, $oft->id, $int->id], Marcas::de('motivos-cita', [$control])[$control]);
+
+        // Un internista recibe los dos generales y CONTROL.
+        [, $medico] = $this->medico([$int]);
+        $this->assertSame(['CONSULTA', 'CONTROL', 'PRIMERA VEZ'], app(CopiarCatalogoInicial::class)->novedades('motivos-cita', [$medico->reg_medico], [$int->id])
+            ->pluck('tipo_atencion')->map(fn ($v) => trim((string) $v))->sort()->values()->all());
+
+        // Otra vez: no cambia nada.
+        $r2 = app(SembrarCatalogosIniciales::class)->ejecutar($carpeta, false, [], ['motivos-cita']);
+        $this->assertSame(['nuevas' => 0, 'generales' => 0, 'marcas' => 0, 'lineas' => 0], $r2['catalogos']['motivos-cita']);
+    }
+
+    public function test_solo_siembra_tambien_lo_que_referencia_y_rechaza_un_catalogo_desconocido(): void
+    {
+        $ped = $this->esp('pediatria');
+        $carpeta = $this->archivos(['pediatria' => [
+            'tipos-examen' => [['codigo_origen' => '001', 'tipo' => 'LABORATORIO']],
+            'examenes' => [['codigo_origen' => '041', 'examen' => 'HEMOGRAMA', 'codetipo' => '001']],
+            'diagnosticos' => [['codigo_origen' => '1', 'descripcion' => 'ASMA']],
+        ]]);
+
+        $r = app(SembrarCatalogosIniciales::class)->ejecutar($carpeta, false, [], ['examenes']);
+
+        $this->assertSame(['tipos-examen', 'examenes'], array_keys($r['catalogos']));
+        $this->assertSame(1, DB::table('examenes')->whereNull('reg_medico')->where('examen', 'HEMOGRAMA')->count());
+        $this->assertSame(0, DB::table('diagnosticos')->whereNull('reg_medico')->count());
+
+        $this->expectException(InvalidArgumentException::class);
+        app(SembrarCatalogosIniciales::class)->ejecutar($carpeta, false, [], ['no-existe']);
+    }
+
+    public function test_el_filtro_de_especialidad_se_recuerda_al_pasar_a_otro_catalogo(): void
+    {
+        $this->actingAs($this->admin());
+        $ped = $this->esp('pediatria');
+        $this->ini('diagnosticos', ['codediagnostico' => '0001', 'descripcion' => 'FIEBRE']);
+        $this->ini('examenes', ['codeexamen' => '001', 'examen' => 'HEMOGRAMA'], [$ped]);
+
+        Livewire::test(CatalogosIniciales::class, ['catalogo' => 'diagnosticos'])->set('especialidad', (string) $ped->id);
+        Livewire::test(CatalogosIniciales::class, ['catalogo' => 'examenes'])->assertSet('especialidad', (string) $ped->id)->assertSee('HEMOGRAMA');
+
+        Livewire::test(CatalogosIniciales::class, ['catalogo' => 'examenes'])->set('especialidad', 'general');
+        Livewire::test(CatalogosIniciales::class, ['catalogo' => 'diagnosticos'])->assertSet('especialidad', 'general')->assertSee('FIEBRE');
+
+        // Una especialidad que ya no existe vuelve a «Todas».
+        session(['admin.catalogo-inicial.especialidad' => '999999']);
+        Livewire::test(CatalogosIniciales::class, ['catalogo' => 'diagnosticos'])->assertSet('especialidad', '');
+    }
 }
