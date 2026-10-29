@@ -49,6 +49,11 @@ class SyncAppDataRequest extends FormRequest
         // especialidad.
         'consultas' => [
             'enfermedadactual', 'evolucion', 'laringe',
+            // Las solapas de texto del examen ginecológico (WEB-6.5): el teléfono las escribe con la
+            // misma regla de columna y el mismo last-write-wins que las tres de arriba. `observaciones`
+            // es la colposcopía, `faringe` la citología, `cuello` la histeroscopía y `oido` el resultado
+            // de exámenes (en pediatría las dos últimas significan otra cosa; no se renombran).
+            'observaciones', 'faringe', 'cuello', 'oido',
             'peso', 'talla', 'fc', 'pp', 'circcefalica', 'circtoraxica', 'circabdominal',
         ],
         'examen_fisico_nuevo' => [

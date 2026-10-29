@@ -152,6 +152,33 @@ class SyncConsultaColumnasTest extends TestCase
         $this->assertSame($medico->reg_medico, $rastro->reg_medico);
     }
 
+    public function test_crear_una_consulta_con_las_solapas_ginecologicas_de_texto(): void
+    {
+        $medico = $this->medico();
+        $historia = $this->historia($medico);
+
+        $this->sync([[
+            'table' => 'consultas',
+            'operation' => 'created',
+            'temp_id' => -61,
+            'numhistoria' => $historia->numhistoria,
+            'fecha' => '2026-01-16',
+            'columns' => [
+                'observaciones' => 'ZONA DE TRANSFORMACIÓN TIPO 1.',
+                'faringe' => 'CITOLOGÍA NEGATIVA.',
+                'cuello' => 'CAVIDAD UTERINA NORMAL.',
+                'oido' => 'LABORATORIO SIN HALLAZGOS.',
+            ],
+        ]]);
+
+        $consulta = $this->consulta($historia);
+        $this->assertNotNull($consulta);
+        $this->assertSame('ZONA DE TRANSFORMACIÓN TIPO 1.', $consulta->observaciones);
+        $this->assertSame('CITOLOGÍA NEGATIVA.', $consulta->faringe);
+        $this->assertSame('CAVIDAD UTERINA NORMAL.', $consulta->cuello);
+        $this->assertSame('LABORATORIO SIN HALLAZGOS.', $consulta->oido);
+    }
+
     public function test_crear_una_consulta_con_antropometria_guarda_los_numeros(): void
     {
         $medico = $this->medico();
