@@ -733,6 +733,11 @@ class PlanPagoWebTest extends TestCase
         $this->assertSame(4800, (int) $pago->monto_usd_e2);
         $this->assertStringContainsString('4 asientos', (string) $pago->concepto);
 
+        $anual = app(Cobros::class)->crearParaPlan($medico->reg_medico, $asiento, $metodo, $user->id, 'anual');
+        $this->assertSame(48000, (int) $anual->monto_usd_e2);
+        $this->assertSame(12, (int) $anual->meses);
+        $this->assertStringContainsString('anual', (string) $anual->concepto);
+
         app(\App\Services\CuentaService::class)->crearSecretaria(
             'Secretaria dos',
             'asiento-sec2-' . substr(uniqid(), -6) . '@example.com',
@@ -743,6 +748,90 @@ class PlanPagoWebTest extends TestCase
 
         $this->assertSame(6000, (int) $conDos->monto_usd_e2);
         $this->assertStringContainsString('5 asientos', (string) $conDos->concepto);
+    }
+
+    public function test_el_mismo_plan_ofrece_mes_y_ano_con_el_ahorro_de_dos_meses(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoDePrueba();
+        $plan = $this->planDePrueba();
+        $plan->update(['precio_anual_usd' => 200]);
+        $metodo = $this->metodoDePrueba();
+        TasaDeCambio::fijar('36,5');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.plan'))
+            ->assertOk()
+            ->assertSee('USD 20,00')
+            ->assertSee('USD 200,00')
+            ->assertSee('Ahorras USD 40,00')
+            ->assertSee('2 meses');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.plan.elegir', [$plan, 'frecuencia' => 'anual']))
+            ->assertOk()
+            ->assertSee('Anual (12 meses)')
+            ->assertSee('USD 200,00')
+            ->assertSee('ahorras USD 40,00')
+            ->assertSee('name="frecuencia" value="anual"', false);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.plan.comprar'), [
+                'plan_id' => $plan->id,
+                'metodo_pago_id' => $metodo->id,
+                'frecuencia' => 'anual',
+            ])
+            ->assertRedirect();
+
+        $pago = Pago::latest('id')->firstOrFail();
+        $this->assertSame(20000, (int) $pago->monto_usd_e2);
+        $this->assertSame(12, (int) $pago->meses);
+        $this->assertStringContainsString('anual', (string) $pago->concepto);
+    }
+
+    public function test_el_pago_anual_renueva_doce_meses_y_no_uno(): void
+    {
+        [$user, $medico] = $this->medicoDePrueba('anual');
+        $plan = $this->planDePrueba();
+        $plan->update(['precio_anual_usd' => 200]);
+        $metodo = $this->metodoDePrueba();
+        TasaDeCambio::fijar('36,5');
+
+        $pago = app(Cobros::class)->crearParaPlan($medico->reg_medico, $plan, $metodo, $user->id, 'anual');
+        $pago->update(['estado' => Pago::APROBADO, 'pagado_el' => now()]);
+
+        app(\App\Actions\Pagos\ConfirmarPagoDePlan::class)->ejecutar($pago);
+
+        $servicio = RegMedicoServicio::where('reg_medico', $medico->reg_medico)
+            ->where('origen', RegMedicoServicio::ORIGEN_COMPRA)
+            ->firstOrFail();
+
+        $this->assertSame(12, (int) round($servicio->inicia_el->diffInMonths($servicio->vence_el)));
+        $this->assertSame('200.00', (string) $servicio->monto_usd);
+    }
+
+    public function test_un_plan_anual_viejo_sigue_siendo_solo_anual(): void
+    {
+        [$user, $medico] = $this->medicoDePrueba('viejo-anual');
+        $metodo = $this->metodoDePrueba();
+        TasaDeCambio::fijar('36,5');
+
+        $plan = $this->planDePrueba('anual-viejo-' . substr(uniqid(), -5));
+        $plan->update([
+            'frecuencia' => Plan::ANUAL,
+            'precio_usd' => 199.90,
+            'precio_anual_usd' => null,
+        ]);
+
+        $this->assertFalse($plan->fresh()->ofreceMensual());
+        $this->assertTrue($plan->fresh()->ofreceAnual());
+        $this->assertSame(12, $plan->fresh()->meses());
+
+        $pago = app(Cobros::class)->crearParaPlan($medico->reg_medico, $plan->fresh(), $metodo, $user->id, 'anual');
+        $this->assertSame(19990, (int) $pago->monto_usd_e2);
+        $this->assertSame(12, (int) $pago->meses);
+
+        $this->expectException(\RuntimeException::class);
+        app(Cobros::class)->crearParaPlan($medico->reg_medico, $plan->fresh(), $metodo, $user->id, 'mensual');
     }
 
     public function test_un_medico_no_puede_ver_el_pago_de_otro(): void

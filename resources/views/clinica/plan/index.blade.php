@@ -69,9 +69,9 @@
                         <tr>
                             <th>Plan</th>
                             <th>Incluye</th>
-                            <th>Frecuencia</th>
+                            <th>Cómo se paga</th>
                             <th class="text-end">Precio para tu equipo</th>
-                            <th class="text-end">Pagar</th>
+                            <th class="text-end">Contratar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -101,18 +101,49 @@
                                         @endforeach
                                     </ul>
                                 </td>
-                                <td>{{ $plan->frecuencia === \App\Models\Plan::ANUAL ? 'Anual (12 meses)' : 'Mensual' }}</td>
+                                <td>
+                                    @if ($plan->ofreceMensual() && $plan->ofreceAnual())
+                                        <span class="badge bg-light text-dark border">Mensual o anual</span>
+                                    @elseif ($plan->ofreceAnual())
+                                        <span class="badge bg-light text-dark border">Anual (12 meses)</span>
+                                    @else
+                                        <span class="badge bg-light text-dark border">Mensual</span>
+                                    @endif
+                                </td>
                                 <td class="text-end">
-                                    <div class="fw-semibold">{{ $vm->precioUsdTexto($plan) }}</div>
-                                    @if ($vm->detallePrecio($plan))
-                                        <small class="text-muted d-block">{{ $vm->detallePrecio($plan) }}</small>
+                                    @if (! $plan->ofreceMensual() && ! $plan->ofreceAnual())
+                                        <span class="fw-semibold">Gratis</span>
+                                    @endif
+                                    @if ($plan->ofreceMensual())
+                                        <div class="fw-semibold">
+                                            {{ $vm->precioUsdTexto($plan) }} <small class="text-muted fw-normal">/mes</small>
+                                        </div>
+                                        @if ($vm->detallePrecio($plan))
+                                            <small class="text-muted d-block">{{ $vm->detallePrecio($plan) }}</small>
+                                        @endif
+                                    @endif
+                                    @if ($vm->ofreceAnual($plan))
+                                        <div class="{{ $plan->ofreceMensual() ? 'mt-1' : 'fw-semibold' }}">
+                                            {{ $vm->precioAnualUsdTexto($plan) }} <small class="text-muted fw-normal">/año</small>
+                                        </div>
+                                        @if ($vm->ahorroAnualTexto($plan) !== 'USD 0,00')
+                                            <small class="text-success d-block">
+                                                Ahorras {{ $vm->ahorroAnualTexto($plan) }}
+                                                @if ($vm->mesesDeAhorro($plan) > 0)
+                                                    ({{ $vm->mesesDeAhorro($plan) }} {{ $vm->mesesDeAhorro($plan) === 1 ? 'mes' : 'meses' }})
+                                                @endif
+                                            </small>
+                                        @endif
+                                        @if ($vm->detallePrecioAnual($plan))
+                                            <small class="text-muted d-block">{{ $vm->detallePrecioAnual($plan) }}</small>
+                                        @endif
                                     @endif
                                 </td>
                                 <td class="text-end">
                                     @if ($vm->puedeContratar($plan))
                                         <a href="{{ route('clinica.plan.elegir', $plan) }}" class="btn btn-primary btn-sm text-nowrap">
                                             <i class="bi bi-credit-card me-1" aria-hidden="true"></i>
-                                            {{ $vm->esElPlanActual($plan) ? 'Renovar' : 'Pagar' }}
+                                            {{ $plan->ofreceMensual() && $plan->ofreceAnual() ? 'Cómo pagar' : ($vm->esElPlanActual($plan) ? 'Renovar' : 'Pagar') }}
                                         </a>
                                     @else
                                         <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap" disabled

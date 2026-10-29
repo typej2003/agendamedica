@@ -240,26 +240,60 @@ final class CupoDelPlan
             . '. Quita a alguien del equipo o elige un plan que los cubra.';
     }
 
-    /** El precio del plan para este equipo, en centavos de USD. */
-    public function precioUsdE2(Plan $plan, array $conteo): int
+    /** El precio del plan para este equipo, en centavos de USD, según la frecuencia elegida. */
+    public function precioUsdE2(Plan $plan, array $conteo, string $frecuencia = Plan::MENSUAL): int
+    {
+        return $frecuencia === Plan::ANUAL
+            ? $this->precioAnualUsdE2($plan, $conteo)
+            : $this->precioMensualUsdE2($plan, $conteo);
+    }
+
+    /** El precio de un mes de servicio para este equipo, en centavos de USD. */
+    public function precioMensualUsdE2(Plan $plan, array $conteo): int
     {
         if (! $plan->cobraPorAsiento()) {
             return Centavos::deDecimal((string) $plan->precio_usd);
         }
 
         $precioAsiento = Centavos::deDecimal((string) $plan->caracteristicas->precioAsientoUsd());
-        $meses = $plan->frecuencia === Plan::ANUAL ? 12 : 1;
 
         return $precioAsiento * $plan->asientosQueSeCobran(
             (int) ($conteo['medicos'] ?? 0),
             (int) ($conteo['secretarias'] ?? 0),
-        ) * $meses;
+        );
+    }
+
+    /** El precio de 12 meses de servicio, en centavos de USD. */
+    public function precioAnualUsdE2(Plan $plan, array $conteo): int
+    {
+        if ($plan->cobraPorAsiento()) {
+            $meses = max(1, $plan->caracteristicas->mesesCobradosAnual());
+
+            return $this->precioMensualUsdE2($plan, $conteo) * $meses;
+        }
+
+        if ($plan->precio_anual_usd !== null) {
+            return Centavos::deDecimal((string) $plan->precio_anual_usd);
+        }
+
+        // Compatibilidad: una fila anual vieja tiene el precio del año en `precio_usd`.
+        if ($plan->frecuencia === Plan::ANUAL) {
+            return Centavos::deDecimal((string) $plan->precio_usd);
+        }
+
+        return $this->precioMensualUsdE2($plan, $conteo) * 12;
+    }
+
+    /** Lo que se ahorra el anual frente a doce meses sueltos, en centavos de USD. */
+    public function ahorroAnualUsdE2(Plan $plan, array $conteo): int
+    {
+        return max(0, 12 * $this->precioMensualUsdE2($plan, $conteo) - $this->precioAnualUsdE2($plan, $conteo));
     }
 
     /** El precio mínimo del plan (para “desde” en la portada y el panel). */
-    public function precioDesdeUsdE2(Plan $plan): int
+    public function precioDesdeUsdE2(Plan $plan, string $frecuencia = Plan::MENSUAL): int
     {
-        return $this->precioUsdE2($plan, ['medicos' => 0, 'secretarias' => 0]);
+        return $this->precioUsdE2($plan, ['medicos' => 0, 'secretarias' => 0], $frecuencia);
     }
 
     public function asientos(Plan $plan, array $conteo): int
@@ -270,11 +304,16 @@ final class CupoDelPlan
         );
     }
 
-    /** “4 asientos × USD 12,00 · 1 secretaría incluida”, o null si el plan es de precio fijo. */
-    public function desglose(Plan $plan, array $conteo): ?string
+    /**
+     * “4 asientos × USD 12,00 · 1 secretaría incluida · 12 meses (pagas 10)”, o null si no hay nada
+     * que explicar (un plan fijo mensual).
+     */
+    public function desglose(Plan $plan, array $conteo, string $frecuencia = Plan::MENSUAL): ?string
     {
         if (! $plan->cobraPorAsiento()) {
-            return null;
+            return $frecuencia === Plan::ANUAL && $plan->ofreceMensual() && $plan->precio_anual_usd !== null
+                ? '12 meses · pagas 10'
+                : null;
         }
 
         $asientos = $this->asientos($plan, $conteo);
@@ -285,6 +324,10 @@ final class CupoDelPlan
         if ($incluidas > 0) {
             $texto .= ' · ' . $incluidas . ' secretaría' . ($incluidas === 1 ? '' : 's')
                 . ' incluida' . ($incluidas === 1 ? '' : 's');
+        }
+
+        if ($frecuencia === Plan::ANUAL) {
+            $texto .= ' · 12 meses (pagas ' . $plan->caracteristicas->mesesCobradosAnual() . ')';
         }
 
         return $texto;

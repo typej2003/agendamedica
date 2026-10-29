@@ -50,17 +50,34 @@ class PlanController extends Controller
 
         $conteo = $cupos->conteo($regMedico);
         $precios = [];
+        $preciosAnuales = [];
+        $ahorrosAnuales = [];
         $detalles = [];
+        $detallesAnuales = [];
         $motivos = [];
 
         foreach ($planes as $plan) {
-            $precios[$plan->id] = $cupos->precioUsdE2($plan, $conteo);
-            $detalles[$plan->id] = $cupos->desglose($plan, $conteo);
+            $precios[$plan->id] = $cupos->precioUsdE2($plan, $conteo, Plan::MENSUAL);
+            $preciosAnuales[$plan->id] = $cupos->precioUsdE2($plan, $conteo, Plan::ANUAL);
+            $ahorrosAnuales[$plan->id] = $plan->ofreceMensual() ? $cupos->ahorroAnualUsdE2($plan, $conteo) : 0;
+            $detalles[$plan->id] = $cupos->desglose($plan, $conteo, Plan::MENSUAL);
+            $detallesAnuales[$plan->id] = $cupos->desglose($plan, $conteo, Plan::ANUAL);
             $motivos[$plan->id] = $cupos->motivoNoCabe($plan, $regMedico);
         }
 
         return view('clinica.plan.index', [
-            'vm' => new PlanVista($regMedico, $servicios->estado($regMedico), $planes, $conteo, $precios, $detalles, $motivos),
+            'vm' => new PlanVista(
+                $regMedico,
+                $servicios->estado($regMedico),
+                $planes,
+                $conteo,
+                $precios,
+                $detalles,
+                $motivos,
+                $preciosAnuales,
+                $ahorrosAnuales,
+                $detallesAnuales,
+            ),
         ]);
     }
 
@@ -90,13 +107,31 @@ class PlanController extends Controller
 
         $conteo = $cupos->conteo($regMedico);
 
+        $frecuencia = (string) $request->query('frecuencia', $plan->frecuenciaPorDefecto());
+        if ($frecuencia === Plan::ANUAL && ! $plan->ofreceAnual()) {
+            return redirect()->route('clinica.plan.elegir', $plan)->with('error', 'Este plan no tiene precio anual.');
+        }
+        if ($frecuencia === Plan::MENSUAL && ! $plan->ofreceMensual()) {
+            return redirect()->route('clinica.plan.elegir', $plan)->with('error', 'Este plan no tiene precio mensual.');
+        }
+        if (! in_array($frecuencia, [Plan::MENSUAL, Plan::ANUAL], true)) {
+            $frecuencia = $plan->frecuenciaPorDefecto();
+        }
+
+        $precioMensualE2 = $cupos->precioUsdE2($plan, $conteo, Plan::MENSUAL);
+        $precioAnualE2 = $cupos->precioUsdE2($plan, $conteo, Plan::ANUAL);
+
         return view('clinica.plan.elegir', [
             'vm' => new PlanElegidoVista(
                 $plan,
                 $metodos,
                 TasaDeCambio::actual(),
-                $cupos->precioUsdE2($plan, $conteo),
-                $cupos->desglose($plan, $conteo),
+                $cupos->precioUsdE2($plan, $conteo, $frecuencia),
+                $cupos->desglose($plan, $conteo, $frecuencia),
+                $frecuencia,
+                $precioMensualE2,
+                $precioAnualE2,
+                $cupos->ahorroAnualUsdE2($plan, $conteo),
             ),
         ]);
     }
@@ -109,7 +144,10 @@ class PlanController extends Controller
         $datos = $request->validate([
             'plan_id' => ['required', 'integer'],
             'metodo_pago_id' => ['required', 'integer'],
-        ], [], ['plan_id' => 'plan', 'metodo_pago_id' => 'método de pago']);
+            'frecuencia' => ['nullable', Rule::in([Plan::MENSUAL, Plan::ANUAL])],
+        ], [
+            'frecuencia.in' => 'Elige pagar por mes o por año.',
+        ], ['plan_id' => 'plan', 'metodo_pago_id' => 'método de pago', 'frecuencia' => 'frecuencia']);
 
         $plan = Plan::where('activo', true)->where('visible', true)->find($datos['plan_id']);
         if (! $plan) {
@@ -125,8 +163,10 @@ class PlanController extends Controller
             return back()->with('error', 'Ese método de pago no está disponible.');
         }
 
+        $frecuencia = (string) ($datos['frecuencia'] ?? $plan->frecuenciaPorDefecto());
+
         try {
-            $pago = $cobros->crearParaPlan($regMedico, $plan, $metodo, $request->user()->id);
+            $pago = $cobros->crearParaPlan($regMedico, $plan, $metodo, $request->user()->id, $frecuencia);
         } catch (RuntimeException $e) {
             return back()->with('error', $e->getMessage());
         }

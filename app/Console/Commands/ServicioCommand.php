@@ -103,8 +103,12 @@ class ServicioCommand extends Command
             return self::FAILURE;
         }
 
-        if ($monto === null && $plan->cobraPorAsiento()) {
-            $monto = Centavos::aDecimal($cupos->precioUsdE2($plan, $cupos->conteo($reg)));
+        if ($monto === null) {
+            $monto = Centavos::aDecimal($cupos->precioUsdE2(
+                $plan,
+                $cupos->conteo($reg),
+                $plan->frecuenciaPorDefecto(),
+            ));
         }
 
         try {

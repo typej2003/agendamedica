@@ -100,6 +100,23 @@ class LandingWebTest extends TestCase
             ->assertDontSee('Plan Portada Inactivo');
     }
 
+    public function test_un_plan_con_precio_anual_muestra_los_dos_y_el_ahorro(): void
+    {
+        $sufijo = substr(uniqid(), -6);
+        $this->plan('portada-anual-' . $sufijo, 'Plan Portada Anual', [
+            'precio_usd' => 20,
+            'precio_anual_usd' => 200,
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Plan Portada Anual')
+            ->assertSee('$20')
+            ->assertSee('$200')
+            ->assertSee('ahorras $40')
+            ->assertSee('2 meses');
+    }
+
     public function test_sin_planes_visibles_no_sale_la_seccion(): void
     {
         Plan::query()->update(['visible' => false]);

@@ -149,8 +149,8 @@
                             <tr>
                                 <th>Plan</th>
                                 <th>Incluye</th>
-                                <th>Frecuencia</th>
-                                <th class="text-end">Monto (USD)</th>
+                                <th>Cobro</th>
+                                <th class="text-end">Precios (USD)</th>
                                 <th class="text-end">Tachado</th>
                                 <th class="text-end">Ahorro</th>
                                 <th class="text-center">Contratos</th>
@@ -180,13 +180,35 @@
                                             </small>
                                         @endif
                                     </td>
-                                    <td>{{ $plan->frecuencia === 'anual' ? 'Anual (12 meses)' : 'Mensual' }}</td>
-                                    <td class="text-end">
-                                        @if ($plan->cobraPorAsiento())
-                                            <span class="d-block fw-semibold">Desde {{ \App\Pagos\Centavos::aTexto(\App\Pagos\Centavos::deDecimal((string) $plan->caracteristicas->precioAsientoUsd()) * max(1, $plan->caracteristicas->minimoAsientos())) }}</span>
-                                            <small class="text-muted">{{ (float) $plan->precio_usd > 0 ? number_format((float) $plan->precio_usd, 2, ',', '.') . ' fijo' : 'Sin monto fijo' }}</small>
+                                    <td>
+                                        @if (! $plan->ofreceMensual() && ! $plan->ofreceAnual())
+                                            Gratis
+                                        @elseif ($plan->ofreceMensual() && $plan->ofreceAnual())
+                                            Mensual o anual
+                                        @elseif ($plan->ofreceAnual())
+                                            Anual (12 meses)
                                         @else
-                                            {{ number_format((float) $plan->precio_usd, 2, ',', '.') }}
+                                            Mensual
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        @php
+                                            $precioMensualVista = $plan->cobraPorAsiento()
+                                                ? (float) $plan->caracteristicas->precioAsientoUsd() * max(1, $plan->caracteristicas->minimoAsientos())
+                                                : (float) $plan->precio_usd;
+                                            $precioAnualVista = $plan->cobraPorAsiento()
+                                                ? $precioMensualVista * max(1, $plan->caracteristicas->mesesCobradosAnual())
+                                                : (float) ($plan->precio_anual_usd ?? ($plan->frecuencia === 'anual' ? $plan->precio_usd : 0));
+                                        @endphp
+                                        @if ($plan->ofreceMensual())
+                                            <span class="d-block fw-semibold">
+                                                {{ $plan->cobraPorAsiento() ? 'Desde ' : '' }}{{ number_format($precioMensualVista, 2, ',', '.') }} <small class="text-muted fw-normal">/mes</small>
+                                            </span>
+                                        @endif
+                                        @if ($plan->ofreceAnual())
+                                            <span class="d-block {{ $plan->ofreceMensual() ? 'text-muted' : 'fw-semibold' }}">
+                                                {{ $plan->cobraPorAsiento() ? 'Desde ' : '' }}{{ number_format($precioAnualVista, 2, ',', '.') }} <small class="fw-normal">/año</small>
+                                            </span>
                                         @endif
                                     </td>
                                     <td class="text-end">
@@ -522,21 +544,29 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-4 mb-3">
-                                    <label class="form-label">Frecuencia</label>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Frecuencia principal</label>
                                     <select class="form-select" wire:model="frecuencia">
                                         <option value="mensual">Mensual (1 mes)</option>
                                         <option value="anual">Anual (12 meses)</option>
                                     </select>
+                                    <div class="form-text">La que se elige por defecto al contratar.</div>
                                     @error('frecuencia') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
-                                <div class="col-4 mb-3">
-                                    <label class="form-label">Monto (USD) <span class="text-danger">*</span></label>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Monto mensual (USD)</label>
                                     <input type="number" min="0" step="0.01" class="form-control" wire:model.live="precio_usd">
+                                    <div class="form-text">0 = no se ofrece por mes.</div>
                                     @error('precio_usd') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
-                                <div class="col-4 mb-3">
-                                    <label class="form-label">Tachado (USD)</label>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Monto anual (USD)</label>
+                                    <input type="number" min="0.01" step="0.01" class="form-control" wire:model.live="precio_anual_usd" placeholder="Sin anual">
+                                    <div class="form-text">Vacío = no se ofrece por año.</div>
+                                    @error('precio_anual_usd') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Tachado mensual (USD)</label>
                                     <input type="number" min="0" step="0.01" class="form-control" wire:model.live="precio_tachado_usd">
                                     @error('precio_tachado_usd') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                 </div>
@@ -546,6 +576,17 @@
                                     Se mostrará <del>{{ number_format((float) $precio_tachado_usd, 2, ',', '.') }}</del>
                                     <strong>{{ number_format((float) $precio_usd, 2, ',', '.') }}</strong>
                                     · ahorro de USD {{ number_format($ahorroVista, 2, ',', '.') }}
+                                </p>
+                            @endif
+                            @php
+                                $ahorroAnualVista = is_numeric($precio_anual_usd) && is_numeric($precio_usd)
+                                    ? max(0, 12 * (float) $precio_usd - (float) $precio_anual_usd)
+                                    : 0;
+                            @endphp
+                            @if ($ahorroAnualVista > 0)
+                                <p class="text-success small mb-3">
+                                    Anual: pagas {{ number_format((float) $precio_anual_usd, 2, ',', '.') }} y tienes 12 meses
+                                    · ahorro de USD {{ number_format($ahorroAnualVista, 2, ',', '.') }}
                                 </p>
                             @endif
 
@@ -574,23 +615,29 @@
                                     <label class="form-check-label" for="plan-impresion">Permite imprimir reportes y generar PDF</label>
                                 </div>
                                 <div class="row">
-                                    <div class="col-4 mb-3">
+                                    <div class="col-md-3 mb-3">
                                         <label class="form-label">Precio por asiento (USD)</label>
                                         <input type="number" min="0.01" step="0.01" class="form-control" wire:model.live="precio_asiento_usd" placeholder="Precio fijo">
                                         <div class="form-text">Vacío = se cobra el monto fijo de arriba.</div>
                                         @error('precio_asiento_usd') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                     </div>
-                                    <div class="col-4 mb-3">
+                                    <div class="col-md-3 mb-3">
                                         <label class="form-label">Secretarías incluidas</label>
                                         <input type="number" min="0" max="999" class="form-control" wire:model="secretarias_incluidas">
                                         <div class="form-text">La “1 secretaría gratis” del plan por asiento.</div>
                                         @error('secretarias_incluidas') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                     </div>
-                                    <div class="col-4 mb-3">
+                                    <div class="col-md-3 mb-3">
                                         <label class="form-label">Mínimo de asientos</label>
                                         <input type="number" min="0" max="999" class="form-control" wire:model="minimo_asientos">
                                         <div class="form-text">Piso que se cobra aunque el equipo sea más chico.</div>
                                         @error('minimo_asientos') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Meses que se cobran al año</label>
+                                        <input type="number" min="0" max="12" class="form-control" wire:model="meses_cobrados_anual">
+                                        <div class="form-text">Plan por asiento: 10 = paga 10 meses y recibe 12. 0 = sin anual.</div>
+                                        @error('meses_cobrados_anual') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
                             </div>

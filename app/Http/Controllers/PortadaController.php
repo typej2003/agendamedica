@@ -33,6 +33,12 @@ class PortadaController extends Controller
             'planes' => $planes,
             // El “desde” del plan por asiento (o el precio fijo), en centavos.
             'preciosDesdeE2' => $planes->mapWithKeys(fn (Plan $plan) => [$plan->id => $cupos->precioDesdeUsdE2($plan)])->all(),
+            'preciosAnualesDesdeE2' => $planes->mapWithKeys(fn (Plan $plan) => [$plan->id => $cupos->precioDesdeUsdE2($plan, Plan::ANUAL)])->all(),
+            'ahorrosAnualesE2' => $planes->mapWithKeys(fn (Plan $plan) => [
+                $plan->id => $plan->ofreceMensual()
+                    ? $cupos->ahorroAnualUsdE2($plan, ['medicos' => 0, 'secretarias' => 0])
+                    : 0,
+            ])->all(),
             'mesesDePrueba' => max(0, (int) config('servicios.prueba_meses')),
             // Sólo las especialidades con médicos **con agenda publicada** (las mismas del catálogo de reservas):
             // un enlace a una lista vacía no ayuda a nadie.
