@@ -991,6 +991,7 @@ class SyncAppDataController extends Controller
             app(\App\Actions\Consulta\GuardarInformeDeLaConsulta::class),
             app(\App\Actions\Consulta\GuardarHospitalizacionDeLaConsulta::class),
             app(\App\Actions\Consulta\GuardarDietaDeLaConsulta::class),
+            app(\App\Actions\Consulta\EliminarRecipe::class),
         );
         $creadosAntes = count($creados);
 

@@ -14,6 +14,7 @@ use App\Actions\Consulta\GuardarEcoObstetrico;
 use App\Actions\Consulta\GuardarEcoObstetricoSegundo;
 use App\Actions\Consulta\GuardarEcoObstetricoTercero;
 use App\Actions\Consulta\GuardarConstanciaDeLaConsulta;
+use App\Actions\Consulta\EliminarRecipe;
 use App\Actions\Consulta\GuardarDietaDeLaConsulta;
 use App\Actions\Consulta\GuardarEvaluacionFisica;
 use App\Actions\Consulta\GuardarHospitalizacionDeLaConsulta;
@@ -199,6 +200,7 @@ class CreacionesClinicas
         private GuardarInformeDeLaConsulta $guardarInforme,
         private GuardarHospitalizacionDeLaConsulta $guardarHospitalizacion,
         private GuardarDietaDeLaConsulta $guardarDieta,
+        private EliminarRecipe $eliminarRecipe,
     ) {
     }
 
@@ -259,6 +261,7 @@ class CreacionesClinicas
             'informe' => $this->crearInforme($change, $tempId, $rechazar),
             'hospitalizacion' => $this->crearHospitalizacion($change, $tempId, $rechazar),
             'dieta_paciente' => $this->crearDieta($change, $tempId, $rechazar),
+            'recipes_ediciones' => $this->aplicarEdicionDeRecipe($change, $tempId, $rechazar),
         };
         if ($respuesta !== null) {
             $creados[] = $respuesta;
@@ -1320,6 +1323,53 @@ class CreacionesClinicas
         $this->anotar('dieta_paciente', $fila->id, $tempId, $consulta->reg_medico);
 
         return $this->respuestaDe('dieta_paciente', $tempId, $fila->id);
+    }
+
+    /**
+     * **Editar o eliminar un récipe ya subido** (v22): la operación viaja como una creación de
+     * `recipes_ediciones` y acá se aplica con las mismas Actions de la web. `accion = eliminar` borra el
+     * récipe entero; cualquier otra cosa lo corrige con `GuardarRecipe`.
+     */
+    private function aplicarEdicionDeRecipe(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if ($consulta === null) {
+            $rechazar('La consulta del récipe no existe.');
+
+            return null;
+        }
+
+        $numero = (int) ($change['numero'] ?? 0);
+        if ($numero < 1) {
+            $rechazar('El récipe no tiene número.');
+
+            return null;
+        }
+
+        $accion = (string) ($change['accion'] ?? 'editar');
+        try {
+            if ($accion === 'eliminar') {
+                $this->eliminarRecipe->ejecutar($consulta, $numero, null, 'mobile');
+            } else {
+                $items = $change['items'] ?? [];
+                $this->guardarRecipe->ejecutar(
+                    $consulta,
+                    is_array($items) ? $items : [],
+                    null,
+                    $numero,
+                    null,
+                    'mobile',
+                );
+            }
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+
+            return null;
+        }
+
+        $this->anotar('recipes_ediciones', max(1, $numero), $tempId, $consulta->reg_medico);
+
+        return ['table' => 'recipes_ediciones', 'temp_id' => $tempId, 'id' => max(1, $numero)];
     }
 
     private function yaCreado(string $table, int $tempId): ?int

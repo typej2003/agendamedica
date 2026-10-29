@@ -285,6 +285,9 @@ class SyncAppDataRequest extends FormRequest
         // Documentos de la consulta: constancia, reposo, referencia e informe se crean en el teléfono y se
         // escriben con las mismas Actions de la web. Cuelgan de la consulta por su id o por sus números.
         'constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'hospitalizacion', 'dieta_paciente',
+        // Edición o baja de un récipe ya subido: la operación entera viaja como una creación y el servidor
+        // aplica `GuardarRecipe` o `EliminarRecipe`.
+        'recipes_ediciones',
     ];
 
     /**
@@ -314,6 +317,8 @@ class SyncAppDataRequest extends FormRequest
         // Documentos de la consulta que el teléfono crea (constancia, reposo, referencia e informe). Sin
         // esta entrada, el lote entero se rechaza con 422, incluido el pull.
         'constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'hospitalizacion', 'dieta_paciente',
+        // La edición/baja de un récipe ya subido viaja como creación de esta tabla de operaciones.
+        'recipes_ediciones',
     ];
 
     /**
