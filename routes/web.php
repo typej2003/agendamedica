@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\CambiarPasswordWebController;
 use App\Http\Controllers\Auth\ElegirPanelController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PortadaController;
+use App\Http\Controllers\SeoPublicoController;
 
 
 /*
@@ -55,10 +56,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/users/permissions', \App\Http\Livewire\Admin\PermissionsUsers::class)->name('users.permissions')->middleware('role:Root|Administrador');
 });
 
-Route::get('/medicos/buscar', ListSearch::class)->name('medicos.search');
+// Búsqueda heredada: ningún menú ni correo la enlaza (el registro y las reservas tienen sus propias pantallas), así que no se
+// indexa. La cabecera sirve aunque la página no tenga título ni descripción propios.
+Route::group(['middleware' => [function ($request, $next) {
+    return tap($next($request), fn ($respuesta) => $respuesta->headers->set('X-Robots-Tag', 'noindex, follow'));
+}]], function () {
+    Route::get('/medicos/buscar', ListSearch::class)->name('medicos.search');
 
-Route::get('/register/patient', ListSearch::class)->name('register.patient');
-Route::get('/register/doctor', ListSearch::class)->name('register.doctor');
+    Route::get('/register/patient', ListSearch::class)->name('register.patient');
+    Route::get('/register/doctor', ListSearch::class)->name('register.doctor');
+});
+
+// Para los buscadores: el mapa del sitio y las reglas de rastreo (ver `SeoPublicoController`).
+Route::get('/sitemap.xml', [SeoPublicoController::class, 'sitemap'])->name('seo.sitemap');
+Route::get('/robots.txt', [SeoPublicoController::class, 'robots'])->name('seo.robots');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/agendar/{medicoId}/{medicalCenterId?}', ViewCalendar::class)->name('agendar.cita');

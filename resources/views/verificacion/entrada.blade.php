@@ -1,6 +1,7 @@
 @extends('verificacion.layout')
 
 @section('titulo', $vm->titulo())
+@section('descripcion', 'Verifica que un récipe impreso con Doctorísimo es auténtico: escanea el código QR de la hoja o escribe el código que aparece junto a él.')
 
 @section('contenido')
     {{-- La entrada por código (WEB-5.6): para quien no pudo escanear el QR de la hoja. --}}

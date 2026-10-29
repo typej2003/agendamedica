@@ -902,6 +902,14 @@ trabajo de reconstrucción), una de `Feature/CargaInicialTest` (el aviso único 
 Los catálogos suman `Feature/BusquedaDeCatalogoCorregidaWebTest` (4: el récipe, los motivos, `literal` y
 «si lo escrito encuentra no se toca»).
 
+**SEO de las páginas públicas** (auditoría de Plesk, 2026-10-29). `layouts/app.blade.php` acepta las secciones `description`, `robots` y `canonical`
+(`@section('description', …)` en la vista; cada página pública lleva la suya, única, de 120-160 caracteres y en tuteo), y el catálogo de
+reservas nombra la especialidad en el título y la descripción cuando llega `?especialidad=` (con `?buscar=` va `noindex`). Restablecer
+contraseña (`auth/passwords/*`) está en español, con `<h1>` y `noindex`; `/registro` es `noindex, follow`. `/sitemap.xml` y `/robots.txt` los
+sirve `SeoPublicoController` (no hay `public/robots.txt`: lleva el dominio de cada entorno con `url()`); las fichas del sitemap salen de
+`CatalogoDeMedicos` con una hora de caché (`seo.sitemap.fichas`). La búsqueda heredada de Livewire (`/medicos/buscar`, `/register/*`) no está
+enlazada y sale con `X-Robots-Tag: noindex`. Tests: `Feature/SeoPublicoTest`.
+
 **El tablero de Laravel Pulse** (`/pulse`, 2026-10-24). `laravel/pulse` v1.8.1 registra los requests, las
 consultas lentas, las excepciones, la cache, las colas y la foto del servidor; el tablero se abre en `/pulse`
 y **sólo entra el rol `Root`** (gate `viewPulse` en `AppServiceProvider::boot()`; el resto de las cuentas y

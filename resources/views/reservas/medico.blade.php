@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('title', $medico->nombre_mostrar . ' · Reservar cita')
+@section('description', 'Reserva en línea tu cita con ' . $medico->nombre_mostrar
+    . ($especialidades->isNotEmpty() ? ' (' . $especialidades->pluck('name')->implode(', ') . ')' : '')
+    . '. Mira sus próximos horarios y confirma con un código en tu teléfono.')
 
 @push('estilos')
     <link rel="stylesheet" href="{{ asset('css/reservas.css') }}">
