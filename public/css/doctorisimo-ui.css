@@ -3769,13 +3769,9 @@ body.auth-pagina {
 .resumen-cajon .resumen-panel .card:last-child { margin-bottom: 0; }
 .resumen-cajon .es-error { color: var(--ds-peligro); }
 
-/* El elemento señalado: un contorno de la marca que no cambia el tamaño ni el lugar de nada. */
-.tour-resaltado {
-    outline: 3px solid var(--ds-violeta-700);
-    outline-offset: 2px;
-    border-radius: var(--ds-radio-sm);
-    scroll-margin: 5rem;
-}
+/* El elemento señalado: el JS le pone esta clase para encontrarlo y el borde lo dibuja el anillo del
+   `.tour-foco` (que sí queda por encima del velo). */
+.tour-resaltado { scroll-margin: 5rem; }
 
 /* El velo del tour (2026-10-20): cubre toda la ventana, transparente, y se come los clics de la pantalla; el
    gris lo pinta la sombra del `.tour-foco`, que deja un hueco claro sobre el elemento señalado. El scroll se
@@ -3792,10 +3788,33 @@ body.auth-pagina {
     z-index: 2071;
     pointer-events: none;
     border-radius: var(--ds-radio-sm);
-    box-shadow: 0 0 0 200vmax rgba(33, 37, 41, .5);
+    box-shadow: 0 0 0 200vmax rgba(33, 37, 41, .62);
     transition: left .15s ease, top .15s ease, width .15s ease, height .15s ease;
 }
-@media (prefers-reduced-motion: reduce) { .tour-foco { transition: none; } }
+/* **El borde que late** (2026-10-29): el contorno del hueco respira para que se distinga de un vistazo qué
+   elemento está señalado. Es el único borde del resalte —el `.tour-resaltado` ya no pinta contorno— y su
+   opacidad va y viene entre una intensidad baja y la alta; el resplandor violeta acompaña porque la sombra
+   se escala con la misma opacidad. Animar sólo `opacity` no obliga a repintar la sombra de 200vmax del
+   velo, que es la que cuesta. */
+.tour-foco::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid var(--ds-violeta-700);
+    border-radius: inherit;
+    box-shadow: 0 0 0 1px rgba(120, 48, 128, .35), 0 0 16px 2px rgba(120, 48, 128, .5),
+                inset 0 0 12px rgba(120, 48, 128, .22);
+    animation: tour-latido 2.4s ease-in-out infinite;
+}
+@keyframes tour-latido {
+    0%, 100% { opacity: .4; }
+    50%      { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .tour-foco { transition: none; }
+    /* Sin latido queda encendido y fijo (la regla global lo dejaría en el extremo tenue). */
+    .tour-foco::after { animation: none; opacity: .9; }
+}
 .tour-velo[hidden], .tour-foco[hidden] { display: none; }
 html.tour-activo, html.tour-activo body { overflow: hidden; overscroll-behavior: none; }
 
