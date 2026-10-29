@@ -164,6 +164,10 @@
                 </a>
             </div>
 
+            {{-- La franja de la próxima cita también en el editor (2026-10-28): el médico agenda la vuelta mientras
+                 redacta el récipe, sin pasar por la lista, y la hoja que imprima sale con la fecha al pie. --}}
+            @include('clinica.consulta._recipes-cita', ['seccion' => $seccion])
+
             {{-- El contador vivo de medicamentos: `consulta-recipes.js` lo mantiene al agregar y quitar. --}}
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                 <x-ui.estado id="recipe-contador" :tono="$contador['tono']" :icono="$contador['icono']">{{ $contador['texto'] }}</x-ui.estado>

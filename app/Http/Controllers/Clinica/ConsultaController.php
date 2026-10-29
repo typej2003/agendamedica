@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Pacientes\SembrarTiposDeAntecedente;
+use App\Clinica\Agenda\ArmadorDeAgenda;
+use App\Clinica\Agenda\MotivosDeCita;
+use App\Clinica\Agenda\ParametrosDeAgenda;
 use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\CitaDeLaConsulta;
@@ -43,6 +46,7 @@ use App\Clinica\Consulta\PlantillasDelTexto;
 use App\Clinica\Consulta\MapaDelEstudio;
 use App\Clinica\Consulta\RecipeDeLaPareja;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
+use App\Clinica\Consulta\Vistas\ProximaCitaVista;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\Vistas\ConstanciaVista;
@@ -130,6 +134,7 @@ use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
 use App\Models\Consulta;
 use App\Models\Medico;
+use App\Models\Office;
 use App\Models\PrenaExamenB;
 use App\Models\PreNatalDesarrolloFino;
 use Carbon\Carbon;
@@ -173,6 +178,8 @@ class ConsultaController extends Controller
         private ProximaCitaDelRecipe $proximaCita,
         private VerificacionesDeLaConsulta $verificaciones,
         private MedicoQueFirma $firma,
+        private ArmadorDeAgenda $armador,
+        private MotivosDeCita $motivosDeCita,
     ) {
     }
 
@@ -1872,6 +1879,7 @@ class ConsultaController extends Controller
                 // Lo escrito en un POST que falló la validación, para no borrarlo (guía de UI §3).
                 (array) old(),
             ))->conImpresion($this->impresion($consulta, $pacienteId, $medico))
+                ->conAgendar($this->agendaDeLaProximaCita($consulta, $pacienteId, $medico))
                 ->conVerificaciones($this->estadoDeLasVerificaciones($consulta));
         }
 
@@ -1904,6 +1912,7 @@ class ConsultaController extends Controller
             (array) old(),
             $pestanas,
         ))->conImpresion($this->impresion($consulta, $pacienteId, $medico))
+            ->conAgendar($this->agendaDeLaProximaCita($consulta, $pacienteId, $medico))
             ->conVerificaciones($this->estadoDeLasVerificaciones($consulta));
     }
 
@@ -1949,6 +1958,51 @@ class ConsultaController extends Controller
             'imprimir' => fn (int $numero) => route('clinica.consulta.recipes.imprimir', [$id, $numero]),
             'imprimirPareja' => route('clinica.consulta.recipe-pareja.imprimir', $id),
         ];
+    }
+
+    /**
+     * **El formulario mínimo para agendar la próxima cita desde la consulta** (2026-10-28): las sedes vigentes del
+     * médico, el catálogo de motivos de la sede elegida y la fecha mínima. Es lo que la franja de la próxima cita
+     * ofrece para no salir a la agenda entera.
+     *
+     * No agrega ninguna regla: el formulario postea a `clinica.agenda.crear` (el alta de siempre) y el servidor
+     * hace lo mismo que con «Hacer cita» —la cita pendiente se pregunta, la jornada y el número los decide
+     * `AgendamientoDeCitas`, `volver_consulta` trae de vuelta a esta sección—.
+     *
+     * La sede es la del contexto (o la única del médico); la consulta **no tiene sede** (`consultas` no guarda
+     * `medical_center_id`), así que cuando atiende en varias se elige y se muestra el `<select>`.
+     */
+    private function agendaDeLaProximaCita(Consulta $consulta, int $pacienteId, Medico $medico): ProximaCitaVista
+    {
+        $regMedico = (string) $consulta->reg_medico;
+        $sedes = $this->armador->sedes($regMedico, $medico->id !== null ? (int) $medico->id : null);
+
+        // La misma regla con la que abre el formulario de la cita (O-03b): la del contexto y, sin ella, la única.
+        $contexto = (array) request()->attributes->get('contexto_clinico', []);
+        $pedida = ParametrosDeAgenda::sedeDelFormulario(request(), $contexto);
+        $elegida = $sedes->firstWhere('id', $pedida) ?? ($sedes->count() === 1 ? $sedes->first() : null);
+        $porHora = fn (Office $sede) => $sede->modalidad === Office::MODALIDAD_HORA;
+
+        return new ProximaCitaVista(
+            sedes: $sedes->map(fn (Office $sede) => [
+                'valor' => (string) $sede->id,
+                'texto' => (string) ($sede->medicalCenter?->nombre ?? ('Consultorio ' . $sede->office_number)),
+            ])->values()->all(),
+            motivos: $this->motivosDeCita->de($regMedico, $elegida)
+                ->map(fn ($motivo) => [
+                    'valor' => (string) $motivo->codigo,
+                    'texto' => (string) ($motivo->tipo_atencion !== null && $motivo->tipo_atencion !== '' ? $motivo->tipo_atencion : $motivo->codigo),
+                ])->values()->all(),
+            sedeElegida: $elegida !== null ? (string) $elegida->id : null,
+            pideHora: $sedes->contains($porHora),
+            horaObligatoria: $elegida !== null && $porHora($elegida),
+            url: route('clinica.agenda.crear'),
+            pacienteId: $pacienteId,
+            consultaId: (int) $consulta->id,
+            // La hoja imprime la próxima cita de **mañana en adelante** (`ProximaCitaDelRecipe`): agendar hoy o antes
+            // dejaría la hoja sin la línea, así que el formulario no lo ofrece y el request lo rechaza.
+            fechaMinima: FechaDelConsultorio::hoy()->addDay()->toDateString(),
+        );
     }
 
     /**

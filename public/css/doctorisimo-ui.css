@@ -3070,6 +3070,31 @@ body.auth-pagina {
 
 .recipe-proxima-cita-texto { display: flex; align-items: center; gap: .5rem; min-width: 0; }
 
+/* Agendar la próxima cita en el lugar (2026-10-28): el `<details>` de la franja, sin JavaScript. El resumen se ve
+   como un botón y el formulario abre debajo, a todo el ancho de la franja. */
+.recipe-proxima-cita-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+
+.recipe-agendar { position: relative; }
+
+.recipe-agendar > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+/* Sin el triángulo del navegador: el botón ya dice lo que hace. */
+.recipe-agendar > summary::-webkit-details-marker { display: none; }
+.recipe-agendar > summary::marker { content: ''; }
+
+.recipe-agendar[open] {
+    flex-basis: 100%;
+}
+
+.recipe-agendar-form {
+    margin-top: .75rem;
+    padding-top: .75rem;
+    border-top: 1px solid var(--ds-borde);
+}
+
 /* Solicitudes de la consulta (WEB-5.3a): el texto base de la constancia y las fechas calculadas del reposo. */
 .solicitud-texto-base {
     margin: 0 0 1rem;
