@@ -1,0 +1,1994 @@
+[
+ {
+  "codigo_origen": "0099",
+  "descripcion": "LEPRA",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0047",
+  "descripcion": "PRE-ECLAMPSIA"
+ },
+ {
+  "codigo_origen": "0100",
+  "descripcion": "FUR",
+  "codtipo": "05"
+ },
+ {
+  "codigo_origen": "0102",
+  "descripcion": "ABORTO",
+  "codtipo": "05"
+ },
+ {
+  "codigo_origen": "0103",
+  "descripcion": "GASTRITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0104",
+  "descripcion": "CANCER",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0057",
+  "descripcion": "HIPOTENSIÓN"
+ },
+ {
+  "codigo_origen": "0105",
+  "descripcion": "QUIRURGICOS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0106",
+  "descripcion": "HTA",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0108",
+  "descripcion": "MADRE",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0110",
+  "descripcion": "ABUELOS PATERNOS",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0112",
+  "descripcion": "HERMANOS",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0114",
+  "descripcion": "ALCOHOL",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0116",
+  "descripcion": "CONVULSION",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0117",
+  "descripcion": "HIPERLIPIDEMIA MIXTA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0119",
+  "descripcion": "VALVULOPLASTIA MITRAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0121",
+  "descripcion": "CA DE MAMA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0123",
+  "descripcion": "CIGARRO",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0125",
+  "descripcion": "NIEGA DE IMPORTANCIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0127",
+  "descripcion": "NIEGA DE IMPORTANCIA",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0129",
+  "descripcion": "INSOMNIO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0002",
+  "descripcion": "INFARTO MIOCARDICO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0004",
+  "descripcion": "DOLOR DE COLUMNA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0007",
+  "descripcion": "CIRUGIA DE LA COLUMNA",
+  "codtipo": "04"
+ },
+ {
+  "codigo_origen": "0009",
+  "descripcion": "POLIOMIELITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0011",
+  "descripcion": "COLPOPERINEOPLASTIA",
+  "codtipo": "04"
+ },
+ {
+  "codigo_origen": "0131",
+  "descripcion": "HIJOS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0015",
+  "descripcion": "TABAQUICOS",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0017",
+  "descripcion": "ACOHOL",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0019",
+  "descripcion": "DISLIPIDEMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0021",
+  "descripcion": "HIPERTENSION ARTERIAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0133",
+  "descripcion": "HIJOS",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0025",
+  "descripcion": "EBPOC TIPO BRONQUITIS CRÓNICA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0138",
+  "descripcion": "NIC",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0029",
+  "descripcion": "DISLIPIDEMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0263",
+  "descripcion": "HIPERURICEMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0264",
+  "descripcion": "PARALISIS FACIAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0267",
+  "descripcion": "HIPER GLICEMIAS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0291",
+  "descripcion": "NIC",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0101",
+  "descripcion": "5 VECES AL DÍA",
+  "codtipo": "06"
+ },
+ {
+  "codigo_origen": "0107",
+  "descripcion": "COLITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0109",
+  "descripcion": "TIOS",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0111",
+  "descripcion": "ABUELOS MATERNOS",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0113",
+  "descripcion": "PRIMOS",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0115",
+  "descripcion": "DIETA",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0058",
+  "descripcion": "TRAUMATOLÓGICOS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0118",
+  "descripcion": "HIPERLIPIDEMIA MIXTA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0120",
+  "descripcion": "ACV",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0122",
+  "descripcion": "COCINO CON LEÑA",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0124",
+  "descripcion": "ENFERMEDAD ALZHEIMER",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0126",
+  "descripcion": "NIEGA DE IMPORTANCIA",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0128",
+  "descripcion": "HERMANOS",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0130",
+  "descripcion": "ARRITMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0132",
+  "descripcion": "MENSTRUACION",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0134",
+  "descripcion": "VERTIGO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0139",
+  "descripcion": "HIPOTIROIDISMO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0141",
+  "descripcion": "FRACTURA EN MID",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0145",
+  "descripcion": "CONDICION FIBROQUISTICA DE MAMA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0149",
+  "descripcion": "HISTERECTOMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0155",
+  "descripcion": "TEP",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0005",
+  "descripcion": "ASMA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0158",
+  "descripcion": "DEPRESION",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0008",
+  "descripcion": "PADRE",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0160",
+  "descripcion": "CONSUMO DE DROGAS DE ABUSO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0012",
+  "descripcion": "CESÁREA",
+  "codtipo": "04"
+ },
+ {
+  "codigo_origen": "0014",
+  "descripcion": "\"CALCULOS EN LOS RIÐONES\"",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0016",
+  "descripcion": "COCA",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0018",
+  "descripcion": "DIABETES MELLITUS TIPO 2",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0020",
+  "descripcion": "TABAQUICOS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0022",
+  "descripcion": "EBPOC TIPO BRONQUITIS CRÓNICA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0026",
+  "descripcion": "CARDIOPATÍA  HTVA"
+ },
+ {
+  "codigo_origen": "0028",
+  "descripcion": "PROLAPSO VESICAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0135",
+  "descripcion": "INFECCIONURINARIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0136",
+  "descripcion": "ENFERMEDAD DE PARKINSON",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0137",
+  "descripcion": "SINDROME POLIARTICULAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0140",
+  "descripcion": "CEFALEA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0142",
+  "descripcion": "OSTEOPOROSIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0044",
+  "descripcion": "ALERGIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0143",
+  "descripcion": "AMENORREA SECUNDARIA",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0144",
+  "descripcion": "PEZON INVERTIDO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0146",
+  "descripcion": "TROMBOSIS VENOSA PROFUNDA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0089",
+  "descripcion": "ONCOLOGICO  LINFOMA NO HODKING",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0147",
+  "descripcion": "HIGADO GRASO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0148",
+  "descripcion": "AMIGDALITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0150",
+  "descripcion": "ANGOR INESTABLE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0151",
+  "descripcion": "ATROFIA RENAL DERECHA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0152",
+  "descripcion": "TROMBOCITOPENIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0153",
+  "descripcion": "RIÑONES POLIQUISTICOS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0154",
+  "descripcion": "TEP",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0156",
+  "descripcion": "TVP MII",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0157",
+  "descripcion": "NEUMONIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0159",
+  "descripcion": "TU RECTAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0161",
+  "descripcion": "ARTTRITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0162",
+  "descripcion": "HIPOKALEMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0163",
+  "descripcion": "HDS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0164",
+  "descripcion": "ANEMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0165",
+  "descripcion": "LITIASIS RENAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0166",
+  "descripcion": "FIBROMATOSIS UTERINA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0167",
+  "descripcion": "LITIASIS VESICULAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0168",
+  "descripcion": "FX DE PERONE DERECHO",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0169",
+  "descripcion": "HERNIA DISCAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0170",
+  "descripcion": "INTOXICACION POR COUMADIN",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0171",
+  "descripcion": "HEPATITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0213",
+  "descripcion": "IQX",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0172",
+  "descripcion": "HIPERTIROIDISMO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0173",
+  "descripcion": "SINDROME DEL COLON IRRITABLE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0174",
+  "descripcion": "HEMORRGIA DIGESTIVA SUPERIOR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0175",
+  "descripcion": "POLICITEMIA VERA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0176",
+  "descripcion": "MENINGITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0177",
+  "descripcion": "MIOMATOSIS UTERINA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0178",
+  "descripcion": "TRICHOMONIASIS VAGINAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0179",
+  "descripcion": "ENUCLEACION IZQUIERDA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0180",
+  "descripcion": "PROLACTINEMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0181",
+  "descripcion": "DEPURACION  DE CREATININA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0182",
+  "descripcion": "CESAREAS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0183",
+  "descripcion": "PROLAPSO VALVULA MITRAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0184",
+  "descripcion": "SINCOPE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0185",
+  "descripcion": "COLECITECTOMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0186",
+  "descripcion": "TRASTORNOS MENSTRUALES",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0187",
+  "descripcion": "PROLAOSO DE VALVULA MITRAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0188",
+  "descripcion": "ANGINA INESTABLE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0189",
+  "descripcion": "DEPRESION",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0190",
+  "descripcion": "HIPOGLICEMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0191",
+  "descripcion": "TRASTORNO BIPOLAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0192",
+  "descripcion": "HERNIAS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0193",
+  "descripcion": "NEFROPATIA HTA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0194",
+  "descripcion": "HISTERECTOMIA",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0195",
+  "descripcion": "MENINGIOMA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0196",
+  "descripcion": "CURA DE PROLAPSO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0197",
+  "descripcion": "FX DE FEMUR IZQUIERDO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0198",
+  "descripcion": "PROSTATECTOMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0199",
+  "descripcion": "ANEURISMA CALCIFICADO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0200",
+  "descripcion": "NIEGA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0203",
+  "descripcion": "HERMANOS APS",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0201",
+  "descripcion": "MADRE MUERTA POR DIABETES",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0202",
+  "descripcion": "PADRE MUERTO POR CA",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0204",
+  "descripcion": "NO TABACO, NO OH",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0205",
+  "descripcion": "ENFERMEDAD ULCERO PEPTICA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0206",
+  "descripcion": "INSUFICIENCIA VENOSA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0207",
+  "descripcion": "DROGAS LICITAS",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0208",
+  "descripcion": "IQ POR ANEURISMA AORTICO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0209",
+  "descripcion": "IQ NEFRECTOMIADERECHA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0210",
+  "descripcion": "TIROIDECTOMIA POR NODULO TIROIDEO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0211",
+  "descripcion": "DISLIPIDEMIA MIXTA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0212",
+  "descripcion": "QUISTE RENAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0214",
+  "descripcion": "SEXUALES",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0215",
+  "descripcion": "FX FEMUR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0216",
+  "descripcion": "NEFROLITIASIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0217",
+  "descripcion": "INSUFICIENCIA HEMORROIDAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0218",
+  "descripcion": "ARTROSIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0219",
+  "descripcion": "HIPERTENSION ARTERIAL",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0220",
+  "descripcion": "SOBRINO",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0221",
+  "descripcion": "ENFERMEDAD DE MENIERE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0222",
+  "descripcion": "NODULO MAMARIO MALIGNO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0223",
+  "descripcion": "CANSANCIO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0224",
+  "descripcion": "PESO EN PELVIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0225",
+  "descripcion": "SINDROME METABOLICO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0226",
+  "descripcion": "ARTROSIS DE RODILLAS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0227",
+  "descripcion": "HEMORRAGIA DIGESTIVA SUP",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0228",
+  "descripcion": "INSUF MITRAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0229",
+  "descripcion": "ULCERA VARICOSA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0230",
+  "descripcion": "ENFERMEDAD BIPOLAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0274",
+  "descripcion": "DENGUE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0231",
+  "descripcion": "INTERVENCION QX",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0232",
+  "descripcion": "ECV",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0233",
+  "descripcion": "LITISIS RENAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0234",
+  "descripcion": "DESPRENDIMIENTO DE RETINA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0235",
+  "descripcion": "MONONEFRA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0236",
+  "descripcion": "SINUSITIS CRONICA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0237",
+  "descripcion": "PRECLAMPSIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0238",
+  "descripcion": "CA EPIDERMOIDE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0239",
+  "descripcion": "LES",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0240",
+  "descripcion": "SINDROME CONVULSIVO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0241",
+  "descripcion": "TRASTORNO DEL SUEÑO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0242",
+  "descripcion": "CA DE PROSTATA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0243",
+  "descripcion": "AUMENTO DE VOLUMEN DE VOLUMEN GANGLIONA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0244",
+  "descripcion": "EMBARAZO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0245",
+  "descripcion": "CRISIS DREPANICITICA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0246",
+  "descripcion": "NODULO TIROIDEO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0247",
+  "descripcion": "NODULO TIROIDEO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0248",
+  "descripcion": "HEMOPTISIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0249",
+  "descripcion": "MIASTENIA GRAVIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0250",
+  "descripcion": "PERDIDA DE LA CONSCIECIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0251",
+  "descripcion": "ANGINA ESTABLE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0252",
+  "descripcion": "INSUFICIENCA VENOSA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0253",
+  "descripcion": "CLIMATERIO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0254",
+  "descripcion": "NEUROPATIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0255",
+  "descripcion": "MIGRAÑA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0256",
+  "descripcion": "INSUFICIENCIA VASCULAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0257",
+  "descripcion": "CATETERISMO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0258",
+  "descripcion": "EDEMA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0259",
+  "descripcion": "RINITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0260",
+  "descripcion": "ENFERMEDAD RENAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0261",
+  "descripcion": "TROMBOFLEBITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0271",
+  "descripcion": "PURPURA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0262",
+  "descripcion": "ESCOLIOSIS DORSAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0265",
+  "descripcion": "PERDIDA DE LA MEMORIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0266",
+  "descripcion": "OSTEOARTROSIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0268",
+  "descripcion": "OVARIO POLIQUISTICO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0269",
+  "descripcion": "DOLORES OSEOS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0270",
+  "descripcion": "MIOCARDIOPATIA DILATADA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0272",
+  "descripcion": "FIBROMIALGIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0273",
+  "descripcion": "NERVIOSISMO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0275",
+  "descripcion": "VARICELA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0276",
+  "descripcion": "CERVICOARTROSIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0277",
+  "descripcion": "ENFERMEDAD DE LYME",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0278",
+  "descripcion": "LITISIS VESICULAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0279",
+  "descripcion": "EPILEPSIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0280",
+  "descripcion": "ACCIDENTES",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0281",
+  "descripcion": "INSUFICIENCIA VASCULAR ARTERIAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0282",
+  "descripcion": "INSUFICIENCIA VASCULAR ARTERIAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0283",
+  "descripcion": "DERMATOMIOSITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0284",
+  "descripcion": "CA DE CUELLO UTERINO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0285",
+  "descripcion": "PROLACTINOMA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0286",
+  "descripcion": "DIABETES MELLITUS TIPO1",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0287",
+  "descripcion": "TOXOPLASMOSIS OCULAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0288",
+  "descripcion": "PREECLAMPSIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0289",
+  "descripcion": "ARTRITIS REUMATOIDE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0290",
+  "descripcion": "RINITIS ALERGICA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0292",
+  "descripcion": "NIC",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0293",
+  "descripcion": "DISRRITMIA  CEREBRAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0294",
+  "descripcion": "DISRRITMIA  CEREBRAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0295",
+  "descripcion": "POLINEUROPATIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0296",
+  "descripcion": "COLECISTOPATIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0301",
+  "descripcion": "TETANOS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0297",
+  "descripcion": "FECHA DE ULTIMA REGLA",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0298",
+  "descripcion": "ENFERMEDAD LINFOPROLIFERATIVA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0299",
+  "descripcion": "SINDROME DE COLON IRRITABLE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0300",
+  "descripcion": "RETINOPATIA DIABETICA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0302",
+  "descripcion": "HIPERTRIGLICERIDEMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0303",
+  "descripcion": "HIPERTENSION PULMONAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0304",
+  "descripcion": "FEOCROMOCITOMA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0305",
+  "descripcion": "PROSTATISMO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0306",
+  "descripcion": "NEURALGIA DEL TRIGEMINO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0307",
+  "descripcion": "EPOC",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0308",
+  "descripcion": "POLIMENORREA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0309",
+  "descripcion": "PANCREATITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0310",
+  "descripcion": "PALUDISMO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0311",
+  "descripcion": "TRAUMATISMO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0312",
+  "descripcion": "ACTOS ANESTESICOS MENORES",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0313",
+  "descripcion": "HOSPITALIZADA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0314",
+  "descripcion": "EPISTAXIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0315",
+  "descripcion": "GASTRECTOMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0316",
+  "descripcion": "HIPERINSULINISMO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0317",
+  "descripcion": "LINFOMA DE HODGKING",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0318",
+  "descripcion": "TAQUICARDIAS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0319",
+  "descripcion": "INSUFIENCIA RENAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0320",
+  "descripcion": "ACNE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0321",
+  "descripcion": "LEUCEMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0322",
+  "descripcion": "GLAUCOMA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0323",
+  "descripcion": "CHAGAS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0324",
+  "descripcion": "HANSEN",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0325",
+  "descripcion": "VAGOTONIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0326",
+  "descripcion": "HIPERPLASIA PROSTATICA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0327",
+  "descripcion": "RM",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0328",
+  "descripcion": "RM",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0329",
+  "descripcion": "RETARDO MENTAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0364",
+  "descripcion": "RM",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0330",
+  "descripcion": "TUMOR DE VEJIGA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0331",
+  "descripcion": "HIDRONEFROSIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0332",
+  "descripcion": "PSORIASIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0333",
+  "descripcion": "LUPUS ERITEMATOSO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0334",
+  "descripcion": "HIPERANDROGENISMO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0335",
+  "descripcion": "DERMATITIS ATOPICA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0336",
+  "descripcion": "ADENOIDES",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0337",
+  "descripcion": "INFECCION RESPIRATORIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0338",
+  "descripcion": "ENFERMEDAD DE VON RINKLEN HAUSER",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0339",
+  "descripcion": "VITILIGO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0340",
+  "descripcion": "ENFERMEDAD DE CUSHING",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0341",
+  "descripcion": "MONONUCLEOSIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0342",
+  "descripcion": "RECTOCOLITIS ULCERATIVA IDIOPATICA.",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0343",
+  "descripcion": "ENFERMEDAD DE ALZHEIMER",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0344",
+  "descripcion": "INSUFICIENCIA CARDIACA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0345",
+  "descripcion": "AMENORREA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0346",
+  "descripcion": "LIQUEN PLANO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0347",
+  "descripcion": "LESIONES EN PIEL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0348",
+  "descripcion": "LOE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0349",
+  "descripcion": "ENFERMEDAD DIVERTICULAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0350",
+  "descripcion": "SORDERA TOTAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0351",
+  "descripcion": "CA DE COLON",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0352",
+  "descripcion": "HIPERMETROPIA",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0353",
+  "descripcion": "LARINGITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0354",
+  "descripcion": "ESTREÑIMIENTO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0355",
+  "descripcion": "CA DE PULMON",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0356",
+  "descripcion": "DROGAS ILICITAS",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0357",
+  "descripcion": "LENTES",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0358",
+  "descripcion": "AUMENTO DE VOLUMEN HEMICARA IZQUIERDA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0360",
+  "descripcion": "HIPERTIROIDISMO",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0359",
+  "descripcion": "ARTRITIS PSORIASICA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0361",
+  "descripcion": "FIBRILACION AURICULAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0362",
+  "descripcion": "ESQUIZOFRENIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0363",
+  "descripcion": "VDRL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0365",
+  "descripcion": "HOMOSEXUAL",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0366",
+  "descripcion": "MARCAPASOS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0367",
+  "descripcion": "TU",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0368",
+  "descripcion": "MUDA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0369",
+  "descripcion": "ESCLEROSIS MULTIPLE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0370",
+  "descripcion": "CHIKUNGUNYA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0371",
+  "descripcion": "RM",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0372",
+  "descripcion": "NODULOS TIROIDEOS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0373",
+  "descripcion": "CA DE OVARIO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0374",
+  "descripcion": "POLINEURITIS MOTORA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0375",
+  "descripcion": "SINDROME DE KLINEFELTER",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0376",
+  "descripcion": "ADENOMA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0377",
+  "descripcion": "PALPITACIONES",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0378",
+  "descripcion": "ATEROSCLEROSIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0379",
+  "descripcion": "HETEROSEXUAL",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0380",
+  "descripcion": "PERDIDA DE PESO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0381",
+  "descripcion": "NO CONTRIBUTORIOS",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0382",
+  "descripcion": "TUBERCULOSIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0383",
+  "descripcion": "DISMIELOPOYESIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0384",
+  "descripcion": "PTERIGION BILATERAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0385",
+  "descripcion": "MARCHA CEREBELOSA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0386",
+  "descripcion": "PENFIGO VULGAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0387",
+  "descripcion": "HIPERTRICOSIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0388",
+  "descripcion": "TRABAJO",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0389",
+  "descripcion": "HIPERCALCIURIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0390",
+  "descripcion": "DOLOR DE CABEZA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0391",
+  "descripcion": "CUADRIPLEJIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0392",
+  "descripcion": "HIPOPLASIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0393",
+  "descripcion": "TRASTORNO DEL RITMO CARDIACO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0394",
+  "descripcion": "HIPOXIA CEREBRAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0395",
+  "descripcion": "TRISOMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0396",
+  "descripcion": "LOE UTERINO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0397",
+  "descripcion": "SERO + VIH",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0398",
+  "descripcion": "GLOMERULONEFRITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0399",
+  "descripcion": "AUMENTO EN ANTEBRAZO IZQUIERDO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0400",
+  "descripcion": "CA DE HIGADO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0401",
+  "descripcion": "LITOTOMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0402",
+  "descripcion": "ACORTAMIENTO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0403",
+  "descripcion": "UVEITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0404",
+  "descripcion": "COMPRESION RADICULAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0405",
+  "descripcion": "ENDOMETRIOSIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0406",
+  "descripcion": "CA DE TIROIDES",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0407",
+  "descripcion": "SINDROME DE DOWN",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0408",
+  "descripcion": "ANEURISMA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0409",
+  "descripcion": "SINDROME DE RESISTENCIA A LA INSULINA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0410",
+  "descripcion": "GESTAS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0411",
+  "descripcion": "HIPERGLICEMIAS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0412",
+  "descripcion": "AMEBIASIS INTESTINAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0413",
+  "descripcion": "CARDIOPATIA ISQUEMICA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0414",
+  "descripcion": "CA DE VEJIGA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0415",
+  "descripcion": "ANSIEDAD",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0416",
+  "descripcion": "ESTENOSIS ARTERIA PULMONAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0417",
+  "descripcion": "COVID",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0418",
+  "descripcion": "AUTISMO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0419",
+  "descripcion": "CA DE VAGINA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0420",
+  "descripcion": "ENCEFALITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0421",
+  "descripcion": "EXPOSICION A BIOMASA",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0422",
+  "descripcion": "APLASTAMIENTO VERTEBRAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0423",
+  "descripcion": "DEXTROCARDIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0424",
+  "descripcion": "HERNA DISCAL CERVICAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0425",
+  "descripcion": "HERNA DISCAL CERVICAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0426",
+  "descripcion": "ALCOHOLISMO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0427",
+  "descripcion": "FIBROSIS PULMONAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0428",
+  "descripcion": "DEPENDENCIA",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0429",
+  "descripcion": "ECLAMPSIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0430",
+  "descripcion": "LEIOMIOMATOSIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0431",
+  "descripcion": "CRISIS DE ANSIEDAD",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0432",
+  "descripcion": "RIÑON UNICO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0433",
+  "descripcion": "HIPERPROLACTINEMIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0434",
+  "descripcion": "TRANSPLANTE RENAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0435",
+  "descripcion": "RIÑON ECTOPICO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0436",
+  "descripcion": "CIRROSIS HEPATICA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0437",
+  "descripcion": "CIRUGIA BARIATRICA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0438",
+  "descripcion": "POLIPOS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0439",
+  "descripcion": "INSUFICIENCIA MITRAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0440",
+  "descripcion": "ULTIMO CONTACTO",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0441",
+  "descripcion": "MIOCARDIOPATIA CONGENITA",
+  "codtipo": "02"
+ },
+ {
+  "codigo_origen": "0442",
+  "descripcion": "ANTIAGREGACION",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0443",
+  "descripcion": "ARTROSIS DE CADERA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0444",
+  "descripcion": "HERIDA POR ARMA DE FUEGO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0445",
+  "descripcion": "ADENOPATIAS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0446",
+  "descripcion": "ANEURISMA AORTICO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0447",
+  "descripcion": "CARDIOVASCULAR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0448",
+  "descripcion": "FX DE TIBIA IZQUIERDA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0449",
+  "descripcion": "CIATALGIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0450",
+  "descripcion": "OSTEOSARCOMA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0451",
+  "descripcion": "FRACTURA DE FEMUR",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0452",
+  "descripcion": "CHIMO",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0453",
+  "descripcion": "MENARQUIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0454",
+  "descripcion": "CATARATA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0455",
+  "descripcion": "TOXOIDE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0456",
+  "descripcion": "MIELOMA MULTIPLE",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0457",
+  "descripcion": "SEXARQUIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0458",
+  "descripcion": "EPOC",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0459",
+  "descripcion": "PROSTATITIS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0460",
+  "descripcion": "TRASTORNOS DEL SUEÑO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0461",
+  "descripcion": "SEXARQUIA",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0462",
+  "descripcion": "SINDROME DE PREXITACION",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0463",
+  "descripcion": "HIPERPLASIA ENDOMETRIAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0464",
+  "descripcion": "INSUFIA SUPRARRENAL",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0465",
+  "descripcion": "MANTENIMIENTO",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0466",
+  "descripcion": "VACUNAS",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0467",
+  "descripcion": "NIEGA",
+  "codtipo": "03"
+ },
+ {
+  "codigo_origen": "0468",
+  "descripcion": "QUISTE OVARICO",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0469",
+  "descripcion": "INFECCION URINARIA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0470",
+  "descripcion": "MI8GRAÑA",
+  "codtipo": "01"
+ },
+ {
+  "codigo_origen": "0471",
+  "descripcion": "PARALISIS CEREBRAL",
+  "codtipo": "01"
+ }
+]
