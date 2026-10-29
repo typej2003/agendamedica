@@ -14,7 +14,9 @@ use App\Actions\Consulta\GuardarEcoObstetrico;
 use App\Actions\Consulta\GuardarEcoObstetricoSegundo;
 use App\Actions\Consulta\GuardarEcoObstetricoTercero;
 use App\Actions\Consulta\GuardarConstanciaDeLaConsulta;
+use App\Actions\Consulta\GuardarDietaDeLaConsulta;
 use App\Actions\Consulta\GuardarEvaluacionFisica;
+use App\Actions\Consulta\GuardarHospitalizacionDeLaConsulta;
 use App\Actions\Consulta\GuardarInformeDeLaConsulta;
 use App\Actions\Consulta\GuardarRecipe;
 use App\Actions\Consulta\GuardarReferenciaDeLaConsulta;
@@ -38,7 +40,9 @@ use App\Http\Requests\SyncAppDataRequest;
 use App\Models\Cola;
 use App\Models\ConstanciaObs;
 use App\Models\Consulta;
+use App\Models\DietaPaciente;
 use App\Models\Historia;
+use App\Models\Hospitalizacion;
 use App\Models\Informe;
 use App\Models\Medico;
 use App\Models\MotivoConsulta;
@@ -193,6 +197,8 @@ class CreacionesClinicas
         private GuardarReposoDeLaConsulta $guardarReposo,
         private GuardarReferenciaDeLaConsulta $guardarReferencia,
         private GuardarInformeDeLaConsulta $guardarInforme,
+        private GuardarHospitalizacionDeLaConsulta $guardarHospitalizacion,
+        private GuardarDietaDeLaConsulta $guardarDieta,
     ) {
     }
 
@@ -251,6 +257,8 @@ class CreacionesClinicas
             'reposo_paciente' => $this->crearReposo($change, $tempId, $rechazar),
             'referencia' => $this->crearReferencia($change, $tempId, $rechazar),
             'informe' => $this->crearInforme($change, $tempId, $rechazar),
+            'hospitalizacion' => $this->crearHospitalizacion($change, $tempId, $rechazar),
+            'dieta_paciente' => $this->crearDieta($change, $tempId, $rechazar),
         };
         if ($respuesta !== null) {
             $creados[] = $respuesta;
@@ -1227,6 +1235,93 @@ class CreacionesClinicas
         return $this->respuestaDe('informe', $tempId, $fila->id);
     }
 
+    /**
+     * **La orden de hospitalización** (WEB-5.3b): una por consulta, con el lugar, el diagnóstico provisional y
+     * las recomendaciones. La Action de la web exige que haya al menos un texto.
+     */
+    private function crearHospitalizacion(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if ($consulta === null) {
+            $rechazar('La consulta de la hospitalización no existe.');
+
+            return null;
+        }
+
+        $columnas = $this->columnasDelCliente($change, 'hospitalizacion');
+        try {
+            $this->guardarHospitalizacion->ejecutar(
+                $consulta,
+                $columnas['hospital'] ?? null,
+                $columnas['diagprev'] ?? null,
+                $columnas['dieta'] ?? null,
+                null,
+                'mobile',
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+
+            return null;
+        }
+
+        $fila = Hospitalizacion::where('nrohistoria', (int) $consulta->numhistoria)
+            ->where('nroconsulta', (int) $consulta->nroconsulta)
+            ->first();
+
+        if ($fila === null) {
+            $rechazar('La hospitalización no se pudo guardar.');
+
+            return null;
+        }
+
+        $this->anotar('hospitalizacion', $fila->id, $tempId, $consulta->reg_medico);
+
+        return $this->respuestaDe('hospitalizacion', $tempId, $fila->id);
+    }
+
+    /**
+     * **La dieta / recomendaciones** (WEB-5.3b): una por consulta, con el título opcional y el texto
+     * obligatorio. La tabla del legado llama `histroria` a la historia y `consulta` a la consulta.
+     */
+    private function crearDieta(array $change, int $tempId, callable $rechazar): ?array
+    {
+        $consulta = $this->resolverConsulta($change);
+        if ($consulta === null) {
+            $rechazar('La consulta de la dieta no existe.');
+
+            return null;
+        }
+
+        $columnas = $this->columnasDelCliente($change, 'dieta_paciente');
+        try {
+            $this->guardarDieta->ejecutar(
+                $consulta,
+                $columnas['dieta'] ?? null,
+                $columnas['descripcion'] ?? null,
+                null,
+                'mobile',
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+
+            return null;
+        }
+
+        $fila = DietaPaciente::where('histroria', (int) $consulta->numhistoria)
+            ->where('consulta', (int) $consulta->nroconsulta)
+            ->first();
+
+        if ($fila === null) {
+            $rechazar('La dieta no se pudo guardar.');
+
+            return null;
+        }
+
+        $this->anotar('dieta_paciente', $fila->id, $tempId, $consulta->reg_medico);
+
+        return $this->respuestaDe('dieta_paciente', $tempId, $fila->id);
+    }
+
     private function yaCreado(string $table, int $tempId): ?int
     {
         return SyncChange::where('table_name', $table)
@@ -1294,7 +1389,7 @@ class CreacionesClinicas
             // no por la clave del legado, igual que en la evaluación física.
             return $this->respuestaEco($table, $tempId, $recordId);
         }
-        if (in_array($table, ['constancia_obs', 'reposo_paciente', 'referencia', 'informe'], true)) {
+        if (in_array($table, ['constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'hospitalizacion', 'dieta_paciente'], true)) {
             // Documentos de la consulta: el teléfono sólo necesita el id real de la fila.
             return ['table' => $table, 'temp_id' => $tempId, 'id' => $recordId];
         }

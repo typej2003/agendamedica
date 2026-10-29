@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\ConstanciaObs;
 use App\Models\Consulta;
+use App\Models\DietaPaciente;
+use App\Models\Hospitalizacion;
 use App\Models\Informe;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
@@ -193,5 +195,50 @@ class SyncDocumentosCreacionTest extends TestCase
 
         $this->assertNotEmpty($response->json('rechazados'));
         $this->assertNull(Informe::where('nrohistoria', 910001)->first());
+    }
+
+    public function test_crea_la_orden_de_hospitalizacion(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->sync([[
+            'table' => 'hospitalizacion',
+            'operation' => 'created',
+            'temp_id' => -76,
+            'consulta_id' => $consulta->id,
+            'columns' => [
+                'hospital' => 'Clínica Norte',
+                'diagprev' => 'Colelitiasis.',
+                'dieta' => 'Ingreso por guardia.',
+            ],
+        ]]);
+
+        $fila = Hospitalizacion::where('nrohistoria', 910001)->where('nroconsulta', 1)->first();
+        $this->assertNotNull($fila);
+        $this->assertSame('Clínica Norte', $fila->hospital);
+        $this->assertSame('Colelitiasis.', $fila->diagprev);
+    }
+
+    public function test_crea_la_dieta_con_titulo_y_texto(): void
+    {
+        $medico = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->sync([[
+            'table' => 'dieta_paciente',
+            'operation' => 'created',
+            'temp_id' => -77,
+            'consulta_id' => $consulta->id,
+            'columns' => [
+                'dieta' => 'Dieta blanda',
+                'descripcion' => 'Fraccionada, sin frituras.',
+            ],
+        ]]);
+
+        $fila = DietaPaciente::where('histroria', 910001)->where('consulta', 1)->first();
+        $this->assertNotNull($fila);
+        $this->assertSame('Dieta blanda', $fila->dieta);
+        $this->assertSame('Fraccionada, sin frituras.', $fila->descripcion);
     }
 }

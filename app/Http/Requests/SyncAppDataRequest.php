@@ -84,6 +84,8 @@ class SyncAppDataRequest extends FormRequest
         'reposo_paciente' => ['fdesde', 'numdias', 'obser_reposo'],
         'referencia' => ['referencia'],
         'informe' => ['para', 'descripcion', 'fe_cha'],
+        'hospitalizacion' => ['hospital', 'diagprev', 'dieta'],
+        'dieta_paciente' => ['dieta', 'descripcion'],
         // ⚠️ Los **cuatro estudios ecográficos** (`eco_pelvico`, `eco_obstetrico`, `eco_obstetrico_tercer_2` y
         // `eco_obstetrico_tercer`, EC-A3 de PLAN-MOVIL.md) **no están acá a propósito**: sus columnas editables
         // son las del mapa del dato de cada estudio —181 nombres entre los cuatro— y duplicarlas en esta lista
@@ -213,7 +215,7 @@ class SyncAppDataRequest extends FormRequest
         'eco_doppler', 'ultra_mama', 'ultra_abdominal', 'ecocadiograma_fetal',
         // Documentos de la consulta (constancia, reposo, referencia e informe): el teléfono los crea y, si
         // la consulta ya tiene la fila que dejó el escritorio, la corrige por columna.
-        'constancia_obs', 'reposo_paciente', 'referencia', 'informe',
+        'constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'hospitalizacion', 'dieta_paciente',
     ];
 
     /**
@@ -282,7 +284,7 @@ class SyncAppDataRequest extends FormRequest
         'recipes_pareja',
         // Documentos de la consulta: constancia, reposo, referencia e informe se crean en el teléfono y se
         // escriben con las mismas Actions de la web. Cuelgan de la consulta por su id o por sus números.
-        'constancia_obs', 'reposo_paciente', 'referencia', 'informe',
+        'constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'hospitalizacion', 'dieta_paciente',
     ];
 
     /**
@@ -311,7 +313,7 @@ class SyncAppDataRequest extends FormRequest
         'eco_doppler', 'ultra_mama', 'ultra_abdominal', 'ecocadiograma_fetal',
         // Documentos de la consulta que el teléfono crea (constancia, reposo, referencia e informe). Sin
         // esta entrada, el lote entero se rechaza con 422, incluido el pull.
-        'constancia_obs', 'reposo_paciente', 'referencia', 'informe',
+        'constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'hospitalizacion', 'dieta_paciente',
     ];
 
     /**
