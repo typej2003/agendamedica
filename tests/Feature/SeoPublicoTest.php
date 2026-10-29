@@ -261,9 +261,40 @@ class SeoPublicoTest extends TestCase
         foreach (['/admin', '/clinica', '/dashboard', '/api'] as $prefijo) {
             $this->assertStringContainsString('Disallow: ' . $prefijo . "\n", $texto);
         }
+        // Los pasos del código de verificación redirigen con un GET sin proceso en curso: no hay nada que rastrear.
+        foreach (['/reservar/*/codigo', '/registro/codigo', '/registro/medico/codigo'] as $paso) {
+            $this->assertStringContainsString('Disallow: ' . $paso . "\n", $texto);
+        }
+
         // Lo público, y las pantallas con `noindex` que el buscador tiene que poder leer, no se cierran.
         foreach (['/reservar', '/registro', '/login', '/password', '/'] as $publico) {
             $this->assertStringNotContainsString('Disallow: ' . $publico . "\n", $texto);
+        }
+    }
+
+    /** Una regla de `robots.txt` (con `*` como comodín, igual que Google) bloquea la ruta si es prefijo de ella. */
+    private function bloquea(string $texto, string $ruta): bool
+    {
+        preg_match_all('/^Disallow: (\S+)$/m', $texto, $reglas);
+        foreach ($reglas[1] as $regla) {
+            $patron = '#^' . str_replace('\*', '.*', preg_quote($regla, '#')) . '#';
+            if (preg_match($patron, $ruta)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function test_robots_cierra_los_pasos_del_codigo_pero_no_la_ficha_ni_el_registro_de_medicos(): void
+    {
+        $texto = $this->get('/robots.txt')->assertOk()->getContent();
+
+        foreach (['/reservar/13/codigo', '/reservar/5/codigo', '/registro/codigo', '/registro/medico/codigo'] as $cerrada) {
+            $this->assertTrue($this->bloquea($texto, $cerrada), "$cerrada debería estar cerrada");
+        }
+        foreach (['/reservar', '/reservar/13', '/reservar/confirmada', '/registro', '/registro/medico', '/registro/medico/recibida', '/login'] as $abierta) {
+            $this->assertFalse($this->bloquea($texto, $abierta), "$abierta no debería estar cerrada");
         }
     }
 }
