@@ -42,6 +42,35 @@ class EspecialidadesDelMedicoTest extends TestCase
         return $user;
     }
 
+    /**
+     * **Ningún médico nace sin especialidad** (2026-10-30): el alta desde el panel le pone
+     * `medicina-general`, que es el piso seguro (el núcleo de la consulta, sin ecos ni embarazo). Antes
+     * quedaba sin ninguna y en silencio: menú vacío, y hasta el fix del alcance además veía el contenido
+     * ginecológico que no le tocaba.
+     */
+    public function test_el_alta_de_un_medico_le_asigna_medicina_general(): void
+    {
+        $this->seed(\Database\Seeders\EspecialidadesYModulosSeeder::class);
+
+        $sufijo = uniqid();
+        $r = app(CuentaService::class)->crearMedico([
+            'name' => 'Nuevo', 'lastname' => 'Sin pedir especialidad',
+            'email' => "alta-{$sufijo}@example.com", 'reg_medico' => "test-alta-{$sufijo}",
+        ]);
+
+        $this->assertSame(['medicina-general'], $r['medico']->specialties()->pluck('slug')->all());
+
+        // Y si se le pide otra, esa manda.
+        $sufijo = uniqid();
+        $otra = $this->especialidad('Cardiología');
+        $r = app(CuentaService::class)->crearMedico([
+            'name' => 'Nuevo', 'lastname' => 'Con pedido', 'specialty_id' => $otra->id,
+            'email' => "alta2-{$sufijo}@example.com", 'reg_medico' => "test-alta2-{$sufijo}",
+        ]);
+
+        $this->assertSame([$otra->id], $r['medico']->specialties()->pluck('specialties.id')->all());
+    }
+
     /** @return array{user: User, medico: Medico} */
     private function medico(string $nombre = 'Doctor'): array
     {
@@ -50,6 +79,11 @@ class EspecialidadesDelMedicoTest extends TestCase
             'name' => $nombre, 'lastname' => 'Especialidad', 'email' => "esp-{$sufijo}@example.com", 'reg_medico' => "test-esp-{$sufijo}",
         ]);
         $r['user']->forceFill(['must_change_password' => false])->save();
+
+        // **El alta ya no deja al médico sin especialidad** (2026-10-30): `crearMedico` le pone
+        // `medicina-general` si no se le pide otra. Esta pantalla se prueba justamente con médicos **sin
+        // ninguna**, así que se le quita la del alta a propósito.
+        $r['medico']->specialties()->detach();
 
         return $r;
     }
