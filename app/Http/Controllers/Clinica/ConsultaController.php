@@ -505,6 +505,10 @@ class ConsultaController extends Controller
             $documento === null ? null : route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => $documento]),
             $seccion === $mapa::SECCION_ANALISIS ? $datos->evolucion($consulta)->all() : [],
             $riesgo,
+            // Las plantillas del examen funcional (tipo `EF`, Alexander 2026-10-29).
+            $pestana === 'funcional' ? PlantillasDelTexto::de((string) $consulta->reg_medico, 'EF')->all() : [],
+            // El «Actualizar» del resumen físico: lo arma el servidor con los signos y el examen guardados.
+            $pestana === 'resumen' ? route('clinica.consulta.internista.resumen', $consulta->id) : null,
         );
     }
 

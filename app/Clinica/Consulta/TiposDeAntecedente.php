@@ -106,13 +106,19 @@ final class TiposDeAntecedente
 
     /**
      * La familia de la especialidad, con la misma vara que `AlcanceDeLaEspecialidad` (`str_contains`): así un slug
-     * con sufijo sigue encontrando sus nombres. Sin especialidad es ginecología.
+     * con sufijo sigue encontrando sus nombres. **Sin especialidad no hay familia** (2026-10-30): antes se tomaba
+     * ginecología y el médico sin especialidad veía los nombres ginecológicos de los antecedentes. Sin dato no se
+     * inventa el nombre: `para()` devuelve `null` y el desplegable muestra los genéricos.
      */
     private static function familia(?string $especialidad): ?string
     {
         $slug = mb_strtolower(trim((string) $especialidad));
 
-        if ($slug === '' || str_contains($slug, 'ginecolog')) {
+        if ($slug === '') {
+            return null;
+        }
+
+        if (str_contains($slug, 'ginecolog')) {
             return 'ginecologia';
         }
 

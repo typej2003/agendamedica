@@ -50,7 +50,9 @@ final class PlantillasDeLaEspecialidad
     }
 
     /**
-     * Los tipos que no se ofrecen en la especialidad; vacío en ginecología y en las demás (no cambian).
+     * Los tipos que no se ofrecen en la especialidad: los de otra especialidad, los de las pantallas que ésta no tiene y
+     * el **examen funcional** (`EF`), que es sólo de medicina interna (2026-10-29). Ginecología ya no ofrece exactamente
+     * lo mismo que antes: suma `EF` a los tres de pediatría.
      *
      * @return array<int,string>
      */

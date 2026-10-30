@@ -15,8 +15,10 @@ use App\Clinica\Impresion\FormatosEnBlanco;
  *
  * **Tres familias, y ninguna más** (2026-10-22, «modo medicina general» de Alexander):
  *
- *  - **Ginecología** (`ginecologia-y-obstetricia`) y **sin especialidad en el contexto**: todo como siempre. Una instalación
- *    sin especialidad es la del legado de ginecología, así que se comporta igual.
+ *  - **Ginecología** (`ginecologia-y-obstetricia`): todo como siempre. **Sin especialidad en el contexto, no** (2026-10-30):
+ *    se niega, no se presume ginecología. Antes el contexto nulo se trataba como ginecología y el médico sin especialidad
+ *    veía los ecos, el embarazo y los exámenes ginecológicos que no le tocan; ahora queda en el **modo medicina general**,
+ *    que es el núcleo. Ver `esGinecologia()`.
  *  - **Pediatría** (WEB-12.1): oculta el embarazo, **el estudio ecográfico entero**, el examen ginecológico, las mamas, la
  *    colposcopía…, y el récipe y el laboratorio de la pareja.
  *  - **Cualquier otra especialidad**: el **núcleo de medicina general**. Alexander lo pidió así para poder habilitar las nueve
@@ -51,6 +53,12 @@ final class AlcanceDeLaEspecialidad
     private const PLANTILLAS_SOLO_PEDIATRIA = ['EX', 'IG', 'EE'];
 
     /**
+     * El tipo de plantilla **sólo de medicina interna**: el examen funcional (`EF`, Alexander, 2026-10-29). Ninguna
+     * otra especialidad tiene esa pantalla, así que fuera del internista no se ofrece en el ABM.
+     */
+    private const PLANTILLAS_SOLO_MEDICINA_INTERNA = ['EF'];
+
+    /**
      * Las solapas del examen que son **sólo de ginecología** y que el modo medicina general no ofrece: las mamas, el examen
      * ginecológico y las tres de texto que le son propias (colposcopía, citología e histeroscopía). *Resultado de exámenes* y
      * la galería de imágenes **no** están: sirven a cualquier especialidad y el modo general las conserva.
@@ -75,14 +83,19 @@ final class AlcanceDeLaEspecialidad
     }
 
     /**
-     * **¿Es ginecología?** También lo es **no tener especialidad en el contexto**: la instalación del legado que no declara
-     * especialidad es la de ginecología y hasta el 2026-10-22 se comportaba igual que ella, así que se conserva.
+     * **¿Es ginecología?** Sólo cuando la especialidad lo dice. **No tener especialidad no es ginecología** (2026-10-30).
+     *
+     * Hasta esa fecha el contexto sin especialidad se tomaba como ginecología («la instalación del legado es de
+     * ginecología»), y eso convertía la ausencia del dato en el permiso más amplio: el médico sin especialidad veía el
+     * estudio ecográfico, el control de embarazo, el examen ginecológico y sus plantillas. Un dato que falta no autoriza
+     * nada: sin especialidad el alcance es el **núcleo de medicina general** (`esGeneral()`), que es una lista cerrada.
+     *
+     * La instalación legada de ginecología ya no se adivina: su administrador le asigna la especialidad (el comando
+     * `medicos:sin-especialidad` lista a quién hay que asignársela).
      */
     public function esGinecologia(): bool
     {
-        return $this->slug === null
-            || $this->slug === 'ginecologia-y-obstetricia'
-            || str_contains($this->slug, 'ginecolog');
+        return $this->slug !== null && str_contains($this->slug, 'ginecolog');
     }
 
     /**
@@ -251,18 +264,23 @@ final class AlcanceDeLaEspecialidad
      * En el **modo medicina general** (2026-10-22) se ocultan las de las dos especialidades: las cinco de ginecología
      * (`CO`, `CI`, `HI`, `EG`, `EM`, `ER`), los siete ecos —porque la sección del estudio no está— y las tres de pediatría.
      * Quedan las que cualquier especialidad usa: evolución (`EV`), informe (`IM`), dietas (`DI`), enfermedad actual (`EA`),
-     * tratamiento (`TR`), resumen físico (`RF`) y resultado de exámenes (`RE`).
+     * tratamiento (`TR`), resumen físico (`RF`) y resultado de exámenes (`RE`). El **examen funcional** (`EF`) es sólo del
+     * internista (2026-10-29): se ofrece en medicina interna y se oculta en el resto.
      *
      * @return array<int,string>
      */
     public function tiposDePlantillaOcultos(): array
     {
-        // Ginecología (y el consultorio sin especialidad) no cambia: sólo faltan las tres de la consulta pediátrica.
+        // El examen funcional es de medicina interna: fuera de ella no hay pantalla que lo consuma.
+        $soloInternista = $this->esMedicinaInterna() ? [] : self::PLANTILLAS_SOLO_MEDICINA_INTERNA;
+
+        // Ginecología (y el consultorio sin especialidad) conserva lo suyo: sólo se ocultan las tres de pediatría y el
+        // examen funcional, que es del internista.
         if (! $this->esPediatria() && ! $this->esGeneral()) {
-            return self::PLANTILLAS_SOLO_PEDIATRIA;
+            return array_merge($soloInternista, self::PLANTILLAS_SOLO_PEDIATRIA);
         }
 
-        $ocultos = self::PLANTILLAS_SOLO_GINECOLOGIA;
+        $ocultos = array_merge(self::PLANTILLAS_SOLO_GINECOLOGIA, $soloInternista);
 
         // El modo general tampoco ofrece los tres tipos de *Exámenes/Estudios* de pediatría: no hay pantalla que los consuma.
         if ($this->esGeneral()) {

@@ -3599,8 +3599,10 @@ body.auth-pagina {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.consulta-paciente { font-weight: 600; color: var(--ds-tinta); }
-.consulta-datos { overflow: hidden; text-overflow: ellipsis; }
+.consulta-paciente { font-weight: 600; color: var(--ds-tinta); min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* La edad no se recorta: en una pantalla angosta se recortan el nombre y el resto de la línea (Alexander, 2026-10-29). */
+.consulta-edad { flex: 0 0 auto; white-space: nowrap; }
+.consulta-datos { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .consulta-barra-navegador { display: flex; align-items: center; gap: .5rem; flex: 0 1 auto; min-width: 0; max-width: 100%; }
 .consulta-encabezado .consulta-barra-navegador .chips { padding-bottom: 0; }
 .consulta-encabezado .consulta-barra-navegador .chip-opcion {

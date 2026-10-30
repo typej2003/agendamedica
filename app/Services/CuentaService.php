@@ -142,6 +142,13 @@ class CuentaService
             ]);
             MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $regMedico]);
 
+            // **Ningún médico nace sin especialidad** (2026-10-30): ver `especialidadDeAlta()`.
+            $especialidad = $this->especialidadDeAlta($datos['specialty_id'] ?? null);
+
+            if ($especialidad !== null) {
+                $this->asignarEspecialidades($medico, [$especialidad->id]);
+            }
+
             return ['user' => $user, 'medico' => $medico, 'clave' => $clave];
         });
     }
@@ -324,6 +331,13 @@ class CuentaService
                 'is_active'      => true,
             ]);
             MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $regMedico]);
+
+            // **Ningún médico nace sin especialidad** (2026-10-30): ver `especialidadDeAlta()`.
+            $especialidad = $this->especialidadDeAlta($datos['specialty_id'] ?? null);
+
+            if ($especialidad !== null) {
+                $this->asignarEspecialidades($medico, [$especialidad->id]);
+            }
 
             return ['user' => $user, 'medico' => $medico];
         });
@@ -823,6 +837,31 @@ class CuentaService
     /* ------------------------------------------------------------------ */
     /* Especialidades del médico                                           */
     /* ------------------------------------------------------------------ */
+
+    /**
+     * **La especialidad con la que nace una cuenta** (2026-10-30): la que se pidió o, si no vino ninguna,
+     * `medicina-general`.
+     *
+     * Antes, el alta desde el panel creaba la ficha **sin especialidad y sin decir nada**: el médico entraba
+     * a `/clinica` con el menú vacío y, hasta el fix del alcance, además veía el contenido ginecológico que
+     * no le tocaba. Medicina general es el piso seguro (el núcleo de la consulta, sin ecos ni embarazo) y el
+     * administrador lo corrige después en `/admin/especialidades`.
+     *
+     * Devuelve `null` sólo si el catálogo no tiene `medicina-general` (una instalación sin sembrar): en ese
+     * caso no se inventa ninguna fila.
+     */
+    private function especialidadDeAlta(?int $pedida): ?Specialty
+    {
+        if ($pedida !== null) {
+            $elegida = Specialty::find($pedida);
+
+            if ($elegida !== null) {
+                return $elegida;
+            }
+        }
+
+        return Specialty::where('slug', 'medicina-general')->first();
+    }
 
     /**
      * Deja al médico con EXACTAMENTE estas especialidades del catálogo (pivote `medico_specialty`).

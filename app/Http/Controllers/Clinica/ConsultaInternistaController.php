@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Actions\Consulta\ArmarResumenDelExamen;
 use App\Actions\Consulta\GuardarDatosDelInternista;
 use App\Clinica\Consulta\ConsultasDelContexto;
+use App\Clinica\Consulta\Interna\DatosDelInternista;
 use App\Clinica\Consulta\Interna\MapaDelInternista;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
@@ -15,6 +17,9 @@ use Illuminate\Validation\Rule;
  * **Guardar una pestaña de la consulta del internista** (MI-2 a MI-5, 2026-10-28): signos vitales, examen funcional, examen
  * físico, resumen físico, EKG, Rx de tórax, laboratorio, observaciones y estimaciones pre-operatorias. La pestaña viaja en el
  * formulario; los campos y sus columnas son los de `MapaDelInternista`, y la escritura es `GuardarDatosDelInternista`.
+ *
+ * Desde el 2026-10-29 también arma el **resumen físico** con «Actualizar» (`resumen`): lee los signos y el examen guardados
+ * y devuelve el texto, como el `ue_resume` del escritorio. No escribe nada.
  */
 class ConsultaInternistaController extends Controller
 {
@@ -76,5 +81,32 @@ class ConsultaInternistaController extends Controller
         return $resultado->seEscribio()
             ? $destino->with('estado', 'Datos guardados.')
             : $destino->with('estado', 'Sin cambios: los datos ya estaban así.');
+    }
+
+    /**
+     * **«Actualizar» del resumen físico** (Alexander, 2026-10-29): el `ue_resume` del escritorio, que arma
+     * `consultas.resultadoexamencomp` con los signos y el examen de esta consulta. No escribe nada: el texto vuelve a
+     * la pantalla, el médico lo revisa y se guarda con el botón (o el guardado de la pestaña).
+     *
+     * Lee lo **guardado**, no el formulario: los signos y el examen viven en otras pestañas y la pantalla sólo tiene
+     * una abierta a la vez. Cambiar de pestaña guarda antes lo escrito (el diálogo de salida), así que al llegar acá
+     * lo que se lee es lo último que el médico cargó.
+     */
+    public function resumen(Request $request, Consulta $consulta, DatosDelInternista $datos)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+
+        $consulta = $this->consultas->consulta(
+            $this->registrosDelMedico($contexto['medico']),
+            (int) $consulta->id,
+            $contexto['reg_medico'],
+        );
+
+        return response()->json([
+            'fisico' => ArmarResumenDelExamen::internista(
+                $datos->valores($consulta, 'signos'),
+                $datos->valores($consulta, 'examen'),
+            ),
+        ]);
     }
 }

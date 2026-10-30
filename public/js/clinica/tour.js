@@ -59,6 +59,45 @@
     // Un clic en el velo no hace nada y tampoco le quita el foco al globo (el `mousedown` lo mandaría a `<body>`).
     velo.addEventListener('mousedown', function (evento) { evento.preventDefault(); });
 
+    /**
+     * **Mientras el tutorial está abierto, la aplicación no se puede tocar** (2026-10-30; Alexander lo
+     * reportó dos veces).
+     *
+     * El paso resaltado se pinta **por encima del velo** para que se vea, y eso lo dejaba clickeable: si el
+     * médico apretaba «Crear sede» desde el tutorial, el diálogo se abría **detrás** del velo y la pantalla
+     * quedaba trabada —no se podía escribir un espacio ni moverse con las flechas—. No era un problema del
+     * formulario: era el tutorial dejando pasar un clic.
+     *
+     * Se corta el clic **en captura**, antes de que llegue al control: fuera del globo (y del botón de
+     * reabrir) no pasa nada. Además se marca `inert` el armazón, así el teclado tampoco llega a los campos de
+     * abajo. Para interactuar hay que **terminar el tutorial o saltarlo**, que es lo que corresponde.
+     */
+    const bloquearLaAplicacion = function (bloquear) {
+        var armazon = document.getElementById('wrapper');
+        var barra = document.querySelector('.site-header, .topbar, nav.navbar');
+
+        [armazon, barra].forEach(function (elemento) {
+            if (!elemento) return;
+            if (bloquear) {
+                elemento.setAttribute('inert', '');
+                elemento.setAttribute('aria-hidden', 'true');
+            } else {
+                elemento.removeAttribute('inert');
+                elemento.removeAttribute('aria-hidden');
+            }
+        });
+    };
+
+    document.addEventListener('click', function (evento) {
+        if (!abierto) return;
+
+        var destino = evento.target;
+        if (raiz.contains(destino) || (botonReabrir && botonReabrir.contains(destino))) return;
+
+        evento.preventDefault();
+        evento.stopPropagation();
+    }, true);
+
     document.body.appendChild(velo);
     document.body.appendChild(foco);
 
@@ -252,6 +291,7 @@
         foco.hidden = true;
         document.documentElement.classList.remove('tour-activo');
         raiz.setAttribute('data-abierto', '0');
+        bloquearLaAplicacion(false);
 
         // El foco vuelve a donde estaba (el botón de reabrir, si se abrió desde ahí).
         if (focoAnterior && document.contains(focoAnterior) && typeof focoAnterior.focus === 'function') {
@@ -273,6 +313,7 @@
         raiz.setAttribute('data-abierto', '1');
         if (globo.parentElement !== document.body) document.body.appendChild(globo);
         document.documentElement.classList.add('tour-activo');
+        bloquearLaAplicacion(true);
         velo.hidden = false;
         foco.hidden = false;
         mostrar(0);

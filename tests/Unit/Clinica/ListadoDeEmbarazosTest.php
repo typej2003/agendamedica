@@ -176,15 +176,15 @@ class ListadoDeEmbarazosTest extends TestCase
 
     public function test_el_catalogo_de_listados_normaliza_la_clave(): void
     {
-        $this->assertSame(['embarazos', 'pacientes-por-rango', 'consultas-por-rango'], ListadosDisponibles::claves());
-        $this->assertSame('embarazos', ListadosDisponibles::normalizar('embarazos'));
+        // Sin especialidad en el contexto (2026-10-30) no se ofrece el de embarazos: es de obstetricia.
+        $this->assertSame(['pacientes-por-rango', 'consultas-por-rango'], ListadosDisponibles::claves());
         $this->assertSame('Embarazos y partos', ListadosDisponibles::titulo('embarazos'));
         $this->assertSame('pacientes-por-rango', ListadosDisponibles::normalizar('pacientes-por-rango'));
         $this->assertSame('Pacientes por rango', ListadosDisponibles::titulo('pacientes-por-rango'));
 
         // Una clave que todavía no tiene pantalla vuelve al listado por defecto, no a una pantalla a medias.
-        $this->assertSame('embarazos', ListadosDisponibles::normalizar('no-existe'));
-        $this->assertSame('embarazos', ListadosDisponibles::normalizar(null));
+        $this->assertSame('pacientes-por-rango', ListadosDisponibles::normalizar('no-existe'));
+        $this->assertSame('pacientes-por-rango', ListadosDisponibles::normalizar(null));
         $this->assertFalse(ListadosDisponibles::existe('otro'));
     }
 
@@ -213,11 +213,11 @@ class ListadoDeEmbarazosTest extends TestCase
         $this->assertSame('pacientes-por-rango', ListadosDisponibles::normalizar('embarazos', 'pediatria'));
         $this->assertSame('consultas-por-rango', ListadosDisponibles::normalizar('consultas-por-rango', 'pediatria'));
 
-        // Sin especialidad en el contexto (médico sin especialidad asignada) el catálogo sigue completo; otra especialidad no ve el
-        // reporte de partos, que es de obstetricia.
+        // **Sin especialidad tampoco se ve el reporte de partos** (2026-10-30): antes el contexto nulo conservaba el
+        // catálogo completo y el médico sin especialidad terminaba viendo embarazos y partos.
         foreach ([null, ''] as $slug) {
-            $this->assertSame(['embarazos', 'pacientes-por-rango', 'consultas-por-rango'], ListadosDisponibles::claves($slug));
-            $this->assertSame('embarazos', ListadosDisponibles::normalizar('embarazos', $slug));
+            $this->assertSame(['pacientes-por-rango', 'consultas-por-rango'], ListadosDisponibles::claves($slug), (string) $slug);
+            $this->assertSame('pacientes-por-rango', ListadosDisponibles::normalizar('embarazos', $slug), (string) $slug);
         }
 
         $this->assertSame(['pacientes-por-rango', 'consultas-por-rango'], ListadosDisponibles::claves('cirugia'));

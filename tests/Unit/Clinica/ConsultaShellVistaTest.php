@@ -56,15 +56,16 @@ class ConsultaShellVistaTest extends TestCase
         );
     }
 
-    public function test_el_encabezado_lleva_el_paciente_la_consulta_la_historia_y_la_fecha(): void
+    public function test_el_encabezado_lleva_el_paciente_la_consulta_la_historia_la_fecha_y_la_edad(): void
     {
-        $vm = $this->vista();
+        $vm = $this->vista(['fnacimiento' => '1990-05-10']);
 
         $this->assertSame('Pérez, Ana', $vm->nombre());
         $this->assertSame('H. 1001', $vm->historia());
-        // A-11: la fila es `NOMBRE · H. n.º · Consulta n.º · fecha`; el resto de la fila (lo que va detrás del nombre).
-        $this->assertSame('H. 1001 · Consulta N.º 3 · 05/10/2026', $vm->subtitulo());
-        $this->assertSame('Pérez, Ana · H. 1001 · Consulta N.º 3 · 05/10/2026', $vm->lineaDeCabecera());
+        // A-11: la fila es `NOMBRE · edad · H. n.º · Consulta n.º · fecha`; la edad va siempre (Alexander, 2026-10-29).
+        $this->assertSame('36 años · H. 1001 · Consulta N.º 3 · 05/10/2026', $vm->subtitulo());
+        $this->assertSame('H. 1001 · Consulta N.º 3 · 05/10/2026', $vm->detalleDeLaCabecera());
+        $this->assertSame('Pérez, Ana · 36 años · H. 1001 · Consulta N.º 3 · 05/10/2026', $vm->lineaDeCabecera());
         $this->assertSame('05/10/2026', $vm->fecha());
         $this->assertSame(3, $vm->nroconsulta());
     }
@@ -80,25 +81,33 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertSame('Paciente sin nombre', $vm->nombre());
         $this->assertNull($vm->historia());
         $this->assertSame('—', $vm->fecha());
-        $this->assertSame('Consulta N.º 3 · —', $vm->subtitulo());
-        $this->assertSame('Paciente sin nombre · Consulta N.º 3 · —', $vm->lineaDeCabecera());
+        $this->assertSame('sin fecha de nacimiento · Consulta N.º 3 · —', $vm->subtitulo());
+        $this->assertSame('Paciente sin nombre · sin fecha de nacimiento · Consulta N.º 3 · —', $vm->lineaDeCabecera());
     }
 
-    public function test_en_pediatria_la_edad_abre_la_linea_del_encabezado(): void
+    public function test_la_edad_abre_la_linea_del_encabezado_en_todas_las_especialidades(): void
     {
-        // «Siempre debe aparecer la edad del paciente en pediatría»: la edad es el primer dato de la línea, delante
-        // de la historia, y entra en el subtítulo para que también quede en el `title` de la cabecera.
-        $vm = $this->vista(['especialidad' => 'pediatria', 'fnacimiento' => '2024-07-02']);
+        // Alexander, 2026-10-29: la edad se ve arriba, en la barra, en todo momento dentro de la consulta. A los
+        // menores de 6 años se dice con meses y días; a los adultos, en años cumplidos.
+        foreach ([null, 'ginecologia-y-obstetricia', 'medicina-interna', 'pediatria'] as $slug) {
+            $vm = $this->vista(['especialidad' => $slug, 'fnacimiento' => '2024-07-02']);
 
-        $this->assertSame('2 años 3 meses 3 días', $vm->edad());
-        $this->assertSame(
-            '2 años 3 meses 3 días · H. 1001 · Consulta N.º 3 · 05/10/2026',
-            $vm->subtitulo(),
-        );
-        $this->assertSame(
-            'Pérez, Ana · 2 años 3 meses 3 días · H. 1001 · Consulta N.º 3 · 05/10/2026',
-            $vm->lineaDeCabecera(),
-        );
+            $this->assertSame('2 años 3 meses 3 días', $vm->edad(), (string) $slug);
+            $this->assertSame(
+                '2 años 3 meses 3 días · H. 1001 · Consulta N.º 3 · 05/10/2026',
+                $vm->subtitulo(),
+                (string) $slug,
+            );
+            $this->assertSame(
+                'Pérez, Ana · 2 años 3 meses 3 días · H. 1001 · Consulta N.º 3 · 05/10/2026',
+                $vm->lineaDeCabecera(),
+                (string) $slug,
+            );
+        }
+
+        $adulto = $this->vista(['especialidad' => 'medicina-interna', 'fnacimiento' => '1990-05-10']);
+        $this->assertSame('36 años', $adulto->edad());
+        $this->assertSame('36 años · H. 1001 · Consulta N.º 3 · 05/10/2026', $adulto->subtitulo());
     }
 
     public function test_la_edad_se_cuenta_a_la_fecha_de_la_consulta_no_a_hoy(): void
@@ -118,20 +127,24 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertSame('8 años', $sinDias->edad());
     }
 
-    public function test_en_pediatria_sin_fecha_de_nacimiento_el_aviso_aparece_igual(): void
+    public function test_sin_fecha_de_nacimiento_el_aviso_aparece_igual_en_cualquier_especialidad(): void
     {
         // Nunca desaparece en silencio: sin el dato (o con la basura del legado) se dice que falta, en el mismo
         // lugar donde iría la edad.
-        $sinDato = $this->vista(['especialidad' => 'pediatria']);
-        $this->assertSame('sin fecha de nacimiento', $sinDato->edad());
-        $this->assertSame(
-            'sin fecha de nacimiento · H. 1001 · Consulta N.º 3 · 05/10/2026',
-            $sinDato->subtitulo(),
-        );
-        $this->assertSame(
-            'Pérez, Ana · sin fecha de nacimiento · H. 1001 · Consulta N.º 3 · 05/10/2026',
-            $sinDato->lineaDeCabecera(),
-        );
+        foreach ([null, 'ginecologia-y-obstetricia', 'medicina-interna', 'pediatria'] as $slug) {
+            $sinDato = $this->vista(['especialidad' => $slug]);
+            $this->assertSame('sin fecha de nacimiento', $sinDato->edad(), (string) $slug);
+            $this->assertSame(
+                'sin fecha de nacimiento · H. 1001 · Consulta N.º 3 · 05/10/2026',
+                $sinDato->subtitulo(),
+                (string) $slug,
+            );
+            $this->assertSame(
+                'Pérez, Ana · sin fecha de nacimiento · H. 1001 · Consulta N.º 3 · 05/10/2026',
+                $sinDato->lineaDeCabecera(),
+                (string) $slug,
+            );
+        }
 
         $nula = $this->vista(['especialidad' => 'pediatria', 'fnacimiento' => '0000-00-00']);
         $this->assertSame('sin fecha de nacimiento', $nula->edad());
@@ -143,22 +156,20 @@ class ConsultaShellVistaTest extends TestCase
         $this->assertStringStartsWith('sin fecha de nacimiento · H. 1001 · ', $anterior->subtitulo());
     }
 
-    public function test_fuera_de_pediatria_el_encabezado_queda_exactamente_como_esta(): void
+    public function test_en_un_adulto_la_edad_va_solo_en_anios_cumplidos(): void
     {
-        // La edad es un dato de pediatría: con la fecha de nacimiento cargada, ginecología y la consulta sin
-        // especialidad siguen mostrando la misma línea de siempre.
-        foreach ([null, 'ginecologia-y-obstetricia'] as $slug) {
-            $vm = $this->vista(['especialidad' => $slug, 'fnacimiento' => '2024-07-02']);
+        // Alexander, 2026-10-29: la edad en la barra también fuera de pediatría; en un adulto los meses y los días
+        // no aportan y se muestran sólo los años, contados a la fecha de la consulta.
+        $vm = $this->vista(['fnacimiento' => '1980-02-29', 'fecha' => '2026-10-05']);
 
-            $this->assertNull($vm->edad(), (string) $slug);
-            $this->assertSame('H. 1001 · Consulta N.º 3 · 05/10/2026', $vm->subtitulo(), (string) $slug);
-            $this->assertSame('Pérez, Ana · H. 1001 · Consulta N.º 3 · 05/10/2026', $vm->lineaDeCabecera(), (string) $slug);
-        }
+        $this->assertSame('46 años', $vm->edad());
+        $this->assertSame('46 años · H. 1001 · Consulta N.º 3 · 05/10/2026', $vm->subtitulo());
     }
 
     public function test_el_panel_tiene_los_trece_items_en_su_orden_y_con_su_tarea(): void
     {
-        $vm = $this->vista();
+        // El panel del legado es el de ginecología: sin especialidad (2026-10-30) el shell muestra el núcleo de once.
+        $vm = $this->vista(['especialidad' => 'ginecologia-y-obstetricia']);
         $panel = $vm->panel();
 
         $this->assertCount(2, $panel, 'el panel se agrupa como el legado: la atención y los documentos');
@@ -190,7 +201,7 @@ class ConsultaShellVistaTest extends TestCase
 
     public function test_el_panel_marca_disponibles_los_items_de_la_consulta_y_la_ficha(): void
     {
-        $vm = $this->vista();
+        $vm = $this->vista(['especialidad' => 'ginecologia-y-obstetricia']);
 
         $disponibles = [];
         foreach ($vm->panel() as $bloque) {

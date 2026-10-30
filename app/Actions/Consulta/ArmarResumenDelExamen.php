@@ -2,9 +2,13 @@
 
 namespace App\Actions\Consulta;
 
+use App\Clinica\Consulta\Interna\DatosDelInternista;
+
 /**
  * **El botón «Actualizar» del examen** (WEB-11.8): arma los dos resúmenes narrativos que el escritorio guarda en
  * `examen_fisico_nuevo.total_f` (examen físico) y `total_g` (examen ginecológico) a partir de los datos **no vacíos** del examen.
+ * Desde el 2026-10-29 también arma el **resumen físico del internista** (`internista()`), con los signos y el examen de la
+ * consulta, que es el `ue_resume` de medicina interna.
  *
  * Es la misma cuenta del `clicked` de `cb_1` (`w_consulta_principal.srw:8960-9010`, el físico) y de `cb_2` (`:9882-9907`, el
  * ginecológico): cada dato no vacío aporta `ROTULO: valor.  ` (punto y dos espacios) en un orden fijo y el texto termina en `.`.
@@ -92,6 +96,61 @@ final class ArmarResumenDelExamen
             ['piernas', 'GENITALES', ''],
             ['otros', 'EXTREMIDADES', ''],
             ['neurologico', 'NEUROLÓGICO', ''],
+        ]);
+    }
+
+    /**
+     * El resumen del **examen físico de medicina interna** (Alexander, 2026-10-29): el `ue_resume` del escritorio
+     * (`w_consulta_principal.srw:22456`), que arma `consultas.resultadoexamencomp` con los **signos** de la solapa
+     * *Signos vitales* y los cuadros de *Examen físico*, en el orden y con los rótulos del escritorio.
+     *
+     * El IMC no se guarda como texto en la consulta: se calcula con peso y talla, como el escritorio (`gffIMC`). La
+     * tensión arterial del escritorio es la **acostada**; si no está, se usa la sentada y después la de pie, para no
+     * perder la que el médico sí cargó.
+     *
+     * @param  array<string,?string>  $signos  valores de la pestaña *Signos vitales*
+     * @param  array<string,?string>  $examen  valores de la pestaña *Examen físico*
+     */
+    public static function internista(array $signos, array $examen): string
+    {
+        $tension = $signos['taacostado'] ?? null;
+
+        foreach (['tasentado', 'tapie'] as $clave) {
+            if (self::valor($tension) !== null) {
+                break;
+            }
+
+            $tension = $signos[$clave] ?? null;
+        }
+
+        $imc = GuardarDatosDelInternista::imc($signos['peso'] ?? null, $signos['talla'] ?? null);
+
+        return self::armar(array_merge($examen, $signos, [
+            'imc' => $imc === null ? null : DatosDelInternista::numeroLegible($imc),
+            'tension' => $tension,
+        ]), [
+            ['peso', 'PESO', ' kg'],
+            ['talla', 'TALLA', ' m'],
+            ['imc', 'IMC', ''],
+            ['cintura', 'C. ABDOMINAL', ' cm'],
+            ['pp', 'F. RESPIRATORIA', ''],
+            ['fc', 'F. CARDIACA', ''],
+            ['tension', 'TENSIÓN ARTERIAL', ' mm/Hg'],
+            ['genera', 'GENERAL', ''],
+            ['ojo_de', 'OJOS', ''],
+            ['boca_de', 'BOCA', ''],
+            ['cabeza', 'CABEZA', ''],
+            ['orl', 'ORL', ''],
+            ['cuello_tiroides', 'CUELLO Y TIROIDES', ''],
+            ['cardiopulmonal', 'CARDIOPULMONAR', ''],
+            ['torax', 'TÓRAX', ''],
+            ['abdomen', 'ABDOMEN', ''],
+            ['extremidades', 'EXTREMIDADES', ''],
+            ['neurologico', 'NEUROLÓGICO', ''],
+            ['vascular', 'VASCULAR', ''],
+            ['piel_mucosas', 'PIEL', ''],
+            ['mucosas', 'MUCOSAS', ''],
+            ['otros', 'OTROS', ''],
         ]);
     }
 

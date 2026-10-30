@@ -490,7 +490,10 @@ class CuentasTest extends TestCase
         $this->assertFalse($r['user']->fresh()->must_change_password);
         // Sin clave temporal el médico ya trabaja: el panel de administración lo devuelve a su consultorio.
         $this->get('/dashboard')->assertRedirect(route('clinica.inicio'));
-        $this->get('/clinica/contexto')->assertOk();
+        // **Elegir consultorio se salta**: el alta ya le puso una especialidad (medicina general, 2026-10-30)
+        // y no tiene ninguno cargado, así que con un solo médico y una sola especialidad la pantalla no
+        // aparece y lo manda al inicio con el aviso de cargar un consultorio.
+        $this->get('/clinica/contexto')->assertRedirect(route('clinica.inicio'));
     }
 
     public function test_una_cuenta_bloqueada_es_sacada_de_la_web(): void

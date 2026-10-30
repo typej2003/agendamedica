@@ -1,0 +1,193 @@
+/* Las páginas legales públicas (2026-10-30): privacidad, términos y eliminación de cuenta.
+   Se cargan con `layouts.app`, así que la paleta y la barra ya están; acá sólo se le da al texto
+   una medida de lectura cómoda. */
+
+.legal {
+    max-width: 780px;
+    padding-top: 32px;
+    padding-bottom: 56px;
+}
+
+.legal-documento {
+    background: #fff;
+    border-radius: 14px;
+    padding: 36px 40px;
+    box-shadow: 0 1px 3px rgba(43, 36, 54, .08);
+}
+
+.legal-documento-angosto {
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.legal-volver {
+    margin: 0 0 18px;
+    font-size: .9rem;
+}
+
+.legal-documento h1 {
+    font-size: 1.9rem;
+    margin: 0 0 12px;
+}
+
+.legal-documento h2 {
+    font-size: 1.2rem;
+    margin: 32px 0 10px;
+    padding-top: 18px;
+    border-top: 1px solid #eee;
+}
+
+.legal-documento h3 {
+    font-size: 1rem;
+    margin: 22px 0 8px;
+}
+
+.legal-documento p,
+.legal-documento li {
+    font-size: .97rem;
+    line-height: 1.65;
+    color: #3b3346;
+}
+
+.legal-documento ul,
+.legal-documento ol {
+    padding-left: 1.3rem;
+}
+
+.legal-documento li {
+    margin-bottom: 6px;
+}
+
+.legal-entrada {
+    font-size: 1.02rem;
+    color: #4a4157;
+}
+
+.legal-pasos li {
+    margin-bottom: 10px;
+}
+
+.legal-identidad {
+    margin: 22px 0 8px;
+    padding: 14px 18px;
+    background: #f7f4fa;
+    border-left: 3px solid #783080;
+    border-radius: 6px;
+    font-size: .88rem;
+    line-height: 1.55;
+}
+
+.legal-identidad p {
+    margin: 0 0 2px;
+    font-size: .88rem;
+}
+
+.legal-vigencia {
+    margin-top: 6px !important;
+    color: #6b6580;
+}
+
+.legal-aviso {
+    margin: 22px 0;
+    padding: 14px 18px;
+    border-radius: 8px;
+    background: #eef7f0;
+    border: 1px solid #cbe6d3;
+    font-size: .95rem;
+    line-height: 1.55;
+}
+
+.legal-aviso-error {
+    background: #fdf1f1;
+    border-color: #f0c9c9;
+}
+
+.legal-formulario {
+    margin: 22px 0 8px;
+    padding: 20px;
+    background: #faf9fc;
+    border: 1px solid #ece8f2;
+    border-radius: 10px;
+}
+
+.legal-campo {
+    margin-bottom: 16px;
+}
+
+.legal-campo label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: .93rem;
+}
+
+.legal-campo input {
+    width: 100%;
+    max-width: 420px;
+    padding: 11px 13px;
+    border: 1px solid #cfc7db;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.legal-campo input:focus {
+    outline: 2px solid #b98cc0;
+    border-color: #783080;
+}
+
+.legal-ayuda,
+.legal-nota {
+    margin: 6px 0 0;
+    font-size: .84rem;
+    color: #6b6580;
+}
+
+.legal-error {
+    margin: 6px 0 0;
+    font-size: .86rem;
+    color: #b3261e;
+}
+
+.legal-boton {
+    display: inline-block;
+    padding: 11px 20px;
+    border: 0;
+    border-radius: 8px;
+    background: #783080;
+    color: #fff;
+    font-size: .97rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.legal-boton:hover {
+    background: #612668;
+}
+
+.legal-boton-secundario {
+    background: #fff;
+    color: #783080;
+    border: 1px solid #783080;
+}
+
+.legal-boton-secundario:hover {
+    background: #f7f4fa;
+}
+
+.legal-pie-documento {
+    margin-top: 34px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+    font-size: .9rem;
+    color: #6b6580;
+}
+
+@media (max-width: 575.98px) {
+    .legal-documento {
+        padding: 24px 20px;
+    }
+
+    .legal-documento h1 {
+        font-size: 1.55rem;
+    }
+}

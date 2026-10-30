@@ -7,13 +7,13 @@ namespace App\Clinica\Catalogos;
  * del ABM del escritorio (`d_a_formatos.srd`, la columna `tipo` con sus valores) con el nombre en claro.
  *
  * Los tipos de `USADOS_EN_LA_WEB` **ya los consume la consulta de la web**: las secciones de texto —evolución (`EV`), informe
- * (`IM`), dietas (`DI`), enfermedad actual (`EA`), las solapas del examen (`CO`, `CI`, `HI`, `RE`), el tratamiento (`TR`) y los
- * resúmenes del examen (`RF`, `EG`)— y **los siete estudios ecográficos del ítem 5** (`UG`, `O1`, `O2`, `O3`, `ED`, `UA`, `UM`;
- * revisión de Alexander, 2026-10-17). Ahí la plantilla se **copia** al campo que se escribe, así que una plantilla nueva o editada
- * se ofrece al instante (es la misma tabla) y editarla no cambia lo que ya está escrito en las consultas. Los que quedan en `null`
- * son los que el escritorio tiene y la web todavía **no ofrece** (el eco de cuello `EM` y el eco renal `ER`, que no tienen sección
- * en ginecología): se pueden mantener acá, con su nombre. Un código que no está en la lista (el legado puede traer cualquiera) se
- * muestra tal cual y no se pierde al guardar.
+ * (`IM`), dietas (`DI`), enfermedad actual (`EA`), las solapas del examen (`CO`, `CI`, `HI`, `RE`), el tratamiento (`TR`), los
+ * resúmenes del examen (`RF`, `EG`), el examen funcional de medicina interna (`EF`)— y **los siete estudios ecográficos del
+ * ítem 5** (`UG`, `O1`, `O2`, `O3`, `ED`, `UA`, `UM`; revisión de Alexander, 2026-10-17). Ahí la plantilla se **copia** al campo
+ * que se escribe, así que una plantilla nueva o editada se ofrece al instante (es la misma tabla) y editarla no cambia lo que
+ * ya está escrito en las consultas. Los que quedan en `null` son los que el escritorio tiene y la web todavía **no ofrece** (el
+ * eco de cuello `EM` y el eco renal `ER`, que no tienen sección en ginecología): se pueden mantener acá, con su nombre. Un
+ * código que no está en la lista (el legado puede traer cualquiera) se muestra tal cual y no se pierde al guardar.
  *
  * ⚠️ Esta clase dice **qué existe**, no qué ve cada especialidad: qué tipos se ofrecen en el ABM lo decide
  * `PlantillasDeLaEspecialidad` (en pediatría no se ofrecen los ginecológicos, 2026-10-18).
@@ -21,7 +21,7 @@ namespace App\Clinica\Catalogos;
 final class TiposDePlantillaDeTexto
 {
     /** Los tipos que la consulta de la web ya ofrece. */
-    public const USADOS_EN_LA_WEB = ['EV', 'IM', 'DI', 'EA', 'CO', 'CI', 'HI', 'TR', 'RE', 'RF', 'EG', 'EX', 'IG', 'EE', 'UG', 'O1', 'O2', 'O3', 'ED', 'UA', 'UM'];
+    public const USADOS_EN_LA_WEB = ['EV', 'IM', 'DI', 'EA', 'CO', 'CI', 'HI', 'TR', 'RE', 'RF', 'EG', 'EF', 'EX', 'IG', 'EE', 'UG', 'O1', 'O2', 'O3', 'ED', 'UA', 'UM'];
 
     /** `código => [nombre, dónde se usa]`. El orden es el de las listas de la pantalla. */
     private const TIPOS = [
@@ -31,6 +31,8 @@ final class TiposDePlantillaDeTexto
         'EA' => ['Enfermedad actual', 'Se ofrece en la enfermedad actual de la consulta.'],
         'EG' => ['Examen ginecológico', 'Se ofrece en el resumen del examen ginecológico.'],
         'RF' => ['Resumen físico', 'Se ofrece en el resumen del examen físico.'],
+        // El examen funcional de medicina interna (Alexander, 2026-10-29): su texto propio, con plantillas.
+        'EF' => ['Examen funcional', 'Se ofrece en el examen funcional de medicina interna.'],
         'CI' => ['Citología', 'Se ofrece en la solapa de citología.'],
         'CO' => ['Colposcopía', 'Se ofrece en la solapa de colposcopía.'],
         'HI' => ['Histeroscopía', 'Se ofrece en la solapa de histeroscopía.'],

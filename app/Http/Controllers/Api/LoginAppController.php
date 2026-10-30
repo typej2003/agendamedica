@@ -87,6 +87,10 @@ class LoginAppController extends Controller
 
         // 5. Respuesta JSON liviana
         if ($user) {
+            // **Iniciar sesión cancela la baja programada** (decisión del usuario, 2026-10-30): vale igual
+            // desde la app, no sólo desde la web. Ver `BajasDeCuenta`.
+            \app(\App\Services\BajasDeCuenta::class)->cancelarPorInicioDeSesion($user);
+
             try {
                 // Token Sanctum
                 $token = \method_exists($user, 'createToken')

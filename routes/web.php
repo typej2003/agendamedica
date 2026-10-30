@@ -8,6 +8,7 @@ use App\Http\Livewire\Components\DaySchedule;
 use App\Http\Controllers\Auth\CustomLoginController;
 use App\Http\Controllers\Auth\CambiarPasswordWebController;
 use App\Http\Controllers\Auth\ElegirPanelController;
+use App\Http\Controllers\Clinica\MisSubespecialidadesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PortadaController;
 use App\Http\Controllers\SeoPublicoController;
@@ -74,4 +75,12 @@ Route::get('/robots.txt', [SeoPublicoController::class, 'robots'])->name('seo.ro
 Route::middleware(['auth'])->group(function () {
     Route::get('/agendar/{medicoId}/{medicalCenterId?}', ViewCalendar::class)->name('agendar.cita');
     Route::get('/agendar/{medicoId}/dia/{fecha}', DaySchedule::class)->name('agendar.dia');
+});
+
+// **El médico activa sus propias subespecialidades** (2026-10-30). La principal la sigue asignando el
+// administrador; acá sólo se encienden los postgrados de las especialidades que ya tiene. Va fuera del
+// grupo de `/clinica` porque no depende del contexto clínico: usa las fichas del propio usuario.
+Route::middleware(['auth', 'role:Root|Medico'])->prefix('clinica/mis-subespecialidades')->group(function () {
+    Route::get('/', [MisSubespecialidadesController::class, 'index'])->name('clinica.mis-subespecialidades');
+    Route::post('/', [MisSubespecialidadesController::class, 'guardar'])->name('clinica.mis-subespecialidades.guardar');
 });

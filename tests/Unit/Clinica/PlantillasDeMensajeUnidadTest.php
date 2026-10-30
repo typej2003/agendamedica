@@ -229,9 +229,8 @@ class PlantillasDeMensajeUnidadTest extends TestCase
         // médica. `EM` (eco de cuello) y `ER` (eco renal) siguen sin pantalla en la web.
         $this->assertTrue(TiposDePlantillaDeTexto::seUsaEnLaWeb('UG'));
         $this->assertFalse(TiposDePlantillaDeTexto::seUsaEnLaWeb('EM'));
-        // 23 desde el 2026-10-19: los tres tipos de *Exámenes/Estudios* de la consulta pediátrica (`EX`,
-        // `IG` y `EE`, commit `355915e`). El conteo se quedó en 20 y la prueba se volvió roja sin que nadie
-        // tocara el catálogo (el dato estaba bien: el assert estaba viejo).
-        $this->assertCount(23, TiposDePlantillaDeTexto::nombres());
+        // 24 desde el 2026-10-29: el examen funcional de medicina interna (`EF`). Antes, 23 desde el 2026-10-19
+        // (los tres tipos de *Exámenes/Estudios* de la consulta pediátrica: `EX`, `IG` y `EE`).
+        $this->assertCount(24, TiposDePlantillaDeTexto::nombres());
     }
 }

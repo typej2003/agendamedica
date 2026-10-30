@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Services\AutenticacionPorCorreo;
+use App\Services\BajasDeCuenta;
 use App\Services\CuentaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,6 +40,11 @@ class CustomLoginController extends Controller
 
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
+
+        // **Iniciar sesión cancela la baja programada** (decisión del usuario, 2026-10-30): si la persona
+        // sigue entrando, es que no quiere que su cuenta desaparezca. El otro camino de cancelación es el
+        // enlace del correo (ver `BajasDeCuenta`).
+        app(BajasDeCuenta::class)->cancelarPorInicioDeSesion($user);
 
         // Acaba de escribir su clave temporal: el cambio obligatorio no se la vuelve a pedir.
         if ($user->must_change_password) {

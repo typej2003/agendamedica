@@ -55,11 +55,11 @@ final class ListadosDisponibles
 
     /**
      * **De qué especialidad es cada listado** (revisión del usuario, 2026-10-18): el de embarazos y partos es de obstetricia, así
-     * que sólo lo ven ginecología y los médicos **sin especialidad elegida**. Es el mismo criterio que `CatalogosDisponibles` usa
-     * para sus catálogos propios: un fragmento del `slug` de la especialidad.
+     * que sólo lo ve ginecología (un fragmento del `slug`, el mismo criterio que `CatalogosDisponibles`).
      *
-     * Los listados que no están acá los ve cualquier especialidad. Si no hay especialidad en el contexto (`null`) no se filtra nada
-     * —un médico sin especialidad asignada conserva todo el catálogo—, y el fragmento se compara con el `slug` de la que sí hay.
+     * Los listados que no están acá los ve cualquier especialidad. **Sin especialidad en el contexto no se ofrece el de otra**
+     * (2026-10-30): antes el `null` mostraba el catálogo entero, y el médico sin especialidad terminaba viendo el reporte de
+     * partos. Sin dato no se presume especialidad: sólo quedan los listados generales.
      */
     private const ESPECIALIDAD = [
         self::EMBARAZOS => 'ginecolog',
@@ -157,6 +157,9 @@ final class ListadosDisponibles
     /**
      * Los listados que ofrece la especialidad, con su título, en el orden de `LISTADOS`.
      *
+     * Sin especialidad (`null` o vacío) sólo quedan los que **no** declaran una: el de embarazos y partos es de
+     * ginecología y no se ofrece (2026-10-30, antes salía todo).
+     *
      * @return array<string,string>
      */
     private static function ofrecidos(?string $especialidad): array
@@ -165,9 +168,8 @@ final class ListadosDisponibles
 
         return array_filter(
             self::LISTADOS,
-            fn (string $titulo, string $listado) => $clave === ''
-                || ! isset(self::ESPECIALIDAD[$listado])
-                || str_contains($clave, self::ESPECIALIDAD[$listado]),
+            fn (string $titulo, string $listado) => ! isset(self::ESPECIALIDAD[$listado])
+                || ($clave !== '' && str_contains($clave, self::ESPECIALIDAD[$listado])),
             ARRAY_FILTER_USE_BOTH,
         );
     }

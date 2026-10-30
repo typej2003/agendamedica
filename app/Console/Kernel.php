@@ -74,6 +74,17 @@ class Kernel extends ConsoleKernel
             ->everyMinute()
             ->withoutOverlapping();
 
+        // **Bajas de cuenta cumplidas** (2026-10-30): la página pública `/eliminar-cuenta` —requisito de
+        // Google Play— programa la baja a 30 días y esto la ejecuta. Corre de madrugada, hora de Caracas,
+        // y **con `--ejecutar`**: sin la bandera el comando sólo informa y las bajas no se harían nunca.
+        // Borra la cuenta, su ficha de médico, sus secretarías y sus archivos; las filas clínicas del
+        // `reg_medico` quedan sin dueño (ver el docblock de `App\Services\BajasDeCuenta`). Necesita el cron
+        // del servidor (`schedule:run`), como el resto.
+        $schedule->command('cuentas:ejecutar-bajas --ejecutar')
+            ->timezone('America/Caracas')
+            ->dailyAt('04:10')
+            ->withoutOverlapping();
+
         // **El worker de la cola NO va acá** (2026-10-24). Tiene su propio cron de Plesk
         // (`queue:work --stop-when-empty`, ver AGENTS.md). Se sacó del scheduler el mismo día que se puso:
         // compartía el minuto con `pagos:conciliar` y, como la tarea del cron manda la salida a
