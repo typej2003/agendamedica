@@ -15,12 +15,12 @@ class SeccionesDeLaConsultaTest extends TestCase
 {
     public function test_el_catalogo_tiene_los_trece_items_en_el_orden_del_legado(): void
     {
-        $todas = SeccionesDeLaConsulta::todas();
+        $todas = SeccionesDeLaConsulta::todas('ginecologia-y-obstetricia');
 
         // O-22 (2026-10-17) retiró *Exámenes* (el ítem 7): la numeración del legado **no se renumera**, así
         // que queda el hueco del 7 y son 13 ítems.
         $this->assertCount(13, $todas);
-        $this->assertSame(13, SeccionesDeLaConsulta::total());
+        $this->assertSame(13, SeccionesDeLaConsulta::total('ginecologia-y-obstetricia'));
         $this->assertSame([1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14], array_column($todas, 'numero'));
         $this->assertSame([
             'Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física',
@@ -29,8 +29,22 @@ class SeccionesDeLaConsultaTest extends TestCase
         ], array_column($todas, 'titulo'));
 
         // Los trece con pantalla (la pre-factura llegó con F9), agrupados como el legado.
-        $this->assertSame(13, SeccionesDeLaConsulta::disponibles());
+        $this->assertSame(13, SeccionesDeLaConsulta::disponibles('ginecologia-y-obstetricia'));
         $this->assertSame(['Consulta', 'Documentos'], array_values(array_unique(array_column($todas, 'grupo'))));
+    }
+
+    /**
+     * **Sin especialidad el catálogo es el del núcleo** (2026-10-30): once ítems, sin el estudio ecográfico (5) ni el
+     * control de embarazo (6). Antes el `null` se tomaba como ginecología y el médico sin especialidad veía los trece.
+     */
+    public function test_sin_especialidad_el_catalogo_es_el_del_nucleo(): void
+    {
+        $todas = SeccionesDeLaConsulta::todas();
+
+        $this->assertCount(11, $todas);
+        $this->assertSame([1, 2, 3, 4, 8, 9, 10, 11, 12, 13, 14], array_column($todas, 'numero'));
+        $this->assertNotContains('Estudio ecográfico', array_column($todas, 'titulo'));
+        $this->assertNotContains('Control de embarazo', array_column($todas, 'titulo'));
     }
 
     public function test_la_seccion_se_normaliza_contra_el_catalogo(): void
@@ -51,7 +65,7 @@ class SeccionesDeLaConsultaTest extends TestCase
 
     public function test_el_submenu_del_menu_lateral_lleva_a_cada_seccion_y_marca_el_activo(): void
     {
-        $items = SeccionesDeLaConsulta::submenu(42, 'diagnostico');
+        $items = SeccionesDeLaConsulta::submenu(42, 'diagnostico', 'ginecologia-y-obstetricia');
 
         $this->assertCount(13, $items);
         $this->assertSame([
@@ -85,7 +99,7 @@ class SeccionesDeLaConsultaTest extends TestCase
 
     public function test_el_icono_y_el_estado_de_cada_item_salen_del_catalogo(): void
     {
-        $items = SeccionesDeLaConsulta::submenu(7, null);
+        $items = SeccionesDeLaConsulta::submenu(7, null, 'ginecologia-y-obstetricia');
 
         $this->assertSame('bi-list-check', $items[0]['icono']);
         $this->assertSame('bi-receipt', $items[12]['icono']);

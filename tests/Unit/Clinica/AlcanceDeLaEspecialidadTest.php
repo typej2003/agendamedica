@@ -39,14 +39,25 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         ));
     }
 
-    public function test_ginecologia_y_sin_especialidad_conservan_el_panel_de_trece_items(): void
+    public function test_ginecologia_conserva_el_panel_de_trece_items(): void
     {
-        foreach ([self::GINECO, null] as $slug) {
-            $vm = $this->shell($slug);
-            // O-22 retiró *Exámenes* (el ítem 7): la numeración del legado no se renumera.
-            $this->assertSame([1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm), (string) $slug);
-            $this->assertSame(13, $vm->totalItems());
-        }
+        $vm = $this->shell(self::GINECO);
+        // O-22 retiró *Exámenes* (el ítem 7): la numeración del legado no se renumera.
+        $this->assertSame([1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm));
+        $this->assertSame(13, $vm->totalItems());
+    }
+
+    /**
+     * **Sin especialidad no se presume ginecología** (2026-10-30): el contexto nulo cae en el núcleo de medicina general
+     * —once ítems—, no en los trece del legado. Antes la ausencia del dato abría el estudio ecográfico y el control de
+     * embarazo, que es justo lo que el médico sin especialidad no debería ver.
+     */
+    public function test_sin_especialidad_el_panel_es_el_del_nucleo_general(): void
+    {
+        $vm = $this->shell(null);
+
+        $this->assertSame([1, 2, 3, 4, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm));
+        $this->assertSame(11, $vm->totalItems());
     }
 
     /**
@@ -181,16 +192,15 @@ class AlcanceDeLaEspecialidadTest extends TestCase
 
     public function test_la_pareja_el_embarazo_y_el_estudio_solo_se_ofrecen_en_ginecologia(): void
     {
-        foreach (['pediatria', self::GENERAL, 'traumatologia-y-ortopedia'] as $slug) {
+        foreach (['pediatria', self::GENERAL, 'traumatologia-y-ortopedia', null] as $slug) {
             $alcance = AlcanceDeLaEspecialidad::de($slug);
 
-            $this->assertFalse($alcance->muestraLaPareja(), $slug);
-            $this->assertFalse($alcance->muestraElEmbarazo(), $slug);
-            $this->assertFalse($alcance->muestraElEstudio(), $slug);
+            $this->assertFalse($alcance->muestraLaPareja(), (string) $slug);
+            $this->assertFalse($alcance->muestraElEmbarazo(), (string) $slug);
+            $this->assertFalse($alcance->muestraElEstudio(), (string) $slug);
         }
 
         $this->assertTrue(AlcanceDeLaEspecialidad::de(self::GINECO)->muestraLaPareja());
-        $this->assertTrue(AlcanceDeLaEspecialidad::de(null)->muestraElEmbarazo());
         $this->assertTrue(AlcanceDeLaEspecialidad::de('ginecologia')->muestraElEstudio());
     }
 
@@ -224,13 +234,23 @@ class AlcanceDeLaEspecialidadTest extends TestCase
      */
     public function test_ginecologia_solo_oculta_las_plantillas_de_examenes_estudios(): void
     {
-        foreach ([self::GINECO, null] as $slug) {
-            $this->assertEqualsCanonicalizing(
-                ['EX', 'IG', 'EE'],
-                AlcanceDeLaEspecialidad::de($slug)->tiposDePlantillaOcultos(),
-                (string) $slug,
-            );
-        }
+        $this->assertEqualsCanonicalizing(
+            ['EX', 'IG', 'EE'],
+            AlcanceDeLaEspecialidad::de(self::GINECO)->tiposDePlantillaOcultos(),
+        );
+    }
+
+    /**
+     * **Sin especialidad se oculta todo lo de las otras dos** (2026-10-30): el contexto nulo se comporta como el modo
+     * medicina general, no como ginecología. Es la mitad del fix: la ausencia de especialidad ya no enciende las
+     * plantillas ginecológicas.
+     */
+    public function test_sin_especialidad_las_plantillas_son_las_del_nucleo(): void
+    {
+        $this->assertEqualsCanonicalizing(
+            AlcanceDeLaEspecialidad::de(self::GENERAL)->tiposDePlantillaOcultos(),
+            AlcanceDeLaEspecialidad::de(null)->tiposDePlantillaOcultos(),
+        );
     }
 
     /**
@@ -268,11 +288,10 @@ class AlcanceDeLaEspecialidadTest extends TestCase
             DocumentoImpreso::ECO_DOPPLER,
         ];
 
-        foreach (['pediatria', self::GENERAL] as $slug) {
-            $this->assertEqualsCanonicalizing($deLosEcos, AlcanceDeLaEspecialidad::de($slug)->formatosEnBlancoOcultos(), $slug);
+        foreach (['pediatria', self::GENERAL, null] as $slug) {
+            $this->assertEqualsCanonicalizing($deLosEcos, AlcanceDeLaEspecialidad::de($slug)->formatosEnBlancoOcultos(), (string) $slug);
         }
 
         $this->assertSame([], AlcanceDeLaEspecialidad::de(self::GINECO)->formatosEnBlancoOcultos());
-        $this->assertSame([], AlcanceDeLaEspecialidad::de(null)->formatosEnBlancoOcultos());
     }
 }

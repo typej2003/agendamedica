@@ -15,8 +15,10 @@ use App\Clinica\Impresion\FormatosEnBlanco;
  *
  * **Tres familias, y ninguna más** (2026-10-22, «modo medicina general» de Alexander):
  *
- *  - **Ginecología** (`ginecologia-y-obstetricia`) y **sin especialidad en el contexto**: todo como siempre. Una instalación
- *    sin especialidad es la del legado de ginecología, así que se comporta igual.
+ *  - **Ginecología** (`ginecologia-y-obstetricia`): todo como siempre. **Sin especialidad en el contexto, no** (2026-10-30):
+ *    se niega, no se presume ginecología. Antes el contexto nulo se trataba como ginecología y el médico sin especialidad
+ *    veía los ecos, el embarazo y los exámenes ginecológicos que no le tocan; ahora queda en el **modo medicina general**,
+ *    que es el núcleo. Ver `esGinecologia()`.
  *  - **Pediatría** (WEB-12.1): oculta el embarazo, **el estudio ecográfico entero**, el examen ginecológico, las mamas, la
  *    colposcopía…, y el récipe y el laboratorio de la pareja.
  *  - **Cualquier otra especialidad**: el **núcleo de medicina general**. Alexander lo pidió así para poder habilitar las nueve
@@ -75,14 +77,19 @@ final class AlcanceDeLaEspecialidad
     }
 
     /**
-     * **¿Es ginecología?** También lo es **no tener especialidad en el contexto**: la instalación del legado que no declara
-     * especialidad es la de ginecología y hasta el 2026-10-22 se comportaba igual que ella, así que se conserva.
+     * **¿Es ginecología?** Sólo cuando la especialidad lo dice. **No tener especialidad no es ginecología** (2026-10-30).
+     *
+     * Hasta esa fecha el contexto sin especialidad se tomaba como ginecología («la instalación del legado es de
+     * ginecología»), y eso convertía la ausencia del dato en el permiso más amplio: el médico sin especialidad veía el
+     * estudio ecográfico, el control de embarazo, el examen ginecológico y sus plantillas. Un dato que falta no autoriza
+     * nada: sin especialidad el alcance es el **núcleo de medicina general** (`esGeneral()`), que es una lista cerrada.
+     *
+     * La instalación legada de ginecología ya no se adivina: su administrador le asigna la especialidad (el comando
+     * `medicos:sin-especialidad` lista a quién hay que asignársela).
      */
     public function esGinecologia(): bool
     {
-        return $this->slug === null
-            || $this->slug === 'ginecologia-y-obstetricia'
-            || str_contains($this->slug, 'ginecolog');
+        return $this->slug !== null && str_contains($this->slug, 'ginecolog');
     }
 
     /**
