@@ -44,6 +44,7 @@ class RegistroDePacienteWebTest extends TestCase
             'email' => 'paciente-' . uniqid() . '@example.com',
             'password' => 'Secreto123',
             'password_confirmation' => 'Secreto123',
+            'terminos' => '1',
         ], $cambios);
     }
 
@@ -58,6 +59,33 @@ class RegistroDePacienteWebTest extends TestCase
             ->assertOk()
             ->assertSee('Crea tu cuenta de paciente')
             ->assertSee('Continuar y verificar mi teléfono');
+    }
+
+    public function test_el_formulario_ofrece_los_terminos_y_la_privacidad_en_el_dialogo(): void
+    {
+        $this->get(route('paciente.registro'))
+            ->assertOk()
+            ->assertSee('He leído y acepto los')
+            ->assertSee('términos y condiciones')
+            ->assertSee('política de privacidad')
+            ->assertSee(route('legal.terminos'), false)
+            ->assertSee(route('legal.privacidad'), false)
+            ->assertSee('Desplázate hasta el final', false)
+            ->assertSee('data-aceptacion-casilla', false)
+            ->assertSee('data-aceptacion-dialogo', false);
+    }
+
+    public function test_sin_aceptar_los_terminos_no_se_envia_el_registro(): void
+    {
+        $datos = $this->datos(['terminos' => '']);
+
+        $this->from(route('paciente.registro'))
+            ->post(route('paciente.registro.codigo.enviar'), $datos)
+            ->assertRedirect(route('paciente.registro'))
+            ->assertSessionHasErrors('terminos');
+
+        $this->assertNull(session('registro.pendiente'));
+        $this->assertDatabaseMissing('users', ['email' => $datos['email']]);
     }
 
     public function test_el_flujo_completo_crea_la_cuenta_y_enlaza_la_ficha(): void
