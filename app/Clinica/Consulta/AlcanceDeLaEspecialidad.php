@@ -53,6 +53,12 @@ final class AlcanceDeLaEspecialidad
     private const PLANTILLAS_SOLO_PEDIATRIA = ['EX', 'IG', 'EE'];
 
     /**
+     * El tipo de plantilla **sólo de medicina interna**: el examen funcional (`EF`, Alexander, 2026-10-29). Ninguna
+     * otra especialidad tiene esa pantalla, así que fuera del internista no se ofrece en el ABM.
+     */
+    private const PLANTILLAS_SOLO_MEDICINA_INTERNA = ['EF'];
+
+    /**
      * Las solapas del examen que son **sólo de ginecología** y que el modo medicina general no ofrece: las mamas, el examen
      * ginecológico y las tres de texto que le son propias (colposcopía, citología e histeroscopía). *Resultado de exámenes* y
      * la galería de imágenes **no** están: sirven a cualquier especialidad y el modo general las conserva.
@@ -258,18 +264,23 @@ final class AlcanceDeLaEspecialidad
      * En el **modo medicina general** (2026-10-22) se ocultan las de las dos especialidades: las cinco de ginecología
      * (`CO`, `CI`, `HI`, `EG`, `EM`, `ER`), los siete ecos —porque la sección del estudio no está— y las tres de pediatría.
      * Quedan las que cualquier especialidad usa: evolución (`EV`), informe (`IM`), dietas (`DI`), enfermedad actual (`EA`),
-     * tratamiento (`TR`), resumen físico (`RF`) y resultado de exámenes (`RE`).
+     * tratamiento (`TR`), resumen físico (`RF`) y resultado de exámenes (`RE`). El **examen funcional** (`EF`) es sólo del
+     * internista (2026-10-29): se ofrece en medicina interna y se oculta en el resto.
      *
      * @return array<int,string>
      */
     public function tiposDePlantillaOcultos(): array
     {
-        // Ginecología (y el consultorio sin especialidad) no cambia: sólo faltan las tres de la consulta pediátrica.
+        // El examen funcional es de medicina interna: fuera de ella no hay pantalla que lo consuma.
+        $soloInternista = $this->esMedicinaInterna() ? [] : self::PLANTILLAS_SOLO_MEDICINA_INTERNA;
+
+        // Ginecología (y el consultorio sin especialidad) conserva lo suyo: sólo se ocultan las tres de pediatría y el
+        // examen funcional, que es del internista.
         if (! $this->esPediatria() && ! $this->esGeneral()) {
-            return self::PLANTILLAS_SOLO_PEDIATRIA;
+            return array_merge($soloInternista, self::PLANTILLAS_SOLO_PEDIATRIA);
         }
 
-        $ocultos = self::PLANTILLAS_SOLO_GINECOLOGIA;
+        $ocultos = array_merge(self::PLANTILLAS_SOLO_GINECOLOGIA, $soloInternista);
 
         // El modo general tampoco ofrece los tres tipos de *Exámenes/Estudios* de pediatría: no hay pantalla que los consuma.
         if ($this->esGeneral()) {

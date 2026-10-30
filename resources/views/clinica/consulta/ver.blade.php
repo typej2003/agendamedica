@@ -28,7 +28,12 @@
 
         <p class="consulta-identidad" title="{{ $vm->lineaDeCabecera() }}">
             <span class="consulta-paciente">{{ $vm->nombre() }}</span>
-            <span class="consulta-datos"><span aria-hidden="true">·</span> {{ $vm->subtitulo() }}</span>
+            {{-- La edad va en su propio `<span>`: el nombre y el resto se recortan en una pantalla angosta, la edad no
+                 (Alexander, 2026-10-29: «en todo momento dentro de la consulta»). --}}
+            @if ($vm->edad())
+                <span class="consulta-edad"><span aria-hidden="true">·</span> {{ $vm->edad() }}</span>
+            @endif
+            <span class="consulta-datos"><span aria-hidden="true">·</span> {{ $vm->detalleDeLaCabecera() }}</span>
         </p>
 
         {{-- El navegador 1…N (WEB-11.5), compacto: menos ancho, sin el rótulo «CONSULTA» y con los números solos. Cambiar
@@ -202,7 +207,7 @@
     {{-- Las mediciones de pediatría (WEB-7.4.3a): el IMC y el AC se recalculan al escribir el peso o la talla. --}}
     <script src="{{ asset('js/clinica/consulta-mediciones.js') }}"></script>
     {{-- Las secciones del internista (MI-2 a MI-5): el aviso de cambios sin guardar de su formulario. --}}
-    <script src="{{ asset('js/clinica/consulta-internista.js') }}"></script>
+    <script src="{{ asset('js/clinica/consulta-internista.js') }}?v={{ @filemtime(public_path('js/clinica/consulta-internista.js')) }}"></script>
     {{-- El panel lateral de plantillas con buscador (WEB-11.2): evolución, solapas de texto del examen, dieta e informe. --}}
     <script src="{{ asset('js/clinica/plantillas-panel.js') }}?v={{ @filemtime(public_path('js/clinica/plantillas-panel.js')) }}"></script>
     {{-- Las plantillas del **formato** del estudio (O-17): completan sólo los campos vacíos del eco y guardan

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Consulta;
 use App\Models\DatosGrafica;
 use App\Models\Ekg;
+use App\Models\FormatoPrint;
 use App\Models\Historia;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
@@ -271,6 +272,60 @@ class ConsultaMedicinaInternaWebTest extends TestCase
         $this->conContexto($userG, $medicoG, $gineco)
             ->get(route('clinica.consulta.documentos.imprimir', [$consultaG->id, 'documento' => 'reposo-absoluto']))
             ->assertDontSee('DEBE GUARDAR REPOSO ABSOLUTO');
+    }
+
+    public function test_el_examen_funcional_ofrece_y_guarda_sus_plantillas(): void
+    {
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        FormatoPrint::create([
+            'reg_medico' => $medico->reg_medico, 'codigo' => '0001', 'tipo' => 'EF',
+            'titulo' => 'NORMAL', 'descripcion' => 'Sin disnea. Tolera el decúbito.',
+        ]);
+
+        $this->conContexto($user, $medico, $mi)->get($this->seccion($consulta, 'fisico-interna', 'funcional'))
+            ->assertOk()
+            ->assertSee('data-plantillas-panel', false)
+            ->assertSee('data-tipo="EF"', false)
+            ->assertSee('Plantillas de examen funcional')
+            ->assertSee('NORMAL');
+
+        // «Guardar como plantilla» desde el mismo cajón (Alexander, 2026-10-29).
+        $this->conContexto($user, $medico, $mi)->postJson(route('clinica.plantillas.guardar'), [
+            'tipo' => 'EF', 'titulo' => 'DISNEA', 'descripcion' => 'Disnea de esfuerzo.',
+        ])->assertCreated()->assertJsonPath('titulo', 'DISNEA');
+
+        $this->assertSame(2, FormatoPrint::where('reg_medico', $medico->reg_medico)->where('tipo', 'EF')->count());
+    }
+
+    public function test_actualizar_arma_el_resumen_fisico_con_los_signos_y_el_examen_guardados(): void
+    {
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->conContexto($user, $medico, $mi)->post(route('clinica.consulta.internista.guardar', $consulta->id), [
+            'pestana' => 'signos', 'peso' => '80', 'talla' => '1,60', 'fc' => '72', 'taacostado' => '120/80',
+        ])->assertRedirect();
+
+        $this->conContexto($user, $medico, $mi)->post(route('clinica.consulta.internista.guardar', $consulta->id), [
+            'pestana' => 'examen', 'genera' => 'Buen estado', 'cardiopulmonal' => 'Sin alteraciones',
+        ])->assertRedirect();
+
+        // La solapa del resumen ofrece el botón y su URL (el `ue_resume` del escritorio).
+        $this->conContexto($user, $medico, $mi)->get($this->seccion($consulta, 'fisico-interna', 'resumen'))
+            ->assertOk()
+            ->assertSee('data-url-resumen="' . route('clinica.consulta.internista.resumen', $consulta->id) . '"', false)
+            ->assertSee('data-resumen-actualizar="fisico"', false)
+            ->assertSee('id="interna-resultadoexamencomp"', false);
+
+        $this->conContexto($user, $medico, $mi)->postJson(route('clinica.consulta.internista.resumen', $consulta->id))
+            ->assertOk()
+            ->assertJsonPath('fisico', 'PESO: 80 kg.  TALLA: 1,6 m.  IMC: 31,25.  F. CARDIACA: 72.  '
+                . 'TENSIÓN ARTERIAL: 120/80 mm/Hg.  GENERAL: Buen estado.  CARDIOPULMONAR: Sin alteraciones.  .');
+
+        // Armar el resumen no escribe nada: el médico lo revisa y lo guarda con el botón de la pestaña.
+        $this->assertNull($consulta->fresh()->resultadoexamencomp);
     }
 
     public function test_ginecologia_no_cambia(): void

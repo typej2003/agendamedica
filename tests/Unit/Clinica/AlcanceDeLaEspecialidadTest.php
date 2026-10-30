@@ -222,6 +222,9 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         $this->assertContains('EM', $ocultos);
         $this->assertContains('ER', $ocultos);
 
+        // El examen funcional es de medicina interna (Alexander, 2026-10-29).
+        $this->assertContains('EF', $ocultos);
+
         // Y se quedan las de las secciones que sí tiene, incluido el resumen físico de su solapa «Examen físico».
         foreach (['EV', 'IM', 'DI', 'EA', 'TR', 'RF'] as $tipo) {
             $this->assertNotContains($tipo, $ocultos, 'Pediatría conserva las plantillas de ' . $tipo . '.');
@@ -230,12 +233,13 @@ class AlcanceDeLaEspecialidadTest extends TestCase
 
     /**
      * Fuera de pediatría no cambia nada de lo que había… salvo las **tres plantillas de *Exámenes/Estudios*** (`EX`, `IG`, `EE`), que
-     * son de la consulta pediátrica y no tienen pantalla en el resto (2026-10-19).
+     * son de la consulta pediátrica y no tienen pantalla en el resto (2026-10-19), y el **examen funcional** (`EF`), que es del
+     * internista (2026-10-29).
      */
-    public function test_ginecologia_solo_oculta_las_plantillas_de_examenes_estudios(): void
+    public function test_ginecologia_solo_oculta_las_plantillas_de_examenes_estudios_y_el_examen_funcional(): void
     {
         $this->assertEqualsCanonicalizing(
-            ['EX', 'IG', 'EE'],
+            ['EX', 'IG', 'EE', 'EF'],
             AlcanceDeLaEspecialidad::de(self::GINECO)->tiposDePlantillaOcultos(),
         );
     }
@@ -252,6 +256,7 @@ class AlcanceDeLaEspecialidadTest extends TestCase
             AlcanceDeLaEspecialidad::de(null)->tiposDePlantillaOcultos(),
         );
     }
+    }
 
     /**
      * **El modo medicina general** (2026-10-22) no ofrece las plantillas de lo que no tiene: las cinco ginecológicas, los siete ecos
@@ -261,7 +266,7 @@ class AlcanceDeLaEspecialidadTest extends TestCase
     {
         $ocultos = AlcanceDeLaEspecialidad::de(self::GENERAL)->tiposDePlantillaOcultos();
 
-        foreach (['CO', 'CI', 'HI', 'EG', 'EM', 'ER', 'EX', 'IG', 'EE'] as $tipo) {
+        foreach (['CO', 'CI', 'HI', 'EG', 'EM', 'ER', 'EX', 'IG', 'EE', 'EF'] as $tipo) {
             $this->assertContains($tipo, $ocultos, 'El modo general no ofrece las plantillas de ' . $tipo . '.');
         }
 
@@ -272,6 +277,21 @@ class AlcanceDeLaEspecialidadTest extends TestCase
 
         foreach (['EV', 'IM', 'DI', 'EA', 'TR', 'RF', 'RE'] as $tipo) {
             $this->assertNotContains($tipo, $ocultos, 'El modo general conserva las plantillas de ' . $tipo . '.');
+        }
+    }
+
+    /**
+     * **El examen funcional es del internista** (Alexander, 2026-10-29): medicina interna es la única especialidad que ofrece
+     * el tipo `EF` en el catálogo de plantillas; en el resto se oculta porque no hay pantalla que lo consuma.
+     */
+    public function test_solo_medicina_interna_ofrece_las_plantillas_del_examen_funcional(): void
+    {
+        $internista = AlcanceDeLaEspecialidad::de('medicina-interna');
+
+        $this->assertNotContains('EF', $internista->tiposDePlantillaOcultos());
+
+        foreach (['pediatria', self::GINECO, self::GENERAL, null] as $slug) {
+            $this->assertContains('EF', AlcanceDeLaEspecialidad::de($slug)->tiposDePlantillaOcultos(), (string) $slug);
         }
     }
 
