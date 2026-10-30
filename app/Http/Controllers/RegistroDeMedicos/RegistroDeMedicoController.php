@@ -67,6 +67,7 @@ class RegistroDeMedicoController extends Controller
             'email'        => ['required', 'email', 'max:120'],
             'ciudad'       => ['nullable', 'string', 'max:100'],
             'mensaje'      => ['nullable', 'string', 'max:1000'],
+            'terminos'     => ['accepted'],
         ], $this->mensajes());
 
         $resultado = $accion->ejecutar($datos);
@@ -175,6 +176,7 @@ class RegistroDeMedicoController extends Controller
             'email.required' => 'Escribe tu correo: ahí te llegan el código y la respuesta.',
             'email.email' => 'Revisa el correo: no tiene forma de correo.',
             'mensaje.max' => 'El mensaje es muy largo (hasta 1000 caracteres).',
+            'terminos.accepted' => 'Marca que leíste y aceptas los términos y condiciones y la política de privacidad.',
             // Respaldo: el caso normal lo explica `exigirFotoRecibida()`, que mira el código de error de PHP.
             'carnet.uploaded' => 'No pudimos recibir la foto. Vuelve a intentarlo o elige otra imagen.',
             'carnet.max' => 'La foto pesa más de ' . CarnetDeLaSolicitud::textoMaximo() . '. Elige una más liviana.',

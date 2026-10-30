@@ -79,6 +79,8 @@
                         </div>
                     </div>
 
+                    <x-legal.aceptacion />
+
                     <div class="d-flex flex-wrap align-items-center gap-2 mt-4">
                         <button type="submit" class="btn btn-primary">Continuar y verificar mi teléfono</button>
                         <a href="{{ route('login') }}" class="btn btn-outline-secondary">Ya tengo cuenta</a>
