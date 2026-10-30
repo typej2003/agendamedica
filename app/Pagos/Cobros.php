@@ -2,35 +2,51 @@
 
 namespace App\Pagos;
 
+use App\Actions\Agenda\CobrarCita;
 use App\Actions\Pagos\ConfirmarPagoDePlan;
 use App\Mail\PagoDePlanAprobado;
+use App\Models\Cola;
 use App\Models\ConfiguracionPago;
 use App\Models\Medico;
 use App\Models\MetodoPago;
 use App\Models\Pago;
 use App\Models\PagoEvento;
 use App\Models\Plan;
+use App\Models\ReglaDeComision;
 use App\Models\TasaDeCambio;
 use App\Models\User;
 use App\Services\CupoDelPlan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Throwable;
 
 /**
- * **El motor de cobro** (MVP: planes de los médicos). Crea el pago, pide el OTP, lo confirma y concilia.
+ * **El motor de cobro** (planes del médico y cobro de citas). Crea el pago, pide el OTP, lo confirma y
+ * concilia.
  *
  * La regla de oro: **el webhook y el sondeo no son la fuente de verdad**. Antes de aprobar se consulta la
  * transacción a SyPago (`GET transaction/{id}`); el webhook sólo dispara la consulta. Si SyPago no
  * responde en ese momento y el aviso vino por el webhook autenticado, se usa el payload como respaldo,
  * pero el monto ya se validó contra el pago.
  *
- * Aprobar es una transición con `lockForUpdate`: dos webhooks iguales no renuevan el plan dos veces.
+ * Aprobar es una transición con `lockForUpdate`: dos webhooks iguales no renuevan el plan ni cobran la
+ * cita dos veces.
  */
 final class Cobros
 {
+    /**
+     * Los canales por los que puede entrar el cobro de una cita. `plan` no es uno de ellos: un plan
+     * no es una cita, y `prefactura` todavía no tiene motor.
+     */
+    public const CANALES_DE_CITA = [
+        Pago::CANAL_LINK,
+        Pago::CANAL_RESERVA_ONLINE,
+        Pago::CANAL_MOSTRADOR,
+    ];
+
     public function __construct(private readonly CupoDelPlan $cupos)
     {
     }
@@ -129,6 +145,152 @@ final class Cobros
             'estado' => Pago::PENDIENTE,
             'expira_el' => now()->addMinutes($minutos),
             'estado_liquidacion' => Pago::LIQUIDACION_NO_APLICA,
+            'creado_por' => $usuarioId,
+        ]);
+    }
+
+    /**
+     * Crea la intención de pago de una **cita**. No cobra: deja el pago en `pendiente`, con la tasa y
+     * el monto en VES congelados cuando el método cobra en bolívares.
+     *
+     * `$montoUsdE2` llega **explícito** y en centavos de USD: cuánto se cobra lo decide quien llama
+     * (el link público, la reserva online o el mostrador), no este método. El pago es del médico
+     * (`beneficiario = medico`); `recaudador` depende de a quién pertenece el método, y de eso sale
+     * también si hay liquidación pendiente.
+     *
+     * Las comisiones se congelan en cascada sobre el bruto en USD: la del método primero y la de cita
+     * online sobre el remanente. La comisión del método **no se suma en una cita online** si
+     * `configuracion_pagos.aplica_comision_metodo_en_citas_online` está apagada, que es el valor con
+     * el que nace la configuración.
+     *
+     * @throws RuntimeException si la cita no tiene consultorio, el canal no es de cita, el monto no
+     *                          es positivo o supera el máximo, el método no está disponible o no es
+     *                          del consultorio de la cita, o falta la tasa para cobrar en VES
+     */
+    public function crearParaCita(
+        Cola $cita,
+        MetodoPago $metodo,
+        int $montoUsdE2,
+        string $canal = Pago::CANAL_LINK,
+        ?int $usuarioId = null
+    ): Pago {
+        $regMedico = trim((string) $cita->reg_medico);
+        if ($regMedico === '') {
+            throw new RuntimeException('Falta el consultorio del médico en la cita.');
+        }
+
+        if (! in_array($canal, self::CANALES_DE_CITA, true)) {
+            throw new RuntimeException('El canal del pago no es uno de los canales de una cita.');
+        }
+
+        if ($montoUsdE2 <= 0) {
+            throw new RuntimeException('El monto de la cita tiene que ser mayor que cero.');
+        }
+        if ($montoUsdE2 > (int) config('pagos.maximo_monto_usd_e2', 100_000_000)) {
+            throw new RuntimeException('El monto de la cita supera el máximo permitido.');
+        }
+
+        if (! $metodo->activo || $metodo->pasarela !== CatalogoDePasarelas::SYPAGO || ! $metodo->estaConfigurado()) {
+            throw new RuntimeException('El método de pago elegido no está disponible.');
+        }
+
+        // Un método del consultorio sólo puede cobrar las citas de ese consultorio.
+        if (! $metodo->esDeLaPlataforma() && trim((string) $metodo->reg_medico) !== $regMedico) {
+            throw new RuntimeException('El método de pago no pertenece al consultorio de la cita.');
+        }
+
+        // La moneda la decide el método: SyPago cobra en VES; un método que cobre en USD no necesita tasa.
+        $moneda = strtoupper((string) ($metodo->cuentaBancaria?->moneda ?: 'VES'));
+
+        if ($moneda === 'VES') {
+            $tasa = TasaDeCambio::actual();
+            if (! $tasa) {
+                throw new RuntimeException('Todavía no hay una tasa VES/USD cargada. El administrador tiene que cargarla para poder cobrar.');
+            }
+            $montoE2 = $tasa->convertirUsdAVes($montoUsdE2);
+            $tasaPago = $tasa->tasa;
+            if ($montoE2 <= 0) {
+                throw new RuntimeException('El monto en bolívares quedó en cero: revisa la tasa.');
+            }
+        } elseif ($moneda === 'USD') {
+            $montoE2 = $montoUsdE2;
+            $tasaPago = null;
+        } else {
+            throw new RuntimeException('La moneda del método de pago no está soportada.');
+        }
+
+        $recaudador = $metodo->esDeLaPlataforma() ? Pago::RECAUDADOR_PLATAFORMA : Pago::RECAUDADOR_MEDICO;
+
+        $configuracion = ConfiguracionPago::actual();
+        $esOnline = $canal === Pago::CANAL_RESERVA_ONLINE;
+
+        // La comisión del método es por **prestar el método de la plataforma**: si el método es del
+        // consultorio, la plataforma no presta nada y no hay comisión. El override del método, si
+        // existe, gana sobre la regla.
+        $reglaMetodo = ReglaDeComision::vigente(ReglaDeComision::TIPO_METODO, $regMedico, $metodo->id);
+        $bpMetodo = $recaudador === Pago::RECAUDADOR_PLATAFORMA
+            ? ($metodo->comision_bp ?? $reglaMetodo?->porcentaje_bp ?? 0)
+            : 0;
+
+        // En una cita online la plataforma ya cobra su comisión: la del método sólo se suma si la
+        // configuración lo pide (por defecto no, para no cobrar dos veces lo mismo).
+        if ($esOnline && ! $configuracion->aplica_comision_metodo_en_citas_online) {
+            $bpMetodo = 0;
+        }
+
+        // La comisión por cita online es por la cita que trae la plataforma: sólo aplica a ese canal.
+        $reglaCitaOnline = $esOnline
+            ? ReglaDeComision::vigente(ReglaDeComision::TIPO_CITA_ONLINE, $regMedico)
+            : null;
+        $bpCitaOnline = $reglaCitaOnline?->porcentaje_bp ?? 0;
+
+        $comisiones = Comisiones::calcular($montoUsdE2, $bpMetodo, $bpCitaOnline);
+
+        // Equivalentes en VES: el neto es lo que queda del monto cobrado, así el recibo suma exacto
+        // en las dos monedas (las comisiones se redondean una sola vez, en USD).
+        $comisionTotalVesE2 = $moneda === 'VES'
+            ? $tasa->convertirUsdAVes($comisiones['total'])
+            : 0;
+        $netoVesE2 = $moneda === 'VES' ? $montoE2 - $comisionTotalVesE2 : 0;
+
+        $estadoLiquidacion = $recaudador === Pago::RECAUDADOR_PLATAFORMA && $comisiones['neto'] > 0
+            ? Pago::LIQUIDACION_PENDIENTE
+            : Pago::LIQUIDACION_NO_APLICA;
+
+        // El token del link público es único y no se repite entre pagos.
+        do {
+            $tokenPublico = (string) Str::uuid();
+        } while (Pago::where('token_publico', $tokenPublico)->exists());
+
+        $minutos = max(1, (int) $configuracion->vigencia_tasa_minutos);
+        $fechaCita = $cita->fecha?->format('d/m/Y');
+
+        return Pago::create([
+            'token_publico' => $tokenPublico,
+            'reg_medico' => $regMedico,
+            'beneficiario_tipo' => Pago::BENEFICIARIO_MEDICO,
+            'beneficiario_reg_medico' => $regMedico,
+            'recaudador' => $recaudador,
+            'canal' => $canal,
+            'pagable_tipo' => Pago::PAGABLE_CITA,
+            'pagable_id' => $cita->id,
+            'concepto' => 'Cita del ' . ($fechaCita ?: 'día') . ' · #' . $cita->id,
+            'meses' => null,
+            'metodo_pago_id' => $metodo->id,
+            'cuenta_bancaria_id' => $metodo->cuenta_bancaria_id,
+            'moneda' => $moneda,
+            'monto_e2' => $montoE2,
+            'monto_usd_e2' => $montoUsdE2,
+            'tasa' => $tasaPago,
+            'comision_metodo_usd_e2' => $comisiones['metodo'],
+            'comision_cita_online_usd_e2' => $comisiones['cita_online'],
+            'comision_total_usd_e2' => $comisiones['total'],
+            'neto_usd_e2' => $comisiones['neto'],
+            'comision_total_ves_e2' => $comisionTotalVesE2,
+            'neto_ves_e2' => $netoVesE2,
+            'estado' => Pago::PENDIENTE,
+            'expira_el' => now()->addMinutes($minutos),
+            'estado_liquidacion' => $estadoLiquidacion,
             'creado_por' => $usuarioId,
         ]);
     }
@@ -314,12 +476,37 @@ final class Cobros
         return $resultado;
     }
 
-    /** Aplica el pago a lo que corresponda. Hoy sólo hay planes. */
+    /** Aplica el pago a lo que corresponda: el plan que se compró o la cita que se cobró. */
     private function aplicar(Pago $pago): void
     {
         if ($pago->esDePlan()) {
             app(ConfirmarPagoDePlan::class)->ejecutar($pago);
         }
+
+        if ($pago->esDeCita()) {
+            $this->aplicarCita($pago);
+        }
+    }
+
+    /**
+     * Deja la cita pagada con la **misma** acción del mostrador (`CobrarCita::recibir`): suma el monto
+     * a lo ya pagado, respeta el last-write-wins de la columna y deja el rastro del sync.
+     *
+     * El adaptador sólo convierte la unidad: `CobrarCita` trabaja con el monto decimal de `cola`
+     * (columna legada `double`), no con los centavos enteros del pago. El monto del pago va también
+     * como precio si la cita no tenía uno, igual que cuando el mostrador cobra una cita sin precio.
+     */
+    private function aplicarCita(Pago $pago): void
+    {
+        $cita = $pago->cita();
+
+        if (! $cita) {
+            throw new RuntimeException('El pago aprobado apunta a una cita que ya no existe.');
+        }
+
+        $recibido = (float) Centavos::aDecimal((int) $pago->monto_usd_e2);
+
+        app(CobrarCita::class)->recibir($cita, $recibido, $recibido, $pago->pagado_el);
     }
 
     /** El comprobante por correo al médico que hizo el pago; si falla, se registra y no se revierte nada. */
