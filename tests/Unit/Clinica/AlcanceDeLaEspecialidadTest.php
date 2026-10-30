@@ -256,7 +256,6 @@ class AlcanceDeLaEspecialidadTest extends TestCase
             AlcanceDeLaEspecialidad::de(null)->tiposDePlantillaOcultos(),
         );
     }
-    }
 
     /**
      * **El modo medicina general** (2026-10-22) no ofrece las plantillas de lo que no tiene: las cinco ginecológicas, los siete ecos
