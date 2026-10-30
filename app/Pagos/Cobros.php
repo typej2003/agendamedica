@@ -489,24 +489,49 @@ final class Cobros
     }
 
     /**
-     * Deja la cita pagada con la **misma** acción del mostrador (`CobrarCita::recibir`): suma el monto
-     * a lo ya pagado, respeta el last-write-wins de la columna y deja el rastro del sync.
+     * Deja la cita pagada, escribiendo con la **misma** acción del mostrador (`CobrarCita`): el precio
+     * sólo se fija si la cita no tenía y lo pagado se escribe como valor **absoluto**, con el
+     * last-write-wins de la columna y el rastro del sync.
+     *
+     * Dos cosas que no hace, a propósito:
+     *
+     * - **No usa `recibir()`**, que es la entrada del mostrador: esa suma y **topa** contra el precio,
+     *   y al pasarse lanza. Acá el pago ya está aprobado, o sea que la plata entró: revertir la
+     *   aprobación dejaría el dinero cobrado sin registrar y el pago en `en_proceso` para siempre.
+     *   El pago de la pasarela es la verdad del dinero, así que se escribe lo que entró (si sobra,
+     *   se ve en los montos de la cita y se devuelve, que es la tarea de reembolsos).
+     * - **No revienta si la cita ya no existe**: deja el evento en el pago y lo aprueba igual, por lo
+     *   mismo. La cita se borra desde la agenda y el dinero no.
      *
      * El adaptador sólo convierte la unidad: `CobrarCita` trabaja con el monto decimal de `cola`
-     * (columna legada `double`), no con los centavos enteros del pago. El monto del pago va también
-     * como precio si la cita no tenía uno, igual que cuando el mostrador cobra una cita sin precio.
+     * (columna legada `double`), no con los centavos enteros del pago.
      */
     private function aplicarCita(Pago $pago): void
     {
         $cita = $pago->cita();
 
         if (! $cita) {
-            throw new RuntimeException('El pago aprobado apunta a una cita que ya no existe.');
+            $pago->registrarEvento(
+                PagoEvento::ORIGEN_SISTEMA,
+                'cita_inexistente',
+                ['cita_id' => $pago->pagable_id]
+            );
+
+            return;
         }
 
         $recibido = (float) Centavos::aDecimal((int) $pago->monto_usd_e2);
+        $cobrar = app(CobrarCita::class);
 
-        app(CobrarCita::class)->recibir($cita, $recibido, $recibido, $pago->pagado_el);
+        if ((float) ($cita->monto ?? 0) <= 0) {
+            $cobrar->fijarMonto($cita, $recibido, $pago->pagado_el);
+        }
+
+        $cobrar->fijarPagado(
+            $cita,
+            (float) ($cita->monto_pagado ?? 0) + $recibido,
+            $pago->pagado_el
+        );
     }
 
     /** El comprobante por correo al médico que hizo el pago; si falla, se registra y no se revierte nada. */

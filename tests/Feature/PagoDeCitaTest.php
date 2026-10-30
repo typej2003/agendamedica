@@ -9,6 +9,7 @@ use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\MetodoPago;
 use App\Models\Pago;
+use App\Models\PagoEvento;
 use App\Models\ReglaDeComision;
 use App\Models\SyncChange;
 use App\Models\TasaDeCambio;
@@ -335,6 +336,74 @@ class PagoDeCitaTest extends TestCase
                 ->where('source', 'web')
                 ->exists()
         );
+    }
+
+    public function test_un_anticipo_sobre_una_cita_con_precio_la_deja_abonada(): void
+    {
+        TasaDeCambio::fijar('36,5');
+        $this->falsificarSyPago();
+
+        $medico = $this->medicoDePrueba();
+        $metodo = $this->metodoDeLaPlataforma();
+        // La cita ya nace con su precio (el del motivo) y el paciente adelanta la mitad.
+        $cita = $this->citaDePrueba($medico, ['monto' => 100, 'monto_pagado' => null]);
+
+        $pago = app(Cobros::class)->crearParaCita($cita, $metodo, 5_000);
+
+        $this->assertTrue(app(Cobros::class)->iniciar($pago, $this->pagador())->ok);
+        $this->assertTrue(app(Cobros::class)->confirmar($pago->fresh(), '123456')->ok);
+
+        $cita->refresh();
+        $this->assertSame(100.0, (float) $cita->monto, 'el precio de la cita no se pisa con el anticipo');
+        $this->assertSame(50.0, (float) $cita->monto_pagado);
+        $this->assertSame(Cola::PAGO_ABONADA, $cita->estadoPago());
+        $this->assertSame(50.0, $cita->montoPendiente());
+    }
+
+    public function test_la_aprobacion_registra_el_pago_aunque_la_cita_ya_no_exista(): void
+    {
+        TasaDeCambio::fijar('36,5');
+        $this->falsificarSyPago();
+
+        $medico = $this->medicoDePrueba();
+        $metodo = $this->metodoDeLaPlataforma();
+        $cita = $this->citaDePrueba($medico);
+
+        $pago = app(Cobros::class)->crearParaCita($cita, $metodo, 5_000);
+        $cita->delete();
+
+        $this->assertTrue(app(Cobros::class)->iniciar($pago, $this->pagador())->ok);
+        $this->assertTrue(app(Cobros::class)->confirmar($pago->fresh(), '123456')->ok);
+
+        // La plata entró: el pago se aprueba y queda el rastro de que la cita ya no estaba.
+        $this->assertSame(Pago::APROBADO, $pago->fresh()->estado);
+        $this->assertTrue(
+            PagoEvento::where('pago_id', $pago->id)->where('evento', 'cita_inexistente')->exists()
+        );
+    }
+
+    public function test_un_segundo_pago_suma_lo_pagado_sin_revertir_la_aprobacion(): void
+    {
+        TasaDeCambio::fijar('36,5');
+        $this->falsificarSyPago();
+
+        $medico = $this->medicoDePrueba();
+        $metodo = $this->metodoDeLaPlataforma();
+        $cita = $this->citaDePrueba($medico, ['monto' => 50, 'monto_pagado' => 50]);
+
+        // La secretaria ya la había marcado cobrada en el mostrador y el link se cobra igual: el
+        // dinero entró dos veces y las dos tienen que quedar registradas, no perderse.
+        $pago = app(Cobros::class)->crearParaCita($cita, $metodo, 5_000);
+
+        $this->assertTrue(app(Cobros::class)->iniciar($pago, $this->pagador())->ok);
+        $this->assertTrue(app(Cobros::class)->confirmar($pago->fresh(), '123456')->ok);
+
+        $this->assertSame(Pago::APROBADO, $pago->fresh()->estado);
+
+        $cita->refresh();
+        $this->assertSame(50.0, (float) $cita->monto);
+        $this->assertSame(100.0, (float) $cita->monto_pagado);
+        $this->assertSame(0.0, $cita->montoPendiente());
     }
 
     public function test_rechaza_un_canal_que_no_es_de_cita(): void
