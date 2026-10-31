@@ -126,7 +126,12 @@
                                 </td>
                                 <td class="text-end text-nowrap">
                                     <div class="fw-semibold">{{ $pago->montoUsdTexto() }}</div>
-                                    <small class="text-muted">{{ $pago->montoTexto() }}</small>
+                                    <small class="text-muted">{{ $pago->cubiertoConLatidos() ? 'Sin cobro' : $pago->montoTexto() }}</small>
+                                    @if ($pago->usaLatidos())
+                                        <small class="text-success d-block">
+                                            {{ $pago->latidosTexto() }} ({{ $pago->descuentoUsdTexto() }})
+                                        </small>
+                                    @endif
                                 </td>
                                 <td>
                                     <span class="badge bg-{{ $this->estadoTono($pago->estado) }}">{{ $this->estadoLegible($pago->estado) }}</span>

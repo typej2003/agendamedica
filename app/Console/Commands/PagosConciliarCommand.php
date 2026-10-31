@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Latidos\Latidos;
 use App\Models\Pago;
 use App\Pagos\Cobros;
 use Illuminate\Console\Command;
@@ -19,12 +20,28 @@ class PagosConciliarCommand extends Command
 
     protected $description = 'Consulta a SyPago los pagos en proceso y aplica los aprobados; expira los vencidos.';
 
-    public function handle(Cobros $cobros): int
+    public function handle(Cobros $cobros, Latidos $latidos): int
     {
-        $expirados = Pago::where('estado', Pago::PENDIENTE)
+        // Se expira con una condición de estado para no pisar un pago que el webhook aprobó en el medio.
+        // Si el pago había retenido Latidos, se liberan: el médico no los pierde por un pago vencido.
+        $expirados = 0;
+        $vencidos = Pago::where('estado', Pago::PENDIENTE)
             ->whereNotNull('expira_el')
             ->where('expira_el', '<', now())
-            ->update(['estado' => Pago::EXPIRADO]);
+            ->get();
+
+        foreach ($vencidos as $pago) {
+            $actualizados = Pago::whereKey($pago->id)
+                ->where('estado', Pago::PENDIENTE)
+                ->update(['estado' => Pago::EXPIRADO]);
+
+            if ($actualizados > 0) {
+                if ((int) $pago->latidos_usados > 0) {
+                    $latidos->liberar($pago);
+                }
+                $expirados++;
+            }
+        }
 
         if ($expirados > 0) {
             $this->info("Pagos vencidos: {$expirados}.");

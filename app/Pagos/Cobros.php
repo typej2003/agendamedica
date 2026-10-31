@@ -3,6 +3,8 @@
 namespace App\Pagos;
 
 use App\Actions\Pagos\ConfirmarPagoDePlan;
+use App\Latidos\Conversion;
+use App\Latidos\Latidos;
 use App\Mail\PagoDePlanAprobado;
 use App\Models\ConfiguracionPago;
 use App\Models\Medico;
@@ -31,13 +33,19 @@ use Throwable;
  */
 final class Cobros
 {
-    public function __construct(private readonly CupoDelPlan $cupos)
-    {
+    public function __construct(
+        private readonly CupoDelPlan $cupos,
+        private readonly Latidos $latidos,
+    ) {
     }
 
     /**
-     * Crea la intención de pago de un plan. No cobra: deja el pago en `pendiente`, con la tasa y el monto
-     * en VES congelados, para que el médico pague con el método elegido.
+     * Crea la intención de pago de un plan. **Usa primero los Latidos** del consultorio: si cubren el total,
+     * el pago nace aprobado y no se le pide nada a SyPago; si no, deja el pago en `pendiente` por la
+     * diferencia, con la tasa congelada.
+     *
+     * `$metodo` es nullable porque un pago cubierto al 100 % con Latidos no tiene método. Si queda una parte
+     * para la pasarela, el método es obligatorio.
      *
      * `$frecuencia` elige mensual (1 mes) o anual (12 meses, con el precio anual del plan). El pago guarda
      * `meses` para que la aprobación cree el período correcto.
@@ -49,16 +57,13 @@ final class Cobros
     public function crearParaPlan(
         string $regMedico,
         Plan $plan,
-        MetodoPago $metodo,
+        ?MetodoPago $metodo = null,
         ?int $usuarioId = null,
         string $frecuencia = Plan::MENSUAL
     ): Pago {
         $regMedico = trim($regMedico);
         if ($regMedico === '') {
             throw new RuntimeException('Falta el consultorio del médico.');
-        }
-        if (! $metodo->activo || $metodo->pasarela !== CatalogoDePasarelas::SYPAGO || ! $metodo->estaConfigurado()) {
-            throw new RuntimeException('El método de pago elegido no está disponible.');
         }
 
         $frecuencia = $frecuencia === Plan::ANUAL ? Plan::ANUAL : Plan::MENSUAL;
@@ -84,53 +89,115 @@ final class Cobros
             throw new RuntimeException('El monto del plan supera el máximo permitido.');
         }
 
-        // La moneda la decide el método: SyPago cobra en VES; un método que cobre en USD no necesita tasa.
-        $moneda = strtoupper((string) ($metodo->cuentaBancaria?->moneda ?: 'VES'));
+        // **Los Latidos primero.** 100 Latidos = USD 1 de descuento; el descuento se congela en USD.
+        $latidosNecesarios = Conversion::desdeUsdE2($montoUsdE2);
+        $latidosDisponibles = $this->latidos->disponiblesParaUsar($regMedico);
+        $latidosUsar = min($latidosDisponibles, $latidosNecesarios);
+        $descuentoUsdE2 = Conversion::aUsdE2($latidosUsar);
+        $pasarelaUsdE2 = $montoUsdE2 - $descuentoUsdE2;
 
-        if ($moneda === 'VES') {
-            $tasa = TasaDeCambio::actual();
-            if (! $tasa) {
-                throw new RuntimeException('Todavía no hay una tasa VES/USD cargada. El administrador tiene que cargarla para poder cobrar.');
+        // Si queda algo para SyPago, el método es obligatorio y tiene que estar operable.
+        if ($pasarelaUsdE2 > 0) {
+            if (! $metodo) {
+                throw new RuntimeException('Falta el método de pago para cobrar la diferencia del plan.');
             }
-            $montoE2 = $tasa->convertirUsdAVes($montoUsdE2);
-            $tasaPago = $tasa->tasa;
-            if ($montoE2 <= 0) {
-                throw new RuntimeException('El monto en bolívares quedó en cero: revisa la tasa.');
+            if (! $metodo->activo || $metodo->pasarela !== CatalogoDePasarelas::SYPAGO || ! $metodo->estaConfigurado()) {
+                throw new RuntimeException('El método de pago elegido no está disponible.');
             }
-        } elseif ($moneda === 'USD') {
-            $montoE2 = $montoUsdE2;
-            $tasaPago = null;
-        } else {
-            throw new RuntimeException('La moneda del método de pago no está soportada.');
+        }
+
+        // La moneda la decide el método: SyPago cobra en VES; un método que cobre en USD no necesita tasa.
+        // Un pago 100 % con Latidos no tiene moneda de cobro ni tasa: queda en USD con monto cero.
+        $moneda = $pasarelaUsdE2 > 0
+            ? strtoupper((string) ($metodo->cuentaBancaria?->moneda ?: 'VES'))
+            : 'USD';
+        $montoE2 = 0;
+        $tasaPago = null;
+        $netoVesE2 = 0;
+
+        if ($pasarelaUsdE2 > 0) {
+            if ($moneda === 'VES') {
+                $tasa = TasaDeCambio::actual();
+                if (! $tasa) {
+                    throw new RuntimeException('Todavía no hay una tasa VES/USD cargada. El administrador tiene que cargarla para poder cobrar.');
+                }
+                $montoE2 = $tasa->convertirUsdAVes($pasarelaUsdE2);
+                $netoVesE2 = $tasa->convertirUsdAVes($montoUsdE2);
+                $tasaPago = $tasa->tasa;
+                if ($montoE2 <= 0) {
+                    throw new RuntimeException('El monto en bolívares quedó en cero: revisa la tasa.');
+                }
+            } elseif ($moneda === 'USD') {
+                $montoE2 = $pasarelaUsdE2;
+            } else {
+                throw new RuntimeException('La moneda del método de pago no está soportada.');
+            }
         }
 
         $minutos = max(1, (int) ConfiguracionPago::actual()->vigencia_tasa_minutos);
+        $latidoId = $latidosUsar > 0 ? $this->latidos->para($regMedico)->id : null;
 
-        return Pago::create([
-            'reg_medico' => $regMedico,
-            'beneficiario_tipo' => Pago::BENEFICIARIO_PLATAFORMA,
-            'beneficiario_reg_medico' => null,
-            'recaudador' => Pago::RECAUDADOR_PLATAFORMA,
-            'canal' => Pago::CANAL_PLAN,
-            'pagable_tipo' => Pago::PAGABLE_PLAN,
-            'pagable_id' => $plan->id,
-            'concepto' => 'Plan ' . $plan->nombre . ' · ' . ($frecuencia === Plan::ANUAL ? 'anual' : 'mensual')
-                . ($plan->cobraPorAsiento() ? ' · ' . $this->cupos->asientos($plan, $conteo) . ' asientos' : ''),
-            'meses' => $plan->meses($frecuencia),
-            'metodo_pago_id' => $metodo->id,
-            'cuenta_bancaria_id' => $metodo->cuenta_bancaria_id,
-            'moneda' => $moneda,
-            'monto_e2' => $montoE2,
-            'monto_usd_e2' => $montoUsdE2,
-            'tasa' => $tasaPago,
-            // Un plan es ingreso de la plataforma: no hay comisión ni liquidación al médico.
-            'neto_usd_e2' => $montoUsdE2,
-            'neto_ves_e2' => $moneda === 'VES' ? $montoE2 : 0,
-            'estado' => Pago::PENDIENTE,
-            'expira_el' => now()->addMinutes($minutos),
-            'estado_liquidacion' => Pago::LIQUIDACION_NO_APLICA,
-            'creado_por' => $usuarioId,
-        ]);
+        $pago = DB::transaction(function () use (
+            $regMedico, $plan, $metodo, $frecuencia, $conteo, $montoUsdE2, $latidosUsar,
+            $descuentoUsdE2, $pasarelaUsdE2, $moneda, $montoE2, $tasaPago, $netoVesE2, $minutos, $latidoId, $usuarioId
+        ) {
+            $concepto = 'Plan ' . $plan->nombre . ' · ' . ($frecuencia === Plan::ANUAL ? 'anual' : 'mensual')
+                . ($plan->cobraPorAsiento() ? ' · ' . $this->cupos->asientos($plan, $conteo) . ' asientos' : '')
+                . ($latidosUsar > 0 ? ' · ' . Conversion::formatear($latidosUsar) . ' de descuento' : '');
+
+            $pago = Pago::create([
+                'reg_medico' => $regMedico,
+                'beneficiario_tipo' => Pago::BENEFICIARIO_PLATAFORMA,
+                'beneficiario_reg_medico' => null,
+                'recaudador' => Pago::RECAUDADOR_PLATAFORMA,
+                'canal' => Pago::CANAL_PLAN,
+                'pagable_tipo' => Pago::PAGABLE_PLAN,
+                'pagable_id' => $plan->id,
+                'concepto' => $concepto,
+                'meses' => $plan->meses($frecuencia),
+                'metodo_pago_id' => $pasarelaUsdE2 > 0 ? $metodo?->id : null,
+                'cuenta_bancaria_id' => $pasarelaUsdE2 > 0 ? $metodo?->cuenta_bancaria_id : null,
+                'moneda' => $moneda,
+                'monto_e2' => $montoE2,
+                'monto_usd_e2' => $montoUsdE2,
+                'latidos_usados' => $latidosUsar,
+                'descuento_usd_e2' => $descuentoUsdE2,
+                'monto_pasarela_usd_e2' => $pasarelaUsdE2,
+                'latido_id' => $latidoId,
+                'tasa' => $tasaPago,
+                // Un plan es ingreso de la plataforma: no hay comisión ni liquidación al médico.
+                'neto_usd_e2' => $montoUsdE2,
+                'neto_ves_e2' => $netoVesE2,
+                'estado' => Pago::PENDIENTE,
+                'expira_el' => $pasarelaUsdE2 > 0 ? now()->addMinutes($minutos) : null,
+                'estado_liquidacion' => Pago::LIQUIDACION_NO_APLICA,
+                'creado_por' => $usuarioId,
+            ]);
+
+            if ($latidosUsar > 0) {
+                $this->latidos->retener($pago, $latidosUsar);
+            }
+
+            // Si los Latidos cubren todo, no hay nada que pedirle a SyPago: se aprueba y se renueva acá.
+            if ($pasarelaUsdE2 === 0) {
+                $pago->update(['estado' => Pago::APROBADO, 'pagado_el' => now()]);
+                $pago->registrarEvento(PagoEvento::ORIGEN_SISTEMA, 'aprobado_con_latidos', [
+                    'latidos' => $latidosUsar,
+                    'descuento_usd_e2' => $descuentoUsdE2,
+                ], Pago::PENDIENTE);
+                $this->latidos->consumir($pago);
+                app(ConfirmarPagoDePlan::class)->ejecutar($pago);
+            }
+
+            return $pago;
+        });
+
+        // Un SMTP caído no puede deshacer el pago ni la renovación. Se manda sólo si nació aprobado.
+        if ($pago->estaAprobado()) {
+            $this->enviarComprobante($pago);
+        }
+
+        return $pago;
     }
 
     /**
@@ -145,6 +212,9 @@ final class Cobros
             return ResultadoDeCobro::error('Este pago ya no está pendiente. Empieza uno nuevo.', $pago);
         }
         if ($pago->expira_el && $pago->expira_el->isPast()) {
+            if ((int) $pago->latidos_usados > 0) {
+                $this->latidos->liberar($pago);
+            }
             $pago->update(['estado' => Pago::EXPIRADO]);
 
             return ResultadoDeCobro::error('El pago venció. Empieza uno nuevo para tomar la tasa actual.', $pago);
@@ -262,6 +332,11 @@ final class Cobros
         }
 
         if ($estado === ClienteSyPago::RECHAZADO) {
+            // Si el pago retenía Latidos, se sueltan: el médico no pierde el descuento por un rechazo.
+            if ((int) $pago->latidos_usados > 0) {
+                $this->latidos->liberar($pago);
+            }
+
             $anterior = $pago->estado;
             $pago->update(['estado' => Pago::RECHAZADO]);
             $pago->registrarEvento($origen, 'rechazado', $respuesta, $anterior);
@@ -300,6 +375,12 @@ final class Cobros
                 'operation_secret' => $this->operationSecret($respuesta) ?? $bloqueado->operation_secret,
             ]);
             $bloqueado->registrarEvento($origen, 'aprobado', $respuesta, $anterior);
+
+            // Los Latidos se descuentan recién acá, cuando el pago quedó aprobado. Si la retención no
+            // existe, la transacción se revierte: el pago no se aplica sin el descuento que prometió.
+            if ((int) $bloqueado->latidos_usados > 0) {
+                $this->latidos->consumir($bloqueado);
+            }
 
             $this->aplicar($bloqueado);
 

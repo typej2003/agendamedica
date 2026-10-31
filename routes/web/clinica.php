@@ -82,6 +82,7 @@ use App\Http\Controllers\Clinica\MostradorController;
 use App\Http\Controllers\Clinica\MotivoCitaCatalogoController;
 use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
+use App\Http\Controllers\Clinica\LatidosController;
 use App\Http\Controllers\Clinica\PlanController;
 use App\Http\Controllers\Clinica\PlantillaDeTextoCatalogoController;
 use App\Http\Controllers\Clinica\PlantillasDeMensajeController;
@@ -166,6 +167,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // sólo del médico (`role:Root|Medico`): la secretaría no paga el plan del consultorio. El pago
             // se crea con la tasa congelada y se aprueba por el webhook o el sondeo, no acá.
             Route::middleware('role:Root|Medico')->group(function () {
+                // **Mis Latidos** (2026-10-31): el programa de descuentos del consultorio, de sólo lectura.
+                // La compra de paquetes está apagada en el MVP; se aplican al pagar el plan.
+                Route::get('/latidos', [LatidosController::class, 'index'])->name('latidos');
                 Route::get('/plan', [PlanController::class, 'index'])->name('plan');
                 // El plan elegido: método de pago y monto en su moneda. `whereNumber` para que no capture
                 // `comprar` ni `pago`.
