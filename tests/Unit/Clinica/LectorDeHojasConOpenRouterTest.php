@@ -31,6 +31,7 @@ class LectorDeHojasConOpenRouterTest extends TestCase
             'api_key' => 'sk-or-de-prueba',
             'base_url' => 'https://openrouter.ai/api',
             'modelo_ocr' => 'gemma-de-prueba',
+            'modelos_ocr_fallover' => '',
             'timeout_ocr' => 5,
             'max_tokens_ocr' => 16000,
             'temperatura_ocr' => '0',
@@ -147,5 +148,41 @@ class LectorDeHojasConOpenRouterTest extends TestCase
         config(['services.ocr.proveedor' => 'openrouter']);
 
         $this->assertInstanceOf(LectorDeHojasConOpenRouter::class, app(LectorDeHojas::class));
+    }
+
+    public function test_si_el_modelo_ocr_principal_falla_prueba_el_respaldo(): void
+    {
+        Http::fake(['*' => Http::sequence()
+            ->push(['error' => ['code' => 400, 'message' => 'model not found']], 400)
+            ->push($this->respuesta(['es_resultado' => true, 'texto' => 'GLUCOSA: 92 mg/dL']), 200)]);
+
+        $texto = $this->lector([
+            'modelo_ocr' => 'principal/vision',
+            'modelos_ocr_fallover' => 'respaldo/vision',
+        ])->leer('bytes', 'image/png');
+
+        $this->assertSame('GLUCOSA: 92 mg/dL', $texto);
+        Http::assertSentCount(2);
+
+        $grabadas = Http::recorded();
+        $this->assertSame('principal/vision', $grabadas[0][0]['model']);
+        $this->assertSame('respaldo/vision', $grabadas[1][0]['model']);
+    }
+
+    public function test_si_todos_los_modelos_ocr_fallan_es_error_del_proveedor(): void
+    {
+        Http::fake(['*' => Http::response(['error' => ['code' => 400]], 400)]);
+
+        try {
+            $this->lector([
+                'modelo_ocr' => 'principal/vision',
+                'modelos_ocr_fallover' => 'respaldo/vision',
+            ])->leer('bytes', 'image/png');
+            $this->fail('Debía fallar como error del proveedor.');
+        } catch (LecturaFallida $e) {
+            $this->assertSame(LecturaFallida::PROVEEDOR, $e->motivo);
+        }
+
+        Http::assertSentCount(2);
     }
 }

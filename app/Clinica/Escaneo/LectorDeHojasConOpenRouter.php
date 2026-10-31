@@ -2,8 +2,10 @@
 
 namespace App\Clinica\Escaneo;
 
+use App\Services\IA\ModelosDeOpenRouter;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -21,6 +23,7 @@ use Illuminate\Support\Facades\Log;
  *    parsea aunque el modelo no tenga entrada de archivos nativa. Con `OPENROUTER_PDF_ENGINE` se elige el motor
  *    (`mistral-ocr` para escaneados, `cloudflare-ai` para PDF con texto, `native` si el modelo lo soporta).
  *  - **Temperatura 0 por defecto** (`OPENROUTER_TEMPERATURA_OCR`): es una transcripción, no hay nada que variar.
+ *  - **Failover de modelos**: si el principal no está disponible, prueba `OPENROUTER_MODELOS_OCR_FALLOVER`.
  *  - **Un reintento** ante 429/5xx o una conexión caída, y 90 s de espera.
  *  - Una respuesta cortada (`finish_reason` `length`/`content_filter`/`error`) es un error del proveedor: no se
  *    pega en la consulta un texto a medias. El log guarda el motivo, nunca el contenido de la hoja.
@@ -29,8 +32,11 @@ final class LectorDeHojasConOpenRouter implements LectorDeHojas
 {
     public const RUTA = '/v1/chat/completions';
 
-    /** @var array{api_key:string, base_url:string, modelo_ocr:string, timeout_ocr:int, max_tokens_ocr:int, temperatura_ocr:?float, pdf_engine:string, referer:string, titulo:string} */
+    /** @var array{api_key:string, base_url:string, modelo_ocr:string, modelos_ocr_fallover:string, timeout_ocr:int, max_tokens_ocr:int, temperatura_ocr:?float, pdf_engine:string, referer:string, titulo:string} */
     private array $config;
+
+    /** @var list<string> */
+    private array $modelos = [];
 
     public function __construct(?array $config = null)
     {
@@ -41,6 +47,7 @@ final class LectorDeHojasConOpenRouter implements LectorDeHojas
             'base_url' => rtrim((string) ($config['base_url'] ?? 'https://openrouter.ai/api'), '/'),
             // `?:` y no `??`: una variable del `.env` puesta en blanco llega como `''`.
             'modelo_ocr' => (string) (($config['modelo_ocr'] ?? '') ?: (($config['model'] ?? '') ?: 'google/gemma-4-26b-a4b-it')),
+            'modelos_ocr_fallover' => (string) ($config['modelos_ocr_fallover'] ?? ''),
             'timeout_ocr' => (int) ($config['timeout_ocr'] ?? 90),
             'max_tokens_ocr' => (int) ($config['max_tokens_ocr'] ?? 16000),
             'temperatura_ocr' => is_numeric($config['temperatura_ocr'] ?? null) ? (float) $config['temperatura_ocr'] : null,
@@ -48,6 +55,8 @@ final class LectorDeHojasConOpenRouter implements LectorDeHojas
             'referer' => trim((string) ($config['referer'] ?? '')),
             'titulo' => trim((string) ($config['titulo'] ?? '')),
         ];
+
+        $this->modelos = ModelosDeOpenRouter::lista($this->config['modelos_ocr_fallover'], $this->config['modelo_ocr']);
     }
 
     public function disponible(): bool
@@ -62,7 +71,6 @@ final class LectorDeHojasConOpenRouter implements LectorDeHojas
         }
 
         $cuerpo = [
-            'model' => $this->config['modelo_ocr'],
             'messages' => [
                 ['role' => 'system', 'content' => Transcripcion::INSTRUCCIONES],
                 ['role' => 'user', 'content' => [
@@ -92,8 +100,47 @@ final class LectorDeHojasConOpenRouter implements LectorDeHojas
             ]];
         }
 
+        foreach ($this->modelos as $modelo) {
+            $cuerpo['model'] = $modelo;
+            $respuesta = $this->pedir($cuerpo, $modelo);
+
+            if ($respuesta === null) {
+                Log::warning('Lectura de hoja: modelo no disponible; se prueba el siguiente.', ['modelo' => $modelo]);
+
+                continue;
+            }
+
+            $fin = $respuesta->json('choices.0.finish_reason');
+            if (in_array($fin, ['length', 'content_filter', 'error'], true)) {
+                Log::warning('Lectura de hoja: respuesta de OpenRouter incompleta', ['modelo' => $modelo, 'fin' => $fin]);
+
+                throw LecturaFallida::delProveedor();
+            }
+
+            $texto = $respuesta->json('choices.0.message.content');
+            if (! is_string($texto) || trim($texto) === '') {
+                Log::warning('Lectura de hoja: OpenRouter no devolvió texto', ['modelo' => $modelo, 'fin' => $fin]);
+
+                throw LecturaFallida::delProveedor();
+            }
+
+            return Transcripcion::deLaRespuesta($texto);
+        }
+
+        Log::warning('Lectura de hoja: ningún modelo de OpenRouter respondió.', ['modelos' => $this->modelos]);
+
+        throw LecturaFallida::delProveedor();
+    }
+
+    /**
+     * Una llamada de lectura con un modelo concreto. Devuelve `null` si el proveedor no está disponible.
+     *
+     * @param  array<string,mixed>  $cuerpo
+     */
+    private function pedir(array $cuerpo, string $modelo): ?Response
+    {
         try {
-            $respuesta = Http::timeout($this->config['timeout_ocr'])
+            return Http::timeout($this->config['timeout_ocr'])
                 ->withToken($this->config['api_key'])
                 ->acceptJson()
                 ->withHeaders($this->cabecerasDeAplicacion())
@@ -103,28 +150,13 @@ final class LectorDeHojasConOpenRouter implements LectorDeHojas
                 ->post($this->config['base_url'] . self::RUTA, $cuerpo);
         } catch (ConnectionException|RequestException $e) {
             Log::warning('Lectura de hoja: OpenRouter falló', [
+                'modelo' => $modelo,
                 'error' => class_basename($e),
                 'estado' => $e instanceof RequestException ? $e->response->status() : null,
             ]);
 
-            throw LecturaFallida::delProveedor($e);
+            return null;
         }
-
-        $fin = $respuesta->json('choices.0.finish_reason');
-        if (in_array($fin, ['length', 'content_filter', 'error'], true)) {
-            Log::warning('Lectura de hoja: respuesta de OpenRouter incompleta', ['fin' => $fin]);
-
-            throw LecturaFallida::delProveedor();
-        }
-
-        $texto = $respuesta->json('choices.0.message.content');
-        if (! is_string($texto) || trim($texto) === '') {
-            Log::warning('Lectura de hoja: OpenRouter no devolvió texto', ['fin' => $fin]);
-
-            throw LecturaFallida::delProveedor();
-        }
-
-        return Transcripcion::deLaRespuesta($texto);
     }
 
     /** El archivo en el formato de chat completions: `file` para el PDF, `image_url` para la foto. */

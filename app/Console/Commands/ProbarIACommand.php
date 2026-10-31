@@ -79,7 +79,7 @@ class ProbarIACommand extends Command
             return [$servicio->modelo(), null, 'OpenRouter no devolvió una respuesta utilizable. Revisa el modelo y el log.'];
         }
 
-        return [$servicio->modelo(), $texto, null];
+        return [$servicio->modeloUsado(), $texto, null];
     }
 
     /** @return array{0:?string,1:?string,2:?string} modelo, texto, error */

@@ -28,6 +28,7 @@ class OpenRouterServiceTest extends TestCase
             'api_key' => 'sk-or-de-prueba',
             'base_url' => 'https://openrouter.ai/api',
             'model' => 'google/gemma-4-26b-a4b-it',
+            'modelos_fallover' => '',
             'timeout' => 5,
             'max_tokens' => 2000,
             'temperatura' => null,
@@ -169,5 +170,64 @@ class OpenRouterServiceTest extends TestCase
 
         $this->assertNull($this->servicio()->responder('S', 'U', [], fn () => new ResultadoDeHerramienta()));
         Http::assertSentCount(2);
+    }
+
+    public function test_si_el_principal_falla_prueba_el_respaldo(): void
+    {
+        Http::fake(['*' => Http::sequence()
+            ->push(['error' => ['code' => 400, 'message' => 'model not found']], 400)
+            ->push($this->texto('Respuesta del respaldo'), 200)]);
+
+        $servicio = $this->servicio([
+            'model' => 'principal/modelo',
+            'modelos_fallover' => 'respaldo/uno,respaldo/dos',
+        ]);
+
+        $texto = $servicio->responder('S', 'U', [], fn () => new ResultadoDeHerramienta());
+
+        $this->assertSame('Respuesta del respaldo', $texto);
+        $this->assertSame('respaldo/uno', $servicio->modeloUsado());
+        Http::assertSentCount(2);
+
+        $grabadas = Http::recorded();
+        $this->assertSame('principal/modelo', $grabadas[0][0]['model']);
+        $this->assertSame('respaldo/uno', $grabadas[1][0]['model']);
+    }
+
+    public function test_no_reintenta_con_otro_modelo_despues_de_ejecutar_una_tool(): void
+    {
+        Http::fake(['*' => Http::sequence()
+            ->push($this->llamada(), 200)
+            ->push(['error' => ['code' => 500]], 500)
+            ->push(['error' => ['code' => 500]], 500)]);
+
+        $servicio = $this->servicio([
+            'model' => 'principal/modelo',
+            'modelos_fallover' => 'respaldo/uno',
+        ]);
+
+        $texto = $servicio->responder(
+            'S',
+            'Consulta',
+            [['name' => 'consultar', 'description' => 'Consulta.', 'parameters' => ['type' => 'object']]],
+            fn () => new ResultadoDeHerramienta(['ok' => true])
+        );
+
+        $this->assertNull($texto);
+        Http::assertSentCount(3);
+        Http::assertNotSent(fn (Request $peticion) => ($peticion->data()['model'] ?? null) === 'respaldo/uno');
+    }
+
+    public function test_si_todos_los_modelos_fallan_devuelve_null(): void
+    {
+        Http::fake(['*' => Http::response(['error' => ['code' => 400]], 400)]);
+
+        $servicio = $this->servicio([
+            'model' => 'principal/modelo',
+            'modelos_fallover' => 'respaldo/uno,respaldo/dos',
+        ]);
+
+        $this->assertNull($servicio->responder('S', 'U', [], fn () => new ResultadoDeHerramienta()));
+        Http::assertSentCount(3);
     }
 }

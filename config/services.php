@@ -114,8 +114,12 @@ return [
         'api_key' => env('OPENROUTER_API_KEY'),
         'base_url' => env('OPENROUTER_BASE_URL', 'https://openrouter.ai/api'),
         'model' => env('OPENROUTER_MODEL', 'google/gemma-4-26b-a4b-it'),
+        // Respaldos si el principal no está disponible (429/5xx/timeout). Acepta JSON o lista separada por comas.
+        // El principal se antepone solo; acá van sólo los respaldos. Vacío = sin failover.
+        'modelos_fallover' => env('OPENROUTER_MODELOS_FALLOVER', 'google/gemma-4-31b-it,openai/gpt-4o-mini'),
         // Sin `OPENROUTER_MODELO_OCR`, el mismo modelo del chatbot.
         'modelo_ocr' => env('OPENROUTER_MODELO_OCR', env('OPENROUTER_MODEL', 'google/gemma-4-26b-a4b-it')),
+        'modelos_ocr_fallover' => env('OPENROUTER_MODELOS_OCR_FALLOVER', 'google/gemma-4-31b-it,openai/gpt-4o-mini'),
         'timeout' => (int) env('OPENROUTER_TIMEOUT', 25),
         'timeout_ocr' => (int) env('OPENROUTER_TIMEOUT_OCR', 90),
         'max_tokens' => (int) env('OPENROUTER_MAX_TOKENS', 2000),

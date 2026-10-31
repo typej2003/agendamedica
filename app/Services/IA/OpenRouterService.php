@@ -22,14 +22,21 @@ use Illuminate\Support\Facades\Log;
  *  - **Temperatura opcional**: si `OPENROUTER_TEMPERATURA` está en blanco no se manda y rige el preset del
  *    modelo en OpenRouter (Gemma 4 trae `temperature=1`, `top_p=0.95`, `top_k=64`).
  *  - **Un reintento** ante 429/5xx o conexión caída. Al final, el chatbot cae en su mensaje de primer contacto.
+ *  - **Failover de modelos**: si el principal no está disponible, prueba los de `OPENROUTER_MODELOS_FALLOVER`.
+ *    El cambio se hace **antes de ejecutar una herramienta**, para no repetir una reserva ni una lectura.
  *  - **No se loguea el contenido** del mensaje ni de las tools: pueden traer datos de pacientes.
  */
 final class OpenRouterService
 {
     public const RUTA_CHAT = '/v1/chat/completions';
 
-    /** @var array{api_key:string, base_url:string, model:string, timeout:int, max_tokens:int, temperatura:?float, referer:string, titulo:string} */
+    /** @var array{api_key:string, base_url:string, model:string, modelos_fallover:string, timeout:int, max_tokens:int, temperatura:?float, referer:string, titulo:string} */
     private array $config;
+
+    /** @var list<string> */
+    private array $modelos = [];
+
+    private ?string $modeloUsado = null;
 
     public function __construct(?array $config = null)
     {
@@ -39,12 +46,15 @@ final class OpenRouterService
             'api_key' => trim((string) ($config['api_key'] ?? '')),
             'base_url' => rtrim((string) ($config['base_url'] ?? 'https://openrouter.ai/api'), '/'),
             'model' => (string) (($config['model'] ?? '') ?: 'google/gemma-4-26b-a4b-it'),
+            'modelos_fallover' => (string) ($config['modelos_fallover'] ?? ''),
             'timeout' => (int) ($config['timeout'] ?? 25),
             'max_tokens' => (int) ($config['max_tokens'] ?? 2000),
             'temperatura' => is_numeric($config['temperatura'] ?? null) ? (float) $config['temperatura'] : null,
             'referer' => trim((string) ($config['referer'] ?? '')),
             'titulo' => trim((string) ($config['titulo'] ?? '')),
         ];
+
+        $this->modelos = ModelosDeOpenRouter::lista($this->config['modelos_fallover'], $this->config['model']);
     }
 
     public function disponible(): bool
@@ -57,13 +67,23 @@ final class OpenRouterService
         return $this->config['model'];
     }
 
+    /** El último modelo que respondió; si todavía no hubo respuesta, el principal. */
+    public function modeloUsado(): string
+    {
+        return $this->modeloUsado ?? $this->config['model'];
+    }
+
     /**
      * Conversa hasta obtener el texto final, ejecutando las tools que pida el modelo.
+     *
+     * Si el principal no responde, prueba los respaldos de `OPENROUTER_MODELOS_FALLOVER`. El cambio de modelo
+     * se hace **antes** de ejecutar una tool: una vez que se ejecutó una (por ejemplo, `reservar_cita`), no se
+     * reintenta con otro modelo para no duplicar la reserva.
      *
      * @param  list<array{name:string,description:string,parameters:array|object}>  $herramientas
      * @param  callable(string,array<string,mixed>):ResultadoDeHerramienta  $ejecutar
      * @param  list<array{role:string,content:string}>  $historial  memoria corta, del turno más viejo al más nuevo
-     * @return string|null  el texto final; `null` si no hay clave, la API falla o el modelo no contesta
+     * @return string|null  el texto final; `null` si no hay clave, ningún modelo responde o no contesta
      */
     public function responder(
         string $sistema,
@@ -76,28 +96,42 @@ final class OpenRouterService
             return null;
         }
 
-        $mensajes = [['role' => 'system', 'content' => $sistema]];
+        foreach ($this->modelos as $modelo) {
+            $mensajes = $this->mensajesIniciales($sistema, $mensaje, $historial);
+            $respuesta = $this->peticion($mensajes, $herramientas, $modelo);
 
-        foreach ($historial as $turno) {
-            $rol = $turno['role'] ?? '';
-            $texto = trim((string) ($turno['content'] ?? ''));
+            if ($respuesta === null) {
+                Log::warning('OpenRouter: modelo no disponible; se prueba el siguiente.', [
+                    'modelo' => $modelo,
+                ]);
 
-            if (! in_array($rol, ['user', 'assistant'], true) || $texto === '') {
                 continue;
             }
 
-            $mensajes[] = ['role' => $rol, 'content' => $texto];
+            $this->modeloUsado = $modelo;
+
+            return $this->continuarTurno($mensajes, $respuesta, $herramientas, $ejecutar, $modelo);
         }
 
-        $mensajes[] = ['role' => 'user', 'content' => $mensaje];
+        Log::warning('OpenRouter: ningún modelo respondió.', ['modelos' => $this->modelos]);
 
+        return null;
+    }
+
+    /**
+     * @param  list<array<string,mixed>>  $mensajes
+     * @param  list<array{name:string,description:string,parameters:array|object}>  $herramientas
+     * @param  callable(string,array<string,mixed>):ResultadoDeHerramienta  $ejecutar
+     */
+    private function continuarTurno(
+        array $mensajes,
+        Response $respuesta,
+        array $herramientas,
+        callable $ejecutar,
+        string $modelo
+    ): ?string {
         // Un turno de tool + el texto final son dos llamadas; se deja margen para una cadena corta.
         for ($turno = 0; $turno < 4; $turno++) {
-            $respuesta = $this->peticion($mensajes, $herramientas);
-            if ($respuesta === null) {
-                return null;
-            }
-
             $mensajeAsistente = (array) $respuesta->json('choices.0.message', []);
             $llamadas = (array) ($mensajeAsistente['tool_calls'] ?? []);
 
@@ -132,6 +166,15 @@ final class OpenRouterService
                     'content' => (string) json_encode($resultado->datos, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
                 ];
             }
+
+            $respuesta = $this->peticion($mensajes, $herramientas, $modelo);
+            if ($respuesta === null) {
+                Log::warning('OpenRouter: el modelo falló después de una herramienta; no se reintenta con otro.', [
+                    'modelo' => $modelo,
+                ]);
+
+                return null;
+            }
         }
 
         Log::warning('OpenRouter: se agotaron los turnos de herramientas.');
@@ -140,15 +183,39 @@ final class OpenRouterService
     }
 
     /**
+     * @param  list<array{role:string,content:string}>  $historial
+     * @return list<array<string,mixed>>
+     */
+    private function mensajesIniciales(string $sistema, string $mensaje, array $historial): array
+    {
+        $mensajes = [['role' => 'system', 'content' => $sistema]];
+
+        foreach ($historial as $turno) {
+            $rol = $turno['role'] ?? '';
+            $texto = trim((string) ($turno['content'] ?? ''));
+
+            if (! in_array($rol, ['user', 'assistant'], true) || $texto === '') {
+                continue;
+            }
+
+            $mensajes[] = ['role' => $rol, 'content' => $texto];
+        }
+
+        $mensajes[] = ['role' => 'user', 'content' => $mensaje];
+
+        return $mensajes;
+    }
+
+    /**
      * Una llamada al endpoint de chat completions.
      *
      * @param  list<array<string,mixed>>  $mensajes
      * @param  list<array{name:string,description:string,parameters:array|object}>  $herramientas
      */
-    private function peticion(array $mensajes, array $herramientas): ?Response
+    private function peticion(array $mensajes, array $herramientas, string $modelo): ?Response
     {
         $cuerpo = [
-            'model' => $this->config['model'],
+            'model' => $modelo,
             'messages' => $mensajes,
             'max_tokens' => $this->config['max_tokens'],
         ];
@@ -180,6 +247,7 @@ final class OpenRouterService
                 ->post($this->config['base_url'] . self::RUTA_CHAT, $cuerpo);
         } catch (ConnectionException|RequestException $e) {
             Log::warning('OpenRouter: la petición falló.', [
+                'modelo' => $modelo,
                 'error' => class_basename($e),
                 'estado' => $e instanceof RequestException ? $e->response->status() : null,
             ]);

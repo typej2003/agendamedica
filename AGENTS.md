@@ -742,6 +742,13 @@ y `ejecutarHerramienta()`. Prueba de conectividad, sin crear citas: `php artisan
 `JEV_PROTOCOLO=openrouter` toma la clave de OpenRouter. Tests: `OpenRouterServiceTest`, `ChatbotOpenRouterTest`,
 `LectorDeHojasConOpenRouterTest`, `ProbarIACommandTest` y el de OpenRouter en `TriajeJevTest`.
 
+**Failover de modelos (2026-10-31).** `OPENROUTER_MODELOS_FALLOVER` y `OPENROUTER_MODELOS_OCR_FALLOVER` aceptan
+JSON o una lista separada por comas; el principal (`OPENROUTER_MODEL` / `OPENROUTER_MODELO_OCR`) se antepone solo.
+Si el principal responde 429/5xx, timeout o un modelo inexistente, se prueba el siguiente en orden. En el chatbot
+el cambio se hace **antes** de ejecutar una tool: si ya se ejecutó una (por ejemplo, `reservar_cita`), no se
+reintenta con otro modelo para no duplicar la reserva. Es una versión simple, sin estado en Redis ni cron de
+salud; los respaldos tienen que soportar tools (chat) o visión + salida estructurada (OCR).
+
 **El triaje con Jev AI (2026-10-18).** `php artisan jev:triaje` mide si Jev acierta la **intención** y la
 **urgencia** de un mensaje de WhatsApp antes de decidir si se integra (ROADMAP §10.3). Cliente:
 `App\Services\JevService` (contrato `POST /v1/systemone`: `state` + `questions` de tipo `choice`/`score`/`noul`;
