@@ -111,6 +111,18 @@ class ReferidosWebTest extends TestCase
         $this->assertSame(1, (int) \App\Models\CodigoDeReferido::where('codigo', $codigo)->firstOrFail()->clics);
     }
 
+    public function test_el_boton_de_descarga_lleva_el_referrer_para_la_app(): void
+    {
+        ConfiguracionLatidos::actual()->update([
+            'url_descarga' => 'https://play.google.com/store/apps/details?id=com.ddrsistemas.doctorisimo',
+        ]);
+        [$user, $medico, $codigo] = $this->referente();
+
+        $this->get('/r/' . $codigo)
+            ->assertOk()
+            ->assertSee('referrer=' . rawurlencode('ref=' . $codigo), false);
+    }
+
     public function test_un_codigo_invalido_no_atribuye(): void
     {
         $this->get('/r/NOEXISTE')

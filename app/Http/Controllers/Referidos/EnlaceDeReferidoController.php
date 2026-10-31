@@ -51,6 +51,9 @@ class EnlaceDeReferidoController extends Controller
         ));
 
         $urlDescarga = trim((string) ($config->url_descarga ?: config('latidos.url_descarga')));
+        if ($urlDescarga !== '') {
+            $urlDescarga = $this->conReferrer($urlDescarga, $codigo->codigo);
+        }
 
         return response()
             ->view('referidos.enlace', [
@@ -59,5 +62,24 @@ class EnlaceDeReferidoController extends Controller
                 'urlRegistro' => route('medico.registro', ['ref' => $codigo->codigo]),
             ])
             ->header('X-Robots-Tag', 'noindex, nofollow');
+    }
+
+    /**
+     * Agrega `referrer=ref%3D<codigo>` al link de Play Store. Es lo que lee **Play Install Referrer** en la
+     * primera apertura y lo que el app convierte en `?ref=` del registro web.
+     *
+     * Si el link ya trae query (por ejemplo `?id=...`), se agrega con `&`; el fragmento se conserva al final.
+     */
+    private function conReferrer(string $url, string $codigo): string
+    {
+        $fragmento = '';
+        if (str_contains($url, '#')) {
+            [$url, $resto] = explode('#', $url, 2);
+            $fragmento = '#' . $resto;
+        }
+
+        $separador = str_contains($url, '?') ? '&' : '?';
+
+        return $url . $separador . 'referrer=' . rawurlencode('ref=' . $codigo) . $fragmento;
     }
 }
