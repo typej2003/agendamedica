@@ -59,6 +59,7 @@
                 $confirmar = $fila->confirmar();
                 $atender = $fila->atender();
                 $cobro = $fila->cobro();
+                $linkDePago = $fila->linkDePago();
                 $recordatorio = $fila->recordatorio();
                 $imprimirDocumentos = $fila->imprimirDocumentos();
                 $quitar = $fila->quitarConfirmacion();
@@ -72,6 +73,7 @@
                 // que ya no tiene nada más que hacer— va como botón directo, al lado de las demás.
                 $secundarias = array_filter([
                     'recordatorio' => (bool) $recordatorio,
+                    'link' => (bool) $linkDePago,
                     'atender' => (bool) ($confirmar && $atender),
                     'quitar' => (bool) $quitar,
                     'citas' => (bool) $fila->pacienteId(),
@@ -167,7 +169,7 @@
                      colgando) y una con pago registrado no se borra: la regla la aplica `EliminarCita`;
                      acá solo no se ofrece. El menú se muestra aunque no haya ninguna de esas acciones
                      cuando el paciente tiene ficha: "Citas del paciente" siempre está. --}}
-                @if (! $soloCitasDelPaciente && ($recordatorio || $quitar || ($confirmar && $atender) || $fila->urlEditar() || $fila->urlEliminar() || $fila->pacienteId()))
+                @if (! $soloCitasDelPaciente && ($recordatorio || $linkDePago || $quitar || ($confirmar && $atender) || $fila->urlEditar() || $fila->urlEliminar() || $fila->pacienteId()))
                     <x-ui.menu>
                         @if ($recordatorio)
                             <button type="button" class="menu-item" data-dialogo="recordatorio"
@@ -180,6 +182,14 @@
                                     data-tiene-correo="{{ $recordatorio['tieneCorreo'] ? '1' : '0' }}">
                                 <i class="bi bi-send" aria-hidden="true"></i> Recordar al paciente
                             </button>
+                        @endif
+
+                        {{-- El link público que el paciente abre para pagar la cita (punto 3 del cobro). La
+                             pantalla lo genera al abrirse y lo comparte; no cobra nada. --}}
+                        @if ($linkDePago)
+                            <a class="menu-item" href="{{ $linkDePago['url'] }}">
+                                <i class="bi bi-link-45deg" aria-hidden="true"></i> Link de pago
+                            </a>
                         @endif
 
                         {{-- Con la cita sin confirmar, "Atender" va en el menú: implica confirmada y además

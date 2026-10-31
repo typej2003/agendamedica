@@ -380,6 +380,26 @@ final class FilaDeCitaVista
         ];
     }
 
+    /**
+     * **«Link de pago»** (punto 3 del cobro de citas): la pantalla que genera el link público de la cita
+     * para mandárselo al paciente y que pague con SyPago. La pantalla decide qué falta (precio, método) y
+     * lo avisa, así que la acción se ofrece aunque la cita todavía no tenga precio: es justamente donde se
+     * explica que hay que ponerlo.
+     *
+     * No se ofrece en una cita movida (esa fila ya ocurrió en otro día) ni en una **ya pagada** —lo mismo
+     * que «Cobrar»—: no hay nada que cobrar.
+     *
+     * @return array{url:string}|null
+     */
+    public function linkDePago(): ?array
+    {
+        if ($this->movida() || $this->cita->estadoPago() === Cola::PAGO_PAGADA) {
+            return null;
+        }
+
+        return ['url' => route('clinica.agenda.link-de-pago', $this->cita->id)];
+    }
+
     /** Una cita atendida ya ocurrió (y tiene la consulta colgando): no se edita. */
     public function urlEditar(): ?string
     {
