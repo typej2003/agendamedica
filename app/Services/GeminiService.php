@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Services\IA\OpenRouterService;
+use App\Services\IA\ResultadoDeHerramienta;
 use App\Support\DisponibilidadEnTexto;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -13,6 +15,7 @@ class GeminiService
     protected string $apiKey;
     protected string $model;
     protected PacienteAtencionContextService $contextService;
+    protected ?OpenRouterService $openRouter = null;
 
     public function __construct(PacienteAtencionContextService $contextService)
     {
@@ -146,13 +149,35 @@ class GeminiService
             return $respuestaInformativa;
         }
 
-        // 8. Si es una consulta conversacional, procesar con Gemini AI y Function Calling
+        // 8. Si es una consulta conversacional, procesarla con el proveedor de IA configurado (`IA_PROVEEDOR` o
+        //    `CHATBOT_PROVEEDOR`): Gemini o OpenRouter, con las mismas tools y las mismas reglas de agenda.
+        if ($this->usaOpenRouter()) {
+            if (! $this->openRouter()->disponible()) {
+                Log::error('GeminiService: OpenRouter no tiene OPENROUTER_API_KEY configurada.');
+
+                return $this->contextService->generarMensajePrimerContacto($contexto);
+            }
+
+            return $this->procesarConOpenRouterAI($mensajeUsuario, $contexto);
+        }
+
         if (empty($this->apiKey)) {
             Log::error('GeminiService: API Key no configurada o vacía.');
             return $this->contextService->generarMensajePrimerContacto($contexto);
         }
 
         return $this->procesarConGeminiAI($mensajeUsuario, $contexto);
+    }
+
+    /** ¿El chatbot usa OpenRouter? Se lee en cada mensaje para que el `.env` mande sin reiniciar objetos. */
+    private function usaOpenRouter(): bool
+    {
+        return strtolower(trim((string) config('services.chatbot.proveedor', 'gemini'))) === 'openrouter';
+    }
+
+    private function openRouter(): OpenRouterService
+    {
+        return $this->openRouter ??= new OpenRouterService();
     }
 
     /**
@@ -575,140 +600,7 @@ class GeminiService
     {
         $systemInstruction = $this->construirSystemInstruction($contexto);
 
-        $tools = [
-            [
-                'function_declarations' => [
-                    [
-                        'name' => 'consultar_proximo_cupo_disponible',
-                        'description' => 'Consulta la agenda real del médico (sus bloques de horario y el cupo de cada bloque) y devuelve hasta tres próximos días con lugar, con la sede y la hora. Devuelve `opciones` con las fechas; el número de cupos es interno y NO se le dice a la paciente.',
-                        'parameters' => [
-                            'type' => 'OBJECT',
-                            'properties' => [
-                                'reg_medico' => [
-                                    'type' => 'STRING',
-                                    'description' => 'El código de registro profesional o nombre del médico.'
-                                ]
-                            ],
-                            'required' => ['reg_medico']
-                        ]
-                    ],
-                    [
-                        'name' => 'buscar_medicos_por_especialidad',
-                        'description' => 'Busca los médicos y sus reg_medico asociados a una especialidad médica determinada.',
-                        'parameters' => [
-                            'type' => 'OBJECT',
-                            'properties' => [
-                                'especialidad' => [
-                                    'type' => 'STRING',
-                                    'description' => 'Nombre de la especialidad médica deseada.'
-                                ]
-                            ],
-                            'required' => ['especialidad']
-                        ]
-                    ],
-                    [
-                        'name' => 'consultar_datos_consultorio',
-                        'description' => 'Consulta en la tabla evolucion la dirección física del consultorio, referencias, ciudad, consultorio y teléfono de contacto de un médico.',
-                        'parameters' => [
-                            'type' => 'OBJECT',
-                            'properties' => [
-                                'reg_medico' => [
-                                    'type' => 'STRING',
-                                    'description' => 'El reg_medico o nombre del doctor a consultar.'
-                                ]
-                            ],
-                            'required' => ['reg_medico']
-                        ]
-                    ],
-                    [
-                        'name' => 'consultar_horarios_atencion',
-                        'description' => 'Consulta en la tabla evolucion los días que atiende el médico, su horario de entrada y salida, y si es por orden de llegada o cita previa.',
-                        'parameters' => [
-                            'type' => 'OBJECT',
-                            'properties' => [
-                                'reg_medico' => [
-                                    'type' => 'STRING',
-                                    'description' => 'El reg_medico o nombre del doctor a consultar.'
-                                ]
-                            ],
-                            'required' => ['reg_medico']
-                        ]
-                    ],
-                    [
-                        'name' => 'consultar_especialidades_disponibles',
-                        'description' => 'Obtiene la lista de especialidades médicas disponibles en la clínica.',
-                        'parameters' => [
-                            'type' => 'OBJECT',
-                            'properties' => new \stdClass(),
-                        ]
-                    ],
-                    [
-                        'name' => 'consultar_informacion_medico',
-                        'description' => 'Obtiene la información integral de un médico: su especialidad, dirección del consultorio y sus horarios de atención.',
-                        'parameters' => [
-                            'type' => 'OBJECT',
-                            'properties' => [
-                                'medico' => [
-                                    'type' => 'STRING',
-                                    'description' => 'Nombre o código reg_medico del médico.'
-                                ]
-                            ],
-                            'required' => ['medico']
-                        ]
-                    ],
-                    [
-                        'name' => 'consultar_telefono_medico',
-                        'description' => 'Obtiene el número de teléfono o contacto del médico desde su ficha en el modelo Medico.',
-                        'parameters' => [
-                            'type' => 'OBJECT',
-                            'properties' => [
-                                'medico' => [
-                                    'type' => 'STRING',
-                                    'description' => 'Nombre o código reg_medico del médico.'
-                                ]
-                            ],
-                            'required' => ['medico']
-                        ]
-                    ],
-                    [
-                        'name' => 'consultar_donde_atiende_medico',
-                        'description' => 'Obtiene los centros médicos, clínicas, sedes o instituciones donde atiende el médico según la relación MedicoMedicalCenter / MedicalCenter.',
-                        'parameters' => [
-                            'type' => 'OBJECT',
-                            'properties' => [
-                                'medico' => [
-                                    'type' => 'STRING',
-                                    'description' => 'Nombre o código reg_medico del médico.'
-                                ]
-                            ],
-                            'required' => ['medico']
-                        ]
-                    ],
-                    [
-                        'name' => 'reservar_cita',
-                        'description' => 'Registra e inserta una cita en la tabla Cola para el paciente con el médico en la fecha seleccionada. Retorna la confirmación oficial con el turno y datos del consultorio.',
-                        'parameters' => [
-                            'type' => 'OBJECT',
-                            'properties' => [
-                                'reg_medico' => [
-                                    'type' => 'STRING',
-                                    'description' => 'El código reg_medico o nombre del médico con quien se reserva la cita.'
-                                ],
-                                'fecha' => [
-                                    'type' => 'STRING',
-                                    'description' => 'Fecha para la cita en formato YYYY-MM-DD. Si no se indica, se toma el próximo día disponible.'
-                                ],
-                                'motivo' => [
-                                    'type' => 'STRING',
-                                    'description' => 'Motivo de la consulta expresado por el paciente (opcional).'
-                                ]
-                            ],
-                            'required' => ['reg_medico']
-                        ]
-                    ]
-                ]
-            ]
-        ];
+        $tools = $this->herramientasParaGemini();
 
         $payload = [
             'system_instruction' => [
@@ -749,56 +641,11 @@ class GeminiService
                         $functionName = $functionCall['name'];
                         $args = $functionCall['args'] ?? [];
 
-                        $resultadoTool = [];
-
-                        if ($functionName === 'consultar_proximo_cupo_disponible') {
-                            $regMedico = $args['reg_medico'] ?? '';
-                            if (!empty($contexto['telefono'])) {
-                                $citaActiva = $this->contextService->obtenerCitaPendienteConMedicoPorTelefono($contexto['telefono'], $regMedico);
-                                if ($citaActiva) {
-                                    return $citaActiva['mensaje'];
-                                }
-                            }
-                            $resultadoTool = $this->contextService->consultarProximoDiaDisponible($regMedico);
-                        } elseif ($functionName === 'buscar_medicos_por_especialidad') {
-                            $esp = $args['especialidad'] ?? '';
-                            $resultadoTool = $this->contextService->buscarMedicosPorEspecialidad($esp);
-                        } elseif ($functionName === 'consultar_datos_consultorio') {
-                            $regMedico = $args['reg_medico'] ?? '';
-                            $resultadoTool = $this->contextService->obtenerDatosConsultorio($regMedico);
-                        } elseif ($functionName === 'consultar_horarios_atencion') {
-                            $regMedico = $args['reg_medico'] ?? '';
-                            $resultadoTool = $this->contextService->obtenerHorariosAtencion($regMedico);
-                        } elseif ($functionName === 'consultar_especialidades_disponibles') {
-                            $resultadoTool = [
-                                'especialidades' => $this->contextService->obtenerEspecialidadesDisponibles()
-                            ];
-                        } elseif ($functionName === 'consultar_informacion_medico') {
-                            $medico = $args['medico'] ?? '';
-                            $resultadoTool = $this->contextService->obtenerInformacionMedico($medico);
-                        } elseif ($functionName === 'consultar_telefono_medico') {
-                            $medico = $args['medico'] ?? '';
-                            $resultadoTool = $this->contextService->obtenerTelefonoMedico($medico);
-                        } elseif ($functionName === 'consultar_donde_atiende_medico') {
-                            $medico = $args['medico'] ?? '';
-                            $resultadoTool = $this->contextService->obtenerCentrosDondeAtiende($medico);
-                        } elseif ($functionName === 'reservar_cita') {
-                            $regMedico = $args['reg_medico'] ?? '';
-                            $fecha = $args['fecha'] ?? null;
-                            $motivo = $args['motivo'] ?? null;
-                            $resultadoTool = $this->contextService->reservarCitaEnCola(
-                                $contexto['telefono'] ?? '',
-                                $regMedico,
-                                $fecha,
-                                $motivo
-                            );
-                            if (!empty($resultadoTool['exito']) && !empty($resultadoTool['mensaje_confirmacion'])) {
-                                return $resultadoTool['mensaje_confirmacion'];
-                            }
-                            if (!empty($resultadoTool['mensaje'])) {
-                                return $resultadoTool['mensaje'];
-                            }
+                        $resultado = $this->ejecutarHerramienta($functionName, (array) $args, $contexto);
+                        if ($resultado->respuestaFinal !== null) {
+                            return $resultado->respuestaFinal;
                         }
+                        $resultadoTool = $resultado->datos;
 
                         // Segundo turno para que Gemini redacte la respuesta con los datos de Cola
                         $followUpPayload = [
@@ -862,6 +709,290 @@ class GeminiService
         }
 
         return $this->contextService->generarMensajePrimerContacto($contexto);
+    }
+
+    /**
+     * Procesa con **OpenRouter** (`IA_PROVEEDOR=openrouter` o `CHATBOT_PROVEEDOR=openrouter`) el mismo turno
+     * conversacional que Gemini: mismo prompt, mismas tools y mismo ejecutor. El bucle de tool calling vive en
+     * `OpenRouterService`; acá se queda la regla de negocio y el aviso de urgencia.
+     */
+    protected function procesarConOpenRouterAI(string $mensajeUsuario, array $contexto): string
+    {
+        $systemInstruction = $this->construirSystemInstruction($contexto);
+        $ultimoResultado = null;
+
+        $texto = $this->openRouter()->responder(
+            $systemInstruction,
+            $mensajeUsuario,
+            $this->herramientasDeLaConversacion(),
+            function (string $nombre, array $argumentos) use ($contexto, &$ultimoResultado): ResultadoDeHerramienta {
+                $resultado = $this->ejecutarHerramienta($nombre, $argumentos, $contexto);
+                $ultimoResultado = $resultado->datos;
+
+                return $resultado;
+            }
+        );
+
+        if ($texto === null || trim($texto) === '') {
+            Log::warning('OpenRouter: no se obtuvo una respuesta utilizable; va el mensaje de primer contacto.');
+
+            return $this->contextService->generarMensajePrimerContacto($contexto);
+        }
+
+        // Urgencia sin horario hoy: el contacto del consultorio va tal cual, no reescrito por el modelo.
+        $aviso = is_array($ultimoResultado) ? DisponibilidadEnTexto::avisoDeUrgencia($ultimoResultado) : '';
+
+        return $aviso === '' ? $texto : $aviso . "\n\n" . $texto;
+    }
+
+    /**
+     * Las tools del chatbot en **JSON Schema** (el formato común). Gemini las recibe en mayúsculas
+     * (`herramientasParaGemini()`) y OpenRouter tal cual.
+     *
+     * @return list<array{name:string,description:string,parameters:array|object}>
+     */
+    protected function herramientasDeLaConversacion(): array
+    {
+        return [
+            [
+                'name' => 'consultar_proximo_cupo_disponible',
+                'description' => 'Consulta la agenda real del médico (sus bloques de horario y el cupo de cada bloque) y devuelve hasta tres próximos días con lugar, con la sede y la hora. Devuelve `opciones` con las fechas; el número de cupos es interno y NO se le dice a la paciente.',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'reg_medico' => [
+                            'type' => 'string',
+                            'description' => 'El código de registro profesional o nombre del médico.',
+                        ],
+                    ],
+                    'required' => ['reg_medico'],
+                ],
+            ],
+            [
+                'name' => 'buscar_medicos_por_especialidad',
+                'description' => 'Busca los médicos y sus reg_medico asociados a una especialidad médica determinada.',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'especialidad' => [
+                            'type' => 'string',
+                            'description' => 'Nombre de la especialidad médica deseada.',
+                        ],
+                    ],
+                    'required' => ['especialidad'],
+                ],
+            ],
+            [
+                'name' => 'consultar_datos_consultorio',
+                'description' => 'Consulta en la tabla evolucion la dirección física del consultorio, referencias, ciudad, consultorio y teléfono de contacto de un médico.',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'reg_medico' => [
+                            'type' => 'string',
+                            'description' => 'El reg_medico o nombre del doctor a consultar.',
+                        ],
+                    ],
+                    'required' => ['reg_medico'],
+                ],
+            ],
+            [
+                'name' => 'consultar_horarios_atencion',
+                'description' => 'Consulta en la tabla evolucion los días que atiende el médico, su horario de entrada y salida, y si es por orden de llegada o cita previa.',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'reg_medico' => [
+                            'type' => 'string',
+                            'description' => 'El reg_medico o nombre del doctor a consultar.',
+                        ],
+                    ],
+                    'required' => ['reg_medico'],
+                ],
+            ],
+            [
+                'name' => 'consultar_especialidades_disponibles',
+                'description' => 'Obtiene la lista de especialidades médicas disponibles en la clínica.',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => new \stdClass(),
+                ],
+            ],
+            [
+                'name' => 'consultar_informacion_medico',
+                'description' => 'Obtiene la información integral de un médico: su especialidad, dirección del consultorio y sus horarios de atención.',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'medico' => [
+                            'type' => 'string',
+                            'description' => 'Nombre o código reg_medico del médico.',
+                        ],
+                    ],
+                    'required' => ['medico'],
+                ],
+            ],
+            [
+                'name' => 'consultar_telefono_medico',
+                'description' => 'Obtiene el número de teléfono o contacto del médico desde su ficha en el modelo Medico.',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'medico' => [
+                            'type' => 'string',
+                            'description' => 'Nombre o código reg_medico del médico.',
+                        ],
+                    ],
+                    'required' => ['medico'],
+                ],
+            ],
+            [
+                'name' => 'consultar_donde_atiende_medico',
+                'description' => 'Obtiene los centros médicos, clínicas, sedes o instituciones donde atiende el médico según la relación MedicoMedicalCenter / MedicalCenter.',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'medico' => [
+                            'type' => 'string',
+                            'description' => 'Nombre o código reg_medico del médico.',
+                        ],
+                    ],
+                    'required' => ['medico'],
+                ],
+            ],
+            [
+                'name' => 'reservar_cita',
+                'description' => 'Registra e inserta una cita en la tabla Cola para el paciente con el médico en la fecha seleccionada. Retorna la confirmación oficial con el turno y datos del consultorio.',
+                'parameters' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'reg_medico' => [
+                            'type' => 'string',
+                            'description' => 'El código reg_medico o nombre del médico con quien se reserva la cita.',
+                        ],
+                        'fecha' => [
+                            'type' => 'string',
+                            'description' => 'Fecha para la cita en formato YYYY-MM-DD. Si no se indica, se toma el próximo día disponible.',
+                        ],
+                        'motivo' => [
+                            'type' => 'string',
+                            'description' => 'Motivo de la consulta expresado por el paciente (opcional).',
+                        ],
+                    ],
+                    'required' => ['reg_medico'],
+                ],
+            ],
+        ];
+    }
+
+    /** Las tools en el dialecto de Gemini (`function_declarations` y tipos en mayúsculas). */
+    protected function herramientasParaGemini(): array
+    {
+        return [
+            'function_declarations' => array_map(fn (array $herramienta) => [
+                'name' => $herramienta['name'],
+                'description' => $herramienta['description'],
+                'parameters' => $this->esquemaParaGemini($herramienta['parameters']),
+            ], $this->herramientasDeLaConversacion()),
+        ];
+    }
+
+    /** El esquema JSON Schema en el dialecto de Gemini: `type` en mayúsculas y los `properties` recursivos. */
+    private function esquemaParaGemini(array|object $esquema): array|object
+    {
+        if ($esquema instanceof \stdClass) {
+            return $esquema;
+        }
+
+        if (isset($esquema['type']) && is_string($esquema['type'])) {
+            $esquema['type'] = strtoupper($esquema['type']);
+        }
+
+        if (isset($esquema['properties']) && is_array($esquema['properties'])) {
+            foreach ($esquema['properties'] as $clave => $valor) {
+                $esquema['properties'][$clave] = $this->esquemaParaGemini($valor);
+            }
+        }
+
+        if (isset($esquema['items'])) {
+            $esquema['items'] = $this->esquemaParaGemini($esquema['items']);
+        }
+
+        return $esquema;
+    }
+
+    /**
+     * Ejecuta una tool del chatbot. Es el **único** lugar donde se decide qué hace cada una, lo use Gemini u
+     * OpenRouter. Si la tool ya tiene la respuesta final (confirmación de reserva, cita pendiente), se devuelve
+     * en `respuestaFinal` y no se le pregunta otra vez al modelo.
+     *
+     * @param  array<string,mixed>  $args
+     * @param  array<string,mixed>  $contexto
+     */
+    protected function ejecutarHerramienta(string $nombre, array $args, array $contexto): ResultadoDeHerramienta
+    {
+        if ($nombre === 'consultar_proximo_cupo_disponible') {
+            $regMedico = $args['reg_medico'] ?? '';
+            if (!empty($contexto['telefono'])) {
+                $citaActiva = $this->contextService->obtenerCitaPendienteConMedicoPorTelefono($contexto['telefono'], $regMedico);
+                if ($citaActiva) {
+                    return new ResultadoDeHerramienta([], $citaActiva['mensaje']);
+                }
+            }
+
+            return new ResultadoDeHerramienta($this->contextService->consultarProximoDiaDisponible($regMedico));
+        }
+
+        if ($nombre === 'buscar_medicos_por_especialidad') {
+            return new ResultadoDeHerramienta($this->contextService->buscarMedicosPorEspecialidad($args['especialidad'] ?? ''));
+        }
+
+        if ($nombre === 'consultar_datos_consultorio') {
+            return new ResultadoDeHerramienta($this->contextService->obtenerDatosConsultorio($args['reg_medico'] ?? ''));
+        }
+
+        if ($nombre === 'consultar_horarios_atencion') {
+            return new ResultadoDeHerramienta($this->contextService->obtenerHorariosAtencion($args['reg_medico'] ?? ''));
+        }
+
+        if ($nombre === 'consultar_especialidades_disponibles') {
+            return new ResultadoDeHerramienta([
+                'especialidades' => $this->contextService->obtenerEspecialidadesDisponibles(),
+            ]);
+        }
+
+        if ($nombre === 'consultar_informacion_medico') {
+            return new ResultadoDeHerramienta($this->contextService->obtenerInformacionMedico($args['medico'] ?? ''));
+        }
+
+        if ($nombre === 'consultar_telefono_medico') {
+            return new ResultadoDeHerramienta($this->contextService->obtenerTelefonoMedico($args['medico'] ?? ''));
+        }
+
+        if ($nombre === 'consultar_donde_atiende_medico') {
+            return new ResultadoDeHerramienta($this->contextService->obtenerCentrosDondeAtiende($args['medico'] ?? ''));
+        }
+
+        if ($nombre === 'reservar_cita') {
+            $resultado = $this->contextService->reservarCitaEnCola(
+                $contexto['telefono'] ?? '',
+                $args['reg_medico'] ?? '',
+                $args['fecha'] ?? null,
+                $args['motivo'] ?? null
+            );
+
+            if (!empty($resultado['exito']) && !empty($resultado['mensaje_confirmacion'])) {
+                return new ResultadoDeHerramienta([], $resultado['mensaje_confirmacion']);
+            }
+
+            if (!empty($resultado['mensaje'])) {
+                return new ResultadoDeHerramienta([], $resultado['mensaje']);
+            }
+
+            return new ResultadoDeHerramienta((array) $resultado);
+        }
+
+        return new ResultadoDeHerramienta();
     }
 
     /**

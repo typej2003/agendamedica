@@ -1,5 +1,20 @@
 <?php
 
+/*
+ * **Un solo interruptor para la IA** (`IA_PROVEEDOR`): `gemini` deja todo como estaba; `openrouter` manda el
+ * chatbot, la lectura de hojas y las decisiones de Jev por OpenRouter con **una sola clave**
+ * (`OPENROUTER_API_KEY`). Cada uso se puede pisar por separado (`CHATBOT_PROVEEDOR`, `OCR_PROVEEDOR`,
+ * `JEV_PROTOCOLO`).
+ */
+$proveedorIA = strtolower((string) (env('IA_PROVEEDOR') ?: 'gemini'));
+$protocoloJev = strtolower((string) (env('JEV_PROTOCOLO') ?: ($proveedorIA === 'openrouter' ? 'openrouter' : 'auto')));
+
+// `auto` significa «la ruta de decisiones del proveedor configurado»: con `IA_PROVEEDOR=openrouter` no
+// tiene sentido probar el host de Jev oficial (y menos mandarle la clave de OpenRouter).
+if ($proveedorIA === 'openrouter' && $protocoloJev === 'auto') {
+    $protocoloJev = 'openrouter';
+}
+
 return [
 
     /*
@@ -63,11 +78,11 @@ return [
     /*
      * **Lectura de hojas escaneadas** (WEB-13.15): la solapa *Resultado de exámenes* manda la foto o el PDF de la
      * hoja del laboratorio a un modelo y recibe el texto transcrito, que el médico revisa y edita antes de guardar.
-     * `proveedor` elige el lector: `gemini` (por defecto, con la clave del chatbot) o `anthropic` (la alternativa).
-     * Sin la clave del proveedor elegido el botón no se ofrece.
+     * `proveedor` elige el lector: `gemini` (por defecto), `openrouter` (la misma clave que el chatbot y Jev) o
+     * `anthropic` (la alternativa). Sin la clave del proveedor elegido el botón no se ofrece.
      */
     'ocr' => [
-        'proveedor' => env('OCR_PROVEEDOR', 'gemini'),
+        'proveedor' => env('OCR_PROVEEDOR') ?: $proveedorIA,
     ],
 
     // Claude, la alternativa para la lectura de hojas (`OCR_PROVEEDOR=anthropic`, `LectorDeHojasConClaude`).
@@ -86,6 +101,35 @@ return [
     ],
 
     /*
+     * **OpenRouter** (`IA_PROVEEDOR=openrouter`): una sola clave para el chatbot de WhatsApp, la lectura de hojas
+     * y Jev. `base_url` es la raíz del API (`https://openrouter.ai/api`): de ahí cuelgan `/v1/chat/completions`
+     * (chat y OCR) y `/alpha/decisions` (Jev). El modelo por defecto es Gemma 4 26B A4B, que soporta tools,
+     * visión y salida estructurada; se puede cambiar sin tocar el código.
+     *
+     * `temperatura` y `temperatura_ocr` se mandan **sólo si son numéricas**. Sin ellas se usa el preset del
+     * modelo en OpenRouter (Gemma 4 trae `temperature=1`, `top_p=0.95`, `top_k=64`), que es lo recomendado por
+     * Google. Para una transcripción, `temperatura_ocr=0` es el valor por defecto: no hay nada que variar.
+     */
+    'openrouter' => [
+        'api_key' => env('OPENROUTER_API_KEY'),
+        'base_url' => env('OPENROUTER_BASE_URL', 'https://openrouter.ai/api'),
+        'model' => env('OPENROUTER_MODEL', 'google/gemma-4-26b-a4b-it'),
+        // Sin `OPENROUTER_MODELO_OCR`, el mismo modelo del chatbot.
+        'modelo_ocr' => env('OPENROUTER_MODELO_OCR', env('OPENROUTER_MODEL', 'google/gemma-4-26b-a4b-it')),
+        'timeout' => (int) env('OPENROUTER_TIMEOUT', 25),
+        'timeout_ocr' => (int) env('OPENROUTER_TIMEOUT_OCR', 90),
+        'max_tokens' => (int) env('OPENROUTER_MAX_TOKENS', 2000),
+        'max_tokens_ocr' => (int) env('OPENROUTER_MAX_TOKENS_OCR', 16000),
+        'temperatura' => env('OPENROUTER_TEMPERATURA'),
+        'temperatura_ocr' => env('OPENROUTER_TEMPERATURA_OCR', '0'),
+        // Motor del `file-parser` para PDF (`mistral-ocr`, `cloudflare-ai`, `native`). En blanco: el de OpenRouter.
+        'pdf_engine' => env('OPENROUTER_PDF_ENGINE'),
+        // Atribución opcional en el ranking de OpenRouter.
+        'referer' => env('OPENROUTER_HTTP_REFERER'),
+        'titulo' => env('OPENROUTER_TITULO', 'AppDDR'),
+    ],
+
+    /*
      * **Jev AI — modelo de decisiones, no de conversación** (evaluado el 2026-10-17, ver
      * `Docs/tecnico/auditoria-chatbot-whatsapp.md` §10.3 y `ROADMAP.md` §10.3). Devuelve valores tipados
      * con probabilidad y confianza sobre un `state` y un mapa de preguntas (`choice`, `score`, `noul`).
@@ -95,27 +139,30 @@ return [
      * en vez de 24 h; `App\Reservas\UrgenciaClinicaJev`). No hay triaje previo del bot con Jev.
      *
      * La clave vive en el `.env` (ignorado por git) como `JEV_API_KEY`; **nunca** en el código ni en un
-     * documento. `base_url` y `model` cambian según de dónde salga la clave:
+     * documento. Con `JEV_PROTOCOLO=openrouter` no hace falta `JEV_API_KEY`: se usa `OPENROUTER_API_KEY`.
+     * `base_url` y `model` cambian según de dónde salga la clave:
      *
-     *   Jev AI (oficial)      https://thejevai.com      typesafe/jev-1.14
+     *   Jev AI (oficial)      https://thejevai.com        typesafe/jev-1.14
      *   DigitalOcean Inference https://inference.do-ai.run  typesafe-jev-1.13.0
+     *   OpenRouter            https://openrouter.ai/api    typesafe/jev-1.14
      */
     'jev' => [
         'api_key' => env('JEV_API_KEY'),
-        'base_url' => env('JEV_BASE_URL', 'https://thejevai.com'),
+        'base_url' => env('JEV_BASE_URL', $protocoloJev === 'openrouter' ? 'https://openrouter.ai/api' : 'https://thejevai.com'),
         'model' => env('JEV_MODEL', 'typesafe/jev-1.14'),
         /*
-         * El transporte, con sus dos rutas de **decisiones** (las que traen probabilidades calibradas):
+         * El transporte, con sus rutas de **decisiones** (las que traen probabilidades calibradas):
          *
-         *   systemone → POST {base}/v1/systemone        (Jev oficial y DigitalOcean)
-         *   decisions → POST {base}/api/v1/decisions    (DefAPI; mismo cuerpo, mismo estado)
-         *   chat      → POST {base}/v1/chat/completions (agregadores sólo OpenAI: confianza autoinformada)
-         *   auto      → prueba las dos de decisiones en orden y, si no hay ninguna, cae a chat
+         *   systemone  → POST {base}/v1/systemone          (Jev oficial y DigitalOcean)
+         *   decisions  → POST {base}/api/v1/decisions      (DefAPI; mismo cuerpo, mismo estado)
+         *   openrouter → POST {base}/alpha/decisions        (OpenRouter; el mismo contrato de Jev)
+         *   chat       → POST {base}/v1/chat/completions   (agregadores sólo OpenAI: confianza autoinformada)
+         *   auto       → prueba las rutas de decisiones en orden y, si no hay ninguna, cae a chat
          *
          * Medido el 2026-10-18: DefAPI **no** sirve `typesafe/jev-1.13` por chat ni por messages («Model not
          * supported»), y no tiene `/v1/systemone`. Su ruta es `/api/v1/decisions`.
          */
-        'protocolo' => env('JEV_PROTOCOLO', 'auto'),
+        'protocolo' => $protocoloJev,
         // Debajo de este umbral de confianza la decisión se deriva a la secretaría en vez de automatizarse.
         'umbral' => (float) env('JEV_UMBRAL', 0.7),
         'timeout' => (int) env('JEV_TIMEOUT', 25),
@@ -128,10 +175,13 @@ return [
     ],
 
     /*
-     * **Chatbot de WhatsApp**. Urgencia afirmada por Jev y sin horario hoy: se avisa a la secretaría por correo
-     * (`App\Reservas\AvisoDeUrgenciaSinHorario`), como máximo una vez por teléfono cada tantos minutos.
+     * **Chatbot de WhatsApp**. `proveedor` elige quién redacta y ejecuta las tools: `gemini` (por defecto) u
+     * `openrouter`. El flujo, los atajos y la reserva son los mismos. Urgencia afirmada por Jev y sin horario hoy:
+     * se avisa a la secretaría por correo (`App\Reservas\AvisoDeUrgenciaSinHorario`), como máximo una vez por
+     * teléfono cada tantos minutos.
      */
     'chatbot' => [
+        'proveedor' => env('CHATBOT_PROVEEDOR') ?: $proveedorIA,
         'urgencia_aviso_minutos' => (int) env('CHATBOT_URGENCIA_AVISO_MINUTOS', 60),
     ],
 

@@ -10,29 +10,32 @@ use RuntimeException;
  * Cliente de **Jev AI**, el modelo de **decisiones** (no de conversación): recibe un estado y preguntas
  * tipadas y devuelve, por cada una, un valor con **probabilidad y confianza**.
  *
- * Hay **dos transportes** y no dan lo mismo (medido el 2026-10-18):
+ * Hay **tres transportes** y no dan lo mismo (medido el 2026-10-18):
  *
  *  1. **`systemone`** — el protocolo propio de Jev: `POST {base}/v1/systemone` con `state` + `questions`
  *     (`choice` / `score` / `noul`). Devuelve `probabilities` **calibradas** y `confidence` del modelo, y la
  *     salida es gratis. Es el único que sirve para calibrar un umbral de derivación con fundamento.
  *     Lo exponen el Jev oficial (`https://thejevai.com`) y DigitalOcean Inference.
- *  2. **`chat`** — el camino degradado por los agregadores que sólo hablan OpenAI: `POST {base}/v1/chat/
+ *  2. **`openrouter`** — el mismo contrato de decisiones, en `POST {base}/alpha/decisions` de OpenRouter
+ *     (`https://openrouter.ai/api`), con `typesafe/jev-1.14` y la misma `OPENROUTER_API_KEY` del chatbot y del
+ *     OCR. Devuelve las respuestas planas (`answers`/`usage`) con probabilidades calibradas.
+ *  3. **`chat`** — el camino degradado por los agregadores que sólo hablan OpenAI: `POST {base}/v1/chat/
  *     completions` con un prompt que exige un JSON. Devuelve texto, y la **confianza pasa a ser
  *     autoinformada** por el modelo (no calibrada): sirve para saber si acierta la categoría, **no** para
  *     fijar un umbral en producción. **DefAPI (defapi.org) es de estos**: su API no tiene `/v1/systemone`
  *     ni `/v1/decide`, sólo `/v1/chat/completions` y `/v1/messages` (comprobado el 2026-10-18; su catálogo
  *     igual lista `typesafe/jev-1.13` a $0,084/MTok).
  *
- * `auto` intenta `systemone` y, si el servidor no tiene esa ruta (404/405), sigue por `chat`. `auto` es el
- * default justamente para que la prueba funcione en los dos proveedores, pero el comando **dice cuál usó**.
+ * `auto` intenta las rutas de decisión y, si el servidor no tiene ninguna, sigue por `chat`. `auto` es el
+ * default justamente para que la prueba funcione en los distintos proveedores, pero el comando **dice cuál usó**.
  *
  * Con `systemone` el sobre también varía por proveedor: el oficial envuelve en
- * `data.result.{answers,usage,elapsedMs}`, DigitalOcean devuelve `answers`/`usage` planos. Acá se normaliza.
+ * `data.result.{answers,usage,elapsedMs}`, DigitalOcean y OpenRouter devuelven `answers`/`usage` planos. Acá se normaliza.
  *
  * Límites del `systemone` (del request, no del modelo): 8 preguntas, 32 KiB de JSON, 64k tokens en total.
  *
- * Esto es **infraestructura de la prueba de concepto** (`php artisan jev:triaje`): no está conectado al
- * chatbot de WhatsApp ni decidió nada de producción todavía.
+ * Esto es **infraestructura de la prueba de concepto** (`php artisan jev:triaje`) y una sola decisión en línea
+ * del chatbot (`UrgenciaClinicaJev`); no decide nada más de producción todavía.
  */
 class JevService
 {
@@ -40,15 +43,16 @@ class JevService
      * Las rutas del protocolo **de decisiones** de Jev (las que devuelven probabilidades calibradas).
      *
      * `systemone` es la del Jev oficial y la de DigitalOcean; `decisions` es la de DefAPI, que monta el
-     * servicio en `/api/v1/decisions` con **el mismo cuerpo** (`model` + `state` + `questions`) y el mismo
-     * sobre plano que DigitalOcean (medido el 2026-10-18 con la clave real).
+     * servicio en `/api/v1/decisions` con **el mismo cuerpo**; `openrouter` es la de OpenRouter, en
+     * `/alpha/decisions` y con la misma forma de respuesta que DefAPI.
      */
     private const RUTAS_DE_DECISION = [
         'systemone' => '/v1/systemone',
         'decisions' => '/api/v1/decisions',
+        'openrouter' => '/alpha/decisions',
     ];
 
-    /** @var array{api_key:?string, base_url:string, model:string, protocolo:string, umbral:float, timeout:int, intentos:int} */
+    /** @var array{api_key:string, base_url:string, model:string, protocolo:string, umbral:float, timeout:int, intentos:int} */
     private array $config;
 
     private ?string $protocoloUsado = null;
@@ -57,11 +61,23 @@ class JevService
     {
         $config ??= (array) config('services.jev', []);
 
+        $protocolo = strtolower((string) ($config['protocolo'] ?? 'auto'));
+        $apiKey = trim((string) ($config['api_key'] ?? ''));
+        $baseUrl = rtrim((string) ($config['base_url'] ?? 'https://thejevai.com'), '/');
+
+        // OpenRouter centraliza todo con una sola clave: con `openrouter` manda `OPENROUTER_API_KEY`, no
+        // `JEV_API_KEY` (así una clave vieja de DefAPI no viaja a otro host por error). La base también sale
+        // de `services.openrouter`, para que un `JEV_BASE_URL` viejo no desvíe la petición.
+        if ($protocolo === 'openrouter') {
+            $apiKey = trim((string) config('services.openrouter.api_key', ''));
+            $baseUrl = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api'), '/');
+        }
+
         $this->config = [
-            'api_key' => $config['api_key'] ?? null,
-            'base_url' => rtrim((string) ($config['base_url'] ?? 'https://thejevai.com'), '/'),
+            'api_key' => $apiKey,
+            'base_url' => $baseUrl,
             'model' => (string) ($config['model'] ?? 'typesafe/jev-1.14'),
-            'protocolo' => (string) ($config['protocolo'] ?? 'auto'),
+            'protocolo' => $protocolo,
             'umbral' => (float) ($config['umbral'] ?? 0.7),
             'timeout' => (int) ($config['timeout'] ?? 25),
             // Intentos máximos ante 429/529. El uso en línea (el bot) lo baja a 1: sin reintentos ni esperas.
@@ -84,7 +100,7 @@ class JevService
         return $this->config['umbral'];
     }
 
-    /** `systemone` o `chat`: cuál se usó de verdad en la última llamada (`auto` se resuelve acá). */
+    /** `systemone`, `decisions`, `openrouter` o `chat`: cuál se usó de verdad en la última llamada (`auto` se resuelve acá). */
     public function protocoloUsado(): ?string
     {
         return $this->protocoloUsado;
@@ -109,7 +125,8 @@ class JevService
     {
         if (! $this->tieneClave()) {
             throw new RuntimeException(
-                'Falta JEV_API_KEY en el .env de MedicAPI (ver .env.example, bloque JEV). Sin clave no hay prueba.'
+                'Falta JEV_API_KEY (o OPENROUTER_API_KEY con JEV_PROTOCOLO=openrouter) en el .env de MedicAPI '
+                . '(ver .env.example, bloque IA). Sin clave no hay prueba.'
             );
         }
 
@@ -123,8 +140,9 @@ class JevService
             return $this->decidirPorDecisiones($protocolo, $estado, $preguntas);
         }
 
-        // `auto`: las rutas de decisión en orden y, si el proveedor no tiene ninguna, el camino de chat.
-        foreach (array_keys(self::RUTAS_DE_DECISION) as $candidato) {
+        // `auto`: las rutas de decisión del mismo proveedor y, si no hay ninguna, el camino de chat. **No**
+        // incluye `openrouter`: es otro host y otra clave, así que se elige explícitamente.
+        foreach (['systemone', 'decisions'] as $candidato) {
             try {
                 return $this->decidirPorDecisiones($candidato, $estado, $preguntas);
             } catch (JevSinRutaDeDecision $e) {
@@ -376,8 +394,8 @@ class JevService
             throw new JevSinRutaDeDecision(
                 $ruta,
                 "El proveedor no tiene la ruta {$ruta} (HTTP {$status}). Prueba JEV_PROTOCOLO=decisions "
-                . "(o systemone), o JEV_PROTOCOLO=chat si el proveedor sólo habla OpenAI. La otra ruta de "
-                . "decisiones de Jev es {$otra}."
+                . "(o systemone), JEV_PROTOCOLO=openrouter si usas OpenRouter, o JEV_PROTOCOLO=chat si el "
+                . "proveedor sólo habla OpenAI. La otra ruta de decisiones de Jev es {$otra}."
             );
         }
 

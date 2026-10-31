@@ -92,11 +92,14 @@ su propia sección. Es el «PLAN DE TRATAMIENTO» del resumen médico. Tests: `C
 `POST /clinica/consulta/{consulta}/examen/{solapa}/escanear` (`ConsultaEscaneoController`, `throttle:20,1`) → un modelo transcribe la hoja
 → `escanear-hoja.js` pone el texto en el campo (**agrega al final, nunca reemplaza**) y dispara `input`. **La lectura no escribe nada**
 (ni la consulta, ni el archivo, ni `sync_changes`): el médico revisa y guarda con el guardado de la solapa —la regla de O-12, «la lectura
-propone, el médico confirma»—. **Proveedor** (`App\Clinica\Escaneo\LectorDeHojas`, elegido por `OCR_PROVEEDOR`):
-**`gemini`** por defecto (`LectorDeHojasConGemini`, HTTP a `generateContent` con la misma `GEMINI_API_KEY` del chatbot; modelo
-`GEMINI_MODELO_OCR`, o el de `GEMINI_MODEL`) y **`anthropic`** como alternativa (`LectorDeHojasConClaude`, SDK `anthropic-ai/sdk`,
-`ANTHROPIC_API_KEY`, `ANTHROPIC_MODELO_OCR` = `claude-opus-5-5`, `fallbacks: "default"`). Las instrucciones, el esquema
-(`es_resultado` + `texto`) y la lectura de la respuesta son **los mismos para los dos** (`Transcripcion`). El tipo sale del contenido
+propone, el médico confirma»—. **Proveedor** (`App\Clinica\Escaneo\LectorDeHojas`, elegido por `OCR_PROVEEDOR` o,
+si está en blanco, por `IA_PROVEEDOR`): **`gemini`** por defecto (`LectorDeHojasConGemini`, HTTP a
+`generateContent` con la misma `GEMINI_API_KEY` del chatbot; modelo `GEMINI_MODELO_OCR`, o el de `GEMINI_MODEL`),
+**`openrouter`** (`LectorDeHojasConOpenRouter`: la misma `OPENROUTER_API_KEY` del chatbot y Jev, `OPENROUTER_MODELO_OCR`
+y `response_format: json_schema`; la foto va como `image_url` y el PDF como parte `file`) y **`anthropic`** como
+alternativa (`LectorDeHojasConClaude`, SDK `anthropic-ai/sdk`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODELO_OCR` =
+`claude-opus-5-5`, `fallbacks: "default"`). Las instrucciones, el esquema (`es_resultado` + `texto`) y la lectura de
+la respuesta son **los mismos para los tres** (`Transcripcion`). El tipo sale del contenido
 (`HojaEscaneada::tipo()`: JPG/PNG/WEBP/GIF/PDF, 10 MB; HEIC no) y la foto grande viaja reducida a 2400 px y enderezada por su EXIF
 (`HojaEscaneada::paraLeer()`, GD). Qué solapas: `'escanear' => true` en `TextosDelExamen`. **Sin la clave del proveedor elegido el botón
 no aparece.** ⚠️ La clave de Gemini tiene que ser de un **proyecto con facturación**: en el nivel gratuito Google puede usar lo enviado, y
@@ -730,12 +733,22 @@ días con lugar** (comprobados con `primerLugarDisponible`, los mismos que acept
 cupos**; el texto lo arma `App\Support\DisponibilidadEnTexto` y la elección por número/día la interpreta
 `PacienteAtencionContextService::interpretarDiaElegido`. Tests: `ChatbotDisponibilidadTest`.
 
+**El proveedor de IA es configurable (2026-10-31).** `IA_PROVEEDOR=openrouter` manda el chatbot
+(`CHATBOT_PROVEEDOR`), el OCR (`OCR_PROVEEDOR`) y Jev (`JEV_PROTOCOLO=openrouter`) por OpenRouter con **una sola
+`OPENROUTER_API_KEY`**; el default sigue siendo Gemini. El chatbot usa `App\Services\IA\OpenRouterService`
+(`chat/completions`, tools y el bucle de resultados) y comparte con Gemini `GeminiService::herramientasDeLaConversacion()`
+y `ejecutarHerramienta()`. Prueba de conectividad, sin crear citas: `php artisan ia:probar`. Jev usa
+`POST https://openrouter.ai/api/alpha/decisions` con `typesafe/jev-1.14`; sin `JEV_API_KEY`, con
+`JEV_PROTOCOLO=openrouter` toma la clave de OpenRouter. Tests: `OpenRouterServiceTest`, `ChatbotOpenRouterTest`,
+`LectorDeHojasConOpenRouterTest`, `ProbarIACommandTest` y el de OpenRouter en `TriajeJevTest`.
+
 **El triaje con Jev AI (2026-10-18).** `php artisan jev:triaje` mide si Jev acierta la **intención** y la
 **urgencia** de un mensaje de WhatsApp antes de decidir si se integra (ROADMAP §10.3). Cliente:
-`App\Services\JevService` (contrato `POST /v1/systemone`: `state` + `questions` de tipo `choice`/`score`/`noul`).
+`App\Services\JevService` (contrato `POST /v1/systemone`: `state` + `questions` de tipo `choice`/`score`/`noul`;
+también `decisions` y, con `IA_PROVEEDOR=openrouter`, `POST https://openrouter.ai/api/alpha/decisions`).
 Corpus **sintético** de 28 mensajes en `database/datos/triaje-whatsapp.json`; la clave va en el `.env` como
-**`JEV_API_KEY`** (nunca en el código) y hay `JEV_BASE_URL`/`JEV_MODEL` para el Jev oficial o DigitalOcean.
-Tests: `TriajeJevTest` (6, con `Http::fake()`). Detalle: `../Docs/tecnico/jev-triaje.md`. **Casos de uso
+**`JEV_API_KEY`** (nunca en el código) y hay `JEV_BASE_URL`/`JEV_MODEL` para el Jev oficial, DigitalOcean u OpenRouter.
+Tests: `TriajeJevTest` (11, con `Http::fake()`). Detalle: `../Docs/tecnico/jev-triaje.md`. **Casos de uso
 con ejemplos verificados** (choice, score y noul, con request/respuesta y costos): `../Docs/tecnico/jev-casos-de-uso.md`.
 
 ## Qué es

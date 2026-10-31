@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Clinica\Escaneo\LectorDeHojas;
 use App\Clinica\Escaneo\LectorDeHojasConClaude;
 use App\Clinica\Escaneo\LectorDeHojasConGemini;
+use App\Clinica\Escaneo\LectorDeHojasConOpenRouter;
 use App\Http\View\Composers\ArmazonClinicaComposer;
 use App\Http\View\Composers\TourDeLaPantallaComposer;
 use App\Models\User;
@@ -28,11 +29,13 @@ class AppServiceProvider extends ServiceProvider
         // el middleware `AplicarRegionalizacion` la reemplaza por la del dispositivo.
         $this->app->scoped(\App\Support\Regionalizacion::class, fn () => \App\Support\Regionalizacion::porDefecto());
 
-        // La lectura de hojas escaneadas (WEB-13.15): Gemini por defecto, Claude con `OCR_PROVEEDOR=anthropic`. Los tests
-        // la reemplazan con `instance()`.
-        $this->app->bind(LectorDeHojas::class, fn () => config('services.ocr.proveedor') === 'anthropic'
-            ? new LectorDeHojasConClaude()
-            : new LectorDeHojasConGemini());
+        // La lectura de hojas escaneadas (WEB-13.15): Gemini por defecto, Claude con `OCR_PROVEEDOR=anthropic` y
+        // OpenRouter con `OCR_PROVEEDOR=openrouter` (o `IA_PROVEEDOR=openrouter`). Los tests la reemplazan con `instance()`.
+        $this->app->bind(LectorDeHojas::class, fn () => match (strtolower((string) config('services.ocr.proveedor'))) {
+            'anthropic' => new LectorDeHojasConClaude(),
+            'openrouter' => new LectorDeHojasConOpenRouter(),
+            default => new LectorDeHojasConGemini(),
+        });
     }
 
     /**
