@@ -2,6 +2,8 @@
 
 namespace App\Reservas;
 
+use App\Clinica\CitaOnline\ConfiguracionDeCitaOnline;
+use App\Models\Evolucion;
 use App\Models\Medico;
 use App\Models\Specialty;
 use Illuminate\Support\Collection;
@@ -12,6 +14,11 @@ use Illuminate\Support\Collection;
  * Es una decisión de producto, no un detalle: un médico sin consultorio activo o sin bloques cargados no
  * se muestra, porque el paciente no tendría nada que elegir. La fuente de "tiene agenda" es
  * `DisponibilidadPublica`, que a su vez usa la regla de la agenda real; acá solo se filtra y se ordena.
+ *
+ * Desde el 2026-10-30 la **publicación es una decisión del médico** (`evolucion.publicar_agenda`): con
+ * `false` no aparece aunque tenga horarios. `null` —las filas que ya existían y las que sube el
+ * escritorio— cuenta como publicado, así que el portal no se vacía de golpe. La regla del valor por
+ * defecto vive en `ConfiguracionDeCitaOnline`.
  */
 final class CatalogoDeMedicos
 {
@@ -30,7 +37,10 @@ final class CatalogoDeMedicos
         $consulta = Medico::query()
             ->where('is_active', true)
             ->whereHas('specialties', fn ($q) => $q->where('activo', true))
-            ->with(['specialties' => fn ($q) => $q->where('activo', true)->orderBy('name')]);
+            ->with([
+                'registro',
+                'specialties' => fn ($q) => $q->where('activo', true)->orderBy('name'),
+            ]);
 
         if ($especialidad !== null && $especialidad !== '') {
             $consulta->whereHas('specialties', fn ($q) => $q->where('slug', $especialidad));
@@ -44,12 +54,50 @@ final class CatalogoDeMedicos
             });
         }
 
-        return $consulta
+        $medicos = $consulta
             ->orderBy('lastname')
             ->orderBy('name')
-            ->get()
-            ->filter(fn (Medico $medico) => $this->disponibilidad->tieneAgenda($medico))
+            ->get();
+
+        $configuraciones = $this->configuracionesDe($medicos);
+
+        return $medicos
+            ->filter(fn (Medico $medico) => $this->disponibilidad->tieneAgenda($medico)
+                && $configuraciones[(int) $medico->id]->publicaAgenda())
             ->values();
+    }
+
+    /**
+     * La configuración de la cita online de cada médico de la lista, en **una sola consulta** a `evolucion`
+     * (el catálogo puede tener cientos de médicos). La fila se busca por el registro con el que se guarda
+     * la configuración del médico (`registroDelFormato()`), que es el mismo que usa la pantalla de
+     * Configuración.
+     *
+     * @param  Collection<int,Medico>  $medicos
+     * @return array<int,ConfiguracionDeCitaOnline>
+     */
+    private function configuracionesDe(Collection $medicos): array
+    {
+        $registros = $medicos
+            ->map(fn (Medico $medico) => $medico->registroDelFormato())
+            ->filter()
+            ->unique()
+            ->values();
+
+        $filas = $registros->isEmpty()
+            ? collect()
+            : Evolucion::whereIn('reg_medico', $registros->all())->get()->keyBy('reg_medico');
+
+        $configuraciones = [];
+
+        foreach ($medicos as $medico) {
+            $registro = $medico->registroDelFormato();
+            $configuraciones[(int) $medico->id] = ConfiguracionDeCitaOnline::de(
+                $registro === null ? null : $filas->get($registro),
+            );
+        }
+
+        return $configuraciones;
     }
 
     /**

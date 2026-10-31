@@ -282,7 +282,8 @@ final class ArmazonVista
 
         // «Configuración» (WEB-8.2) es un grupo para lo que se ajusta del propio consultorio: el formato de impresión (membrete,
         // logo, firma y sello), los mensajes a pacientes (WEB-8.4: el recordatorio de cita y el saludo de cumpleaños), los usuarios
-        // (WEB-8.5: su secretaria) y la bitácora de cambios (WEB-8.5).
+        // (WEB-8.5: su secretaria) y la bitácora de cambios (WEB-8.5). Desde el 2026-10-30 también la **cita online** (el porcentaje
+        // que se cobra al reservar y si la agenda se publica).
         //
         // **No es un grupo sólo del médico** (revisión de Alexander, A-10): la duración de la cita y los bloques de horario viven
         // en «Sedes y consultorios» (`clinica.sedes`, antes `clinica.consultorios`) y los días no laborables en `clinica.agenda.no-laborables`, y las dos rutas aceptan a la
@@ -310,6 +311,7 @@ final class ArmazonVista
             if ($this->trabajaLaConsulta) {
                 foreach ([
                     ['clinica.plan', 'Mi plan', 'bi-credit-card'],
+                    ['clinica.configuracion.cita-online', 'Cita Online', 'bi-globe2'],
                     ['clinica.formato', 'Formato de impresión', 'bi-printer'],
                     ['clinica.mensajes', 'Mensajes a pacientes', 'bi-chat-text'],
                     ['clinica.equipo', 'Equipo', 'bi-person-plus'],
