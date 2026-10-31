@@ -82,7 +82,10 @@
                 <p class="fs-4 fw-bold mb-1">{{ $vm->monto() }}</p>
                 <p>Equivalente en dólares: {{ $vm->montoUsd() }}</p>
                 @if ($vm->tasa())
-                    <p>Tasa aplicada: {{ $vm->tasa() }}</p>
+                    <p>{{ $vm->montoEsDelDia() ? 'Tasa del día' : 'Tasa aplicada' }}: {{ $vm->tasa() }}</p>
+                @endif
+                @if ($vm->montoEsDelDia())
+                    <p class="small mb-0">El monto en bolívares se confirma al momento de pagar.</p>
                 @endif
             </div>
         </div>

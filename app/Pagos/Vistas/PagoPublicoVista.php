@@ -5,6 +5,7 @@ namespace App\Pagos\Vistas;
 use App\Models\Cola;
 use App\Models\Medico;
 use App\Models\Pago;
+use App\Models\TasaDeCambio;
 use App\Pagos\Centavos;
 use App\Pagos\ClienteSyPago;
 use App\Support\HoraLocal;
@@ -73,7 +74,7 @@ final class PagoPublicoVista
 
     public function monto(): string
     {
-        return Centavos::formatear((int) $this->pago->monto_e2, (string) $this->pago->moneda);
+        return Centavos::formatear($this->montoE2DelDia(), (string) $this->pago->moneda);
     }
 
     public function montoUsd(): string
@@ -81,14 +82,41 @@ final class PagoPublicoVista
         return Centavos::formatear((int) $this->pago->monto_usd_e2, 'USD');
     }
 
-    /** La tasa VES/USD congelada en el pago, o `null` si el cobro fue en dólares. */
+    /**
+     * ¿El monto se calcula con la tasa de hoy? Sí mientras el pago de una cita siga pendiente en
+     * bolívares: **el pago de una cita no congela la tasa**, se cobra con la del momento.
+     */
+    public function montoEsDelDia(): bool
+    {
+        // Sólo antes de pedir el OTP: desde `en_proceso` el monto ya viajó a SyPago y es el que se cobra.
+        return $this->pago->estado === Pago::PENDIENTE
+            && strtoupper((string) $this->pago->moneda) === 'VES';
+    }
+
+    /** El monto que se cobraría ahora: el de la tasa vigente si sigue pendiente, el cobrado si ya pasó. */
+    private function montoE2DelDia(): int
+    {
+        if (! $this->montoEsDelDia()) {
+            return (int) $this->pago->monto_e2;
+        }
+
+        $monto = TasaDeCambio::actual()?->convertirUsdAVes((int) $this->pago->monto_usd_e2) ?? 0;
+
+        return $monto > 0 ? $monto : (int) $this->pago->monto_e2;
+    }
+
+    /** La tasa VES/USD que se aplicaría (o se aplicó), o `null` si el cobro fue en dólares. */
     public function tasa(): ?string
     {
-        if ($this->pago->tasa === null || (float) $this->pago->tasa <= 0) {
+        $tasa = $this->montoEsDelDia()
+            ? (TasaDeCambio::actual()?->tasa ?? $this->pago->tasa)
+            : $this->pago->tasa;
+
+        if ($tasa === null || (float) $tasa <= 0) {
             return null;
         }
 
-        return number_format((float) $this->pago->tasa, 2, ',', '.') . ' VES por USD';
+        return number_format((float) $tasa, 2, ',', '.') . ' VES por USD';
     }
 
     public function referencia(): string

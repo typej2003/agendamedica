@@ -4,6 +4,7 @@ namespace App\Pagos;
 
 use App\Actions\Agenda\CobrarCita;
 use App\Actions\Pagos\ConfirmarPagoDePlan;
+use App\Clinica\FechaDelConsultorio;
 use App\Mail\PagoDePlanAprobado;
 use App\Models\Cola;
 use App\Models\ConfiguracionPago;
@@ -16,6 +17,7 @@ use App\Models\ReglaDeComision;
 use App\Models\TasaDeCambio;
 use App\Models\User;
 use App\Services\CupoDelPlan;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -262,7 +264,10 @@ final class Cobros
             $tokenPublico = (string) Str::uuid();
         } while (Pago::where('token_publico', $tokenPublico)->exists());
 
-        $minutos = max(1, (int) $configuracion->vigencia_tasa_minutos);
+        // La vigencia es la del **link**, no la de la tasa: un pago de cita se cobra con la tasa del
+        // momento (`actualizarTasaDeLaCita()`), así que el link vive hasta el final del día de la cita y no
+        // los 15 minutos que dura una tasa congelada.
+        $expiraEl = $this->vigenciaDelLink($cita);
         $fechaCita = $cita->fecha?->format('d/m/Y');
 
         return Pago::create([
@@ -289,7 +294,7 @@ final class Cobros
             'comision_total_ves_e2' => $comisionTotalVesE2,
             'neto_ves_e2' => $netoVesE2,
             'estado' => Pago::PENDIENTE,
-            'expira_el' => now()->addMinutes($minutos),
+            'expira_el' => $expiraEl,
             'estado_liquidacion' => $estadoLiquidacion,
             'creado_por' => $usuarioId,
         ]);
@@ -311,6 +316,8 @@ final class Cobros
 
             return ResultadoDeCobro::error('El pago venció. Empieza uno nuevo para tomar la tasa actual.', $pago);
         }
+
+        $this->actualizarTasaDeLaCita($pago);
 
         $metodo = $pago->metodoPago;
         if (! $metodo || ! $metodo->activo || ! $metodo->estaConfigurado()) {
@@ -569,6 +576,75 @@ final class Cobros
             'cuenta' => trim((string) ($pagador['cuenta'] ?? '')),
             'telefono' => trim((string) ($pagador['telefono'] ?? '')),
         ], fn ($valor) => $valor !== '');
+    }
+
+    /**
+     * Hasta cuándo vale el link de una cita: **hasta el final del día de la cita**, en la zona del
+     * consultorio. Si la cita ya pasó (el consultorio manda el link tarde), se le da un día desde ahora
+     * para que el paciente alcance a pagar.
+     */
+    private function vigenciaDelLink(Cola $cita): Carbon
+    {
+        $fecha = $cita->fecha?->format('Y-m-d');
+
+        if ($fecha) {
+            // El final del día es en hora del consultorio; a la base va el instante en UTC.
+            $fin = Carbon::parse($fecha . ' 23:59:59', FechaDelConsultorio::zona())->utc();
+
+            if ($fin->isFuture()) {
+                return $fin;
+            }
+        }
+
+        return now()->addDay();
+    }
+
+    /**
+     * **Un pago de cita no congela la tasa**: se cobra con la del momento. Justo antes de pedir el OTP se
+     * recalcula el monto en bolívares con la tasa vigente, para que el débito y el pago guarden la misma
+     * cifra (la comisión en USD no cambia; sólo su equivalente en VES).
+     *
+     * Un pago de **plan** no se toca: ahí la tasa se congela al crear el pago y el médico decide si
+     * reintenta cuando cambió (`RefrescarPagoDePlan`). Sin tasa cargada se sigue con la que tenía el pago.
+     */
+    private function actualizarTasaDeLaCita(Pago $pago): void
+    {
+        if (! $pago->esDeCita() || strtoupper((string) $pago->moneda) !== 'VES') {
+            return;
+        }
+
+        $tasa = TasaDeCambio::actual();
+        if (! $tasa) {
+            return;
+        }
+
+        $montoE2 = $tasa->convertirUsdAVes((int) $pago->monto_usd_e2);
+        if ($montoE2 <= 0) {
+            return;
+        }
+
+        $tasaAnterior = (string) $pago->tasa;
+        $montoAnterior = (int) $pago->monto_e2;
+
+        if ($tasaAnterior === (string) $tasa->tasa && $montoAnterior === $montoE2) {
+            return;
+        }
+
+        $comisionVesE2 = $tasa->convertirUsdAVes((int) $pago->comision_total_usd_e2);
+
+        $pago->update([
+            'monto_e2' => $montoE2,
+            'tasa' => $tasa->tasa,
+            'comision_total_ves_e2' => $comisionVesE2,
+            'neto_ves_e2' => $montoE2 - $comisionVesE2,
+        ]);
+
+        $pago->registrarEvento(PagoEvento::ORIGEN_SISTEMA, 'tasa_actualizada', [
+            'tasa_anterior' => $tasaAnterior,
+            'tasa_nueva' => (string) $tasa->tasa,
+            'monto_anterior_e2' => $montoAnterior,
+            'monto_nuevo_e2' => $montoE2,
+        ]);
     }
 
     /** @param array<string,mixed> $respuesta */

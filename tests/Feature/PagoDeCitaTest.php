@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\FechaDelConsultorio;
 use App\Models\Cola;
 use App\Models\ConfiguracionPago;
 use App\Models\CuentaBancaria;
@@ -404,6 +405,81 @@ class PagoDeCitaTest extends TestCase
         $this->assertSame(50.0, (float) $cita->monto);
         $this->assertSame(100.0, (float) $cita->monto_pagado);
         $this->assertSame(0.0, $cita->montoPendiente());
+    }
+
+    public function test_el_link_vale_hasta_el_final_del_dia_de_la_cita(): void
+    {
+        $medico = $this->medicoDePrueba();
+        $metodo = $this->metodoDeLaPlataforma();
+
+        $fecha = now()->addDays(5)->format('Y-m-d');
+        $cita = $this->citaDePrueba($medico, ['fecha' => $fecha]);
+
+        $pago = app(Cobros::class)->crearParaCita($cita, $metodo, 5000);
+
+        // El final del día es el del consultorio, no el de UTC.
+        $expira = $pago->expira_el->timezone(FechaDelConsultorio::zona());
+
+        $this->assertSame($fecha, $expira->format('Y-m-d'));
+        $this->assertSame('23:59:59', $expira->format('H:i:s'));
+        $this->assertTrue($pago->expira_el->isFuture());
+        // Ya no son los 15 minutos de la tasa congelada.
+        $this->assertTrue($pago->expira_el->greaterThan(now()->addDays(4)));
+    }
+
+    public function test_un_link_de_una_cita_que_ya_paso_da_un_dia_para_pagar(): void
+    {
+        $medico = $this->medicoDePrueba();
+        $metodo = $this->metodoDeLaPlataforma();
+
+        $cita = $this->citaDePrueba($medico, ['fecha' => now()->subDays(3)->format('Y-m-d')]);
+
+        $pago = app(Cobros::class)->crearParaCita($cita, $metodo, 5000);
+
+        $this->assertTrue($pago->expira_el->isFuture());
+        $this->assertTrue($pago->expira_el->greaterThan(now()->addHours(23)));
+        $this->assertTrue($pago->expira_el->lessThan(now()->addHours(25)));
+    }
+
+    public function test_al_iniciar_el_pago_se_cobra_con_la_tasa_del_dia(): void
+    {
+        TasaDeCambio::fijar('36,5');
+        $enviado = [];
+
+        Http::fake(function (ClientRequest $request) use (&$enviado) {
+            if (str_contains($request->url(), 'request/otp')) {
+                $enviado = $request->data();
+
+                return Http::response(['transaction_id' => 'tx-tasa'], 200);
+            }
+
+            return Http::response(['transaction_id' => 'tx-tasa'], 200);
+        });
+
+        $this->reglaGlobal(ReglaDeComision::TIPO_METODO, 1_000); // 10 %
+
+        $medico = $this->medicoDePrueba();
+        $metodo = $this->metodoDeLaPlataforma();
+        $cita = $this->citaDePrueba($medico);
+
+        $pago = app(Cobros::class)->crearParaCita($cita, $metodo, 10_000); // 100,00 USD
+        $this->assertSame(365000, (int) $pago->monto_e2); // a 36,5
+
+        // La tasa se mueve y el paciente paga recién ahí: se cobra con la del momento.
+        TasaDeCambio::fijar('40');
+
+        $inicio = app(Cobros::class)->iniciar($pago, $this->pagador());
+        $this->assertTrue($inicio->ok, $inicio->mensaje);
+
+        $pago->refresh();
+        $this->assertSame(400000, (int) $pago->monto_e2);
+        $this->assertSame('40.000000', (string) $pago->tasa);
+        // La comisión en USD no se mueve; su equivalente en VES sí.
+        $this->assertSame(1_000, (int) $pago->comision_total_usd_e2);
+        $this->assertSame(40000, (int) $pago->comision_total_ves_e2);
+        $this->assertSame(360000, (int) $pago->neto_ves_e2);
+        // El débito que se pide a SyPago lleva el monto nuevo (4.000,00 VES).
+        $this->assertSame(4000.0, (float) $enviado['amount']['amt']);
     }
 
     public function test_rechaza_un_canal_que_no_es_de_cita(): void

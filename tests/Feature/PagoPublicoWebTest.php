@@ -13,6 +13,7 @@ use App\Models\Paciente;
 use App\Models\Pago;
 use App\Models\TasaDeCambio;
 use App\Models\User;
+use App\Pagos\Centavos;
 use App\Pagos\Cobros;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Client\Request as ClientRequest;
@@ -376,6 +377,25 @@ class PagoPublicoWebTest extends TestCase
 
         $this->assertSame(Pago::PENDIENTE, $pago->fresh()->estado);
         Http::assertNothingSent();
+    }
+
+    public function test_la_pantalla_muestra_el_monto_a_la_tasa_del_dia(): void
+    {
+        Http::fake();
+
+        $medico = $this->medicoDePrueba();
+        $cita = $this->citaDePrueba($medico);
+        $pago = $this->pagoDePrueba($medico, $cita); // 50,00 USD a la tasa del setUp (36,5)
+
+        // La tasa se mueve después de crear el link: el paciente tiene que ver la de hoy, no la vieja.
+        TasaDeCambio::fijar('50');
+
+        $this->get(route('pagar.mostrar', $pago->token_publico))
+            ->assertOk()
+            ->assertSee('Tasa del día')
+            ->assertSee(Centavos::formatear(250000, 'VES'))   // 50,00 USD × 50
+            ->assertSee('se confirma al momento de pagar')
+            ->assertDontSee(Centavos::formatear(182500, 'VES')); // la vieja, a 36,5
     }
 
     public function test_una_cita_cobrada_en_el_mostrador_no_se_vuelve_a_cobrar_por_el_link(): void
