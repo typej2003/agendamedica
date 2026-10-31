@@ -21,7 +21,9 @@ use Tests\TestCase;
  * `DatabaseTransactions`, no `RefreshDatabase`: ver SyncCredencialTest.
  *
  * Lo que fijan estos tests:
- *  - solo se carga sobre un médico sin datos (primera carga), y una sola vez;
+ *  - un médico sin datos carga en modo `limpio`, y una sola vez;
+ *  - un médico **con datos** ya no se rechaza: la carga pasa a modo `mezcla` (ver
+ *    CargaInicialSobreDatosTest, que es donde se prueba el traslado de los números);
  *  - una carga cortada se retoma, y reenviar un lote NO duplica filas;
  *  - solo entran las tablas de la lista blanca, y lo que no se guarda se informa;
  *  - pacientes queda como lo ve el app (paciente + relación con el médico + historia), sin perder
@@ -99,14 +101,19 @@ class CargaInicialTest extends TestCase
         $this->assertSame('users,pbcatcol', $r->json('ignoradas'));
     }
 
-    public function test_rechaza_la_carga_si_el_medico_ya_tiene_datos(): void
+    /**
+     * Antes se rechazaba con `medico_con_datos` (regla del 2026-09-27). Desde el 2026-10-31 el
+     * escritorio es la fuente absoluta y la carga **entra igual**, en modo mezcla: lo que ocupaba un
+     * número se mueve al final (CargaInicialSobreDatosTest).
+     */
+    public function test_un_medico_con_datos_ya_no_rechaza_la_carga_sino_que_la_hace_en_modo_mezcla(): void
     {
         $this->crearMedico('carga-t-002');
         DB::table('cola')->insert(['reg_medico' => 'carga-t-002', 'fecha' => '2026-01-01', 'hora_ini' => '08:00:00']);
 
         $this->iniciar('carga-t-002', ['cola' => 1])
-            ->assertStatus(409)
-            ->assertJson(['error' => 'medico_con_datos']);
+            ->assertOk()
+            ->assertJson(['ok' => true, 'modo' => 'mezcla', 'limpiadas' => '']);
     }
 
     public function test_dc_venoso_acepta_numeros_y_letras_del_legado(): void
@@ -405,8 +412,9 @@ class CargaInicialTest extends TestCase
 
     /**
      * La contracara: si el médico ya tiene algo que **no** es una copia del catálogo del panel —aquí, una
-     * historia—, no se borra nada y la carga sigue rechazándose. La regla es «sólo se pisa lo que el panel
-     * copió», no «se limpia lo que moleste».
+     * historia—, no se borra nada de entrada y la carga pasa a modo mezcla. La regla es «sólo se pisa lo
+     * que el panel copió por adelantado», no «se limpia lo que moleste»: lo que sobre se resuelve con el
+     * traslado (y su copia en `sync_traslados`), no borrándolo antes de tiempo.
      */
     public function test_no_quita_las_copias_del_catalogo_si_el_medico_ya_tiene_historias(): void
     {
@@ -416,11 +424,11 @@ class CargaInicialTest extends TestCase
         DB::table('historias')->insert(['reg_medico' => 'carga-t-031', 'numhistoria' => '9001']);
 
         $this->iniciar('carga-t-031', ['pacientes' => 0])
-            ->assertStatus(409)
-            ->assertJson(['error' => 'medico_con_datos']);
+            ->assertOk()
+            ->assertJson(['ok' => true, 'modo' => 'mezcla', 'limpiadas' => '']);
 
         $this->assertSame(1, DB::table('diagnosticos')->where('reg_medico', 'carga-t-031')->count(),
-            'la copia del catálogo sigue ahí: no se borra nada cuando hay datos clínicos');
+            'la copia del catálogo sigue ahí: no se borra nada de entrada cuando hay datos clínicos');
         $this->assertSame(1, DB::table('historias')->where('reg_medico', 'carga-t-031')->count());
     }
 

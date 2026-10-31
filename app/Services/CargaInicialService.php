@@ -10,37 +10,48 @@ use App\Models\Paciente;
 use App\Models\Specialty;
 use App\Models\SyncCarga;
 use App\Models\SyncCargaTabla;
+use App\Models\SyncTraslado;
 use App\Sync\Escritorio\AtencionCita;
 use App\Sync\Escritorio\EstadoCita;
 use App\Sync\Escritorio\PacientesLegado;
 use App\Sync\Escritorio\TablasDelSync;
 use App\Sync\Escritorio\TablasLegado;
+use App\Sync\Escritorio\Traslados;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use RuntimeException;
+use Throwable;
 
 /**
  * Carga inicial completa del escritorio PowerBuilder al API (Fase 1 del sync del legado).
  *
- * Reglas (decididas con el usuario, 2026-09-27):
- *  - Solo se hace si el `reg_medico` está LIMPIO en el API: es la primera carga. Si ya hay datos,
- *    se rechaza; para reintentar desde cero se usa otro `reg_medico`.
+ * Reglas (decididas con el usuario, 2026-09-27 y 2026-10-31):
+ *  - **El escritorio es la fuente absoluta.** El número de historia del escritorio se conserva siempre
+ *    (ya está impreso) y la consulta del escritorio entra con su par `(historia, nroconsulta)`.
+ *  - Sobre un consultorio **limpio** la carga es la de siempre: un volcado en bloque, rápido.
+ *  - Sobre un consultorio **con datos** (modo mezcla) el API ya no rechaza: aparta el registro que ocupaba
+ *    ese número, junto con lo que cuelga de él, y al cerrar le da el número libre siguiente. Lo que se
+ *    movió queda en `sync_traslados` con su copia. Ver `App\Sync\Escritorio\Traslados`.
  *  - Una carga que se cortó a mitad de camino se RETOMA: el API guarda cuántas filas recibió de
  *    cada tabla y solo acepta el lote que sigue. Reenviar un lote ya recibido no duplica nada.
  *  - Solo se aceptan las tablas de `config/sync_legado.php`.
  *
- * Por qué el reanudar es por POSICIÓN y no por clave primaria: la carga es sobre un médico limpio,
- * así que no hay nada con qué chocar; basta con no aplicar dos veces el mismo tramo. El escritorio
- * lee cada tabla ordenada por su clave primaria, así que la posición es estable entre intentos.
+ * Por qué el reanudar es por POSICIÓN y no por clave primaria: en el modo limpio la carga es sobre un
+ * médico limpio, así que no hay nada con qué chocar; basta con no aplicar dos veces el mismo tramo. El
+ * escritorio lee cada tabla ordenada por su clave primaria, así que la posición es estable entre intentos.
+ * En modo mezcla la transacción del lote cubre también el apartado: un lote rechazado no deja nada movido.
  */
 class CargaInicialService
 {
     /** Tablas del API (no del legado) que también indican que el médico ya tiene datos. */
     private const TABLAS_DEL_API_CON_DATOS = ['medico_pacientes', 'historias'];
 
-    public function __construct(private TablasLegado $tablas, private TablasDelSync $sync)
-    {
+    public function __construct(
+        private TablasLegado $tablas,
+        private TablasDelSync $sync,
+        private Traslados $traslados
+    ) {
     }
 
     /* ------------------------------------------------------------------ */
@@ -111,14 +122,20 @@ class CargaInicialService
         }
 
         if (! $carga) {
-            $conDatos = $this->tablasConDatos($regMedico);
-            if ($conDatos !== []) {
-                $limpiadas = $this->quitarCopiasDelCatalogoInicial($regMedico, $conDatos);
+            $conDatos = $this->tablasConDatos($regMedico, $medico);
+            $modo = Traslados::MODO_LIMPIA;
 
-                if ($limpiadas === null) {
-                    return $this->error(409, 'medico_con_datos',
-                        "El médico {$regMedico} ya tiene datos en el API (" . implode(', ', $conDatos) . '). '
-                        . 'La carga inicial solo se hace sobre un médico sin datos: usa otro reg_medico.');
+            if ($conDatos !== []) {
+                // Si lo único que hay son las copias del catálogo inicial del panel, se quitan y la carga
+                // sigue limpia (comportamiento de siempre, medido el 2026-10-22).
+                $limpiadas = $this->quitarCopiasDelCatalogoInicial($regMedico, $conDatos);
+                $restantes = $limpiadas === null ? $conDatos : array_diff($conDatos, array_keys($limpiadas));
+
+                if ($restantes !== []) {
+                    // Hay datos de verdad: la carga no se rechaza, se mezcla (ver Traslados). Si no se
+                    // limpió nada, las copias del catálogo también se resuelven en la carga, con su copia.
+                    $modo = Traslados::MODO_MEZCLA;
+                    $limpiadas = [];
                 }
             }
 
@@ -126,6 +143,7 @@ class CargaInicialService
                 'reg_medico'  => $regMedico,
                 'medico_id'   => $medico->id,
                 'estado'      => SyncCarga::EN_CURSO,
+                'modo'        => $modo,
                 'iniciada_at' => now(),
             ]);
         }
@@ -181,21 +199,28 @@ class CargaInicialService
             // Tablas en las que se quitaron las copias del catálogo inicial del panel para poder arrancar
             // (vacío si no hubo nada que quitar). Queda en el log del escritorio.
             'limpiadas' => implode(',', array_keys($limpiadas)),
+            // Cómo se está aplicando: `limpia` (el consultorio no tenía datos) o `mezcla` (tenía datos y el
+            // escritorio manda: lo que ocupaba un número se mueve al final al cerrar la carga).
+            'modo' => $carga->modo ?: Traslados::MODO_LIMPIA,
+            // Cuántos registros del API ya se apartaron en una carga mezcla que se cortó y se retoma.
+            'traslados_pendientes' => SyncTraslado::where('sync_carga_id', $carga->id)
+                ->where('estado', SyncTraslado::PENDIENTE)->count(),
         ]];
     }
 
     /**
-     * Quita las filas que dejó la copia automática del catálogo inicial del panel, **sólo** si lo que
-     * bloquea la carga es exactamente eso.
+     * Quita las filas que dejó la copia automática del catálogo inicial del panel, **sólo** si lo que hay
+     * en el consultorio es exactamente eso.
      *
      * La copia (`CopiarCatalogoInicial` al asignarle una especialidad) se salta al médico que ya tiene
      * credencial del escritorio, pero la API key se puede emitir **después** del alta: cuando eso pasa,
-     * esas filas hacían que la carga inicial se rechazara para siempre (`medico_con_datos`), y no había
-     * forma de arrancar desde la web. Como el escritorio es la fuente de verdad de los catálogos del
-     * consultorio y los sube en esta misma carga, sus copias se descartan.
+     * esas filas bloqueaban la carga inicial, y no había forma de arrancar desde la web. Como el escritorio
+     * es la fuente de verdad de los catálogos del consultorio y los sube en esta misma carga, sus copias se
+     * descartan y la carga sigue siendo limpia.
      *
      * Devuelve `tabla => filas borradas`, o `null` si hay cualquier otra tabla con datos (consultas,
-     * historias, pacientes…): el médico ya trabajó y no se borra nada.
+     * historias, pacientes…): el médico ya trabajó, no se borra nada y la carga pasa a modo mezcla (ahí
+     * esas copias también se reemplazan, pero con su copia en `sync_traslados`).
      *
      * Las marcas `created` que dejó la copia en `sync_changes` **no** se tocan: apuntan al `id` de una fila
      * que ya no existe y el reemplazo del escritorio sólo protege los `id` vivos, así que quedan huérfanas
@@ -324,17 +349,18 @@ class CargaInicialService
 
         $ignoradas = [];
         $omitidas = 0;
+        $enMezcla = $carga->modo === Traslados::MODO_MEZCLA;
 
         // Las tablas de las que salen los **pacientes** de este médico: `pacientes` siempre y, si su
         // especialidad declara otra (pediatría: `paciente_chamo`), también esa. Ver
         // `TablasDelSync::pacientesDe()`.
         $pacientes = $this->sync->pacientesDe($this->medicoDe($carga->reg_medico));
 
-        DB::transaction(function () use ($carga, $tabla, $filas, $pacientes, &$ignoradas, &$omitidas) {
+        DB::transaction(function () use ($carga, $tabla, $filas, $pacientes, $enMezcla, $desde, &$ignoradas, &$omitidas) {
             if (array_key_exists($tabla, $pacientes)) {
                 // El camino de pacientes: crea el paciente, su relación con el médico y su historia. Es lo
                 // que después leen la web y el app.
-                $omitidas = $this->guardarPacientes($carga, $tabla, $filas, $ignoradas, $pacientes[$tabla]);
+                $omitidas = $this->guardarPacientes($carga, $tabla, $filas, $ignoradas, $pacientes[$tabla], $enMezcla);
 
                 // Cuando la tabla de pacientes es propia de la especialidad, además se guarda tal cual: sus
                 // columnas que no existen en `pacientes` (alergia, notas, foto, representante, familia…)
@@ -351,6 +377,16 @@ class CargaInicialService
                     $this->guardarEvolucion($carga, $filas, $ignoradas);
                     break;
                 default:
+                    // En modo mezcla el escritorio manda: antes de insertar se aparta lo que ocupe el
+                    // número de una consulta (sin red de índice único: la detección es explícita) o se
+                    // reemplaza la tabla si es un catálogo.
+                    if ($enMezcla) {
+                        if ($tabla === 'consultas') {
+                            $this->traslados->prepararConsultas($carga, $filas);
+                        } else {
+                            $this->traslados->reemplazarCatalogo($carga, $tabla, $desde);
+                        }
+                    }
                     $this->insertarGenerico($carga, $tabla, $filas, $ignoradas);
             }
         });
@@ -385,6 +421,29 @@ class CargaInicialService
             ]];
         }
 
+        // Modo mezcla: recién ahora que entró TODO el escritorio se puede dar el número definitivo a lo que
+        // se apartó. Va antes de marcar la carga como completa: si falla, la carga queda en curso y se
+        // reintenta `finalizar` (o `sync:traslados --reacomodar`), nunca a medias.
+        if ($this->traslados->hayPendientes($carga)) {
+            try {
+                $this->traslados->reacomodar($carga);
+            } catch (Throwable $e) {
+                Log::error('Carga inicial: no se pudieron reacomodar los registros apartados', [
+                    'reg_medico' => $carga->reg_medico,
+                    'carga'      => $carga->id,
+                    'error'      => $e->getMessage(),
+                ]);
+
+                return ['http' => 500, 'cuerpo' => [
+                    'ok'      => false,
+                    'error'   => 'traslados_pendientes',
+                    'mensaje' => 'La carga entró, pero no se pudieron reacomodar los registros que movió: '
+                        . mb_substr($e->getMessage(), 0, 300)
+                        . ' Vuelve a finalizar o corre sync:traslados --reacomodar.',
+                ]];
+            }
+        }
+
         if ($carga->estado !== SyncCarga::COMPLETA) {
             $carga->estado = SyncCarga::COMPLETA;
             $carga->finalizada_at = now();
@@ -396,6 +455,7 @@ class CargaInicialService
         }
 
         $conIgnoradas = $tablas->filter(fn ($t) => $t->columnas_ignoradas);
+        $traslados = SyncTraslado::where('sync_carga_id', $carga->id);
 
         return ['http' => 200, 'cuerpo' => [
             'ok'                 => true,
@@ -404,6 +464,11 @@ class CargaInicialService
             'filas'              => (int) $tablas->sum('filas_recibidas'),
             'filas_omitidas'     => (int) $tablas->sum('filas_omitidas'),
             'columnas_ignoradas' => $conIgnoradas->map(fn ($t) => $t->tabla . ':' . $t->columnas_ignoradas)->implode(' | '),
+            // Qué se movió para que el escritorio mandara (modo mezcla). `a_revisar` son los catálogos
+            // reemplazados: tienen su copia en `sync_traslados` y los mira el administrador.
+            'traslados'           => (clone $traslados)->count(),
+            'traslados_pendientes' => (clone $traslados)->where('estado', SyncTraslado::PENDIENTE)->count(),
+            'traslados_a_revisar'  => (clone $traslados)->where('estado', SyncTraslado::A_REVISAR)->count(),
         ]];
     }
 
@@ -502,10 +567,21 @@ class CargaInicialService
      * `$tabla` es de dónde vienen (para el mensaje de error) y `$mapa` el mapeo de columnas del manifiesto
      * (`sync.pacientes.columnas`), vacío cuando la tabla es `pacientes`.
      *
+     * En modo mezcla, antes de escribir cada paciente se le deja libre el número de historia: si lo ocupa
+     * otra historia se aparta, y si el mismo paciente ya existe con otro número, esa historia adopta el del
+     * escritorio y se lleva sus consultas (ver `Traslados::prepararPaciente`). El número que se escribe es
+     * **siempre** el del escritorio.
+     *
      * @return int filas omitidas
      */
-    private function guardarPacientes(SyncCarga $carga, string $tabla, array $filas, array &$ignoradas, array $mapa = []): int
-    {
+    private function guardarPacientes(
+        SyncCarga $carga,
+        string $tabla,
+        array $filas,
+        array &$ignoradas,
+        array $mapa = [],
+        bool $enMezcla = false
+    ): int {
         $pacientes = new PacientesLegado($this->tablas);
         $omitidas = 0;
 
@@ -513,7 +589,7 @@ class CargaInicialService
         // corrector del buscador pagaría el vocabulario entero en cada una. La carga no es un guardado
         // suelto: al terminar, `CargaInicialCompletada` manda a reconstruir el índice en segundo plano
         // (`ReconstruirIndiceDePacientes`).
-        Paciente::withoutEvents(function () use ($filas, $carga, $mapa, $pacientes, &$omitidas, &$ignoradas): void {
+        Paciente::withoutEvents(function () use ($filas, $carga, $mapa, $pacientes, $enMezcla, &$omitidas, &$ignoradas): void {
             foreach ($filas as $fila) {
                 if (! is_array($fila)) {
                     $omitidas++;
@@ -525,7 +601,12 @@ class CargaInicialService
                     $omitidas++;
                     continue;
                 }
-                $pacientes->guardar($carga, $fila, $fila['numhistoria'], TablasLegado::claveHistoria($fila['numhistoria']), $ignoradas);
+
+                $numHistoria = $enMezcla
+                    ? $this->traslados->prepararPaciente($carga, $fila, $fila['numhistoria'])
+                    : $fila['numhistoria'];
+
+                $pacientes->guardar($carga, $fila, $numHistoria, TablasLegado::claveHistoria($fila['numhistoria']), $ignoradas);
             }
         });
 
