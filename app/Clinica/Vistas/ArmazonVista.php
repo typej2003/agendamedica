@@ -128,8 +128,9 @@ final class ArmazonVista
     }
 
     /**
-     * Los accesos que viven en el **menú de la cuenta**: sedes y consultorios, y cambiar de consultorio. El panel
-     * de administración se queda en la barra (sólo lo ve el administrador).
+     * Los accesos que viven en el **menú de la cuenta**: sedes y consultorios, cambiar de consultorio y —para el
+     * médico— invitaciones, Mis Latidos, Invita y gana y Mi plan. El panel de administración se queda en la barra
+     * (sólo lo ve el administrador).
      *
      * @return array<int,array{texto:string, icono:string, url:string, primario:bool}>
      */
@@ -139,10 +140,10 @@ final class ArmazonVista
     }
 
     /**
-     * Los accesos de la barra superior. Las sedes son el **lugar de la clínica** y el paso previo a crear un
-     * consultorio (WEB-2.8b.1); los consultorios son **del médico del contexto** (WEB-2.8b.2), así que solo
-     * aparecen cuando ya se eligió con quién trabajar. El panel es de administración: a un médico no se le
-     * ofrece una puerta que no le corresponde.
+     * Los accesos de la barra superior y del menú de la cuenta (`accesosDeLaCuenta()`). Las sedes son el **lugar de
+     * la clínica** y el paso previo a crear un consultorio (WEB-2.8b.1); los consultorios son **del médico del
+     * contexto** (WEB-2.8b.2), así que solo aparecen cuando ya se eligió con quién trabajar. El panel es de
+     * administración: a un médico no se le ofrece una puerta que no le corresponde.
      *
      * @return array<int,array{texto:string, icono:string, url:string, primario:bool}>
      */
@@ -159,8 +160,15 @@ final class ArmazonVista
         }
 
         // Las invitaciones a otros equipos son del médico: la secretaría no recibe ni acepta invitaciones.
+        // Y desde el 2026-10-30 **«Mis Latidos», «Invita y gana» y «Mi plan» viven acá**, debajo de
+        // «Invitaciones»: son cosas de la cuenta del médico (su programa de descuentos, sus referidos y su
+        // suscripción), no ajustes del consultorio, y en «Configuración» quedaban mezcladas con el formato de
+        // impresión o los usuarios.
         if ($this->trabajaLaConsulta) {
             $accesos[] = ['texto' => 'Invitaciones', 'icono' => 'bi-envelope-paper', 'url' => route('clinica.invitaciones'), 'primario' => false];
+            $accesos[] = ['texto' => 'Mis Latidos', 'icono' => 'bi-stars', 'url' => route('clinica.latidos'), 'primario' => false];
+            $accesos[] = ['texto' => 'Invita y gana', 'icono' => 'bi-gift', 'url' => route('clinica.referidos'), 'primario' => false];
+            $accesos[] = ['texto' => 'Mi plan', 'icono' => 'bi-credit-card', 'url' => route('clinica.plan'), 'primario' => false];
         }
 
         if ($this->esAdministrador) {
@@ -285,6 +293,9 @@ final class ArmazonVista
         // (WEB-8.5: su secretaria) y la bitácora de cambios (WEB-8.5). Desde el 2026-10-30 también la **cita online** (el porcentaje
         // que se cobra al reservar y si la agenda se publica).
         //
+        // **«Mis Latidos», «Invita y gana» y «Mi plan» ya no están acá** (2026-10-30): son de la cuenta del médico y viven en el
+        // menú de la cuenta, debajo de «Invitaciones» (`accesos()`), no entre los ajustes del consultorio.
+        //
         // **No es un grupo sólo del médico** (revisión de Alexander, A-10): la duración de la cita y los bloques de horario viven
         // en «Sedes y consultorios» (`clinica.sedes`, antes `clinica.consultorios`) y los días no laborables en `clinica.agenda.no-laborables`, y las dos rutas aceptan a la
         // secretaría (es ella la que carga los horarios y marca las ausencias en la vida real). Por eso el grupo se arma con lo
@@ -310,9 +321,6 @@ final class ArmazonVista
 
             if ($this->trabajaLaConsulta) {
                 foreach ([
-                    ['clinica.latidos', 'Mis Latidos', 'bi-stars'],
-                    ['clinica.referidos', 'Invita y gana', 'bi-gift'],
-                    ['clinica.plan', 'Mi plan', 'bi-credit-card'],
                     ['clinica.configuracion.cita-online', 'Cita Online', 'bi-globe2'],
                     ['clinica.formato', 'Formato de impresión', 'bi-printer'],
                     ['clinica.mensajes', 'Mensajes a pacientes', 'bi-chat-text'],

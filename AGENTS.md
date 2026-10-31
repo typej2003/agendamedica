@@ -692,6 +692,8 @@ panel, que seguían esperando «8 de 13». Trampas 114 a 120. **WEB-6.5 queda ce
 
 **Encabezado y menú (2026-10-12):** el `<x-ui.page-head>` lleva **sólo título, subtítulo y botones**; el buscador y los filtros van en `<x-ui.barra-herramientas>` (slot por defecto = buscador, slot `filtros` = segmentados/selects), debajo del encabezado. Los catálogos ya no tienen índice de pestañas: son **submenús del grupo plegable «Catálogos»** de la barra lateral (`ArmazonVista::menu()` devuelve el ítem con `hijos`; `CatalogosDisponibles::submenu()` es la fuente única; `<details class="nav-grupo">` en `clinica/layout`). Ver las trampas 63 y 64.
 
+**Qué va en «Configuración» y qué en el menú de la cuenta (norma del usuario, 2026-10-30):** en «Configuración» (barra lateral) van los apartados que **modifican la forma de hacer tu trabajo de médico** —sedes y horarios, días no laborables, cita online, formato de impresión, mensajes a pacientes, equipo, usuarios y bitácora—; en el **menú de la cuenta** (el botón «Mi cuenta», arriba a la derecha) va lo que tiene que ver con **tu cuenta o perfil** —invitaciones, Mis Latidos, Invita y gana, Mi plan, cambiar contraseña y cerrar sesión—. Se arma en `ArmazonVista::accesos()` (cuenta) y `ArmazonVista::menu()` (lateral); ante la duda, si cambia cómo trabajas es Configuración y si es tuyo como usuario es la cuenta. Está escrito en la guía de UI, §3.
+
 **El inicio del médico tiene su acción primaria en el encabezado (decisión del usuario, 2026-10-19):** `InicioVista::urlNuevaCita()` —**«Nueva cita»**, `/clinica/agenda/nueva` con la **fecha del inicio y la sede del contexto** ya puestas—, **siempre**, con la lista llena o vacía. No crea la cita: abre el formulario de la agenda, así que la jornada, el cupo y el turno siguen pasando por sus reglas. *(Antes era «Agregar paciente», O-34 del 2026-10-18; el alta del que llega sin cita sigue en `/clinica/pacientes/nuevo` y en la ficha con «¿Atender ahora?», O-05.)* La tarjeta del vacío no repite el botón (sólo ofrece la agenda) y el tour del inicio usa `[data-tour=inicio-nueva-cita]`. Tests: `InicioWebTest` y `Unit/Clinica/InicioVistaTest`; verificador `../.agent-tools/verificar-inicio-medico-web.js`.
 
 Variables del entorno que se leen por `config/services.php` y que **la instancia local no tiene** (los
@@ -933,7 +935,7 @@ solo. El paciente **todavía no** paga consultas: el modelo ya lo prevé (`Pago:
 
 | Ruta | Qué hace |
 |---|---|
-| `GET /clinica/plan` (`PlanController@index`) | El servicio del contexto, el catálogo visible y «Mi plan» en el grupo **Configuración** del menú. El listado **no** muestra tasa ni métodos: se eligen en el paso siguiente. |
+| `GET /clinica/plan` (`PlanController@index`) | El servicio del contexto, el catálogo visible y «Mi plan» en el **menú de la cuenta** (debajo de «Invitaciones»). El listado **no** muestra tasa ni métodos: se eligen en el paso siguiente. |
 | `GET /clinica/plan/{plan}` (`@elegir`) | El método de la plataforma y el monto en USD/VES; los datos del pagador se recuerdan del último pago aprobado. |
 | `POST /clinica/plan/comprar` | Crea el `Pago` en `pendiente` con la **tasa congelada** y manda al checkout. |
 | `GET /clinica/plan/pago/{pago}` (`@pagar`) | Resumen y paso actual: datos, OTP, confirmando, aprobado, rechazado o vencido. |
