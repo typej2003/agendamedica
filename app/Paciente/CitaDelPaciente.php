@@ -88,6 +88,24 @@ final class CitaDelPaciente
         return $this->aviso === '';
     }
 
+    /**
+     * ¿«Mis citas» ofrece el botón «Pagar»? Sólo cuando la cita **debe algo** y **no es de un día pasado**
+     * (de hoy en adelante, con el día del consultorio: `FechaDelConsultorio`); la cita de hoy con la hora
+     * ya pasada sigue siendo pagable, porque el cobro es por la cita y no por la hora. La regla del saldo
+     * es la misma que aplica `GenerarLinkDePagoDeCita`: tiene que haber precio y quedar algo por cobrar
+     * después de los abonos. Una cita pagada o sin precio no muestra nada (o el estado que la pantalla ya
+     * pinta).
+     *
+     * Es sólo la puerta de la pantalla: la ruta vuelve a comprobar todo a través de la Action, que además
+     * mira los pagos aprobados de la pasarela.
+     */
+    public function puedePagar(): bool
+    {
+        return (float) ($this->cita->monto ?? 0) > 0
+            && $this->cita->montoPendiente() > 0
+            && ! FechaDelConsultorio::esAnteriorAHoy($this->cita->fecha);
+    }
+
     public function sede(): string
     {
         return $this->centro->name ?? 'Consultorio';
