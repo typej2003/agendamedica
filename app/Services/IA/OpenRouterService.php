@@ -62,18 +62,34 @@ final class OpenRouterService
      *
      * @param  list<array{name:string,description:string,parameters:array|object}>  $herramientas
      * @param  callable(string,array<string,mixed>):ResultadoDeHerramienta  $ejecutar
+     * @param  list<array{role:string,content:string}>  $historial  memoria corta, del turno más viejo al más nuevo
      * @return string|null  el texto final; `null` si no hay clave, la API falla o el modelo no contesta
      */
-    public function responder(string $sistema, string $mensaje, array $herramientas, callable $ejecutar): ?string
-    {
+    public function responder(
+        string $sistema,
+        string $mensaje,
+        array $herramientas,
+        callable $ejecutar,
+        array $historial = []
+    ): ?string {
         if (! $this->disponible()) {
             return null;
         }
 
-        $mensajes = [
-            ['role' => 'system', 'content' => $sistema],
-            ['role' => 'user', 'content' => $mensaje],
-        ];
+        $mensajes = [['role' => 'system', 'content' => $sistema]];
+
+        foreach ($historial as $turno) {
+            $rol = $turno['role'] ?? '';
+            $texto = trim((string) ($turno['content'] ?? ''));
+
+            if (! in_array($rol, ['user', 'assistant'], true) || $texto === '') {
+                continue;
+            }
+
+            $mensajes[] = ['role' => $rol, 'content' => $texto];
+        }
+
+        $mensajes[] = ['role' => 'user', 'content' => $mensaje];
 
         // Un turno de tool + el texto final son dos llamadas; se deja margen para una cadena corta.
         for ($turno = 0; $turno < 4; $turno++) {

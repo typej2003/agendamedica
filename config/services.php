@@ -182,6 +182,9 @@ return [
      */
     'chatbot' => [
         'proveedor' => env('CHATBOT_PROVEEDOR') ?: $proveedorIA,
+        // Tope de mensajes por teléfono (adaptado del rate limit de ChatAI): protege el presupuesto de IA.
+        'limite_mensajes' => (int) env('CHATBOT_LIMITE_MENSAJES', 40),
+        'ventana_mensajes' => (int) env('CHATBOT_VENTANA_MENSAJES', 300),
         'urgencia_aviso_minutos' => (int) env('CHATBOT_URGENCIA_AVISO_MINUTOS', 60),
     ],
 
