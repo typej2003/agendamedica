@@ -125,6 +125,25 @@ final class PagoPublicoVista
         return $this->otroPagoAprobado;
     }
 
+    /**
+     * La cita **ya no debe nada**: se cobró entera en el mostrador (o por otro medio) y este link
+     * cobraría de más. Es distinto de `citaYaPagada()`, que mira los pagos de la pasarela: acá manda
+     * `cola.monto`/`monto_pagado`, que es lo que ve la agenda.
+     *
+     * Sin precio en la cita no se afirma nada: la cita puede estar sin monto y todavía haber algo que
+     * cobrar, así que el link sigue disponible.
+     */
+    public function citaSinSaldo(): bool
+    {
+        if ($this->cita === null) {
+            return false;
+        }
+
+        $precio = (float) ($this->cita->monto ?? 0);
+
+        return $precio > 0 && $this->cita->montoPendiente() <= 0.004;
+    }
+
     /** Faltan los datos del pagador: se muestra el formulario del débito. */
     public function enDatos(): bool
     {
@@ -152,10 +171,16 @@ final class PagoPublicoVista
         return ClienteSyPago::estadoDe((array) ($this->pago->respuesta ?? [])) === ClienteSyPago::EN_PROCESO;
     }
 
-    /** El pago se puede iniciar: sigue pendiente, el link no venció y la cita no se pagó por otro lado. */
+    /**
+     * El pago se puede iniciar: sigue pendiente, el link no venció, la cita no se pagó por otro pago de
+     * la pasarela y la cita todavía debe algo.
+     */
     public function puedePagar(): bool
     {
-        return $this->pago->estaPendiente() && ! $this->vencido() && ! $this->otroPagoAprobado;
+        return $this->pago->estaPendiente()
+            && ! $this->vencido()
+            && ! $this->otroPagoAprobado
+            && ! $this->citaSinSaldo();
     }
 
     /** Se puede confirmar el OTP: hay datos del pagador y el pago sigue vigente. */

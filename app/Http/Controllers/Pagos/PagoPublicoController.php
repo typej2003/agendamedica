@@ -287,7 +287,7 @@ class PagoPublicoController extends Controller
         if ($vm->fallado()) {
             return 'Este pago no se completó. Pídele al consultorio que te envíe un link nuevo.';
         }
-        if ($vm->citaYaPagada()) {
+        if ($vm->citaYaPagada() || $vm->citaSinSaldo()) {
             return 'Esta cita ya está pagada. No tienes que pagar otra vez.';
         }
 

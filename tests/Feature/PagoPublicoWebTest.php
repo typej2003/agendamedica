@@ -378,6 +378,45 @@ class PagoPublicoWebTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_una_cita_cobrada_en_el_mostrador_no_se_vuelve_a_cobrar_por_el_link(): void
+    {
+        Http::fake();
+
+        $medico = $this->medicoDePrueba();
+        // La secretaría ya la cobró en la agenda: precio 100 y pagado 100. El link llegó después.
+        $cita = $this->citaDePrueba($medico, ['monto' => 100, 'monto_pagado' => 100]);
+        $pago = $this->pagoDePrueba($medico, $cita);
+
+        $url = route('pagar.mostrar', $pago->token_publico);
+
+        $this->get($url)
+            ->assertOk()
+            ->assertSee('El consultorio ya registró el pago')
+            ->assertDontSee('Enviar código de confirmación');
+
+        $this->post(route('pagar.iniciar', $pago->token_publico), $this->pagador())
+            ->assertRedirect($url)
+            ->assertSessionHas('error');
+
+        $this->assertSame(Pago::PENDIENTE, $pago->fresh()->estado);
+        Http::assertNothingSent();
+    }
+
+    public function test_una_cita_con_saldo_pendiente_si_deja_pagar_el_link(): void
+    {
+        Http::fake();
+
+        $medico = $this->medicoDePrueba();
+        // Debe 50 de 100: el link (de 50) todavía tiene que poder cobrarse.
+        $cita = $this->citaDePrueba($medico, ['monto' => 100, 'monto_pagado' => 50]);
+        $pago = $this->pagoDePrueba($medico, $cita);
+
+        $this->get(route('pagar.mostrar', $pago->token_publico))
+            ->assertOk()
+            ->assertSee('Enviar código de confirmación')
+            ->assertDontSee('El consultorio ya registró el pago');
+    }
+
     public function test_una_cita_ya_pagada_por_otro_pago_no_se_cobra_dos_veces(): void
     {
         $this->falsificarSyPago();

@@ -139,6 +139,16 @@
                     No tienes que pagar otra vez. Si crees que es un error, comunícate con el consultorio.
                 </p>
             </div>
+        @elseif ($vm->citaSinSaldo())
+            <div class="alert alert-info" role="status">
+                <h2 class="alert-heading h5">
+                    <i class="bi bi-info-circle-fill me-1" aria-hidden="true"></i> Esta cita ya está pagada
+                </h2>
+                <p class="mb-0">
+                    El consultorio ya registró el pago, así que no tienes que pagar otra vez.
+                    Si crees que es un error, comunícate con el consultorio.
+                </p>
+            </div>
         @elseif ($vm->enOtp())
             {{-- Ya se pidió el código: el pagador sólo lo escribe. --}}
             <div class="reservas-panel">
