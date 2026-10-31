@@ -1981,6 +1981,14 @@ class PacienteAtencionContextService
         $fechaCita = Carbon::parse($citaExistente->fecha)->startOfDay();
         $citaPerdida = $fechaCita->lt($hoy);
 
+        if (!$citaPerdida && $fechaCita->equalTo($hoy)) {
+            $ahora = \App\Clinica\FechaDelConsultorio::ahora();
+            $horaFin = $this->obtenerHoraFinAtencionDeCita($citaExistente, $medico);
+            if ($horaFin !== null && $ahora->format('H:i') >= $horaFin) {
+                $citaPerdida = true;
+            }
+        }
+
         $nombrePaciente = trim("{$paciente->nombres} {$paciente->apellidos}");
         if (empty($nombrePaciente) || $nombrePaciente === 'Paciente WhatsApp') {
             $nombrePaciente = $paciente->telefono ? "Paciente ({$paciente->telefono})" : 'Paciente';
@@ -2212,5 +2220,313 @@ class PacienteAtencionContextService
         $msg .= "ℹ️ *Nota:* No es necesario registrar una nueva cita. Si deseas realizar algún cambio o necesitas información adicional, con gusto te atenderemos. 😊";
 
         return $msg;
+    }
+
+    /**
+     * Determina la hora estimada de culminación de la atención médica de la cita para el día de hoy.
+     * Consulta los bloques configurados en OfficeSchedule para la sede o médico; si no los hay,
+     * estima la culminación con base en la hora de inicio o el cierre habitual de jornada.
+     */
+    public function obtenerHoraFinAtencionDeCita(Cola $cita, Medico $medico): ?string
+    {
+        if (!empty($cita->hora_fin)) {
+            return substr((string) $cita->hora_fin, 0, 5);
+        }
+
+        $regMedico = $medico->regMedicoPrincipal() ?? $medico->reg_medico;
+        $fechaObj = Carbon::parse($cita->fecha);
+        $diaSemana = $fechaObj->dayOfWeekIso;
+
+        $sedes = $this->armador()->sedes($regMedico, $medico->id);
+        if ($cita->medical_center_id) {
+            $sedesFiltradas = $sedes->where('medical_center_id', $cita->medical_center_id);
+            if ($sedesFiltradas->isNotEmpty()) {
+                $sedes = $sedesFiltradas;
+            }
+        }
+
+        $horaIniCita = !empty($cita->hora_ini) ? substr((string) $cita->hora_ini, 0, 5) : null;
+        $maxHoraFin = null;
+        $bloqueCoincidenteFin = null;
+
+        foreach ($sedes as $sede) {
+            foreach ($sede->bloquesDe($diaSemana) as $bloque) {
+                $iniBloque = substr((string) $bloque->hora_inicio, 0, 5);
+                $finBloque = substr((string) $bloque->hora_fin, 0, 5);
+
+                if ($maxHoraFin === null || $finBloque > $maxHoraFin) {
+                    $maxHoraFin = $finBloque;
+                }
+
+                if ($horaIniCita !== null && $horaIniCita >= $iniBloque && $horaIniCita < $finBloque) {
+                    $bloqueCoincidenteFin = $finBloque;
+                }
+            }
+        }
+
+        if ($bloqueCoincidenteFin !== null) {
+            return $bloqueCoincidenteFin;
+        }
+
+        if ($maxHoraFin !== null) {
+            return $maxHoraFin;
+        }
+
+        if ($horaIniCita !== null) {
+            try {
+                return Carbon::createFromFormat('H:i', $horaIniCita)->addHours(2)->format('H:i');
+            } catch (\Throwable $e) {}
+        }
+
+        return '18:00';
+    }
+
+    /**
+     * Busca la cita activa más próxima (atendido = 0) para un paciente dado.
+     */
+    public function obtenerCitaActivaDelPaciente($paciente): ?array
+    {
+        if (!$paciente) {
+            return null;
+        }
+
+        $historias = [];
+        if (!empty($paciente->numhistoria)) {
+            $historias[] = $paciente->numhistoria;
+        }
+        try {
+            $fromHistorias = $paciente->historias()->pluck('numhistoria')->all();
+            $historias = array_merge($historias, $fromHistorias);
+        } catch (\Throwable $e) {}
+        try {
+            $fromPivot = \DB::table('medico_pacientes')
+                ->where('paciente_id', $paciente->id)
+                ->whereNotNull('numhistoria')
+                ->pluck('numhistoria')
+                ->all();
+            $historias = array_merge($historias, $fromPivot);
+        } catch (\Throwable $e) {}
+        $historias = array_values(array_unique(array_filter($historias)));
+
+        $cita = Cola::where('atendido', 0)
+            ->where(function ($qPac) use ($paciente, $historias) {
+                $qPac->where('paciente_sinhistoria_id', $paciente->id);
+                if (!empty($historias)) {
+                    $qPac->orWhereIn('numhistoria', $historias);
+                }
+            })
+            ->orderBy('fecha')
+            ->first();
+
+        if (!$cita) {
+            return null;
+        }
+
+        $medico = Medico::find($cita->medico) ?? $this->resolverMedico($cita->reg_medico);
+
+        return [
+            'cita' => $cita,
+            'medico' => $medico,
+        ];
+    }
+
+    /**
+     * Prepara el flujo de confirmación en dos pasos para cancelar una cita.
+     * Si la cita tiene un pago registrado, informa inmediatamente que requiere gestión manual.
+     * Si la cita no tiene pago, retorna el mensaje de confirmación y los datos para guardar en cache.
+     *
+     * @param string $telefono
+     * @param string|Medico|null $criterioMedico
+     * @return array{exito: bool, tiene_pago?: bool, pendiente?: array, mensaje: string}
+     */
+    public function prepararCancelacionCita(string $telefono, $criterioMedico = null): array
+    {
+        $paciente = $this->buscarPacientePorTelefono($telefono);
+        if (!$paciente) {
+            return [
+                'exito' => false,
+                'mensaje' => "No encontramos un paciente registrado con tu número de teléfono ({$telefono}). Si deseas agendar una cita por primera vez, con gusto te ayudaremos.",
+            ];
+        }
+
+        $citaData = null;
+        if ($criterioMedico) {
+            $citaData = $this->obtenerCitaPendienteConMedico($paciente, $criterioMedico);
+        }
+
+        if (!$citaData) {
+            $citaData = $this->obtenerCitaActivaDelPaciente($paciente);
+        }
+
+        if (!$citaData || empty($citaData['cita'])) {
+            return [
+                'exito' => false,
+                'mensaje' => "No tienes ninguna cita activa pendiente de atención para cancelar. ¿Deseas consultar nuestras especialidades o agendar una cita nueva? 😊",
+            ];
+        }
+
+        /** @var Cola $cita */
+        $cita = $citaData['cita'];
+        $medico = $citaData['medico'] ?? (Medico::find($cita->medico) ?? $this->resolverMedico($cita->reg_medico));
+        $nombreMedico = $medico ? $medico->nombre_mostrar : 'tu médico';
+        $especialidad = $medico ? ($medico->specialties->pluck('name')->first() ?? $medico->biography ?? 'Consulta Médica') : 'Consulta Médica';
+        $regMedico = $medico ? ($medico->regMedicoPrincipal() ?? $medico->reg_medico) : $cita->reg_medico;
+
+        $nombrePaciente = trim("{$paciente->nombres} {$paciente->apellidos}");
+        if (empty($nombrePaciente) || $nombrePaciente === 'Paciente WhatsApp') {
+            $nombrePaciente = "Paciente ({$telefono})";
+        }
+
+        $fechaCarbon = Carbon::parse($cita->fecha);
+        $fechaFormateada = ucfirst($fechaCarbon->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY'));
+
+        // REGLA: Cita con pago registrado -> Informar para gestión manual
+        if ((float) ($cita->monto_pagado ?? 0) > 0) {
+            $consultorio = $this->obtenerDatosConsultorio($regMedico);
+            $telefonoContacto = $medico ? ($this->obtenerTelefonoMedico($regMedico)['telefono'] ?? null) : null;
+            if (!$telefonoContacto && !empty($consultorio['telefono'])) {
+                $telefonoContacto = $consultorio['telefono'];
+            }
+
+            $montoStr = number_format((float) $cita->monto_pagado, 2, ',', '.');
+            $msg = "💳 *CITA CON PAGO REGISTRADO*\n\n"
+                . "Estimado(a) *{$nombrePaciente}*, verificamos que tu cita con el/la *{$nombreMedico}* para el *{$fechaFormateada}* cuenta con un pago registrado (monto: {$montoStr}).\n\n"
+                . "Por motivos administrativos y de seguridad contable, las citas con pagos no pueden ser canceladas automáticamente por este canal.\n\n"
+                . "Por favor comunícate directamente con la secretaría o el consultorio para una gestión manual o solicitud de reprogramación/reembolso:\n"
+                . ($telefonoContacto ? "📞 *Teléfono de contacto:* {$telefonoContacto}\n" : "")
+                . "📍 *Consultorio:* " . ($consultorio['consultorio'] ?? 'Consultorio principal') . "\n"
+                . "🏢 *Dirección:* " . ($consultorio['direccion'] ?? 'Dirección no especificada') . "\n\n"
+                . "Con gusto te atenderán para ayudarte. 😊";
+
+            return [
+                'exito' => false,
+                'tiene_pago' => true,
+                'mensaje' => $msg,
+            ];
+        }
+
+        $consultorio = $this->obtenerDatosConsultorio($regMedico);
+        $horaStr = !empty($cita->hora_ini)
+            ? \App\Support\HoraLocal::hora12(substr((string) $cita->hora_ini, 0, 5), (string) $cita->hora_ini)
+            : '8:00 AM';
+        $turno = $cita->numorden ?? 1;
+
+        $msg = "⚠️ *CONFIRMACIÓN DE CANCELACIÓN*\n\n"
+            . "Estimado(a) *{$nombrePaciente}*, ¿confirmas que deseas cancelar tu cita?\n\n"
+            . "👨‍⚕️ *Médico:* {$nombreMedico} ({$especialidad})\n"
+            . "📅 *Fecha:* {$fechaFormateada}\n"
+            . "🎫 *Turno:* #{$turno}\n"
+            . "⏰ *Hora:* {$horaStr}\n"
+            . "📍 *Consultorio:* " . ($consultorio['consultorio'] ?? 'Consultorio principal') . "\n\n"
+            . "Para cancelar definitivamente tu cita, responde *SÍ* o *CONFIRMAR*.\n"
+            . "Si prefieres cambiar el día en lugar de cancelarla, escribe *CAMBIAR FECHA*.";
+
+        return [
+            'exito' => true,
+            'pendiente' => [
+                'cita_id' => $cita->id,
+                'reg_medico' => $regMedico,
+                'medico' => $nombreMedico,
+                'fecha' => $cita->fecha,
+            ],
+            'mensaje' => $msg,
+        ];
+    }
+
+    /**
+     * Cancela y elimina una cita médica de la tabla Cola ejecutando la Action compartida EliminarCita,
+     * garantizando que no esté atendida, no tenga cobro y emita su registro en sync_changes.
+     */
+    public function cancelarCitaEnCola(string $telefono, $criterioMedico = null, ?int $citaId = null): array
+    {
+        try {
+            $paciente = $this->buscarPacientePorTelefono($telefono);
+            if (!$paciente) {
+                return [
+                    'exito' => false,
+                    'mensaje' => "No encontramos un paciente registrado con tu número de teléfono ({$telefono}).",
+                ];
+            }
+
+            $cita = null;
+            if ($citaId) {
+                $cita = Cola::find($citaId);
+            }
+            if (!$cita && $criterioMedico) {
+                $citaData = $this->obtenerCitaPendienteConMedico($paciente, $criterioMedico);
+                $cita = $citaData['cita'] ?? null;
+            }
+            if (!$cita) {
+                $citaData = $this->obtenerCitaActivaDelPaciente($paciente);
+                $cita = $citaData['cita'] ?? null;
+            }
+
+            if (!$cita) {
+                return [
+                    'exito' => false,
+                    'mensaje' => 'No encontramos ninguna cita activa pendiente de atención para cancelar.',
+                ];
+            }
+
+            $medico = Medico::find($cita->medico) ?? $this->resolverMedico($cita->reg_medico);
+            $nombreMedico = $medico ? $medico->nombre_mostrar : 'tu médico';
+            $especialidad = $medico ? ($medico->specialties->pluck('name')->first() ?? $medico->biography ?? 'Consulta Médica') : 'Consulta Médica';
+
+            $nombrePaciente = trim("{$paciente->nombres} {$paciente->apellidos}");
+            if (empty($nombrePaciente) || $nombrePaciente === 'Paciente WhatsApp') {
+                $nombrePaciente = "Paciente ({$telefono})";
+            }
+
+            $fechaCarbon = Carbon::parse($cita->fecha);
+            $fechaFormateada = ucfirst($fechaCarbon->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY'));
+
+            // Verificar si tiene pago registrado
+            if ((float) ($cita->monto_pagado ?? 0) > 0) {
+                $regMedico = $medico ? ($medico->regMedicoPrincipal() ?? $medico->reg_medico) : $cita->reg_medico;
+                $consultorio = $this->obtenerDatosConsultorio($regMedico);
+                $telefonoContacto = $medico ? ($this->obtenerTelefonoMedico($regMedico)['telefono'] ?? null) : null;
+                if (!$telefonoContacto && !empty($consultorio['telefono'])) {
+                    $telefonoContacto = $consultorio['telefono'];
+                }
+
+                $montoStr = number_format((float) $cita->monto_pagado, 2, ',', '.');
+                return [
+                    'exito' => false,
+                    'tiene_pago' => true,
+                    'mensaje' => "💳 *CITA CON PAGO REGISTRADO*\n\n"
+                        . "Estimado(a) *{$nombrePaciente}*, tu cita con el/la *{$nombreMedico}* para el *{$fechaFormateada}* cuenta con un pago registrado (monto: {$montoStr}).\n\n"
+                        . "Por motivos administrativos y de seguridad contable, las citas con pagos no pueden ser canceladas automáticamente por este canal.\n\n"
+                        . "Por favor comunícate directamente con la secretaría o el consultorio para una gestión manual o solicitud de reprogramación/reembolso:\n"
+                        . ($telefonoContacto ? "📞 *Teléfono de contacto:* {$telefonoContacto}\n" : "")
+                        . "📍 *Consultorio:* " . ($consultorio['consultorio'] ?? 'Consultorio principal') . "\n"
+                        . "🏢 *Dirección:* " . ($consultorio['direccion'] ?? 'Dirección no especificada') . "\n\n"
+                        . "Con gusto te atenderán para ayudarte. 😊",
+                ];
+            }
+
+            // Ejecutar la acción compartida EliminarCita
+            app(\App\Actions\Agenda\EliminarCita::class)->ejecutar($cita);
+
+            $msg = "✅ *CITA CANCELADA CON ÉXITO*\n\n"
+                . "Estimado(a) *{$nombrePaciente}*, hemos cancelado tu cita con el/la *{$nombreMedico}* ({$especialidad}) que estaba programada para el *{$fechaFormateada}*.\n\n"
+                . "El cupo ha sido liberado en la agenda. Si en el futuro deseas agendar una nueva cita, con mucho gusto estaremos a tu disposición. ¡Que tengas un excelente día! 😊";
+
+            return [
+                'exito' => true,
+                'cita_id' => $citaId ?? $cita->id,
+                'mensaje_confirmacion' => $msg,
+            ];
+
+        } catch (\Throwable $e) {
+            Log::error('PacienteAtencionContextService::cancelarCitaEnCola error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return [
+                'exito' => false,
+                'error' => 'No fue posible cancelar la cita: ' . $e->getMessage(),
+                'mensaje' => 'No fue posible cancelar la cita en este momento. Por favor intenta de nuevo o comunícate con el consultorio.',
+            ];
+        }
     }
 }
