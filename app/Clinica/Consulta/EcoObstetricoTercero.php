@@ -141,7 +141,7 @@ class EcoObstetricoTercero
                 ['columna' => 'conclusion', 'etiqueta' => 'Conclusiones', 'tipo' => 'area',
                     'ayuda' => ''],
                 ['columna' => 'observacion', 'etiqueta' => 'Observaciones', 'tipo' => 'area',
-                    'ayuda' => 'Las observaciones (acá el rótulo coincide con la columna).'],
+                    'ayuda' => 'Las observaciones (aquí el rótulo coincide con la columna).'],
             ]],
         ];
     }
