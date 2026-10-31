@@ -17,6 +17,7 @@ use App\Models\Plan;
 use App\Models\ReglaDeComision;
 use App\Models\TasaDeCambio;
 use App\Models\User;
+use App\Pagos\Correos\AvisoDePagoDeCita;
 use App\Services\CupoDelPlan;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
@@ -486,8 +487,14 @@ final class Cobros
         });
 
         // Fuera de la transacción: un SMTP caído no puede deshacer el pago ni la renovación.
-        if ($resultado->cambio && $resultado->pago && $resultado->pago->esDePlan()) {
-            $this->enviarComprobante($resultado->pago);
+        if ($resultado->cambio && $resultado->pago) {
+            if ($resultado->pago->esDePlan()) {
+                $this->enviarComprobante($resultado->pago);
+            }
+
+            if ($resultado->pago->esDeCita()) {
+                $this->enviarAvisosDeCita($resultado->pago);
+            }
         }
 
         return $resultado;
@@ -566,6 +573,24 @@ final class Cobros
         } catch (Throwable $e) {
             report($e);
             $pago->registrarEvento(PagoEvento::ORIGEN_SISTEMA, 'comprobante_error', ['mensaje' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Los avisos de una **cita pagada**: al médico y al paciente, desde el mismo punto y con los mismos
+     * datos. Cada envío se protege por dentro; este try/catch es la última red para que nada de lo que
+     * pase armando el correo pueda tumbar la aprobación, que ya está confirmada.
+     */
+    private function enviarAvisosDeCita(Pago $pago): void
+    {
+        try {
+            app(AvisoDePagoDeCita::class)->enviar($pago);
+        } catch (Throwable $e) {
+            report($e);
+            $pago->registrarEvento(PagoEvento::ORIGEN_SISTEMA, 'correo_error', [
+                'destinatario' => 'ambos',
+                'mensaje' => $e->getMessage(),
+            ]);
         }
     }
 
