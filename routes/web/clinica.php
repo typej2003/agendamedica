@@ -86,6 +86,7 @@ use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
 use App\Http\Controllers\Clinica\LatidosController;
 use App\Http\Controllers\Clinica\PlanController;
+use App\Http\Controllers\Clinica\ReferidosController;
 use App\Http\Controllers\Clinica\PlantillaDeTextoCatalogoController;
 use App\Http\Controllers\Clinica\PlantillasDeMensajeController;
 use App\Http\Controllers\Clinica\RecordatorioController;
@@ -172,6 +173,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // **Mis Latidos** (2026-10-31): el programa de descuentos del consultorio, de sólo lectura.
                 // La compra de paquetes está apagada en el MVP; se aplican al pagar el plan.
                 Route::get('/latidos', [LatidosController::class, 'index'])->name('latidos');
+                // **Invita y gana** (fase 4): el link y los referidos del consultorio. Sólo el médico.
+                Route::get('/referidos', [ReferidosController::class, 'index'])->name('referidos');
+                Route::post('/referidos/regenerar', [ReferidosController::class, 'regenerar'])->name('referidos.regenerar');
                 Route::get('/plan', [PlanController::class, 'index'])->name('plan');
                 // Prender/apagar la renovación automática con Latidos (preferencia del consultorio).
                 Route::post('/plan/renovacion', [PlanController::class, 'renovacion'])->name('plan.renovacion');

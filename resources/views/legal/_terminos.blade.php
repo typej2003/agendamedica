@@ -77,6 +77,32 @@
     </li>
 </ul>
 
+<h3>5.1 Latidos y referidos</h3>
+<ul>
+    <li>
+        Los <strong>Latidos</strong> son una unidad de descuento promocional, <strong>no dinero</strong>:
+        <strong>100 Latidos = USD 1 de descuento</strong>. No son una cuenta bancaria, un depósito ni una
+        wallet, y no generan intereses ni rendimientos.
+    </li>
+    <li>
+        No se retiran, no se transfieren, no se venden y no se convierten a efectivo. Sólo se canjean en
+        productos o servicios de Doctorísimo.
+    </li>
+    <li>
+        El programa de referidos acredita Latidos cuando un administrador aprueba el registro del colega.
+        El premio se otorga <strong>una sola vez por consultorio referido</strong>, no aplica a
+        autorreferencias ni a clientes existentes, y puede anularse si hay fraude o un error.
+    </li>
+    <li>
+        La renovación automática con Latidos viene encendida y puedes apagarla desde «Mi plan». Si está
+        encendida y los Latidos cubren el 100 % del plan, se descuentan el día del vencimiento y el
+        servicio se extiende; si no alcanzan, no se descuenta nada.
+    </li>
+    <li>
+        Los Latidos no vencen en esta versión. Si das de baja la cuenta, los Latidos se pierden.
+    </li>
+</ul>
+
 <h2>6. Responsabilidad clínica</h2>
 <p>
     <strong>La decisión médica es tuya.</strong> Doctorísimo es una herramienta de registro y de

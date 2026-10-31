@@ -11,6 +11,7 @@ use App\Http\Controllers\Auth\ElegirPanelController;
 use App\Http\Controllers\Clinica\MisSubespecialidadesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PortadaController;
+use App\Http\Controllers\Referidos\EnlaceDeReferidoController;
 use App\Http\Controllers\SeoPublicoController;
 
 
@@ -22,6 +23,13 @@ use App\Http\Controllers\SeoPublicoController;
 
 // La portada le habla al médico (el registro es la conversión) y deja un bloque al paciente: ver `PortadaController`.
 Route::get('/', PortadaController::class)->name('welcome');
+
+// **Link de referido** (fase 4, 2026-10-31): público, sin login, con throttle y `noindex`. Guarda el código
+// en una cookie y muestra la landing con la descarga configurable y el registro.
+Route::get('/r/{codigo}', EnlaceDeReferidoController::class)
+    ->where('codigo', '[A-Za-z0-9]{4,12}')
+    ->middleware('throttle:60,1')
+    ->name('referidos.enlace');
 
 // 1. Deshabilitamos las rutas de login por defecto de Auth::routes()
 //    El alta de cuentas también: el registro de médicos (con aprobación) y el de pacientes son las

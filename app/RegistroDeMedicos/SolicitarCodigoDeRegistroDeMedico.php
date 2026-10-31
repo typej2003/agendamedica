@@ -195,7 +195,16 @@ final class SolicitarCodigoDeRegistroDeMedico
             'email' => $this->correoNormalizado((string) $datos['email']),
             'ciudad' => $this->textoONull($datos['ciudad'] ?? null),
             'mensaje' => $this->textoONull($datos['mensaje'] ?? null),
+            'codigo_referido' => $this->codigoDeReferido($datos['codigo_referido'] ?? null),
         ];
+    }
+
+    /** El código de invitación se guarda en mayúsculas; si no vino, null. Se valida al confirmar la solicitud. */
+    private function codigoDeReferido($valor): ?string
+    {
+        $codigo = strtoupper(trim((string) $valor));
+
+        return $codigo === '' ? null : substr($codigo, 0, 12);
     }
 
     /**
