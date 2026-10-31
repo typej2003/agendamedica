@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Reservas;
 
 use App\Http\Controllers\Controller;
 use App\Models\Medico;
+use App\Models\MotivoCita;
 use App\Reservas\CatalogoDeMedicos;
 use App\Reservas\DisponibilidadPublica;
 use Illuminate\Http\Request;
@@ -49,6 +50,16 @@ class CatalogoDeReservasController extends Controller
             'especialidades' => $medico->specialties()->where('activo', true)->orderBy('name')->get(),
             'sedes' => $catalogo->sedes($medico),
             'opciones' => $disponibilidad->opciones($medico),
+            // El motivo con precio es lo que le da precio a la cita y, con el porcentaje de «Cita
+            // Online», el monto que se cobra al reservar. Sin motivos con precio la reserva sigue igual,
+            // sin cobro. El servidor vuelve a validar el motivo contra la sede elegida.
+            'motivos' => MotivoCita::where('reg_medico', $medico->regMedicoPrincipal())
+                ->whereNotNull('precio')
+                ->where('precio', '>', 0)
+                ->orderBy('tipo_atencion')
+                ->get()
+                ->unique('codigo')
+                ->values(),
         ]);
     }
 }

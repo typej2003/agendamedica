@@ -18,6 +18,7 @@ use App\Models\TasaDeCambio;
 use App\Models\User;
 use App\Services\CupoDelPlan;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -165,6 +166,9 @@ final class Cobros
      * `configuracion_pagos.aplica_comision_metodo_en_citas_online` está apagada, que es el valor con
      * el que nace la configuración.
      *
+     * `$expiraEl` lo usa la reserva online, que da **30 minutos** para pagar; sin él se mantiene la
+     * regla del link de la agenda (hasta el final del día de la cita).
+     *
      * @throws RuntimeException si la cita no tiene consultorio, el canal no es de cita, el monto no
      *                          es positivo o supera el máximo, el método no está disponible o no es
      *                          del consultorio de la cita, o falta la tasa para cobrar en VES
@@ -174,7 +178,8 @@ final class Cobros
         MetodoPago $metodo,
         int $montoUsdE2,
         string $canal = Pago::CANAL_LINK,
-        ?int $usuarioId = null
+        ?int $usuarioId = null,
+        ?CarbonInterface $expiraEl = null
     ): Pago {
         $regMedico = trim((string) $cita->reg_medico);
         if ($regMedico === '') {
@@ -266,8 +271,8 @@ final class Cobros
 
         // La vigencia es la del **link**, no la de la tasa: un pago de cita se cobra con la tasa del
         // momento (`actualizarTasaDeLaCita()`), así que el link vive hasta el final del día de la cita y no
-        // los 15 minutos que dura una tasa congelada.
-        $expiraEl = $this->vigenciaDelLink($cita);
+        // los 15 minutos que dura una tasa congelada. La reserva online manda su propio plazo.
+        $expiraEl = $expiraEl ?? $this->vigenciaDelLink($cita);
         $fechaCita = $cita->fecha?->format('d/m/Y');
 
         return Pago::create([

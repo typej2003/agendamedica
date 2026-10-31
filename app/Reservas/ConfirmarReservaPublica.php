@@ -141,6 +141,9 @@ final class ConfirmarReservaPublica
                 'nuevo_apellidos' => $datos['apellidos'],
                 'nuevo_telefono' => $datos['telefono'],
                 'nuevo_email' => $datos['email'] ?: null,
+                // El motivo con precio (si se eligió) es el que decide `cola.monto`: el cobro al reservar
+                // sale de ese precio.
+                'motivo' => $datos['motivo'] ?? null,
             ],
             $registros,
             [
