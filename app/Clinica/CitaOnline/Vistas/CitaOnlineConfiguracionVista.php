@@ -52,7 +52,7 @@ final class CitaOnlineConfiguracionVista
     /**
      * El ejemplo con el primer motivo de cita con precio del médico, o `null` si no tiene ninguno.
      *
-     * @return array{motivo:string, precio:string, alReservar:string, resto:string}|null
+     * @return array{motivo:string, precio:string, alReservar:string, resto:string, resto_e2:int}|null
      */
     public function referencia(): ?array
     {
@@ -63,12 +63,15 @@ final class CitaOnlineConfiguracionVista
         }
 
         $alReservar = Porcentaje::aplicar($precio, $this->configuracion->porcentajeBp());
+        $resto = max(0, $precio - $alReservar);
 
         return [
             'motivo' => (string) $this->motivo->tipo_atencion,
             'precio' => Centavos::formatear($precio, 'USD'),
             'alReservar' => Centavos::formatear($alReservar, 'USD'),
-            'resto' => Centavos::formatear(max(0, $precio - $alReservar), 'USD'),
+            'resto' => Centavos::formatear($resto, 'USD'),
+            // La vista calla la segunda oración cuando no queda nada por cobrar en el consultorio.
+            'resto_e2' => $resto,
         ];
     }
 }
