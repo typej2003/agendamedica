@@ -210,6 +210,28 @@ class PagoDelPacienteWebTest extends TestCase
             ->assertDontSee(route('paciente.citas.pagar', $deUnDiaPasado->id), false);
     }
 
+    public function test_la_pantalla_del_link_no_muestra_el_panel_del_consultorio(): void
+    {
+        Http::fake();
+        $this->metodoDeLaPlataforma();
+
+        $cita = $this->cita();
+        $this->actingAs($this->usuario)->get(route('paciente.citas.pagar', $cita));
+
+        $pago = $this->pagosDe($cita)->sole();
+
+        // El paciente llega con su sesión abierta, pero el link es una página pública: sin la barra
+        // lateral del panel del consultorio.
+        $this->actingAs($this->usuario)
+            ->get(route('pagar.mostrar', $pago->token_publico))
+            ->assertOk()
+            ->assertSee('Paga tu cita')
+            // El `id` sólo lo escribe el armazón del panel; el script del final lo nombra igual, así que
+            // la comprobación va sobre el atributo.
+            ->assertDontSee('id="panel-sidebar-fondo"', false)
+            ->assertDontSee('class="app-sidebar-fondo"', false);
+    }
+
     public function test_el_paciente_paga_su_cita_y_la_ruta_redirige_a_la_pantalla_del_token(): void
     {
         Http::fake();

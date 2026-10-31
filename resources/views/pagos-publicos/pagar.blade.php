@@ -2,6 +2,9 @@
 
 @section('title', 'Pagar tu cita · Doctorísimo')
 @section('robots', 'noindex, nofollow')
+{{-- El link lo puede abrir el paciente con su sesión abierta: es una página pública, sin el panel del
+     consultorio (ver `layouts/app.blade.php`). --}}
+@section('sin-panel', true)
 
 @push('meta')
     {{-- Además de la cabecera `Referrer-Policy` del middleware: el token del link no sale de esta página. --}}
