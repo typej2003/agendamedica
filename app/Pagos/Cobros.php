@@ -4,6 +4,7 @@ namespace App\Pagos;
 
 use App\Actions\Agenda\CobrarCita;
 use App\Actions\Pagos\ConfirmarPagoDePlan;
+use App\Actions\Pagos\LiberarCupoDeReservaOnline;
 use App\Clinica\FechaDelConsultorio;
 use App\Mail\PagoDePlanAprobado;
 use App\Models\Cola;
@@ -318,6 +319,7 @@ final class Cobros
         }
         if ($pago->expira_el && $pago->expira_el->isPast()) {
             $pago->update(['estado' => Pago::EXPIRADO]);
+            $this->liberarCupoSiEsReservaOnline($pago);
 
             return ResultadoDeCobro::error('El pago venció. Empieza uno nuevo para tomar la tasa actual.', $pago);
         }
@@ -439,6 +441,9 @@ final class Cobros
             $anterior = $pago->estado;
             $pago->update(['estado' => Pago::RECHAZADO]);
             $pago->registrarEvento($origen, 'rechazado', $respuesta, $anterior);
+
+            // No va a pagar: el turno no puede quedar tomado por una reserva que quedó rechazada.
+            $this->liberarCupoSiEsReservaOnline($pago);
 
             $mensaje = $pago->metodoPago
                 ? (ClienteSyPago::para($pago->metodoPago)->mensajeDeError($respuesta) ?: 'El pago fue rechazado.')
@@ -581,6 +586,28 @@ final class Cobros
             'cuenta' => trim((string) ($pagador['cuenta'] ?? '')),
             'telefono' => trim((string) ($pagador['telefono'] ?? '')),
         ], fn ($valor) => $valor !== '');
+    }
+
+    /**
+     * Si el pago de una **reserva online** terminó sin pagarse —vencido o rechazado—, el cupo vuelve a
+     * estar libre: el turno no se queda tomado por alguien que no va a ir. La regla de cuándo se puede
+     * liberar está en `LiberarCupoDeReservaOnline`; acá sólo se dispara y **nunca** se deja que un error
+     * de la liberación tumbe el cobro (el pago y su estado son lo importante).
+     */
+    private function liberarCupoSiEsReservaOnline(Pago $pago): void
+    {
+        if ($pago->canal !== Pago::CANAL_RESERVA_ONLINE || ! $pago->esDeCita()) {
+            return;
+        }
+
+        try {
+            app(LiberarCupoDeReservaOnline::class)->ejecutar($pago);
+        } catch (Throwable $e) {
+            report($e);
+            $pago->registrarEvento(PagoEvento::ORIGEN_SISTEMA, 'liberar_cupo_error', [
+                'mensaje' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

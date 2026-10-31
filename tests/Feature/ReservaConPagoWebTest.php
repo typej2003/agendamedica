@@ -349,6 +349,54 @@ class ReservaConPagoWebTest extends TestCase
         );
     }
 
+    public function test_un_pago_rechazado_libera_el_cupo_de_la_reserva(): void
+    {
+        $this->metodoDeLaPlataforma();
+        $this->motivo(100.0);
+        $this->conPorcentaje(10_000);
+
+        $this->reservar(['motivo' => 'CONSULTA']);
+
+        $pago = $this->pagoDeLaCita();
+        $citaId = $this->cita()->id;
+
+        // El débito se rechaza (sin fondos, clave mal): no va a pagar y el turno no se puede quedar tomado.
+        Http::fake(fn (ClientRequest $request) => str_contains($request->url(), 'request/otp')
+            ? Http::response(['transaction_id' => 'tx-rechazo'], 200)
+            : Http::response(['status' => 'RJCT', 'transaction_id' => 'tx-rechazo'], 200));
+
+        $cobros = app(Cobros::class);
+        $this->assertTrue($cobros->iniciar($pago, $this->pagador())->ok);
+
+        $resultado = $cobros->confirmar($pago->fresh(), '123456');
+
+        $this->assertFalse($resultado->ok);
+        $this->assertSame(Pago::RECHAZADO, $pago->fresh()->estado);
+        $this->assertNull(Cola::find($citaId), 'El turno tiene que volver a estar libre.');
+    }
+
+    public function test_abrir_un_link_de_reserva_vencido_libera_el_cupo(): void
+    {
+        $this->metodoDeLaPlataforma();
+        $this->motivo(100.0);
+        $this->conPorcentaje(10_000);
+
+        $this->reservar(['motivo' => 'CONSULTA']);
+
+        $pago = $this->pagoDeLaCita();
+        $citaId = $this->cita()->id;
+
+        // El paciente entra al link después de los 30 minutos: la pantalla lo marca vencido, y el cupo
+        // tiene que volver a estar libre aunque el comando todavía no haya pasado.
+        $pago->update(['expira_el' => now()->subMinute()]);
+
+        $resultado = app(Cobros::class)->iniciar($pago->fresh(), $this->pagador());
+
+        $this->assertFalse($resultado->ok);
+        $this->assertSame(Pago::EXPIRADO, $pago->fresh()->estado);
+        $this->assertNull(Cola::find($citaId));
+    }
+
     public function test_no_libera_una_cita_atendida(): void
     {
         $this->metodoDeLaPlataforma();
