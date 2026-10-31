@@ -222,6 +222,42 @@ class ChatbotInformationTest extends TestCase
         $this->assertTrue(collect($resultado['medicos'])->pluck('reg_medico')->contains('MED-TEST-55'));
     }
 
+    public function test_el_bot_no_ofrece_al_medico_que_despublico_su_agenda()
+    {
+        $specialty = Specialty::firstOrCreate(['name' => 'Cardiología Publicada']);
+
+        $publicado = Medico::create([
+            'name' => 'Pablo',
+            'lastname' => 'Publicado',
+            'prefix' => 'Dr.',
+            'reg_medico' => 'MED-TEST-71',
+            'is_active' => true,
+        ]);
+        $publicado->specialties()->sync([$specialty->id]);
+
+        $oculto = Medico::create([
+            'name' => 'Olga',
+            'lastname' => 'Oculta',
+            'prefix' => 'Dra.',
+            'reg_medico' => 'MED-TEST-72',
+            'is_active' => true,
+        ]);
+        $oculto->specialties()->sync([$specialty->id]);
+
+        // Apagó «publicar mi agenda» en Configuración → Cita Online.
+        Evolucion::create([
+            'reg_medico' => 'MED-TEST-72',
+            'clave' => 0,
+            'publicar_agenda' => false,
+        ]);
+
+        $resultado = $this->contextService->buscarMedicosPorEspecialidad('Cardiología Publicada');
+        $regs = collect($resultado['medicos'])->pluck('reg_medico');
+
+        $this->assertTrue($regs->contains('MED-TEST-71'), 'El que no tocó nada sigue publicado.');
+        $this->assertFalse($regs->contains('MED-TEST-72'), 'El que despublicó no se ofrece por el bot.');
+    }
+
     public function test_obtener_informacion_integral_de_un_medico()
     {
         $medico = Medico::create([

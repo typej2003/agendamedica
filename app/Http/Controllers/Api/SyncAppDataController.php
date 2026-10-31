@@ -61,6 +61,7 @@ use App\Models\RecipeGrupo;
 use App\Models\RecipeGrupoDetalle;
 use App\Models\TipoAntecedente;
 use App\Models\Vademecum;
+use App\Latidos\RenovacionAutomatica;
 use App\Services\ServicioService;
 use App\Actions\Pacientes\AsignarHistoria;
 use App\Sync\CargaInicialEnCurso;
@@ -784,6 +785,12 @@ class SyncAppDataController extends Controller
     ): array {
         $vacio = collect([]);
 
+        // Estado de la renovación automática con Latidos. `aviso_por_vencer` es false cuando el plan está
+        // cubierto al 100 %: el app no debe mostrar el banner de “por vencer” ni el recordatorio de 7 días.
+        $renovacion = app(RenovacionAutomatica::class)->estado(
+            (string) ($estadoServicio['reg_medico'] ?? ($registrosMedicos[0] ?? '')),
+        );
+
         return [
             'synced_at' => $syncedAt->toIso8601String(),
             'pacientes' => $datos['pacientes'] ?? $vacio,
@@ -864,10 +871,18 @@ class SyncAppDataController extends Controller
             // Va acá y no en `configuracion` porque no es un dato de `evolucion`: el pivote es de AppDDR.
             'especialidades' => app(TablasDelSync::class)->especialidadesDe($medicoModel),
             // Estado del servicio contratado, para que el app muestre el vencimiento y avise antes de que
-            // venza (y no intente sincronizar cuando ya venció).
-            'servicio' => collect($estadoServicio)->only(
-                ['estado', 'plan', 'vence_el', 'dias_restantes', 'gracia_hasta', 'restricciones', 'caracteristicas', 'permite_imprimir']
-            )->all(),
+            // venza (y no intente sincronizar cuando ya venció). Los tres campos de renovación son los que
+            // permiten callar el aviso cuando los Latidos cubren el plan.
+            'servicio' => array_merge(
+                collect($estadoServicio)->only(
+                    ['estado', 'plan', 'vence_el', 'dias_restantes', 'gracia_hasta', 'restricciones', 'caracteristicas', 'permite_imprimir']
+                )->all(),
+                [
+                    'renovacion_automatica' => $renovacion['activa'],
+                    'renovacion_cubierta' => $renovacion['cubierta'],
+                    'aviso_por_vencer' => $renovacion['aviso_por_vencer'],
+                ],
+            ),
             'eliminados' => $eliminados,
             // Mapeo id temporal del cliente → id real, para que pueda soltar su fila provisional.
             'creados' => $resultadoChanges['creados'],

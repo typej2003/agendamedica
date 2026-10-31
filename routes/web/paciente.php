@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Paciente\CancelarCitaController;
 use App\Http\Controllers\Paciente\MisCitasController;
+use App\Http\Controllers\Paciente\PagarCitaController;
 use App\Http\Controllers\Paciente\ReagendarCitaController;
 use App\Http\Controllers\Paciente\RegistroDePacienteController;
 use App\Http\Controllers\Paciente\TelefonoDelPacienteController;
@@ -35,6 +36,9 @@ Route::middleware(['auth', 'role:Paciente'])->prefix('mis-citas')->name('pacient
 
     Route::get('/{cita}/cancelar', [CancelarCitaController::class, 'confirmar'])->name('citas.cancelar');
     Route::post('/{cita}/cancelar', [CancelarCitaController::class, 'guardar'])->name('citas.cancelar.guardar');
+
+    // Pagar la cita: genera o reusa el link y manda a la pantalla pública `/pagar/{token}` (punto 4).
+    Route::get('/{cita}/pagar', [PagarCitaController::class, 'mostrar'])->name('citas.pagar');
 
     // Confirmar o cambiar el teléfono cuando su validación venció (12 meses): mismo código que el registro.
     Route::get('/telefono', [TelefonoDelPacienteController::class, 'formulario'])->name('telefono');

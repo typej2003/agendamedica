@@ -24,7 +24,14 @@ class Evolucion extends Model
         'sms_user', 'sms_clave', 'sms_cantidad_total', 'sms_telefono_llamada',
         'sms_sexo_medico', 'sms_proveedor', 'correo_med', 'pais', 'prefi_1',
         'prefi_2', 'prefi_3', 'nom_moneda', 'nom_impuesto', 'impuesto_vale', 'slug',
-        'plantilla_cita', 'plantilla_cumple',
+        'plantilla_cita', 'plantilla_cumple', 'porcentaje_cita_online_bp', 'publicar_agenda',
+    ];
+
+    protected $casts = [
+        // El porcentaje de la cita online, en puntos base (`10000` = 100 %). `null` = 100 %.
+        'porcentaje_cita_online_bp' => 'integer',
+        // `null` = agenda publicada; sólo `false` la oculta del catálogo público.
+        'publicar_agenda' => 'boolean',
     ];
 
     /**

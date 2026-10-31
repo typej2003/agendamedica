@@ -54,6 +54,7 @@ class RegistroDeMedicoWebTest extends TestCase
             'mpps' => (string) random_int(100000, 999999),
             'telefono' => '0414-5556677',
             'email' => 'medico-' . uniqid() . '@example.com',
+            'terminos' => '1',
         ], $cambios);
     }
 
@@ -116,6 +117,31 @@ class RegistroDeMedicoWebTest extends TestCase
             ->assertSee('Continuar y verificar mi correo');
 
         $this->get(route('login'))->assertSee(route('medico.registro'));
+    }
+
+    public function test_el_formulario_ofrece_los_terminos_y_la_privacidad_en_el_dialogo(): void
+    {
+        $this->get(route('medico.registro'))
+            ->assertOk()
+            ->assertSee('He leído y acepto los')
+            ->assertSee('términos y condiciones')
+            ->assertSee('política de privacidad')
+            ->assertSee(route('legal.terminos'), false)
+            ->assertSee(route('legal.privacidad'), false)
+            ->assertSee('Desplázate hasta el final', false)
+            ->assertSee('data-aceptacion-casilla', false)
+            ->assertSee('data-aceptacion-dialogo', false);
+    }
+
+    public function test_sin_aceptar_los_terminos_no_se_envia_la_solicitud(): void
+    {
+        $this->from(route('medico.registro'))
+            ->post(route('medico.registro.codigo.enviar'), $this->datos(['terminos' => '']))
+            ->assertRedirect(route('medico.registro'))
+            ->assertSessionHasErrors('terminos');
+
+        Mail::assertNotSent(CodigoDeRegistroDeMedico::class);
+        $this->assertNull(session('registro_medico.pendiente'));
     }
 
     public function test_el_formulario_solo_ofrece_las_especialidades_soportadas(): void

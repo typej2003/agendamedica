@@ -37,6 +37,7 @@ class RegistroDePacienteController extends Controller
             'email'     => ['required', 'email', 'max:120'],
             'password'  => ['required', 'string', 'min:8', 'confirmed'],
             'reenviar'  => ['nullable', 'boolean'],
+            'terminos'  => ['accepted'],
         ], $this->mensajes());
 
         $resultado = $accion->ejecutar($datos, $request->boolean('reenviar'));
@@ -116,6 +117,7 @@ class RegistroDePacienteController extends Controller
             'password.required' => 'Elige una contraseña.',
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
             'password.confirmed' => 'La confirmación no coincide con la contraseña.',
+            'terminos.accepted' => 'Marca que leíste y aceptas los términos y condiciones y la política de privacidad.',
         ];
     }
 

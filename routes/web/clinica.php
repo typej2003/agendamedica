@@ -20,6 +20,7 @@ use App\Http\Controllers\Clinica\MedicamentoCatalogoController;
 use App\Http\Controllers\Clinica\TratamientoCatalogoController;
 use App\Http\Controllers\Clinica\AyudaController;
 use App\Http\Controllers\Clinica\CitaController;
+use App\Http\Controllers\Clinica\CitaOnlineConfiguracionController;
 use App\Http\Controllers\Clinica\CitasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaAntecedentesController;
 use App\Http\Controllers\Clinica\ConsultaConstanciaController;
@@ -77,12 +78,15 @@ use App\Http\Controllers\Clinica\HistoriaPediatricaController;
 use App\Http\Controllers\Clinica\HorarioController;
 use App\Http\Controllers\Clinica\ImpresionDeRecipeController;
 use App\Http\Controllers\Clinica\LatidoDeSesionController;
+use App\Http\Controllers\Clinica\LinkDePagoController;
 use App\Http\Controllers\Clinica\ListadosController;
 use App\Http\Controllers\Clinica\MostradorController;
 use App\Http\Controllers\Clinica\MotivoCitaCatalogoController;
 use App\Http\Controllers\Clinica\NoLaborableController;
 use App\Http\Controllers\Clinica\PacienteController;
+use App\Http\Controllers\Clinica\LatidosController;
 use App\Http\Controllers\Clinica\PlanController;
+use App\Http\Controllers\Clinica\ReferidosController;
 use App\Http\Controllers\Clinica\PlantillaDeTextoCatalogoController;
 use App\Http\Controllers\Clinica\PlantillasDeMensajeController;
 use App\Http\Controllers\Clinica\RecordatorioController;
@@ -166,7 +170,15 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // sólo del médico (`role:Root|Medico`): la secretaría no paga el plan del consultorio. El pago
             // se crea con la tasa congelada y se aprueba por el webhook o el sondeo, no acá.
             Route::middleware('role:Root|Medico')->group(function () {
+                // **Mis Latidos** (2026-10-31): el programa de descuentos del consultorio, de sólo lectura.
+                // La compra de paquetes está apagada en el MVP; se aplican al pagar el plan.
+                Route::get('/latidos', [LatidosController::class, 'index'])->name('latidos');
+                // **Invita y gana** (fase 4): el link y los referidos del consultorio. Sólo el médico.
+                Route::get('/referidos', [ReferidosController::class, 'index'])->name('referidos');
+                Route::post('/referidos/regenerar', [ReferidosController::class, 'regenerar'])->name('referidos.regenerar');
                 Route::get('/plan', [PlanController::class, 'index'])->name('plan');
+                // Prender/apagar la renovación automática con Latidos (preferencia del consultorio).
+                Route::post('/plan/renovacion', [PlanController::class, 'renovacion'])->name('plan.renovacion');
                 // El plan elegido: método de pago y monto en su moneda. `whereNumber` para que no capture
                 // `comprar` ni `pago`.
                 Route::get('/plan/{plan}', [PlanController::class, 'elegir'])->whereNumber('plan')->name('plan.elegir');
@@ -176,6 +188,15 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/plan/pago/{pago}/confirmar', [PlanController::class, 'confirmar'])->name('plan.confirmar');
                 Route::post('/plan/pago/{pago}/consultar', [PlanController::class, 'consultar'])->name('plan.consultar');
                 Route::post('/plan/pago/{pago}/refrescar', [PlanController::class, 'refrescar'])->name('plan.refrescar');
+            });
+
+            // **Cita Online** (2026-10-30): la mitad de configuración del cobro de citas. El porcentaje que
+            // se cobra al reservar y si la agenda se publica en el portal y el bot. Es una fila por médico
+            // (`evolucion`) y sólo la abre el médico, como el resto de Configuración que no es de la
+            // secretaría. No cobra nada: el cobro al reservar es la tarea siguiente.
+            Route::middleware('role:Root|Medico')->group(function () {
+                Route::get('/configuracion/cita-online', [CitaOnlineConfiguracionController::class, 'index'])->name('configuracion.cita-online');
+                Route::post('/configuracion/cita-online', [CitaOnlineConfiguracionController::class, 'guardar'])->name('configuracion.cita-online.guardar');
             });
 
             // El tour guiado de la pantalla (A-15): el JS lo marca al terminar o al saltar. Es un **POST**
@@ -758,6 +779,11 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             Route::post('/agenda/{cola}/medico', [MostradorController::class, 'asignarMedico'])->name('agenda.medico');
             Route::post('/agenda/{cola}/atender', [MostradorController::class, 'atender'])->name('agenda.atender');
             Route::post('/agenda/{cola}/cobrar', [MostradorController::class, 'cobrar'])->name('agenda.cobrar');
+            // **El link de pago de una cita** (punto 3 del cobro): la pantalla donde el consultorio lo genera
+            // y lo comparte. La crea al abrirse, de forma idempotente (reusa el pendiente del mismo monto);
+            // no cobra, sólo deja la intención. Mismos roles que el resto de la agenda y la cita del
+            // `reg_medico` del contexto.
+            Route::get('/agenda/{cola}/link-de-pago', [LinkDePagoController::class, 'mostrar'])->name('agenda.link-de-pago');
             Route::post('/agenda/{cola}/eliminar', [CitaController::class, 'eliminar'])->name('agenda.eliminar');
             Route::get('/agenda/{cola}/editar', [CitaController::class, 'editar'])->name('agenda.editar');
             // La última: cualquier POST a `/agenda/<algo>` que no haya matcheado antes cae acá como

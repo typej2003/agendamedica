@@ -2,7 +2,9 @@
 
 namespace App\Reservas;
 
+use App\Clinica\Agenda\MotivosDeCita;
 use App\Models\Medico;
+use App\Models\Office;
 use App\Models\Paciente;
 use App\Paciente\BloqueoDePacientes;
 use App\Notificaciones\Telefono;
@@ -28,11 +30,12 @@ final class SolicitarCodigoDeReserva
         private ReservaPendiente $pendiente,
         private CodigoDeVerificacion $codigos,
         private DisponibilidadPublica $disponibilidad,
+        private MotivosDeCita $motivos,
     ) {
     }
 
     /**
-     * @param  array<string,mixed>  $datos  cédula, nombres, apellidos, teléfono, email, fecha, hora, office_id
+     * @param  array<string,mixed>  $datos  cédula, nombres, apellidos, teléfono, email, fecha, hora, office_id, motivo
      * @return array{reenviado: bool, canal: string}
      *
      * @throws ValidationException
@@ -46,6 +49,8 @@ final class SolicitarCodigoDeReserva
                 'fecha' => 'Ese horario ya no está disponible. Elige otro de los que se muestran.',
             ]);
         }
+
+        $this->exigirMotivoConPrecio($medico, $datos, $opcion);
 
         $cedula = preg_replace('/\D/', '', (string) $datos['cedula']);
         if ($cedula === '') {
@@ -121,6 +126,32 @@ final class SolicitarCodigoDeReserva
     }
 
     /**
+     * El motivo es opcional: sin él la cita se reserva como siempre y no hay precio que cobrar. Si viene,
+     * tiene que ser un motivo **con precio** de esa sede, porque es el precio del que sale el cobro.
+     *
+     * @param  array<string,mixed>  $datos
+     *
+     * @throws ValidationException
+     */
+    private function exigirMotivoConPrecio(Medico $medico, array $datos, OpcionDeReserva $opcion): void
+    {
+        $codigo = trim((string) ($datos['motivo'] ?? ''));
+
+        if ($codigo === '') {
+            return;
+        }
+
+        $sede = Office::find($opcion->officeId);
+        $motivo = $this->motivos->de((string) $medico->regMedicoPrincipal(), $sede)->firstWhere('codigo', $codigo);
+
+        if ($motivo === null || (float) ($motivo->precio ?? 0) <= 0) {
+            throw ValidationException::withMessages([
+                'motivo' => 'Elige un motivo de la consulta con precio para esa sede.',
+            ]);
+        }
+    }
+
+    /**
      * @param  array<string,mixed>  $datos
      * @param  array<string,mixed>  $codigo  el hash y sus metadatos, o los del trámite anterior
      * @return array<string,mixed>
@@ -141,6 +172,7 @@ final class SolicitarCodigoDeReserva
             'apellidos' => trim((string) $datos['apellidos']),
             'telefono' => $telefono,
             'email' => trim((string) ($datos['email'] ?? '')) ?: null,
+            'motivo' => trim((string) ($datos['motivo'] ?? '')) ?: null,
         ]);
     }
 }

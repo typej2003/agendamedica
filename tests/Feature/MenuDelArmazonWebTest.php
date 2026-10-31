@@ -174,4 +174,53 @@ class MenuDelArmazonWebTest extends TestCase
             ->assertOk()
             ->assertSee('Embarazos y partos');
     }
+
+    /**
+     * **Qué va en cada menú** (norma del usuario, 2026-10-30): en «Configuración» queda lo que **modifica la forma de
+     * trabajar del médico** (horarios, impresión, mensajes, usuarios…) y en el **menú de la cuenta** va lo que tiene que
+     * ver con **su cuenta o perfil**. Por eso «Mis Latidos», «Invita y gana» y «Mi plan» viven en el menú de la cuenta,
+     * debajo de «Invitaciones», y no en el grupo lateral.
+     */
+    public function test_latidos_referidos_y_plan_viven_en_el_menu_de_la_cuenta_debajo_de_invitaciones(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso('ginecologia-y-obstetricia');
+
+        $html = $this->conContexto($user, $medico, $gineco)->get('/clinica')->assertOk()->getContent();
+
+        // El menú de la cuenta es el `<details class="… menu-cuenta">` de la barra superior.
+        preg_match('/<details[^>]*menu-cuenta[^>]*>.*?<\/details>/s', $html, $coincidencia);
+        $this->assertNotEmpty($coincidencia, 'No se encontró el menú de la cuenta.');
+        $cuenta = $coincidencia[0];
+
+        $orden = [
+            'Invitaciones'  => route('clinica.invitaciones'),
+            'Mis Latidos'   => route('clinica.latidos'),
+            'Invita y gana' => route('clinica.referidos'),
+            'Mi plan'       => route('clinica.plan'),
+        ];
+
+        foreach ($orden as $texto => $url) {
+            $this->assertStringContainsString('href="' . $url . '"', $cuenta, "Falta «{$texto}» en el menú de la cuenta.");
+            $this->assertStringContainsString($texto, $cuenta, "Falta el rótulo «{$texto}» en el menú de la cuenta.");
+        }
+
+        // En ese orden: cada uno va debajo del anterior.
+        $posiciones = array_values(array_map(fn (string $url) => strpos($cuenta, $url), $orden));
+        $this->assertNotContains(false, $posiciones, 'Falta alguno de los enlaces en el menú de la cuenta.');
+
+        for ($i = 1; $i < count($posiciones); $i++) {
+            $this->assertGreaterThan($posiciones[$i - 1], $posiciones[$i], 'El orden del menú de la cuenta cambió.');
+        }
+
+        // Y «Configuración» del menú lateral ya no los ofrece.
+        $barra = $this->barraLateral($html);
+
+        foreach ($orden as $texto => $url) {
+            if ($texto === 'Invitaciones') {
+                continue;
+            }
+
+            $this->assertStringNotContainsString($url, $barra, "«{$texto}» ya no va en el menú lateral.");
+        }
+    }
 }

@@ -46,7 +46,13 @@ final class ConfirmarPagoDePlan
 
         $montoUsd = (float) ($pago->monto_usd_e2 / 100);
         $meses = (int) ($pago->meses ?: $plan->meses());
-        $nota = 'Pago #' . $pago->id . ' · ' . $pago->montoTexto();
+        $nota = 'Pago #' . $pago->id . ' · total ' . $pago->montoUsdTexto();
+        if ($pago->usaLatidos()) {
+            $nota .= ' · ' . $pago->latidosTexto() . ' de descuento (' . $pago->descuentoUsdTexto() . ')';
+        }
+        $nota .= $pago->cubiertoConLatidos()
+            ? ' · sin cobro por pasarela'
+            : ' · pasarela ' . $pago->montoTexto();
         if ($pago->tasa !== null) {
             $nota .= ' (tasa ' . number_format((float) $pago->tasa, 4, ',', '.') . ')';
         }

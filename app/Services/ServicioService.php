@@ -323,6 +323,41 @@ class ServicioService
     }
 
     /**
+     * **Renovar justo el día del vencimiento** (la renovación automática con Latidos, 2026-10-31).
+     *
+     * El día `vence_el` todavía es del período viejo: el servicio se sirve hasta el final de ese día. Si se
+     * usara `renovar()`, el período nuevo arrancaría hoy y regalaría un día. Acá arranca **mañana**.
+     *
+     * Si el comando llegó tarde y el servicio ya venció (gracia), el período nuevo arranca **hoy**, como
+     * cualquier renovación de un servicio vencido.
+     */
+    public function renovarAlVencer(
+        string $regMedico,
+        Plan $plan,
+        ?float $monto = null,
+        ?string $nota = null,
+        string $origen = RegMedicoServicio::ORIGEN_COMPRA,
+        ?int $meses = null
+    ): RegMedicoServicio {
+        $actual = $this->actual($regMedico);
+        $hoy = \App\Clinica\FechaDelConsultorio::hoyComoFecha();
+        $desde = null;
+
+        if ($actual) {
+            if ($actual->vence_el->equalTo($hoy)) {
+                $desde = $actual->vence_el->copy()->addDay();
+            } elseif ($actual->vence_el->gt($hoy)) {
+                $desde = $actual->vence_el->copy();
+            }
+        }
+
+        return $this->otorgar(
+            $regMedico, $plan, $origen,
+            meses: $meses, monto: $monto ?? (float) $plan->precio_usd, desde: $desde, nota: $nota,
+        );
+    }
+
+    /**
      * Desde cuándo empezaría un período nuevo: donde termina el servicio actual si todavía no venció (no se
      * pierde nada de lo ya pagado); null = hoy.
      */

@@ -31,6 +31,10 @@ final class PlanElegidoVista
         public readonly ?int $precioMensualE2 = null,
         public readonly ?int $precioAnualE2 = null,
         public readonly int $ahorroE2 = 0,
+        public readonly int $latidosDisponibles = 0,
+        public readonly int $latidosUsados = 0,
+        public readonly int $descuentoUsdE2 = 0,
+        public readonly int $aPagarUsdE2 = 0,
     ) {
     }
 
@@ -47,6 +51,37 @@ final class PlanElegidoVista
     public function precioUsdTexto(): string
     {
         return Centavos::formatear($this->precioUsdE2(), 'USD');
+    }
+
+    public function latidosDisponiblesTexto(): string
+    {
+        return \App\Latidos\Conversion::formatear($this->latidosDisponibles);
+    }
+
+    public function latidosUsadosTexto(): string
+    {
+        return \App\Latidos\Conversion::formatear($this->latidosUsados);
+    }
+
+    public function descuentoUsdTexto(): string
+    {
+        return Centavos::formatear($this->descuentoUsdE2, 'USD');
+    }
+
+    public function aPagarUsdTexto(): string
+    {
+        return Centavos::formatear($this->aPagarUsdE2, 'USD');
+    }
+
+    /** ¿Los Latidos cubren todo el plan? */
+    public function cubiertoConLatidos(): bool
+    {
+        return $this->usaLatidos() && $this->aPagarUsdE2 <= 0;
+    }
+
+    public function usaLatidos(): bool
+    {
+        return $this->latidosUsados > 0;
     }
 
     /** “4 asientos × USD 12,00 · 1 secretaría incluida”, o null si el plan es de precio fijo. */
@@ -115,7 +150,12 @@ final class PlanElegidoVista
     public function montoDelMetodo(MetodoPago $metodo): ?array
     {
         $moneda = $this->monedaDelMetodo($metodo);
-        $usd = $this->precioUsdE2();
+        // A la pasarela sólo le queda la diferencia después de los Latidos.
+        $usd = max(0, $this->aPagarUsdE2);
+
+        if ($usd === 0) {
+            return ['centavos' => 0, 'moneda' => 'USD', 'texto' => 'Sin cobro'];
+        }
 
         if ($moneda === 'VES') {
             if ($this->tasa === null) {
@@ -149,6 +189,10 @@ final class PlanElegidoVista
 
     public function aviso(): ?string
     {
+        if ($this->cubiertoConLatidos()) {
+            return null;
+        }
+
         if ($this->metodos->isEmpty()) {
             return 'No hay un método de pago disponible para cobrar este plan.';
         }
@@ -164,7 +208,7 @@ final class PlanElegidoVista
 
     public function puedeContinuar(): bool
     {
-        return $this->metodos->isNotEmpty() && $this->aviso() === null;
+        return $this->cubiertoConLatidos() || ($this->metodos->isNotEmpty() && $this->aviso() === null);
     }
 
     private function precioUsdE2(): int

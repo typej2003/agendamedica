@@ -17,6 +17,8 @@
  *    usuario sólo puede seguir, volver o saltar. El scroll que hace el propio tour (`scrollIntoView`) sí
  *    funciona: es programático.
  *  - Se cierra con «Saltar», con «Listo» y con `Esc` (la salida de teclado de cualquier diálogo modal).
+ *  - Sus **propios botones siempre responden**, aunque el globo se haya movido a `<body>`: son la única salida
+ *    del modal además de `Esc` (2026-10-31, ver `bloquearLaAplicacion`).
  *  - Al terminar o saltar avisa por `POST` (nunca por GET) para no volver a mostrarlo. `Esc` cuenta como
  *    saltar: si no, el tour reaparecería en cada visita de quien lo cerró con el teclado.
  */
@@ -68,31 +70,48 @@
      * quedaba trabada —no se podía escribir un espacio ni moverse con las flechas—. No era un problema del
      * formulario: era el tutorial dejando pasar un clic.
      *
-     * Se corta el clic **en captura**, antes de que llegue al control: fuera del globo (y del botón de
-     * reabrir) no pasa nada. Además se marca `inert` el armazón, así el teclado tampoco llega a los campos de
-     * abajo. Para interactuar hay que **terminar el tutorial o saltarlo**, que es lo que corresponde.
+     * Se ataca por dos lados: el clic se corta **en captura**, antes de que llegue al control (`esDelTour`), y
+     * el armazón se marca `inert`, así el teclado tampoco llega a los campos de abajo. Para interactuar hay
+     * que **terminar el tutorial o saltarlo**, que es lo que corresponde.
      */
     const bloquearLaAplicacion = function (bloquear) {
-        var armazon = document.getElementById('wrapper');
-        var barra = document.querySelector('.site-header, .topbar, nav.navbar');
+        // El armazón de la web clínica es `.app-columna` (barra superior + `main`) y la barra lateral es
+        // `.app-sidebar`, que vive fuera de la columna; `#wrapper` y `nav.navbar` son de los otros layouts
+        // (panel y Livewire), donde el tour también se pinta.
+        const armazon = ['#wrapper', '.app-columna', '.app-sidebar', '.site-header', '.topbar', 'nav.navbar'];
 
-        [armazon, barra].forEach(function (elemento) {
-            if (!elemento) return;
-            if (bloquear) {
-                elemento.setAttribute('inert', '');
-                elemento.setAttribute('aria-hidden', 'true');
-            } else {
-                elemento.removeAttribute('inert');
-                elemento.removeAttribute('aria-hidden');
-            }
+        armazon.forEach(function (selector) {
+            Array.prototype.forEach.call(document.querySelectorAll(selector), function (elemento) {
+                if (bloquear) {
+                    elemento.setAttribute('inert', '');
+                    elemento.setAttribute('aria-hidden', 'true');
+                } else {
+                    elemento.removeAttribute('inert');
+                    elemento.removeAttribute('aria-hidden');
+                }
+            });
         });
     };
 
-    document.addEventListener('click', function (evento) {
-        if (!abierto) return;
+    /**
+     * Lo único que responde con el tutorial abierto: sus propios botones y el de reabrir.
+     *
+     * ⚠️ **El globo no se puede buscar dentro de la raíz** (2026-10-31): al abrir, el globo se mueve a
+     * `<body>` —para no quedar debajo de la barra lateral—, así que `raiz.contains(destino)` daba `false` para
+     * «Siguiente», «Saltar» y «Listo»: el corte de captura los dejaba sin efecto y el tutorial sólo se cerraba
+     * con `Esc`. Con un médico nuevo —que lo primero que intenta es llenar sus datos— es una pantalla trabada.
+     * Por eso se pregunta por el globo **por separado**.
+     */
+    const esDelTour = function (destino) {
+        if (!destino) return false;
 
-        var destino = evento.target;
-        if (raiz.contains(destino) || (botonReabrir && botonReabrir.contains(destino))) return;
+        return globo.contains(destino)
+            || raiz.contains(destino)
+            || !!(botonReabrir && botonReabrir.contains(destino));
+    };
+
+    document.addEventListener('click', function (evento) {
+        if (!abierto || esDelTour(evento.target)) return;
 
         evento.preventDefault();
         evento.stopPropagation();

@@ -22,7 +22,7 @@ class SolicitudMedico extends Model
     protected $fillable = [
         'prefijo', 'nombres', 'apellidos', 'cedula', 'mpps', 'colegio', 'specialty_id', 'telefono', 'email',
         'ciudad', 'mensaje', 'carnet_ruta', 'carnet_tipo', 'carnet_nombre', 'estado', 'motivo_rechazo',
-        'revisada_por', 'revisada_el', 'medico_id', 'reg_medico',
+        'revisada_por', 'revisada_el', 'medico_id', 'reg_medico', 'codigo_referido', 'referente_reg_medico',
     ];
 
     protected $casts = [

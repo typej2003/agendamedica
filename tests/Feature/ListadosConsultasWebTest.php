@@ -320,6 +320,85 @@ class ListadosConsultasWebTest extends TestCase
             ->assertSeeInOrder(['Embarazos y partos', 'Pacientes por rango', 'Consultas por rango']);
     }
 
+    // ------------------------------------------------------------------- El nombre: catálogo o copia
+
+    /**
+     * El `COALESCE` del legado: manda el nombre del catálogo y la copia de la fila sólo es el respaldo.
+     * El filtro no puede encontrar la copia cuando el catálogo ya tiene el nombre.
+     */
+    public function test_el_nombre_del_catalogo_manda_sobre_la_copia_de_la_fila(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->paciente($medico, 1, 'Precedencia');
+        $this->consulta($medico, 1, 1, '2026-01-01');
+        $this->motivo($medico, 1, 1, '0001', 'CATALOGO');
+
+        DB::table('motivo_consulta_paciente')
+            ->where('reg_medico', $medico->reg_medico)
+            ->where('nroconsulta', 1)
+            ->update(['descripcion' => 'COPIA']);
+
+        $pedir = fn (array $filtros) => $this->conContexto($user, $medico, $gineco)->get($this->listado($filtros))->assertOk();
+
+        $pedir(['motivo' => 'catalogo'])->assertSee('Precedencia, Ana');
+        $pedir(['motivo' => 'copia'])->assertDontSee('Precedencia, Ana');
+    }
+
+    /**
+     * Cuando la fila del catálogo **no existe**, el nombre es el que quedó copiado en la fila de la
+     * consulta (motivo, diagnóstico, medicamento y antecedente). Es lo que hacía el `COALESCE` y lo que
+     * la partición en dos `EXISTS` tiene que conservar.
+     */
+    public function test_sin_fila_en_el_catalogo_los_cuatro_filtros_usan_la_copia_de_la_fila(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->paciente($medico, 1, 'Copias');
+        $this->consulta($medico, 1, 1, '2026-01-01');
+
+        $ahora = now();
+        $comun = ['reg_medico' => $medico->reg_medico, 'created_at' => $ahora, 'updated_at' => $ahora];
+
+        DB::table('motivo_consulta_paciente')->insert($comun + [
+            'codemotivo' => '9999', 'nrohistoria' => 1, 'nroconsulta' => 1, 'descripcion' => 'DOLOR LUMBAR',
+        ]);
+        DB::table('diagnostico_paciente')->insert($comun + [
+            'nrohistoria' => 1, 'nroconsulta' => 1, 'codediagnostico' => '9999', 'detalle_diagnostco' => 'LUMBALGIA', 'orden' => 1,
+        ]);
+        DB::table('recipes')->insert($comun + [
+            'nrohistoria' => 1, 'nroconsulta' => 1, 'codemedicina' => '9999', 'descripcion' => 'TRAMADOL', 'recipe' => 1, 'orden' => 1,
+        ]);
+        DB::table('antece_paciente')->insert($comun + [
+            'numhistoria' => 1, 'codeantecedente' => '9999', 'descripcion' => 'ASMA',
+        ]);
+
+        $pedir = fn (array $filtros) => $this->conContexto($user, $medico, $gineco)->get($this->listado($filtros))->assertOk();
+
+        $pedir(['motivo' => 'lumbar'])->assertSee('Copias, Ana');
+        $pedir(['diagnostico' => 'lumbalgia'])->assertSee('Copias, Ana');
+        $pedir(['medicamento' => 'tramadol'])->assertSee('Copias, Ana');
+        $pedir(['antecedente' => 'asma'])->assertSee('Copias, Ana');
+    }
+
+    /** El antecedente del catálogo puede existir con la descripción vacía: ahí manda la copia del paciente. */
+    public function test_un_antecedente_del_catalogo_sin_descripcion_cae_en_la_copia_de_la_fila(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->paciente($medico, 1, 'Nulo');
+        $this->consulta($medico, 1, 1, '2026-01-01');
+
+        DB::table('antecedentes')->insert([
+            'reg_medico' => $medico->reg_medico, 'codantecedente' => '9998', 'descripcion' => null,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('antece_paciente')->insert([
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 1, 'codeantecedente' => '9998', 'descripcion' => 'MIGRANA',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $this->conContexto($user, $medico, $gineco)->get($this->listado(['antecedente' => 'migrana']))
+            ->assertOk()->assertSee('Nulo, Ana');
+    }
+
     // ------------------------------------------------------------------------------------- Permisos
 
     public function test_la_secretaria_recibe_403(): void

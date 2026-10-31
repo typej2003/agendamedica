@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Reservas;
 use App\Http\Controllers\Controller;
 use App\Models\Medico;
 use App\Notificaciones\Telefono;
+use App\Reservas\CobroAlReservar;
 use App\Reservas\ConfirmarReservaPublica;
 use App\Reservas\ReservaPendiente;
 use App\Reservas\SolicitarCodigoDeReserva;
@@ -36,6 +37,7 @@ class ReservaPublicaController extends Controller
             'apellidos' => ['required', 'string', 'max:100'],
             'telefono' => ['required', 'string', 'max:30'],
             'email'    => ['nullable', 'email', 'max:120'],
+            'motivo'   => ['nullable', 'string', 'max:50'],
             'reenviar' => ['nullable', 'boolean'],
         ], $this->mensajes());
 
@@ -50,6 +52,7 @@ class ReservaPublicaController extends Controller
             'apellidos' => $datos['apellidos'],
             'telefono' => $datos['telefono'],
             'email' => $datos['email'] ?? null,
+            'motivo' => $datos['motivo'] ?? null,
         ], $request->boolean('reenviar'));
 
         $mensaje = $resultado['reenviado']
@@ -82,9 +85,13 @@ class ReservaPublicaController extends Controller
         ]);
     }
 
-    /** Paso 3: comprobar el código y crear la cita. */
-    public function confirmar(Request $request, Medico $medico, ConfirmarReservaPublica $accion)
-    {
+    /** Paso 3: comprobar el código y crear la cita (y, si corresponde, el pago de la reserva). */
+    public function confirmar(
+        Request $request,
+        Medico $medico,
+        ConfirmarReservaPublica $accion,
+        CobroAlReservar $cobro,
+    ) {
         abort_unless($medico->is_active, 404);
 
         $datos = $request->validate([
@@ -123,6 +130,15 @@ class ReservaPublicaController extends Controller
             'cedula' => $resultado['cedula'] ?? null,
             'telefono' => $resultado['telefono'] ?? null,
         ]);
+
+        // La reserva ya está hecha. Si el médico cobra al reservar, el paciente paga en la pantalla
+        // pública del pago; si no corresponde cobrar (0 %, sin precio o sin método), sigue al comprobante
+        // de siempre. `CobroAlReservar` nunca lanza: un cobro que falla no tumba la reserva.
+        $pago = $cobro->ejecutar($medico, $cita);
+
+        if ($pago !== null) {
+            return redirect()->route('pagar.mostrar', $pago->token_publico);
+        }
 
         return redirect()->route('reservas.confirmada');
     }

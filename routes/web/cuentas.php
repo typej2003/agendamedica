@@ -12,8 +12,10 @@ use App\Http\Livewire\Admin\ReportesEscritorio;
 use App\Http\Livewire\Admin\Cuentas;
 use App\Http\Livewire\Admin\DetalleDelMedico;
 use App\Http\Livewire\Admin\Especialidades;
+use App\Http\Livewire\Admin\Latidos;
 use App\Http\Livewire\Admin\MetodosPago;
 use App\Http\Livewire\Admin\Pagos;
+use App\Http\Livewire\Admin\Referidos;
 use App\Http\Livewire\Admin\Servicios;
 use App\Http\Livewire\Admin\SolicitudesDeMedicos;
 use App\Http\Livewire\Admin\UsuariosPacientes;
@@ -71,6 +73,10 @@ Route::middleware(['auth', 'role:Root|Administrador'])->prefix('admin')->name('a
     Route::get('/metodos-pago/tasas', MetodosPago::class)->name('metodos-pago.tasas');
     // **Pagos** (2026-10-21): lo que entró por SyPago, con su bitácora y la conciliación manual.
     Route::get('/pagos', Pagos::class)->name('pagos');
+    // **Latidos** (2026-10-31): el programa de descuentos por consultorio. El ajuste manual es sólo Root.
+    Route::get('/latidos', Latidos::class)->name('latidos');
+    // **Referidos** (2026-10-31): configuración del premio y anulación con reverso.
+    Route::get('/referidos', Referidos::class)->name('referidos');
     // **Sedes del médico** (2026-10-20): el administrador ayuda a configurar dónde atiende cada médico, en
     // profundidad: sedes → consultorios de la sede → horarios y cupos del consultorio. Las reglas son las Actions
     // de `/clinica` (`GuardarSede`, `GuardarConsultorio`, `GuardarBloqueHorario`); el tenant, el `reg_medico` del médico.

@@ -180,6 +180,7 @@ class IdentidadYTelefonoWebTest extends TestCase
         $datos = [
             'cedula' => '21000010', 'nombres' => 'Rosa', 'apellidos' => 'Nueva', 'telefono' => '0412-2100010',
             'email' => 'rosa-' . substr(uniqid(), -6) . '@example.com', 'password' => 'Secreto123', 'password_confirmation' => 'Secreto123',
+            'terminos' => '1',
         ];
 
         $this->post(route('paciente.registro.codigo.enviar'), $datos)->assertRedirect(route('paciente.registro.codigo'));

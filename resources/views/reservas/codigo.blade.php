@@ -78,6 +78,9 @@
                     <input type="hidden" name="apellidos" value="{{ $pendiente['apellidos'] }}">
                     <input type="hidden" name="telefono" value="{{ $pendiente['telefono'] }}">
                     <input type="hidden" name="email" value="{{ $pendiente['email'] }}">
+                    @if (! empty($pendiente['motivo']))
+                        <input type="hidden" name="motivo" value="{{ $pendiente['motivo'] }}">
+                    @endif
 
                     <button type="submit" class="btn btn-link p-0">No me llegó: reenviar código</button>
                 </form>

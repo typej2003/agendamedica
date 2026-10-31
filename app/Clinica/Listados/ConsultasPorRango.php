@@ -130,76 +130,171 @@ final class ConsultasPorRango
 
     // ------------------------------------------------------------------------------- Los filtros
 
+    /** El motivo: el nombre es el del catálogo del médico y, si no está, el que quedó copiado en la fila. */
     private function conMotivo($consulta, string $regMedico, ?string $texto): void
     {
-        if ($texto === null) {
-            return;
-        }
-
-        $consulta->whereExists(function ($sub) use ($regMedico, $texto) {
-            $sub->select(DB::raw(1))->from('motivo_consulta_paciente as mp')
-                ->leftJoin('motivos_consulta as mc', function ($join) {
-                    $join->on('mc.codemotivo', '=', 'mp.codemotivo')->on('mc.reg_medico', '=', 'mp.reg_medico');
-                })
-                ->where('mp.reg_medico', $regMedico)
-                ->whereColumn('mp.nrohistoria', 'consultas.numhistoria')
-                ->whereColumn('mp.nroconsulta', 'consultas.nroconsulta');
-            $this->contiene($sub, ["COALESCE(mc.descripcion, mp.descripcion, '')"], $texto);
-        });
+        $this->conNombre(
+            $consulta,
+            $texto,
+            function ($sub) use ($regMedico) {
+                $sub->from('motivo_consulta_paciente as mp')
+                    ->join('motivos_consulta as mc', function ($join) {
+                        $join->on('mc.codemotivo', '=', 'mp.codemotivo')->on('mc.reg_medico', '=', 'mp.reg_medico');
+                    })
+                    ->where('mp.reg_medico', $regMedico)
+                    ->whereNotNull('mc.descripcion')
+                    ->whereColumn('mp.nrohistoria', 'consultas.numhistoria')
+                    ->whereColumn('mp.nroconsulta', 'consultas.nroconsulta');
+            },
+            ['mc.descripcion'],
+            function ($sub) use ($regMedico) {
+                $sub->from('motivo_consulta_paciente as mp')
+                    ->where('mp.reg_medico', $regMedico)
+                    ->whereColumn('mp.nrohistoria', 'consultas.numhistoria')
+                    ->whereColumn('mp.nroconsulta', 'consultas.nroconsulta')
+                    ->whereNotExists(function ($catalogo) {
+                        $catalogo->select(DB::raw(1))->from('motivos_consulta as mc')
+                            ->whereColumn('mc.codemotivo', 'mp.codemotivo')
+                            ->whereColumn('mc.reg_medico', 'mp.reg_medico')
+                            ->whereNotNull('mc.descripcion');
+                    });
+            },
+            ["COALESCE(mp.descripcion, '')"],
+        );
     }
 
+    /** El diagnóstico: el nombre es el del catálogo del médico y, si no está, el detalle copiado en la fila. */
     private function conDiagnostico($consulta, string $regMedico, ?string $texto): void
     {
-        if ($texto === null) {
-            return;
-        }
-
-        $consulta->whereExists(function ($sub) use ($regMedico, $texto) {
-            $sub->select(DB::raw(1))->from('diagnostico_paciente as dp')
-                ->leftJoin('diagnosticos as dg', function ($join) {
-                    $join->on('dg.codediagnostico', '=', 'dp.codediagnostico')->on('dg.reg_medico', '=', 'dp.reg_medico');
-                })
-                ->where('dp.reg_medico', $regMedico)
-                ->whereColumn('dp.nrohistoria', 'consultas.numhistoria')
-                ->whereColumn('dp.nroconsulta', 'consultas.nroconsulta');
-            $this->contiene($sub, ["COALESCE(dg.descripcion, dp.detalle_diagnostco, '')"], $texto);
-        });
+        $this->conNombre(
+            $consulta,
+            $texto,
+            function ($sub) use ($regMedico) {
+                $sub->from('diagnostico_paciente as dp')
+                    ->join('diagnosticos as dg', function ($join) {
+                        $join->on('dg.codediagnostico', '=', 'dp.codediagnostico')->on('dg.reg_medico', '=', 'dp.reg_medico');
+                    })
+                    ->where('dp.reg_medico', $regMedico)
+                    ->whereNotNull('dg.descripcion')
+                    ->whereColumn('dp.nrohistoria', 'consultas.numhistoria')
+                    ->whereColumn('dp.nroconsulta', 'consultas.nroconsulta');
+            },
+            ['dg.descripcion'],
+            function ($sub) use ($regMedico) {
+                $sub->from('diagnostico_paciente as dp')
+                    ->where('dp.reg_medico', $regMedico)
+                    ->whereColumn('dp.nrohistoria', 'consultas.numhistoria')
+                    ->whereColumn('dp.nroconsulta', 'consultas.nroconsulta')
+                    ->whereNotExists(function ($catalogo) {
+                        $catalogo->select(DB::raw(1))->from('diagnosticos as dg')
+                            ->whereColumn('dg.codediagnostico', 'dp.codediagnostico')
+                            ->whereColumn('dg.reg_medico', 'dp.reg_medico')
+                            ->whereNotNull('dg.descripcion');
+                    });
+            },
+            ["COALESCE(dp.detalle_diagnostco, '')"],
+        );
     }
 
     /** El nombre del medicamento es el que quedó copiado en el récipe o el del vademécum del médico. */
     private function conMedicamento($consulta, string $regMedico, ?string $texto): void
     {
-        if ($texto === null) {
-            return;
-        }
-
-        $consulta->whereExists(function ($sub) use ($regMedico, $texto) {
-            $sub->select(DB::raw(1))->from('recipes as rc')
-                ->leftJoin('vademecum as vd', function ($join) {
-                    $join->on('vd.codemedicina', '=', 'rc.codemedicina')->on('vd.reg_medico', '=', 'rc.reg_medico');
-                })
-                ->where('rc.reg_medico', $regMedico)
-                ->whereColumn('rc.nrohistoria', 'consultas.numhistoria')
-                ->whereColumn('rc.nroconsulta', 'consultas.nroconsulta');
-            $this->contiene($sub, ["COALESCE(rc.descripcion, '')", "COALESCE(vd.nombrecomercial, '')", "COALESCE(vd.nombregenerico, '')"], $texto);
-        });
+        $this->conNombre(
+            $consulta,
+            $texto,
+            function ($sub) use ($regMedico) {
+                $sub->from('recipes as rc')
+                    ->join('vademecum as vd', function ($join) {
+                        $join->on('vd.codemedicina', '=', 'rc.codemedicina')->on('vd.reg_medico', '=', 'rc.reg_medico');
+                    })
+                    ->where('rc.reg_medico', $regMedico)
+                    ->whereColumn('rc.nrohistoria', 'consultas.numhistoria')
+                    ->whereColumn('rc.nroconsulta', 'consultas.nroconsulta');
+            },
+            ["COALESCE(rc.descripcion, '')", "COALESCE(vd.nombrecomercial, '')", "COALESCE(vd.nombregenerico, '')"],
+            function ($sub) use ($regMedico) {
+                $sub->from('recipes as rc')
+                    ->where('rc.reg_medico', $regMedico)
+                    ->whereColumn('rc.nrohistoria', 'consultas.numhistoria')
+                    ->whereColumn('rc.nroconsulta', 'consultas.nroconsulta')
+                    ->whereNotExists(function ($catalogo) {
+                        $catalogo->select(DB::raw(1))->from('vademecum as vd')
+                            ->whereColumn('vd.codemedicina', 'rc.codemedicina')
+                            ->whereColumn('vd.reg_medico', 'rc.reg_medico');
+                    });
+            },
+            ["COALESCE(rc.descripcion, '')"],
+        );
     }
 
     /** El antecedente es **del paciente** (no de la consulta): se busca por su número de historia. */
     private function conAntecedente($consulta, string $regMedico, ?string $texto): void
     {
+        $this->conNombre(
+            $consulta,
+            $texto,
+            function ($sub) use ($regMedico) {
+                $sub->from('antece_paciente as ap')
+                    ->join('antecedentes as an', function ($join) {
+                        $join->on('an.codantecedente', '=', 'ap.codeantecedente')->on('an.reg_medico', '=', 'ap.reg_medico');
+                    })
+                    ->where('ap.reg_medico', $regMedico)
+                    ->whereNotNull('an.descripcion')
+                    ->whereColumn('ap.numhistoria', 'consultas.numhistoria');
+            },
+            ['an.descripcion'],
+            function ($sub) use ($regMedico) {
+                $sub->from('antece_paciente as ap')
+                    ->where('ap.reg_medico', $regMedico)
+                    ->whereColumn('ap.numhistoria', 'consultas.numhistoria')
+                    ->whereNotExists(function ($catalogo) {
+                        $catalogo->select(DB::raw(1))->from('antecedentes as an')
+                            ->whereColumn('an.codantecedente', 'ap.codeantecedente')
+                            ->whereColumn('an.reg_medico', 'ap.reg_medico')
+                            ->whereNotNull('an.descripcion');
+                    });
+            },
+            ["COALESCE(ap.descripcion, '')"],
+        );
+    }
+
+    /**
+     * Agrega un filtro de texto que se resuelve contra un catálogo, con la **copia de la fila** como
+     * respaldo: es el `COALESCE` del legado (manda el nombre del catálogo; si no está, el de la fila).
+     *
+     * Se escribe como **dos `EXISTS` correlacionados** —uno con la fila del catálogo y otro sin ella— y
+     * no como uno solo con `LEFT JOIN` + `COALESCE(...) LIKE`. Esa forma hacía que el motor
+     * **materializara** la subconsulta: con el filtro de diagnóstico sobre 15.000 consultas costaba
+     * 3,6 s; partida en dos, 0,06 s, con el mismo resultado, porque el motor usa el índice de la tabla
+     * de la fila y sólo evalúa el nombre para los candidatos de la consulta.
+     *
+     * @param  callable(\Illuminate\Database\Query\Builder):void  $conCatalogo  arma la fila con el catálogo
+     * @param  array<int,string>  $expresionesConCatalogo  el nombre cuando el catálogo lo tiene
+     * @param  callable(\Illuminate\Database\Query\Builder):void  $sinCatalogo  arma la fila sin el catálogo
+     * @param  array<int,string>  $expresionesSinCatalogo  el nombre de la copia de la fila
+     */
+    private function conNombre(
+        $consulta,
+        ?string $texto,
+        callable $conCatalogo,
+        array $expresionesConCatalogo,
+        callable $sinCatalogo,
+        array $expresionesSinCatalogo,
+    ): void {
         if ($texto === null) {
             return;
         }
 
-        $consulta->whereExists(function ($sub) use ($regMedico, $texto) {
-            $sub->select(DB::raw(1))->from('antece_paciente as ap')
-                ->leftJoin('antecedentes as an', function ($join) {
-                    $join->on('an.codantecedente', '=', 'ap.codeantecedente')->on('an.reg_medico', '=', 'ap.reg_medico');
-                })
-                ->where('ap.reg_medico', $regMedico)
-                ->whereColumn('ap.numhistoria', 'consultas.numhistoria');
-            $this->contiene($sub, ["COALESCE(an.descripcion, ap.descripcion, '')"], $texto);
+        $consulta->where(function ($grupo) use ($conCatalogo, $expresionesConCatalogo, $sinCatalogo, $expresionesSinCatalogo, $texto) {
+            $grupo->whereExists(function ($sub) use ($conCatalogo, $expresionesConCatalogo, $texto) {
+                $sub->select(DB::raw(1));
+                $conCatalogo($sub);
+                $this->contiene($sub, $expresionesConCatalogo, $texto);
+            })->orWhereExists(function ($sub) use ($expresionesSinCatalogo, $sinCatalogo, $texto) {
+                $sub->select(DB::raw(1));
+                $sinCatalogo($sub);
+                $this->contiene($sub, $expresionesSinCatalogo, $texto);
+            });
         });
     }
 

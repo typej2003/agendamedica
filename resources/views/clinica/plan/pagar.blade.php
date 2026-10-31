@@ -22,14 +22,35 @@
                     <p class="text-muted small mb-3">Pago #{{ $vm->pago->id }}</p>
 
                     <dl class="row mb-0">
-                        <dt class="col-6 fw-normal text-muted">Monto en USD</dt>
+                        <dt class="col-6 fw-normal text-muted">Total del plan</dt>
                         <dd class="col-6 text-end fw-semibold">{{ $vm->montoUsd() }}</dd>
 
-                        <dt class="col-6 fw-normal text-muted">Monto a pagar</dt>
-                        <dd class="col-6 text-end fw-semibold" data-pago-monto>{{ $vm->monto() }}</dd>
+                        @if ($vm->pago->usaLatidos())
+                            <dt class="col-6 fw-normal text-muted">Descuento con Latidos</dt>
+                            <dd class="col-6 text-end text-success fw-semibold">
+                                {{ $vm->pago->latidosTexto() }}
+                                <small class="text-muted fw-normal">({{ $vm->pago->descuentoUsdTexto() }})</small>
+                            </dd>
+                        @endif
+
+                        <dt class="col-6 fw-normal text-muted">
+                            {{ $vm->pago->cubiertoConLatidos() ? 'A pagar con SyPago' : 'Monto a pagar' }}
+                        </dt>
+                        <dd class="col-6 text-end fw-semibold" data-pago-monto>
+                            @if ($vm->pago->cubiertoConLatidos())
+                                Sin cobro
+                            @elseif ($vm->pago->usaLatidos())
+                                {{ $vm->pago->montoPasarelaUsdTexto() }}
+                                <small class="text-muted fw-normal">({{ $vm->monto() }})</small>
+                            @else
+                                {{ $vm->monto() }}
+                            @endif
+                        </dd>
 
                         <dt class="col-6 fw-normal text-muted">Método</dt>
-                        <dd class="col-6 text-end">{{ $vm->metodoEtiqueta() }}</dd>
+                        <dd class="col-6 text-end">
+                            {{ $vm->pago->cubiertoConLatidos() ? 'Latidos' : $vm->metodoEtiqueta() }}
+                        </dd>
                     </dl>
 
                     {{-- Aparece sólo si al vencer el pago la tasa cambió: el formulario queda bloqueado
@@ -48,7 +69,10 @@
             @if ($vm->aprobado())
                 <div class="alert alert-success" role="status">
                     <h5 class="alert-heading"><i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i> ¡Pago aprobado!</h5>
-                    <p class="mb-0">El servicio de este consultorio ya quedó renovado con el plan que pagaste.</p>
+                    <p class="mb-0">
+                        El servicio de este consultorio ya quedó renovado
+                        {{ $vm->pago->cubiertoConLatidos() ? 'con tus Latidos.' : 'con el plan que pagaste.' }}
+                    </p>
                 </div>
                 <a href="{{ route('clinica.plan') }}" class="btn btn-primary">
                     <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Volver a mi plan

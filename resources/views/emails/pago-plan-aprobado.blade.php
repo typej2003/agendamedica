@@ -14,11 +14,32 @@
     </p>
 
     <table cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-size: 14px;">
-        <tr>
-            <td style="color: #55555f;">Monto cobrado</td>
-            <td><strong>{{ $pago->montoTexto() }}</strong></td>
-        </tr>
-        @if (strtoupper((string) $pago->moneda) !== 'USD')
+        @if ($pago->usaLatidos())
+            <tr>
+                <td style="color: #55555f;">Total del plan</td>
+                <td><strong>{{ $pago->montoUsdTexto() }}</strong></td>
+            </tr>
+            <tr>
+                <td style="color: #55555f;">Descuento con Latidos</td>
+                <td>{{ $pago->latidosTexto() }} ({{ $pago->descuentoUsdTexto() }})</td>
+            </tr>
+            <tr>
+                <td style="color: #55555f;">Pagado con SyPago</td>
+                <td>
+                    @if ($pago->cubiertoConLatidos())
+                        <strong>Sin cobro</strong>
+                    @else
+                        <strong>{{ $pago->montoTexto() }}</strong>
+                    @endif
+                </td>
+            </tr>
+        @else
+            <tr>
+                <td style="color: #55555f;">Monto cobrado</td>
+                <td><strong>{{ $pago->montoTexto() }}</strong></td>
+            </tr>
+        @endif
+        @if (strtoupper((string) $pago->moneda) !== 'USD' && ! $pago->cubiertoConLatidos())
             <tr>
                 <td style="color: #55555f;">Equivalente en dólares</td>
                 <td>{{ $pago->montoUsdTexto() }}</td>

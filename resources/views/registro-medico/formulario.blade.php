@@ -105,6 +105,21 @@
                             <div class="form-text">Te enviamos un código para confirmarlo. Es con el que vas a iniciar sesión.</div>
                         </div>
 
+                        <div class="col-md-6">
+                            <label for="codigo_referido" class="form-label">Código de invitación <span class="text-muted">(opcional)</span></label>
+                            <input type="text" class="form-control @error('codigo_referido') is-invalid @enderror"
+                                   id="codigo_referido" name="codigo_referido" maxlength="12"
+                                   value="{{ old('codigo_referido', $codigoReferido ?? '') }}"
+                                   placeholder="Ej. ABC23456" autocomplete="off">
+                            <div class="form-text">
+                                @if (! empty($referenteNombre))
+                                    Te invitó <strong>{{ $referenteNombre }}</strong>.
+                                @else
+                                    Si un colega te compartió un código, escríbelo acá.
+                                @endif
+                            </div>
+                        </div>
+
                         <div class="col-12">
                             <label for="carnet" class="form-label">Foto del carnet <span class="text-muted">(opcional)</span></label>
                             <input type="file" class="form-control @error('carnet') is-invalid @enderror" id="carnet" name="carnet"
@@ -127,6 +142,8 @@
                                       placeholder="Por ejemplo, si ya usas GinecoReport en tu consultorio.">{{ old('mensaje', $previo['mensaje'] ?? '') }}</textarea>
                         </div>
                     </div>
+
+                    <x-legal.aceptacion />
 
                     <div class="d-flex flex-wrap align-items-center gap-2 mt-4">
                         <button type="submit" class="btn btn-primary">Continuar y verificar mi correo</button>

@@ -6,6 +6,8 @@ use App\Clinica\Pagos\Vistas\PagoVista;
 use App\Clinica\Pagos\Vistas\PlanElegidoVista;
 use App\Clinica\Pagos\Vistas\PlanVista;
 use App\Http\Controllers\Controller;
+use App\Latidos\Conversion;
+use App\Latidos\Latidos;
 use App\Models\CuentaBancaria;
 use App\Models\MetodoPago;
 use App\Models\Pago;
@@ -38,7 +40,7 @@ use RuntimeException;
  */
 class PlanController extends Controller
 {
-    public function index(Request $request, ServicioService $servicios, CupoDelPlan $cupos)
+    public function index(Request $request, ServicioService $servicios, CupoDelPlan $cupos, Latidos $latidos, \App\Latidos\RenovacionAutomatica $renovacion)
     {
         $regMedico = $this->regMedicoDelContexto($request);
 
@@ -83,12 +85,35 @@ class PlanController extends Controller
                 $ahorrosAnuales,
                 $detallesAnuales,
                 $frecuencia,
+                $latidos->disponiblesParaUsar($regMedico),
+                $renovacion->estado($regMedico),
             ),
         ]);
     }
 
+    /** Prende o apaga la renovación automática con Latidos (preferencia del consultorio). */
+    public function renovacion(Request $request, Latidos $latidos)
+    {
+        $regMedico = $this->regMedicoDelContexto($request);
+        $datos = $request->validate([
+            'renovacion_automatica' => ['required', 'boolean'],
+        ], [
+            'renovacion_automatica.required' => 'Indica si quieres la renovación automática.',
+        ], ['renovacion_automatica' => 'renovación automática']);
+
+        $latido = $latidos->para($regMedico);
+        $latido->update(['renovacion_automatica' => (bool) $datos['renovacion_automatica']]);
+
+        return redirect()->route('clinica.plan')->with(
+            'estado',
+            $latido->renovacion_automatica
+                ? 'Renovación automática encendida.'
+                : 'Renovación automática apagada.',
+        );
+    }
+
     /** La pantalla del plan elegido: método de pago y monto en su moneda. */
-    public function elegir(Request $request, Plan $plan, CupoDelPlan $cupos)
+    public function elegir(Request $request, Plan $plan, CupoDelPlan $cupos, Latidos $latidos)
     {
         $regMedico = $this->regMedicoDelContexto($request);
 
@@ -127,18 +152,30 @@ class PlanController extends Controller
 
         $precioMensualE2 = $cupos->precioUsdE2($plan, $conteo, Plan::MENSUAL);
         $precioAnualE2 = $cupos->precioUsdE2($plan, $conteo, Plan::ANUAL);
+        $precioE2 = $cupos->precioUsdE2($plan, $conteo, $frecuencia);
+
+        // Los Latidos se aplican primero; la pasarela sólo cobra la diferencia.
+        $disponibles = $latidos->disponiblesParaUsar($regMedico);
+        $necesarios = Conversion::desdeUsdE2($precioE2);
+        $latidosUsar = min($disponibles, $necesarios);
+        $descuentoUsdE2 = Conversion::aUsdE2($latidosUsar);
+        $aPagarUsdE2 = max(0, $precioE2 - $descuentoUsdE2);
 
         return view('clinica.plan.elegir', [
             'vm' => new PlanElegidoVista(
                 $plan,
                 $metodos,
                 TasaDeCambio::actual(),
-                $cupos->precioUsdE2($plan, $conteo, $frecuencia),
+                $precioE2,
                 $cupos->desglose($plan, $conteo, $frecuencia),
                 $frecuencia,
                 $precioMensualE2,
                 $precioAnualE2,
                 $cupos->ahorroAnualUsdE2($plan, $conteo),
+                $disponibles,
+                $latidosUsar,
+                $descuentoUsdE2,
+                $aPagarUsdE2,
             ),
         ]);
     }
@@ -150,7 +187,8 @@ class PlanController extends Controller
 
         $datos = $request->validate([
             'plan_id' => ['required', 'integer'],
-            'metodo_pago_id' => ['required', 'integer'],
+            // Es nullable: un plan cubierto al 100 % con Latidos no necesita método.
+            'metodo_pago_id' => ['nullable', 'integer'],
             'frecuencia' => ['nullable', Rule::in([Plan::MENSUAL, Plan::ANUAL])],
         ], [
             'frecuencia.in' => 'Elige pagar por mes o por año.',
@@ -161,13 +199,16 @@ class PlanController extends Controller
             return back()->with('error', 'Ese plan ya no está disponible.');
         }
 
-        $metodo = MetodoPago::deLaPlataforma()
-            ->activos()
-            ->paraUso(MetodoPago::PLANES)
-            ->find($datos['metodo_pago_id']);
+        $metodo = null;
+        if (! empty($datos['metodo_pago_id'])) {
+            $metodo = MetodoPago::deLaPlataforma()
+                ->activos()
+                ->paraUso(MetodoPago::PLANES)
+                ->find($datos['metodo_pago_id']);
 
-        if (! $metodo || $metodo->pasarela !== CatalogoDePasarelas::SYPAGO || ! $metodo->estaConfigurado()) {
-            return back()->with('error', 'Ese método de pago no está disponible.');
+            if (! $metodo || $metodo->pasarela !== CatalogoDePasarelas::SYPAGO || ! $metodo->estaConfigurado()) {
+                return back()->with('error', 'Ese método de pago no está disponible.');
+            }
         }
 
         $frecuencia = (string) ($datos['frecuencia'] ?? ($plan->ofreceAnual() ? Plan::ANUAL : Plan::MENSUAL));
