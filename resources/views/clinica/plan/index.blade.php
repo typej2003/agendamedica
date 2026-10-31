@@ -6,6 +6,7 @@
     <x-ui.page-head :titulo="$vm->titulo()" :subtitulo="$vm->subtitulo()" />
 
     <x-ui.errores />
+    <x-ui.avisos />
 
     <div class="card mb-4">
         <div class="card-header bg-white py-3">
@@ -27,7 +28,9 @@
                 @if ($vm->venceEl())
                     <p class="mb-1">
                         Vence el <strong>{{ \Carbon\Carbon::parse($vm->venceEl())->format(\App\Support\Regionalizacion::formatoActual()) }}</strong>
-                        @if ($vm->diasRestantes() !== null)
+                        @if ($vm->renovacionCubierta() && ($vm->diasRestantes() ?? -1) >= 0)
+                            <span class="badge bg-success">{{ $vm->renovacionTexto() }}</span>
+                        @elseif ($vm->diasRestantes() !== null && ! $vm->renovacionCubierta())
                             @if ($vm->diasRestantes() >= 0)
                                 <span class="text-muted">({{ $vm->diasRestantes() }} {{ $vm->diasRestantes() === 1 ? 'día' : 'días' }})</span>
                             @else
@@ -48,6 +51,38 @@
             @else
                 <p class="mb-0 text-muted">Todavía no tienes un plan asignado a este consultorio.</p>
             @endif
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <strong>Renovación automática con Latidos</strong>
+                <p class="small text-muted mb-0">
+                    @if ($vm->renovacionAutomatica() && $vm->renovacionCubierta())
+                        Tus Latidos cubren el próximo plan: se descuentan el día del vencimiento y no se te
+                        manda el recordatorio de “por vencer”.
+                    @elseif ($vm->renovacionAutomatica())
+                        La preferencia está encendida. Cuando tengas Latidos suficientes, el plan se pagará
+                        solo el día del vencimiento.
+                    @else
+                        El plan no se renueva solo: al vencer, puedes usar tus Latidos desde «Mi plan».
+                    @endif
+                </p>
+            </div>
+            <form method="POST" action="{{ route('clinica.plan.renovacion') }}" class="d-flex align-items-center gap-2">
+                @csrf
+                <input type="hidden" name="renovacion_automatica" value="0">
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" role="switch" id="renovacion-automatica"
+                           name="renovacion_automatica" value="1"
+                           {{ $vm->renovacionAutomatica() ? 'checked' : '' }}>
+                    <label class="form-check-label small" for="renovacion-automatica">
+                        {{ $vm->renovacionAutomatica() ? 'Encendida' : 'Apagada' }}
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-sm btn-outline-primary">Guardar</button>
+            </form>
         </div>
     </div>
 

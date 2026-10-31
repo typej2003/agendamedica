@@ -40,7 +40,7 @@ use RuntimeException;
  */
 class PlanController extends Controller
 {
-    public function index(Request $request, ServicioService $servicios, CupoDelPlan $cupos, Latidos $latidos)
+    public function index(Request $request, ServicioService $servicios, CupoDelPlan $cupos, Latidos $latidos, \App\Latidos\RenovacionAutomatica $renovacion)
     {
         $regMedico = $this->regMedicoDelContexto($request);
 
@@ -86,8 +86,30 @@ class PlanController extends Controller
                 $detallesAnuales,
                 $frecuencia,
                 $latidos->disponiblesParaUsar($regMedico),
+                $renovacion->estado($regMedico),
             ),
         ]);
+    }
+
+    /** Prende o apaga la renovación automática con Latidos (preferencia del consultorio). */
+    public function renovacion(Request $request, Latidos $latidos)
+    {
+        $regMedico = $this->regMedicoDelContexto($request);
+        $datos = $request->validate([
+            'renovacion_automatica' => ['required', 'boolean'],
+        ], [
+            'renovacion_automatica.required' => 'Indica si quieres la renovación automática.',
+        ], ['renovacion_automatica' => 'renovación automática']);
+
+        $latido = $latidos->para($regMedico);
+        $latido->update(['renovacion_automatica' => (bool) $datos['renovacion_automatica']]);
+
+        return redirect()->route('clinica.plan')->with(
+            'estado',
+            $latido->renovacion_automatica
+                ? 'Renovación automática encendida.'
+                : 'Renovación automática apagada.',
+        );
     }
 
     /** La pantalla del plan elegido: método de pago y monto en su moneda. */

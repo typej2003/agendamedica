@@ -173,6 +173,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // La compra de paquetes está apagada en el MVP; se aplican al pagar el plan.
                 Route::get('/latidos', [LatidosController::class, 'index'])->name('latidos');
                 Route::get('/plan', [PlanController::class, 'index'])->name('plan');
+                // Prender/apagar la renovación automática con Latidos (preferencia del consultorio).
+                Route::post('/plan/renovacion', [PlanController::class, 'renovacion'])->name('plan.renovacion');
                 // El plan elegido: método de pago y monto en su moneda. `whereNumber` para que no capture
                 // `comprar` ni `pago`.
                 Route::get('/plan/{plan}', [PlanController::class, 'elegir'])->whereNumber('plan')->name('plan.elegir');

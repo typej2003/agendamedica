@@ -74,9 +74,15 @@ class Kernel extends ConsoleKernel
             ->everyMinute()
             ->withoutOverlapping();
 
+        // **Renovación automática con Latidos** (fase 3, 2026-10-31): sólo actúa el día del vencimiento
+        // (o en gracia si una corrida falló). Si los Latidos no cubren el 100 %, no toca nada.
+        $schedule->command('latidos:renovar-planes')
+            ->timezone('America/Caracas')
+            ->dailyAt('06:10')
+            ->withoutOverlapping();
+
         // **Latidos** (2026-10-31): revisa que la caché `latidos.disponibles` coincida con el libro de
         // movimientos. No corrige nada: si hay un descuadre, termina en error y el cron lo deja en el log.
-        // La renovación automática con Latidos va en la fase 3, no acá.
         $schedule->command('latidos:verificar')
             ->timezone('America/Caracas')
             ->weeklyOn(1, '03:30')
