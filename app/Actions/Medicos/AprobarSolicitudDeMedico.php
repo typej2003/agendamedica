@@ -2,13 +2,20 @@
 
 namespace App\Actions\Medicos;
 
+use App\Mail\LatidosGanadosPorReferido;
 use App\Models\Medico;
+use App\Models\Referido;
+use App\Models\RegMedicoServicio;
 use App\Models\SolicitudMedico;
 use App\Models\User;
+use App\Referidos\AcreditarReferido;
 use App\RegistroDeMedicos\CorreosDeLaSolicitud;
 use App\Services\CuentaService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * **Aprobar la solicitud de registro de un médico** (ROADMAP §10.4, fase 2): nace su cuenta con clave temporal y
@@ -34,6 +41,7 @@ final class AprobarSolicitudDeMedico
     public function __construct(
         private CuentaService $cuentas,
         private CorreosDeLaSolicitud $correos,
+        private AcreditarReferido $referidos,
     ) {
     }
 
@@ -49,7 +57,12 @@ final class AprobarSolicitudDeMedico
             throw ValidationException::withMessages(['reg_medico' => 'Escribe el reg_medico con el que va a trabajar.']);
         }
 
-        $resultado = DB::transaction(function () use ($solicitud, $revisor, $regMedico) {
+        // Si la ficha ya existía con un servicio, es un cliente existente: el premio no se paga. Se mira
+        // **antes** de crear la cuenta, porque `MedicoRegistrado` le otorga la prueba y después parecería
+        // que ya era cliente.
+        $teniaServicioAntes = RegMedicoServicio::where('reg_medico', $regMedico)->exists();
+
+        $resultado = DB::transaction(function () use ($solicitud, $revisor, $regMedico, $teniaServicioAntes) {
             $solicitud = SolicitudMedico::whereKey($solicitud->id)->lockForUpdate()->firstOrFail();
 
             if (! $solicitud->estaPendiente()) {
@@ -103,7 +116,17 @@ final class AprobarSolicitudDeMedico
                 'reg_medico' => $regMedico,
             ]);
 
-            return ['medico' => $ficha, 'clave' => $clave, 'enlazada' => $enlazada, 'solicitud' => $solicitud];
+            // El premio se acredita en la misma transacción del alta. La Action decide si corresponde
+            // (autorreferencia, cliente existente, tope) y deja la fila `rechazado` cuando no.
+            $referido = $this->referidos->ejecutar($solicitud, $regMedico, $ficha, $teniaServicioAntes);
+
+            return [
+                'medico' => $ficha,
+                'clave' => $clave,
+                'enlazada' => $enlazada,
+                'solicitud' => $solicitud,
+                'referido' => $referido,
+            ];
         });
 
         // Va después de guardar, igual que en la pantalla de especialidades: si la copia del catálogo inicial
@@ -114,6 +137,8 @@ final class AprobarSolicitudDeMedico
             $this->cuentas->asignarEspecialidades($resultado['medico'], array_merge($actuales, [$especialidadId]));
         }
 
+        $this->avisarLatidosDelReferido($resultado['referido'] ?? null);
+
         $correoEnviado = $this->correos->aprobada($resultado['solicitud'], $resultado['clave']);
 
         return [
@@ -122,6 +147,43 @@ final class AprobarSolicitudDeMedico
             'enlazada' => $resultado['enlazada'],
             'correoEnviado' => $correoEnviado,
         ];
+    }
+
+    /**
+     * Avisa a los dos que ganaron Latidos. Va **después** de la transacción: si el correo falla, el premio
+     * no se revierte (la regla del plan). El aviso es informativo, no un comprobante.
+     */
+    private function avisarLatidosDelReferido(?Referido $referido): void
+    {
+        if (! $referido || ! $referido->estaAcreditado()) {
+            return;
+        }
+
+        $referente = Medico::where('reg_medico', $referido->referente_reg_medico)->first();
+        $colega = Medico::where('reg_medico', $referido->referido_reg_medico)->first();
+
+        foreach ([
+            [$referente, (int) $referido->latidos_referente, true],
+            [$colega, (int) $referido->latidos_referido, false],
+        ] as [$medico, $latidos, $esReferente]) {
+            if (! $medico?->email || $latidos <= 0) {
+                continue;
+            }
+
+            try {
+                Mail::to($medico->email)->send(new LatidosGanadosPorReferido(
+                    trim($medico->name . ' ' . $medico->lastname),
+                    $latidos,
+                    $esReferente,
+                ));
+            } catch (Throwable $e) {
+                Log::warning('No se pudo avisar los Latidos del referido', [
+                    'referido_id' => $referido->id,
+                    'medico' => $medico->reg_medico,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 
     /**

@@ -40,7 +40,37 @@ final class PlanVista
         public readonly array $detallesAnuales = [],
         public readonly string $frecuenciaElegida = Plan::ANUAL,
         public readonly int $latidosDisponibles = 0,
+        public readonly array $renovacion = [],
     ) {
+    }
+
+    public function renovacionAutomatica(): bool
+    {
+        return (bool) ($this->renovacion['activa'] ?? false);
+    }
+
+    public function renovacionCubierta(): bool
+    {
+        return (bool) ($this->renovacion['cubierta'] ?? false);
+    }
+
+    public function avisoPorVencer(): bool
+    {
+        return (bool) ($this->renovacion['aviso_por_vencer'] ?? true);
+    }
+
+    /** “Se renueva solo el 30/11/2026 con 2.000 Latidos.” Null si no está cubierta. */
+    public function renovacionTexto(): ?string
+    {
+        if (! $this->renovacionCubierta() || empty($this->renovacion['vence_el'])) {
+            return null;
+        }
+
+        $fecha = \Carbon\Carbon::parse((string) $this->renovacion['vence_el'])
+            ->format(\App\Support\Regionalizacion::formatoActual());
+
+        return 'Se renueva solo el ' . $fecha . ' con '
+            . \App\Latidos\Conversion::formatear((int) ($this->renovacion['latidos_necesarios'] ?? 0));
     }
 
     public function latidosDisponibles(): int

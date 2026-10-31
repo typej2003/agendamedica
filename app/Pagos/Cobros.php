@@ -639,8 +639,11 @@ final class Cobros
         );
     }
 
-    /** El comprobante por correo al médico que hizo el pago; si falla, se registra y no se revierte nada. */
-    private function enviarComprobante(Pago $pago): void
+    /**
+     * El comprobante por correo al médico que hizo el pago; si falla, se registra y no se revierte nada.
+     * Es público para que la renovación automática con Latidos mande el mismo comprobante.
+     */
+    public function enviarComprobante(Pago $pago): void
     {
         try {
             $usuario = $pago->creado_por ? User::find($pago->creado_por) : null;

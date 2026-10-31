@@ -280,10 +280,12 @@ class CitaOnlineConfiguracionWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->get(self::URL);
 
         $respuesta->assertOk();
-        // Con el 100 % por defecto, al reservar se cobra el precio completo del motivo.
+        // Con el 100 % por defecto, al reservar se cobra el precio completo del motivo y **no** queda
+        // nada por cobrar en el consultorio: la segunda oración no tiene que aparecer.
         $respuesta->assertSee('CONSULTA');
         $respuesta->assertSee('USD 50,00');
-        $respuesta->assertSee('USD 0,00');
+        $respuesta->assertSee('Al reservar se cobran');
+        $respuesta->assertDontSee('restantes se cobran');
 
         // Con 30 % se muestra el desglose: 15 al reservar y 35 en el consultorio.
         $this->conContexto($user, $medico, $gineco)
@@ -295,6 +297,7 @@ class CitaOnlineConfiguracionWebTest extends TestCase
         $respuesta->assertOk();
         $respuesta->assertSee('USD 15,00');
         $respuesta->assertSee('USD 35,00');
+        $respuesta->assertSee('restantes se cobran');
     }
 
     public function test_configuracion_de_cita_online_aplica_los_valores_por_defecto(): void

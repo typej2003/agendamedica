@@ -3,6 +3,7 @@
 namespace App\RegistroDeMedicos;
 
 use App\Models\SolicitudMedico;
+use App\Referidos\CodigosDeReferido;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -21,12 +22,14 @@ final class ConfirmarSolicitudDeMedico
 
     private const CAMPOS = [
         'prefijo', 'nombres', 'apellidos', 'cedula', 'mpps', 'colegio', 'specialty_id', 'telefono', 'email',
-        'ciudad', 'mensaje', 'carnet_ruta', 'carnet_tipo', 'carnet_nombre',
+        'ciudad', 'mensaje', 'carnet_ruta', 'carnet_tipo', 'carnet_nombre', 'codigo_referido',
+        'referente_reg_medico',
     ];
 
     public function __construct(
         private SolicitudEnCurso $enCurso,
         private CorreosDeLaSolicitud $correos,
+        private CodigosDeReferido $codigosDeReferido,
     ) {
     }
 
@@ -51,6 +54,12 @@ final class ConfirmarSolicitudDeMedico
                 'codigo' => 'Demasiados intentos con ese código. Pide uno nuevo.',
             ]);
         }
+
+        // Se resuelve una sola vez, al confirmar: si el código no existe, la solicitud se guarda sin
+        // atribución y no se bloquea el registro.
+        $referido = $this->codigosDeReferido->resolver($datos['codigo_referido'] ?? null);
+        $datos['codigo_referido'] = $referido?->codigo;
+        $datos['referente_reg_medico'] = $referido?->reg_medico;
 
         if (! Hash::check($codigo, (string) ($datos['codigo_hash'] ?? ''))) {
             $datos['intentos'] = (int) ($datos['intentos'] ?? 0) + 1;

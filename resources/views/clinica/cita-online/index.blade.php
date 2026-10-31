@@ -57,8 +57,10 @@
                         Cita de <strong>{{ $referencia['motivo'] }}</strong> · {{ $referencia['precio'] }}
                     </p>
                     <p class="mb-0 small">
-                        Al reservar se cobran <strong>{{ $referencia['alReservar'] }}</strong>;
-                        los <strong>{{ $referencia['resto'] }}</strong> restantes se cobran en el consultorio.
+                        Al reservar se cobran <strong>{{ $referencia['alReservar'] }}</strong>.
+                        @if ($referencia['resto_e2'] > 0)
+                            Los <strong>{{ $referencia['resto'] }}</strong> restantes se cobran en el consultorio.
+                        @endif
                     </p>
                 </div>
             @else
