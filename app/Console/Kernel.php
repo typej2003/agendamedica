@@ -74,6 +74,14 @@ class Kernel extends ConsoleKernel
             ->everyMinute()
             ->withoutOverlapping();
 
+        // **Latidos** (2026-10-31): revisa que la caché `latidos.disponibles` coincida con el libro de
+        // movimientos. No corrige nada: si hay un descuadre, termina en error y el cron lo deja en el log.
+        // La renovación automática con Latidos va en la fase 3, no acá.
+        $schedule->command('latidos:verificar')
+            ->timezone('America/Caracas')
+            ->weeklyOn(1, '03:30')
+            ->withoutOverlapping();
+
         // **Bajas de cuenta cumplidas** (2026-10-30): la página pública `/eliminar-cuenta` —requisito de
         // Google Play— programa la baja a 30 días y esto la ejecuta. Corre de madrugada, hora de Caracas,
         // y **con `--ejecutar`**: sin la bandera el comando sólo informa y las bajas no se harían nunca.

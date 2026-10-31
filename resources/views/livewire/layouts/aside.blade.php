@@ -100,6 +100,13 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('admin.latidos') }}" class="nav-link {{ request()->routeIs('admin.latidos') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.latidos')) aria-current="page" @endif title="Latidos">
+                    <i class="bi bi-stars" aria-hidden="true"></i>
+                    <span class="link-text">Latidos</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('admin.solicitudes-medicos') }}" class="nav-link {{ request()->routeIs('admin.solicitudes-medicos') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.solicitudes-medicos')) aria-current="page" @endif
                    title="Solicitudes de médicos{{ $avisos['solicitudes'] ? ' (' . $avisos['solicitudes'] . ' sin responder)' : '' }}">
