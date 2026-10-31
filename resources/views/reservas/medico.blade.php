@@ -101,6 +101,23 @@
                             </label>
                         @endforeach
                     </div>
+
+                    @if ($motivos->isNotEmpty())
+                        <div class="mt-3">
+                            <label for="motivo" class="form-label">Motivo de la consulta</label>
+                            <select class="form-select @error('motivo') is-invalid @enderror" id="motivo" name="motivo" required>
+                                <option value="">Elige el motivo</option>
+                                @foreach ($motivos as $motivo)
+                                    <option value="{{ $motivo->codigo }}" {{ old('motivo') === $motivo->codigo ? 'selected' : '' }}>
+                                        {{ $motivo->tipo_atencion }}
+                                        · {{ \App\Pagos\Centavos::formatear(\App\Pagos\Centavos::deDecimal((string) $motivo->precio), 'USD') }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">Es el motivo de tu cita; el precio es el de la consulta.</div>
+                            @error('motivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                    @endif
                 </fieldset>
 
                 <fieldset class="reservas-paso">

@@ -51,6 +51,8 @@
                         <span class="paciente-cita-hora">{{ $cita->horaLegible() }}</span>
                         <span class="paciente-estado {{ $cita->estadoClase() }}">{{ $cita->estado() }}</span>
 
+                        @include('paciente._pagar', ['cita' => $cita])
+
                         @if ($cita->puedeGestionarse())
                             <div class="paciente-cita-acciones">
                                 <a href="{{ route('paciente.citas.reprogramar', $cita->id()) }}" class="btn btn-outline-primary btn-sm">
@@ -89,6 +91,8 @@
 
                     <div class="paciente-cita-lado">
                         <span class="paciente-estado {{ $cita->estadoClase() }}">{{ $cita->estado() }}</span>
+
+                        @include('paciente._pagar', ['cita' => $cita])
                     </div>
                 </article>
             @endforeach

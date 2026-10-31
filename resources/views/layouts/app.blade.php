@@ -52,15 +52,17 @@
         .main-content { flex: 1; padding: 0; min-width: 0; }
     </style>
 </head>
-<body class="@auth panel @else sitio-publico @endauth">
+{{-- Una página pública que declara `sin-panel` se ve igual con sesión o sin ella: el link de pago lo abre
+     el paciente, que puede estar logueado, y no tiene por qué aparecer el armazón del consultorio. --}}
+<body class="@if (auth()->check() && ! View::hasSection('sin-panel')) panel @else sitio-publico @endif">
 
     @livewire('layouts.navbar')
 
     <div id="wrapper">
-        @auth
+        @if (auth()->check() && ! View::hasSection('sin-panel'))
             <div class="app-sidebar-fondo" id="panel-sidebar-fondo" hidden></div>
             @livewire('layouts.aside')
-        @endauth
+        @endif
 
         <main class="main-content">
             {{ $slot ?? '' }}
