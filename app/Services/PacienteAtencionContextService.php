@@ -6,6 +6,7 @@ use App\Actions\Agenda\CrearCita;
 use App\Actions\Agenda\EditarCita;
 use App\Clinica\Agenda\ArmadorDeAgenda;
 use App\Clinica\Agenda\Jornada;
+use App\Clinica\CitaOnline\ConfiguracionDeCitaOnline;
 use App\Models\Cola;
 use App\Models\DiaNoLaborable;
 use App\Models\Evolucion;
@@ -1291,6 +1292,9 @@ class PacienteAtencionContextService
                 $medicos = Medico::where('biography', 'like', "%{$nombreEspecialidad}%")->get();
             }
 
+            // El bot ofrece la misma agenda que el portal: el médico que la despublicó no aparece acá.
+            $medicos = $this->soloConAgendaPublicada($medicos);
+
             $resultado = [];
             foreach ($medicos as $m) {
                 $resultado[] = [
@@ -1312,6 +1316,37 @@ class PacienteAtencionContextService
                 'medicos' => [],
             ];
         }
+    }
+
+    /**
+     * **La agenda publicada también manda en el bot** (2026-10-30): el médico que apagó «publicar mi
+     * agenda» en Configuración → Cita Online no se le ofrece al paciente por WhatsApp, igual que
+     * desaparece del portal. Sin fila en `evolucion`, o con la columna en `null`, se publica: es el
+     * valor por defecto, para no dejar fuera a los consultorios que ya existen.
+     *
+     * Se resuelve en **una sola consulta** para toda la lista, no una por médico.
+     *
+     * @param  \Illuminate\Support\Collection<int,\App\Models\Medico>  $medicos
+     * @return \Illuminate\Support\Collection<int,\App\Models\Medico>
+     */
+    private function soloConAgendaPublicada($medicos)
+    {
+        $regs = $medicos->pluck('reg_medico')->filter()->unique()->values();
+
+        if ($regs->isEmpty()) {
+            return $medicos;
+        }
+
+        $publican = Evolucion::whereIn('reg_medico', $regs)
+            ->get()
+            ->mapWithKeys(fn (Evolucion $evolucion): array => [
+                $evolucion->reg_medico => ConfiguracionDeCitaOnline::de($evolucion)->publicaAgenda(),
+            ]);
+
+        return $medicos
+            ->filter(fn (Medico $medico): bool => $publican[$medico->reg_medico]
+                ?? ConfiguracionDeCitaOnline::PUBLICAR_POR_DEFECTO)
+            ->values();
     }
 
     /**
