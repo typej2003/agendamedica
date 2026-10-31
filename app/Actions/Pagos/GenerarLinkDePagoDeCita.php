@@ -19,8 +19,9 @@ use RuntimeException;
  *
  * Las reglas del alcance:
  *
- * - **El monto es el precio de la cita** (`cola.monto`, en USD): el cobro del 100 % por defecto. El
- *   porcentaje configurable es otra tarea, así que acá no se inventa ninguno.
+ * - **El monto es lo que falta cobrar de la cita** (`montoPendiente()` = `cola.monto` − `monto_pagado`,
+ *   en USD). En una cita sin abonos es el precio completo; en una abonada, el saldo: el link nunca cobra
+ *   dos veces lo que el mostrador ya recibió. El porcentaje configurable es otra tarea.
  * - **Sin precio no hay link**: una cita con `monto` nulo o ≤ 0 no se cobra; la pantalla manda a ponerlo.
  * - **El método es el de la plataforma para cobros**, con la misma consulta que usa el checkout del plan
  *   (`MetodoPago::deLaPlataforma()->activos()->paraUso(...)`, SyPago y configurado). Si hay varios gana el
@@ -58,8 +59,13 @@ final class GenerarLinkDePagoDeCita
 
     public function ejecutar(Cola $cita, ?int $usuarioId = null): ResultadoDeLinkDePago
     {
-        // `cola.monto` está en dólares: el link cobra el precio de la cita, no un porcentaje.
-        $montoUsdE2 = Centavos::deDecimal($cita->monto);
+        // Una cita ya cobrada no genera link: es distinto de una cita sin precio, que sí manda a cargarlo.
+        if ($this->estaPagada($cita)) {
+            return ResultadoDeLinkDePago::yaPagada();
+        }
+
+        // `cola.monto` está en dólares: el link cobra el saldo de la cita, no un porcentaje.
+        $montoUsdE2 = Centavos::deDecimal($cita->montoPendiente());
         if ($montoUsdE2 <= 0) {
             return ResultadoDeLinkDePago::sinPrecio();
         }
@@ -79,15 +85,16 @@ final class GenerarLinkDePagoDeCita
                     return ResultadoDeLinkDePago::error('La cita ya no existe.');
                 }
 
-                // El precio se vuelve a leer bajo el bloqueo: si el mostrador lo cambió mientras se abría
-                // la pantalla, se cobra el vigente y los links del monto viejo quedan cancelados.
-                $montoUsdE2 = Centavos::deDecimal($bloqueada->monto);
-                if ($montoUsdE2 <= 0) {
-                    return ResultadoDeLinkDePago::sinPrecio();
-                }
-
                 if ($this->estaPagada($bloqueada)) {
                     return ResultadoDeLinkDePago::yaPagada();
+                }
+
+                // El saldo se vuelve a leer bajo el bloqueo: si el mostrador cobró o cambió el precio
+                // mientras se abría la pantalla, se cobra el vigente y los links del monto viejo quedan
+                // cancelados.
+                $montoUsdE2 = Centavos::deDecimal($bloqueada->montoPendiente());
+                if ($montoUsdE2 <= 0) {
+                    return ResultadoDeLinkDePago::sinPrecio();
                 }
 
                 $vigente = $this->pendienteDelMismoMonto($bloqueada, $montoUsdE2);

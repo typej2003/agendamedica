@@ -98,7 +98,7 @@ final class LinkDePagoVista
             : '';
     }
 
-    /** El precio de la cita en dólares: es lo que se cobra. */
+    /** El saldo de la cita en dólares: es lo que se cobra (el precio completo si no hay abonos). */
     public function montoUsd(): string
     {
         return Centavos::formatear($this->montoUsdE2(), 'USD');
@@ -184,6 +184,6 @@ final class LinkDePagoVista
 
     private function montoUsdE2(): int
     {
-        return (int) ($this->pago()?->monto_usd_e2 ?? Centavos::deDecimal($this->cita->monto));
+        return (int) ($this->pago()?->monto_usd_e2 ?? Centavos::deDecimal($this->cita->montoPendiente()));
     }
 }

@@ -251,6 +251,28 @@ class LinkDePagoAgendaWebTest extends TestCase
         $respuesta->assertSee('la tasa del día');
     }
 
+    public function test_una_cita_abonada_genera_el_link_por_el_saldo(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico);
+        $this->metodoDeLaPlataforma();
+
+        // Precio 50, ya abonó 20 en el mostrador: el link tiene que cobrar los 30 que faltan.
+        $cita = $this->citaDePrueba($medico, $sede, ['monto_pagado' => 20]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlDelLink($cita))
+            ->assertOk()
+            ->assertSee('USD 30,00');
+
+        $pago = Pago::where('pagable_tipo', Pago::PAGABLE_CITA)
+            ->where('pagable_id', $cita->id)
+            ->sole();
+
+        $this->assertSame(3000, (int) $pago->monto_usd_e2);
+        $this->assertGreaterThan(0, (int) $pago->monto_e2);
+    }
+
     public function test_abrir_la_pantalla_dos_veces_reusa_el_pendiente(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
