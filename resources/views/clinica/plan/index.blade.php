@@ -51,6 +51,16 @@
         </div>
     </div>
 
+    @if ($vm->latidosDisponibles() > 0)
+        <div class="alert alert-success d-flex align-items-start gap-2" role="status">
+            <i class="bi bi-stars mt-1" aria-hidden="true"></i>
+            <div>
+                Tienes <strong>{{ $vm->latidosDisponiblesTexto() }}</strong>.
+                Se aplican como descuento al pagar un plan: 100 Latidos = USD 1 de descuento.
+            </div>
+        </div>
+    @endif
+
     @if ($vm->aviso())
         <div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
             <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> {{ $vm->aviso() }}

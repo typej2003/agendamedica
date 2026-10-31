@@ -31,6 +31,17 @@
                             <dt class="col-6 fw-normal text-muted">Ahorro</dt>
                             <dd class="col-6 text-end text-success fw-semibold">{{ $vm->ahorroTexto() }}</dd>
                         @endif
+
+                        @if ($vm->usaLatidos())
+                            <dt class="col-6 fw-normal text-muted">Descuento con Latidos</dt>
+                            <dd class="col-6 text-end text-success fw-semibold">
+                                {{ $vm->latidosUsadosTexto() }}
+                                <small class="text-muted fw-normal">({{ $vm->descuentoUsdTexto() }})</small>
+                            </dd>
+
+                            <dt class="col-6 fw-normal text-muted">A pagar</dt>
+                            <dd class="col-6 text-end fw-semibold">{{ $vm->aPagarUsdTexto() }}</dd>
+                        @endif
                     </dl>
 
                     @if ($vm->desglose())
@@ -94,7 +105,32 @@
                         </div>
                     @endif
 
-                    @if ($vm->metodos->isNotEmpty())
+                    @if ($vm->usaLatidos())
+                        <div class="alert alert-success py-2 small" role="status">
+                            <i class="bi bi-stars me-1" aria-hidden="true"></i>
+                            Usamos <strong>{{ $vm->latidosUsadosTexto() }}</strong> como descuento
+                            ({{ $vm->descuentoUsdTexto() }}).
+                            @if ($vm->cubiertoConLatidos())
+                                <strong>El plan queda cubierto: no pagas nada con SyPago.</strong>
+                            @else
+                                Te queda por pagar <strong>{{ $vm->aPagarUsdTexto() }}</strong>.
+                            @endif
+                        </div>
+                    @endif
+
+                    @if ($vm->cubiertoConLatidos())
+                        <form method="POST" action="{{ route('clinica.plan.comprar') }}">
+                            @csrf
+                            <input type="hidden" name="plan_id" value="{{ $vm->plan->id }}">
+                            <input type="hidden" name="frecuencia" value="{{ $vm->frecuenciaElegida }}">
+                            <div class="d-flex gap-2 mt-3">
+                                <a href="{{ route('clinica.plan') }}" class="btn btn-outline-secondary">Volver a mi plan</a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-stars me-1" aria-hidden="true"></i> Usar mis Latidos y activar
+                                </button>
+                            </div>
+                        </form>
+                    @elseif ($vm->metodos->isNotEmpty())
                         <form method="POST" action="{{ route('clinica.plan.comprar') }}">
                             @csrf
                             <input type="hidden" name="plan_id" value="{{ $vm->plan->id }}">

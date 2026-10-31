@@ -54,7 +54,10 @@ final class RefrescarPagoDePlan
             return $this->renovar($pago, $minutos);
         }
 
-        $montoE2 = $tasa->convertirUsdAVes((int) $pago->monto_usd_e2);
+        // La tasa cambia **sólo la parte de la pasarela**: los Latidos ya se descontaron en USD y no se
+        // vuelven a convertir. El neto del plan sigue siendo el total de la venta, no lo que cobra SyPago.
+        $montoE2 = $tasa->convertirUsdAVes((int) $pago->monto_pasarela_usd_e2);
+        $netoVesE2 = $tasa->convertirUsdAVes((int) $pago->monto_usd_e2);
 
         if (! $aplicar) {
             return $this->resultado('cambio', $pago, $montoE2, $moneda, null,
@@ -65,7 +68,7 @@ final class RefrescarPagoDePlan
             'estado' => Pago::PENDIENTE,
             'monto_e2' => $montoE2,
             'tasa' => $tasa->tasa,
-            'neto_ves_e2' => $montoE2,
+            'neto_ves_e2' => $netoVesE2,
             'expira_el' => now()->addMinutes($minutos),
         ]);
 

@@ -59,7 +59,7 @@ class Pago extends Model
     protected $fillable = [
         'referencia', 'internal_id', 'token_publico', 'beneficiario_tipo', 'beneficiario_reg_medico', 'reg_medico', 'recaudador',
         'canal', 'pagable_tipo', 'pagable_id', 'concepto', 'metodo_pago_id', 'cuenta_bancaria_id', 'meses',
-        'moneda', 'monto_e2', 'monto_usd_e2', 'tasa',
+        'moneda', 'monto_e2', 'monto_usd_e2', 'latidos_usados', 'descuento_usd_e2', 'monto_pasarela_usd_e2', 'latido_id', 'tasa',
         'comision_metodo_usd_e2', 'comision_cita_online_usd_e2', 'comision_total_usd_e2', 'neto_usd_e2',
         'comision_total_ves_e2', 'neto_ves_e2',
         'estado', 'referencia_externa', 'operation_secret', 'datos_pagador', 'respuesta', 'otp_enviado_el', 'otp_intentos',
@@ -69,6 +69,9 @@ class Pago extends Model
     protected $casts = [
         'monto_e2' => 'integer',
         'monto_usd_e2' => 'integer',
+        'latidos_usados' => 'integer',
+        'descuento_usd_e2' => 'integer',
+        'monto_pasarela_usd_e2' => 'integer',
         'meses' => 'integer',
         'tasa' => 'decimal:6',
         'comision_metodo_usd_e2' => 'integer',
@@ -109,6 +112,12 @@ class Pago extends Model
     public function cuentaBancaria(): BelongsTo
     {
         return $this->belongsTo(CuentaBancaria::class, 'cuenta_bancaria_id');
+    }
+
+    /** La fila de Latidos del consultorio que se usó en este pago, si se usó. */
+    public function latido(): BelongsTo
+    {
+        return $this->belongsTo(Latido::class, 'latido_id');
     }
 
     public function comisiones(): HasMany
@@ -171,6 +180,36 @@ class Pago extends Model
     public function montoUsdTexto(): string
     {
         return Centavos::formatear($this->monto_usd_e2, 'USD');
+    }
+
+    /** ¿Este pago usó Latidos como descuento? */
+    public function usaLatidos(): bool
+    {
+        return (int) $this->latidos_usados > 0;
+    }
+
+    /** ¿Los Latidos cubrieron todo y la pasarela no cobró nada? */
+    public function cubiertoConLatidos(): bool
+    {
+        return $this->usaLatidos() && (int) $this->monto_pasarela_usd_e2 === 0;
+    }
+
+    /** El valor del descuento con Latidos, en USD. */
+    public function descuentoUsdTexto(): string
+    {
+        return Centavos::formatear((int) $this->descuento_usd_e2, 'USD');
+    }
+
+    /** La parte que pagó la pasarela, en USD. */
+    public function montoPasarelaUsdTexto(): string
+    {
+        return Centavos::formatear((int) $this->monto_pasarela_usd_e2, 'USD');
+    }
+
+    /** «2.000 Latidos», para el comprobante y las pantallas. */
+    public function latidosTexto(): string
+    {
+        return \App\Latidos\Conversion::formatear((int) $this->latidos_usados);
     }
 
     public function montoTexto(): string

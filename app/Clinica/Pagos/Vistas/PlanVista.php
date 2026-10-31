@@ -39,7 +39,18 @@ final class PlanVista
         public readonly array $ahorrosAnualesE2 = [],
         public readonly array $detallesAnuales = [],
         public readonly string $frecuenciaElegida = Plan::ANUAL,
+        public readonly int $latidosDisponibles = 0,
     ) {
+    }
+
+    public function latidosDisponibles(): int
+    {
+        return $this->latidosDisponibles;
+    }
+
+    public function latidosDisponiblesTexto(): string
+    {
+        return \App\Latidos\Conversion::formatear($this->latidosDisponibles);
     }
 
     public function titulo(): string
