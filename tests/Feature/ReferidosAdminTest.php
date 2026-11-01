@@ -128,4 +128,26 @@ class ReferidosAdminTest extends TestCase
         $this->assertSame(0, app(Latidos::class)->disponibles($referente->reg_medico));
         $this->assertSame(0, app(Latidos::class)->disponibles($referido->referido_reg_medico));
     }
+
+    public function test_la_bandeja_de_solicitudes_muestra_quien_refirio(): void
+    {
+        [$user, $referente, $codigo] = $this->referente();
+
+        SolicitudMedico::create([
+            'prefijo' => 'Dr.', 'nombres' => 'Nuevo', 'apellidos' => 'Referido',
+            'cedula' => '9' . random_int(1000000, 9999999), 'mpps' => (string) random_int(100000, 999999),
+            'telefono' => '0414-5556677', 'email' => 'bandeja-ref-' . uniqid() . '@example.com',
+            'estado' => SolicitudMedico::PENDIENTE,
+            'referente_reg_medico' => $referente->reg_medico,
+            'codigo_referido' => $codigo,
+        ]);
+
+        $this->actingAs($this->usuario('Administrador'))
+            ->get(route('admin.solicitudes-medicos'))
+            ->assertOk()
+            ->assertSee('Referido por')
+            ->assertSee('Dr. Admin Referente')
+            ->assertSee($codigo)
+            ->assertSee($referente->reg_medico);
+    }
 }

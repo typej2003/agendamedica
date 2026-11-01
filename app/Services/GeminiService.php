@@ -54,6 +54,45 @@ class GeminiService
                 'especialidades' => $this->contextService->obtenerEspecialidadesDisponibles(),
             ];
 
+        // 1b. Si existe una confirmación de cancelación de cita pendiente en dos pasos
+        if (!empty($contexto['telefono'])) {
+            $pendienteCancelar = Cache::get("wa_pendiente_cancelar_{$contexto['telefono']}")
+                ?? ($cleanTel ? Cache::get("wa_pendiente_cancelar_{$cleanTel}") : null);
+
+            if ($pendienteCancelar) {
+                $limpioCancelar = mb_strtolower(trim(preg_replace('/[^\p{L}\p{N}\s]/u', '', $mensajeUsuario)));
+
+                if ($this->esConfirmacionDeCancelacion($limpioCancelar)) {
+                    $resultado = $this->contextService->cancelarCitaEnCola(
+                        $contexto['telefono'],
+                        $pendienteCancelar['reg_medico'] ?? null,
+                        $pendienteCancelar['cita_id'] ?? null
+                    );
+                    Cache::forget("wa_pendiente_cancelar_{$contexto['telefono']}");
+                    if ($cleanTel) {
+                        Cache::forget("wa_pendiente_cancelar_{$cleanTel}");
+                    }
+                    return $resultado['mensaje_confirmacion'] ?? ($resultado['mensaje'] ?? 'Cita cancelada.');
+                }
+
+                if ($this->esRechazoDeCancelacion($limpioCancelar)) {
+                    Cache::forget("wa_pendiente_cancelar_{$contexto['telefono']}");
+                    if ($cleanTel) {
+                        Cache::forget("wa_pendiente_cancelar_{$cleanTel}");
+                    }
+                    $nombreMed = $pendienteCancelar['medico'] ?? 'tu médico';
+                    return "Entendido, no hemos cancelado tu cita con el/la *{$nombreMed}*. Sigue programada y activa. Si deseas algo más, con gusto te atenderemos. 😊";
+                }
+
+                if (preg_match('/(?:cambiar|reprogramar|mover)/u', $limpioCancelar)) {
+                    Cache::forget("wa_pendiente_cancelar_{$contexto['telefono']}");
+                    if ($cleanTel) {
+                        Cache::forget("wa_pendiente_cancelar_{$cleanTel}");
+                    }
+                }
+            }
+        }
+
         // 2. Si el usuario elige uno de los días ofrecidos o confirma directamente ("sí", "el martes", "2")
         if (!empty($contexto['telefono'])) {
             $pendiente = Cache::get("wa_pendiente_{$contexto['telefono']}")
@@ -109,6 +148,12 @@ class GeminiService
         $respuestaCambio = $this->resolverSolicitudCambioOPerdidaDeCita($mensajeUsuario, $contexto);
         if ($respuestaCambio !== null) {
             return $respuestaCambio;
+        }
+
+        // 2c. Si el paciente solicita cancelar o eliminar su cita (flujo en dos pasos)
+        $respuestaCancelacion = $this->resolverSolicitudCancelacionCita($mensajeUsuario, $contexto);
+        if ($respuestaCancelacion !== null) {
+            return $respuestaCancelacion;
         }
 
         // 3. Manejo directo si el usuario seleccionó un médico de una especialidad previamente consultada
@@ -443,6 +488,72 @@ class GeminiService
     }
 
     /**
+     * Evalúa y procesa si el usuario solicita cancelar o eliminar su cita médica (flujo en dos pasos).
+     */
+    protected function resolverSolicitudCancelacionCita(string $mensaje, array $contexto): ?string
+    {
+        $limpio = mb_strtolower(trim($mensaje));
+        $esCancelacion = (bool) preg_match('/(?:cancela(?:r)?|elimina(?:r)?|anula(?:r)?|borra(?:r)?|suspende(?:r)?|no\s+voy\s+a\s+(?:poder\s+)?(?:ir|asistir)|no\s+puedo\s+asistir|dar\s+de\s+baja)\s+(?:mi\s+|la\s+)?cita/iu', $limpio)
+            || in_array($limpio, ['cancelar cita', 'eliminar cita', 'anular cita', 'cancelar mi cita', 'eliminar mi cita', 'anular mi cita', 'cancela mi cita', 'elimina mi cita', 'anula mi cita'], true);
+
+        if (!$esCancelacion) {
+            return null;
+        }
+
+        $telefono = $contexto['telefono'] ?? null;
+        if (!$telefono) {
+            return null;
+        }
+
+        $criterioMedico = null;
+        if (preg_match('/(?:dr\.?|dra\.?|doctor(?:a)?|m[eé]dico)\s+([a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+)/iu', $limpio, $m)) {
+            $cand = preg_replace('/\s+(por\s+favor|porfa|gracias|\?)\s*$/iu', '', trim($m[1]));
+            $criterioMedico = trim($cand);
+        }
+
+        if (empty($criterioMedico) && !empty($contexto['medicos_asociados']) && count($contexto['medicos_asociados']) === 1) {
+            $criterioMedico = $contexto['medicos_asociados'][0]['reg_medico'] ?? $contexto['medicos_asociados'][0]['nombre'];
+        }
+
+        $resultado = $this->contextService->prepararCancelacionCita($telefono, $criterioMedico);
+
+        if (!empty($resultado['pendiente'])) {
+            $cleanTel = preg_replace('/\D/', '', $telefono);
+            Cache::put("wa_pendiente_cancelar_{$telefono}", $resultado['pendiente'], now()->addMinutes(30));
+            if ($cleanTel) {
+                Cache::put("wa_pendiente_cancelar_{$cleanTel}", $resultado['pendiente'], now()->addMinutes(30));
+            }
+        }
+
+        return $resultado['mensaje'] ?? null;
+    }
+
+    /**
+     * Evalúa si la respuesta del usuario confirma la cancelación de su cita en el flujo de 2 pasos.
+     */
+    protected function esConfirmacionDeCancelacion(string $limpio): bool
+    {
+        if (preg_match('/\b(no|rechazar|conservar|mantener)\b/u', $limpio)) {
+            return false;
+        }
+
+        $afirmaciones = ['si', 'sí', 'confirmar', 'confirmo', 'cancelar', 'eliminar', 'anular', 'adelante', 'correcto', 'por favor', 'porfa', 'ok', 'dale', 'seguro'];
+        if (in_array($limpio, $afirmaciones, true)) {
+            return true;
+        }
+
+        return (bool) preg_match('/\b(si|sí|confirmo|confirmar|confirmado|cancela|cancelar|elimina|eliminar|anula|anular|borra|borrar)\b/u', $limpio);
+    }
+
+    /**
+     * Evalúa si la respuesta del usuario desiste o rechaza la cancelación de su cita.
+     */
+    protected function esRechazoDeCancelacion(string $limpio): bool
+    {
+        return (bool) preg_match('/\b(no|dejarla|mantener|conservar|no cancelar|no la canceles|equivocacion|me equivoque|me equivoqué)\b/u', $limpio);
+    }
+
+    /**
      * Resuelve si el usuario solicita directamente a un médico específico en su mensaje.
      */
     protected function resolverSolicitudDirectaMedico(string $mensajeUsuario, array $contexto): ?string
@@ -705,6 +816,45 @@ class GeminiService
                             ],
                             'required' => ['reg_medico']
                         ]
+                    ],
+                    [
+                        'name' => 'cancelar_cita',
+                        'description' => 'Inicia o ejecuta la cancelación o eliminación de una cita médica activa del paciente. Si confirmado es false, solicita confirmación en dos pasos al paciente.',
+                        'parameters' => [
+                            'type' => 'OBJECT',
+                            'properties' => [
+                                'medico' => [
+                                    'type' => 'STRING',
+                                    'description' => 'Nombre o código reg_medico del médico de la cita a cancelar (opcional).'
+                                ],
+                                'confirmado' => [
+                                    'type' => 'BOOLEAN',
+                                    'description' => 'Indica si el paciente ya confirmó explícitamente la cancelación en su mensaje (true/false).'
+                                ]
+                            ]
+                        ]
+                    ],
+                    [
+                        'name' => 'reprogramar_cita',
+                        'description' => 'Cambia la fecha o reprograma una cita médica existente o una cita perdida para el paciente.',
+                        'parameters' => [
+                            'type' => 'OBJECT',
+                            'properties' => [
+                                'reg_medico' => [
+                                    'type' => 'STRING',
+                                    'description' => 'El código reg_medico o nombre del médico con quien se reprograma la cita.'
+                                ],
+                                'nueva_fecha' => [
+                                    'type' => 'STRING',
+                                    'description' => 'Nueva fecha para la cita en formato YYYY-MM-DD.'
+                                ],
+                                'motivo' => [
+                                    'type' => 'STRING',
+                                    'description' => 'Motivo opcional del cambio de la cita.'
+                                ]
+                            ],
+                            'required' => ['reg_medico', 'nueva_fecha']
+                        ]
                     ]
                 ]
             ]
@@ -790,6 +940,45 @@ class GeminiService
                                 $contexto['telefono'] ?? '',
                                 $regMedico,
                                 $fecha,
+                                $motivo
+                            );
+                            if (!empty($resultadoTool['exito']) && !empty($resultadoTool['mensaje_confirmacion'])) {
+                                return $resultadoTool['mensaje_confirmacion'];
+                            }
+                            if (!empty($resultadoTool['mensaje'])) {
+                                return $resultadoTool['mensaje'];
+                            }
+                        } elseif ($functionName === 'cancelar_cita') {
+                            $medico = $args['medico'] ?? null;
+                            $confirmado = (bool) ($args['confirmado'] ?? false);
+                            $tel = $contexto['telefono'] ?? '';
+
+                            if ($confirmado) {
+                                $resultadoTool = $this->contextService->cancelarCitaEnCola($tel, $medico);
+                                if (!empty($resultadoTool['mensaje_confirmacion'])) {
+                                    return $resultadoTool['mensaje_confirmacion'];
+                                }
+                            } else {
+                                $resultadoTool = $this->contextService->prepararCancelacionCita($tel, $medico);
+                                if (!empty($resultadoTool['pendiente'])) {
+                                    $cleanTel = preg_replace('/\D/', '', $tel);
+                                    Cache::put("wa_pendiente_cancelar_{$tel}", $resultadoTool['pendiente'], now()->addMinutes(30));
+                                    if ($cleanTel) {
+                                        Cache::put("wa_pendiente_cancelar_{$cleanTel}", $resultadoTool['pendiente'], now()->addMinutes(30));
+                                    }
+                                }
+                            }
+                            if (!empty($resultadoTool['mensaje'])) {
+                                return $resultadoTool['mensaje'];
+                            }
+                        } elseif ($functionName === 'reprogramar_cita') {
+                            $regMedico = $args['reg_medico'] ?? '';
+                            $nuevaFecha = $args['nueva_fecha'] ?? '';
+                            $motivo = $args['motivo'] ?? null;
+                            $resultadoTool = $this->contextService->reprogramarCitaEnCola(
+                                $contexto['telefono'] ?? '',
+                                $regMedico,
+                                $nuevaFecha,
                                 $motivo
                             );
                             if (!empty($resultadoTool['exito']) && !empty($resultadoTool['mensaje_confirmacion'])) {
@@ -924,6 +1113,8 @@ class GeminiService
 
         $prompt .= "\nREGLAS DE CONSULTA Y HERRAMIENTAS (TOOLS):\n";
         $prompt .= "- Si el paciente CONFIRMA O SOLICITA RESERVAR, AGENDAR O APARTAR UNA CITA (o dice 'sí', 'reserva', 'agéndala', etc.): DEBES invocar OBLIGATORIAMENTE la herramienta 'reservar_cita'.\n";
+        $prompt .= "- Si el paciente PIDE CANCELAR, ELIMINAR O ANULAR SU CITA: DEBES invocar la herramienta 'cancelar_cita'.\n";
+        $prompt .= "- Si el paciente PIDE CAMBIAR LA FECHA, REPROGRAMAR O MOVER SU CITA (o reagendar una cita perdida): DEBES invocar 'reprogramar_cita'.\n";
         $prompt .= "- Si el paciente pregunta por el TELÉFONO O NÚMERO DE CONTACTO directo de un médico: DEBES invocar la herramienta 'consultar_telefono_medico'.\n";
         $prompt .= "- Si el paciente pregunta DÓNDE ATIENDE un médico, en qué clínicas, hospitales o centros médicos presta servicio: DEBES invocar la herramienta 'consultar_donde_atiende_medico'.\n";
         $prompt .= "- Si el paciente pregunta por la DIRECCIÓN, UBICACIÓN FÍSICA, CIUDAD O TELÉFONO del consultorio de un médico: DEBES invocar la herramienta 'consultar_datos_consultorio'.\n";

@@ -1,4 +1,4 @@
-<h1>Política de privacidad</h1>
+<h2>Política de privacidad</h2>
 
 <p class="legal-entrada">
     Doctorísimo es una aplicación de gestión de consultorios médicos: la usan médicos y sus

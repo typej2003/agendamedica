@@ -24,10 +24,12 @@ class Referido extends Model
 
     protected $fillable = [
         'codigo_id', 'codigo', 'referente_reg_medico', 'referido_reg_medico', 'solicitud_id', 'medico_id',
-        'estado', 'latidos_referente', 'latidos_referido', 'acreditado_el', 'anulado_el', 'anulado_por', 'motivo',
+        'estado', 'revisar', 'latidos_referente', 'latidos_referido', 'acreditado_el', 'anulado_el', 'anulado_por',
+        'motivo',
     ];
 
     protected $casts = [
+        'revisar' => 'boolean',
         'latidos_referente' => 'integer',
         'latidos_referido' => 'integer',
         'acreditado_el' => 'datetime',

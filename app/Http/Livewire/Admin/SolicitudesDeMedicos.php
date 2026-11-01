@@ -172,7 +172,7 @@ class SolicitudesDeMedicos extends Component
 
         return view('livewire.admin.solicitudes-de-medicos', [
             'solicitudes' => SolicitudMedico::query()
-                ->with('especialidad')
+                ->with(['especialidad', 'referente'])
                 ->when($this->estado !== 'todas', fn ($query) => $query->where('estado', $this->estado))
                 ->orderByDesc('created_at')
                 ->paginate(15),

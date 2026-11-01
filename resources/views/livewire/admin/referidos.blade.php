@@ -62,7 +62,7 @@
                     @error('vigenciaDias') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-6 col-md-2">
-                    <label class="form-label small" for="tope-mensual">Tope mensual (0 = sin tope)</label>
+                    <label class="form-label small" for="tope-mensual">Umbral de revisión (0 = sin marca)</label>
                     <input id="tope-mensual" type="number" min="0" wire:model="topeMensual"
                            class="form-control @error('topeMensual') is-invalid @enderror">
                     @error('topeMensual') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -80,7 +80,8 @@
             </form>
             <p class="text-muted small mb-0 mt-2">
                 100 Latidos = USD 1 de descuento. El premio se acredita al aprobar el registro, una sola vez
-                por consultorio referido.
+                por consultorio referido. Al superar el umbral mensual, el referido se marca <strong>Revisar</strong>
+                pero no se bloquea.
             </p>
         </div>
     </div>
@@ -127,6 +128,9 @@
                                 <td class="text-nowrap small">{{ $referido->created_at?->format('d/m/Y H:i') }}</td>
                                 <td>
                                     <span class="badge bg-{{ $tono }}">{{ ucfirst($referido->estado) }}</span>
+                                    @if ($referido->revisar)
+                                        <span class="badge bg-danger">Revisar</span>
+                                    @endif
                                     @if ($referido->motivo)
                                         <small class="text-muted d-block">{{ $referido->motivo }}</small>
                                     @endif

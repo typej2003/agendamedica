@@ -56,9 +56,20 @@
                 registro queda asociado a ti.
             </p>
             <div class="input-group mb-2">
-                <input type="text" class="form-control" value="{{ $url }}" readonly
+                <input type="text" class="form-control" id="url-referido" value="{{ $url }}" readonly
                        aria-label="Tu link de referido">
                 <span class="input-group-text"><code>{{ $codigo->codigo }}</code></span>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <button type="button" id="copiar-link-referido" class="btn btn-sm btn-primary"
+                        data-url="{{ $url }}">
+                    <i class="bi bi-clipboard me-1" aria-hidden="true"></i> Copiar link
+                </button>
+                <button type="button" id="compartir-link-referido" class="btn btn-sm btn-outline-primary"
+                        data-url="{{ $url }}">
+                    <i class="bi bi-share me-1" aria-hidden="true"></i> Compartir
+                </button>
+                <span id="estado-link-referido" class="small text-success" role="status" aria-live="polite"></span>
             </div>
             <p class="small text-muted mb-0">
                 El código también se puede escribir a mano en el registro. El premio se acredita
@@ -133,4 +144,8 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('scripts')
+    <script src="{{ asset('js/clinica/referidos.js') }}"></script>
 @endsection

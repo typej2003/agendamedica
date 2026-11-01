@@ -44,6 +44,15 @@ class SolicitudMedico extends Model
         return $this->belongsTo(Medico::class, 'medico_id');
     }
 
+    /**
+     * El médico que compartió el código de invitación. La solicitud guarda el `reg_medico` resuelto, no un
+     * id: si el referente cambia de ficha, la atribución sigue apuntando al consultorio que la originó.
+     */
+    public function referente()
+    {
+        return $this->belongsTo(Medico::class, 'referente_reg_medico', 'reg_medico');
+    }
+
     public function estaPendiente(): bool
     {
         return $this->estado === self::PENDIENTE;

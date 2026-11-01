@@ -213,24 +213,51 @@ class ReferidosWebTest extends TestCase
         $this->assertSame(0, app(Latidos::class)->disponibles($referente->reg_medico));
     }
 
-    public function test_el_tope_mensual_rechaza_el_segundo(): void
+    public function test_no_hay_autorreferencia_por_cedula(): void
+    {
+        [$user, $referente, $codigo] = $this->referente();
+        SolicitudMedico::create([
+            'prefijo' => 'Dr.', 'nombres' => 'Referente', 'apellidos' => 'Aprobado',
+            'cedula' => 'V-12345678', 'mpps' => '999999', 'telefono' => '0414-5556677',
+            'email' => $referente->email, 'estado' => SolicitudMedico::APROBADA,
+            'reg_medico' => $referente->reg_medico,
+        ]);
+        $solicitud = $this->solicitud($referente->reg_medico, $codigo, [
+            'cedula' => '12345678',
+            'email' => 'otro-correo-' . uniqid() . '@example.com',
+        ]);
+
+        $referido = app(AcreditarReferido::class)->ejecutar(
+            $solicitud, 'MPPS-CEDULA-1', Medico::create([
+                'name' => 'Otro', 'lastname' => 'Colega', 'reg_medico' => 'MPPS-CEDULA-1', 'is_active' => true,
+            ]), false,
+        );
+
+        $this->assertSame(Referido::RECHAZADO, $referido->estado);
+        $this->assertStringContainsString('cédula', (string) $referido->motivo);
+        $this->assertSame(0, app(Latidos::class)->disponibles($referente->reg_medico));
+    }
+
+    public function test_el_umbral_mensual_marca_para_revision_sin_bloquear(): void
     {
         [$user, $referente, $codigo] = $this->referente();
         ConfiguracionLatidos::actual()->update(['tope_mensual_por_referente' => 1]);
 
         $primera = $this->solicitud($referente->reg_medico, $codigo);
-        app(AcreditarReferido::class)->ejecutar($primera, 'MPPS-TOPE-1', Medico::create([
+        $uno = app(AcreditarReferido::class)->ejecutar($primera, 'MPPS-TOPE-1', Medico::create([
             'name' => 'Uno', 'lastname' => 'Tope', 'reg_medico' => 'MPPS-TOPE-1', 'is_active' => true,
         ]), false);
+        $this->assertFalse($uno->revisar);
 
         $segunda = $this->solicitud($referente->reg_medico, $codigo);
-        $rechazada = app(AcreditarReferido::class)->ejecutar($segunda, 'MPPS-TOPE-2', Medico::create([
+        $dos = app(AcreditarReferido::class)->ejecutar($segunda, 'MPPS-TOPE-2', Medico::create([
             'name' => 'Dos', 'lastname' => 'Tope', 'reg_medico' => 'MPPS-TOPE-2', 'is_active' => true,
         ]), false);
 
-        $this->assertSame(Referido::RECHAZADO, $rechazada->estado);
-        $this->assertStringContainsString('tope', (string) $rechazada->motivo);
-        $this->assertSame(2000, app(Latidos::class)->disponibles($referente->reg_medico));
+        // El plan pide marcar, no bloquear: el segundo premio se paga y queda para revisión.
+        $this->assertSame(Referido::ACREDITADO, $dos->estado);
+        $this->assertTrue($dos->revisar);
+        $this->assertSame(4000, app(Latidos::class)->disponibles($referente->reg_medico));
     }
 
     public function test_la_pagina_del_medico_muestra_el_link_y_el_codigo(): void
@@ -247,7 +274,10 @@ class ReferidosWebTest extends TestCase
             ->assertOk()
             ->assertSee('Invita y gana')
             ->assertSee($codigo)
-            ->assertSee('/r/' . $codigo, false);
+            ->assertSee('/r/' . $codigo, false)
+            ->assertSee('Copiar link')
+            ->assertSee('Compartir')
+            ->assertSee('js/clinica/referidos.js', false);
     }
 
     public function test_regenerar_cambia_el_codigo_y_invalida_el_viejo(): void

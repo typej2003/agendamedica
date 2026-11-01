@@ -156,6 +156,7 @@
                             <th>MPPS</th>
                             <th>Especialidad</th>
                             <th>Correo</th>
+                            <th>Referido por</th>
                             <th>Recibida</th>
                             <th>Estado</th>
                             <th class="text-end">Acciones</th>
@@ -169,6 +170,20 @@
                                 <td>{{ $solicitud->mpps }}</td>
                                 <td>{{ $solicitud->especialidad?->name ?? '—' }}</td>
                                 <td>{{ $solicitud->email }}</td>
+                                <td>
+                                    @if ($solicitud->referente_reg_medico)
+                                        @php($referente = $solicitud->referente)
+                                        <div class="fw-semibold">
+                                            {{ $referente ? trim($referente->name . ' ' . $referente->lastname) : $solicitud->referente_reg_medico }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ $solicitud->codigo_referido ?: 'Sin código' }}
+                                            · {{ $solicitud->referente_reg_medico }}
+                                        </small>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
                                 <td>
                                     <div>{{ \App\Support\HoraLocal::instante($solicitud->created_at)?->format(\App\Support\Regionalizacion::formatoActual()) }}</div>
                                     <small class="text-muted">{{ $solicitud->created_at?->diffForHumans() }}</small>
