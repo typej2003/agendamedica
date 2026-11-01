@@ -86,25 +86,37 @@ final class AcreditarReferido
         if ($mppsReferente !== '' && $mppsReferente === $mppsSolicitud) {
             return $this->rechazar($base, 'El referente y el referido comparten el mismo MPPS.');
         }
+
+        // La ficha del médico no guarda la cédula; la solicitud aprobada con la que nació sí. Si existe,
+        // se compara normalizada (sólo dígitos) contra la del nuevo registro.
+        $cedulaReferente = preg_replace('/\D/', '', (string) SolicitudMedico::where('reg_medico', $referente)
+            ->where('estado', SolicitudMedico::APROBADA)
+            ->value('cedula'));
+        $cedulaSolicitud = preg_replace('/\D/', '', (string) $solicitud->cedula);
+        if ($cedulaReferente !== '' && $cedulaReferente === $cedulaSolicitud) {
+            return $this->rechazar($base, 'El referente y el referido comparten la misma cédula.');
+        }
         if ($teniaServicioAntes) {
             return $this->rechazar($base, 'El referido ya era cliente: tenía un servicio antes de la aprobación.');
         }
 
+        // El umbral no bloquea: el premio se paga y la fila queda marcada para que el administrador la
+        // revise. Es la regla del plan (8.5) y evita castigar a un referente legítimo por volumen.
         $tope = (int) $config->tope_mensual_por_referente;
+        $revisar = false;
         if ($tope > 0) {
             $delMes = Referido::where('referente_reg_medico', $referente)
                 ->where('estado', Referido::ACREDITADO)
                 ->whereBetween('acreditado_el', [now()->startOfMonth(), now()->endOfMonth()])
                 ->count();
 
-            if ($delMes >= $tope) {
-                return $this->rechazar($base, 'El referente alcanzó el tope mensual de referidos.');
-            }
+            $revisar = $delMes >= $tope;
         }
 
-        return DB::transaction(function () use ($base, $config, $referente, $referido) {
+        return DB::transaction(function () use ($base, $config, $referente, $referido, $revisar) {
             $fila = Referido::create($base + [
                 'estado' => Referido::ACREDITADO,
+                'revisar' => $revisar,
                 'latidos_referente' => (int) $config->latidos_referente,
                 'latidos_referido' => (int) $config->latidos_referido,
                 'acreditado_el' => now(),
