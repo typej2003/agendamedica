@@ -1,4 +1,4 @@
-<h1>Términos y condiciones</h1>
+<h2>Términos y condiciones</h2>
 
 <p class="legal-entrada">
     Estos términos son el acuerdo entre tú y

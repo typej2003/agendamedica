@@ -11,6 +11,8 @@
     <div class="container legal">
         <p class="legal-volver"><a href="{{ route('welcome') }}">&larr; Volver a Doctorísimo</a></p>
 
+        <h1>Política de privacidad</h1>
+
         <x-legal.documento tipo="privacidad" />
     </div>
 @endsection
