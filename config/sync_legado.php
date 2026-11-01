@@ -183,4 +183,16 @@ return [
     // es la configuración del médico y puede existir desde que se registró en el app.
     'no_cuentan_para_limpieza' => ['evolucion'],
 
+    // **Rango reservado de la carga inicial en modo mezcla** (ver App\Sync\Escritorio\Traslados).
+    //
+    // Cuando el consultorio ya tiene datos, el escritorio conserva sus números y el registro del API que
+    // los ocupaba se APARTA: se renumera a `base + id` —por encima de cualquier número real del escritorio,
+    // y único porque el id lo es— para que no vuelva a chocar mientras sigue entrando el resto de la carga.
+    // Al cerrar la carga recibe el número libre siguiente. No se usa `max + 1` en el momento del choque
+    // porque el escritorio puede traer 200 consultas numeradas 1..200 y la del API se movería 200 veces.
+    //
+    // Tiene que caber en `consultas.nroconsulta` (INT con signo) y quedar por encima de cualquier número
+    // real. Si un día se pasa de ahí, `Traslados::comprobarBase()` lo dice con un error claro.
+    'numero_parqueado_base' => 900000000,
+
 ];
