@@ -304,6 +304,9 @@ class PacienteFamiliaWebTest extends TestCase
 
     public function test_la_ficha_de_un_nino_dice_la_edad_con_meses_y_las_alergias_se_destacan(): void
     {
+        // Fecha fija a mitad de mes: en un día 29-31, `subMonths()` puede desbordar y la edad cambia de mes.
+        $this->travelTo(\Carbon\Carbon::parse('2026-10-15 12:00:00'));
+
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
         $id = $this->nino($medico, 'Mateo', 601);
         // La edad la cuenta la ficha contra el día del **consultorio** (`FechaDelConsultorio`), no contra el
@@ -318,6 +321,9 @@ class PacienteFamiliaWebTest extends TestCase
 
     public function test_la_edad_detallada_cuenta_dias_meses_y_anios_y_en_mayores_de_cinco_solo_anios(): void
     {
+        // Fecha fija a mitad de mes: en un día 29-31, `subMonth()` puede desbordar y la edad cambia de mes.
+        $this->travelTo(\Carbon\Carbon::parse('2026-10-15 12:00:00'));
+
         // La referencia es el día del consultorio (lo que hace `FechaClinica`), no el UTC del servidor.
         $hoy = FechaDelConsultorio::hoy();
 
