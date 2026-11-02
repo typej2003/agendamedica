@@ -5,8 +5,13 @@
 
      Dos piezas propias (Alexander, 2026-10-29): el **examen funcional** ofrece sus plantillas `EF` en el cajón de siempre, y
      el **resumen físico** tiene «Actualizar», que arma el texto con los signos y el examen guardados (`consulta-resumen.js`,
-     el mismo botón de la evaluación de ginecología). --}}
+     el mismo botón de la evaluación de ginecología).
+
+     Y una más (O-44, 2026-11-02): la pestaña **Rx de tórax** suma, debajo del campo de los hallazgos, las **fotos de la
+     placa** —la lista y la subida de siempre, `_imagenes-lista`, con la etiqueta de su examen—. El campo de texto no
+     cambia y no se imprime nada distinto. --}}
 <div class="consulta-seccion" id="{{ $seccion->id() }}">
+    @php $placa = $seccion->imagenes(); @endphp
     @if ($seccion->pestanas() !== [])
         <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()" :etiqueta="$seccion->titulo()" />
     @endif
@@ -115,6 +120,22 @@
                     </button>
                 </div>
             </form>
+        @endif
+
+        {{-- **Las fotos de la placa** (O-44): la misma lista y la misma subida de las imágenes de la consulta, con la
+             etiqueta `rx` de `TagDeImagen`. Se pueden cargar varias (PA y lateral); en el teléfono el selector ofrece la
+             cámara y en la PC el archivo, como «Escanear hoja». El campo de los hallazgos queda arriba, intacto. --}}
+        @if ($placa !== null)
+            <hr class="my-4">
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                <h3 class="h6 mb-0">
+                    <i class="bi bi-images me-1" aria-hidden="true"></i> Fotos de la placa
+                </h3>
+                <span class="texto-tenue small">Puedes cargar varias: la placa y su lateral.</span>
+            </div>
+
+            @include('clinica.consulta._imagenes-lista', ['imagenes' => $placa, 'prefijo' => 'rx-placa'])
         @endif
     </x-ui.tarjeta>
 </div>

@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\Archivos\ArchivosClinicos;
+use App\Clinica\Consulta\Interna\MapaDelInternista;
+use App\Clinica\Consulta\TagDeImagen;
 use App\Models\Consulta;
 use App\Models\DatosGrafica;
 use App\Models\Ekg;
 use App\Models\FormatoPrint;
 use App\Models\Historia;
+use App\Models\ImagenConsulta;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
@@ -16,8 +20,10 @@ use App\Models\SyncChange;
 use App\Models\User;
 use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -370,5 +376,71 @@ class ConsultaMedicinaInternaWebTest extends TestCase
         $paciente = (int) MedicoPaciente::where('reg_medico', $medico->reg_medico)->value('paciente_id');
         $this->conContexto($user, $medico, $gineco)->get(route('clinica.pacientes.historia.imprimir', $paciente))
             ->assertOk()->assertSee('Faringe: Normal.')->assertDontSee('Rx de tórax');
+    }
+
+    /**
+     * **Las fotos de la placa de la Rx de tórax** (O-44): la pestaña `rx` del plan de diagnóstico acepta varias
+     * imágenes —la placa y su lateral—, las guarda con la etiqueta `rx` y vuelve a su pestaña (no a Evaluación
+     * física), y el campo de los hallazgos sigue igual.
+     */
+    public function test_la_rx_de_torax_sube_varias_placas_y_vuelve_a_su_pestana(): void
+    {
+        Storage::fake(ArchivosClinicos::DISCO);
+
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+        $consulta->forceFill(['faringe' => 'Índice cardiotorácico normal.'])->save();
+
+        $destino = $this->seccion($consulta, MapaDelInternista::SECCION_PLAN, 'rx');
+
+        // La tarjeta de la pestaña ya ofrece la lista y la subida, y el campo de los hallazgos sigue ahí.
+        $this->conContexto($user, $medico, $mi)->get($destino)
+            ->assertOk()
+            ->assertSee('Fotos de la placa')
+            ->assertSee('Índice cardiotorácico normal.')
+            ->assertSee('id="rx-placa-subida"', false);
+
+        $this->conContexto($user, $medico, $mi)
+            ->post(route('clinica.consulta.examenes.subir', $consulta->id), [
+                'examen' => 'rx',
+                'imagen' => UploadedFile::fake()->image('placa-pa.jpg', 800, 600),
+            ])
+            ->assertRedirect($destino);
+
+        $placa = ImagenConsulta::where('reg_medico', $medico->reg_medico)
+            ->where('observacion', TagDeImagen::RX)
+            ->firstOrFail();
+
+        $this->assertSame(2001, (int) $placa->nrohistoria);
+        $this->assertSame(1, (int) $placa->nroconsulta);
+        Storage::disk(ArchivosClinicos::DISCO)->assertExists($placa->imagen);
+
+        // Se ven en la tarjeta, y una segunda sube sin pisar la primera (son varias). El nombre del archivo no se
+        // muestra —lo pone el servidor—: la fila se anuncia por su examen.
+        $this->conContexto($user, $medico, $mi)->get($destino)
+            ->assertOk()
+            ->assertSee('Imagen de Rx de tórax')
+            ->assertDontSee('Todavía no hay imágenes en Rx de tórax');
+
+        $this->conContexto($user, $medico, $mi)
+            ->post(route('clinica.consulta.examenes.subir', $consulta->id), [
+                'examen' => 'rx',
+                'imagen' => UploadedFile::fake()->image('placa-lateral.jpg', 800, 600),
+            ])
+            ->assertRedirect($destino);
+
+        $this->assertSame(2, ImagenConsulta::where('reg_medico', $medico->reg_medico)->where('observacion', TagDeImagen::RX)->count());
+
+        // Se puede abrir y se puede quitar, y vuelve a la misma pestaña.
+        $this->conContexto($user, $medico, $mi)
+            ->get(route('clinica.consulta.examenes.descargar', [$consulta->id, $placa->id]))
+            ->assertOk();
+
+        $this->conContexto($user, $medico, $mi)
+            ->delete(route('clinica.consulta.examenes.quitar', [$consulta->id, $placa->id]), ['examen' => 'rx'])
+            ->assertRedirect($destino);
+
+        $this->assertNull(ImagenConsulta::find($placa->id));
+        Storage::disk(ArchivosClinicos::DISCO)->assertMissing($placa->imagen);
     }
 }

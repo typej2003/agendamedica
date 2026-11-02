@@ -40,6 +40,8 @@ final class InternistaVista
         private array $plantillas = [],
         // La URL del «Actualizar» del resumen físico (el `ue_resume` del escritorio), o `null`.
         private ?string $urlResumen = null,
+        // Las **fotos de la placa** de la Rx de tórax (O-44): la lista y la subida de la pestaña `rx`, o `null`.
+        private ?ImagenesDeLaConsultaVista $imagenes = null,
     ) {
     }
 
@@ -135,6 +137,16 @@ final class InternistaVista
     public function riesgo(): ?RiesgoQuirurgicoVista
     {
         return $this->riesgo;
+    }
+
+    /**
+     * **Las fotos de la placa de la Rx de tórax** (O-44): el ViewModel de la lista y la subida, o `null` en las
+     * demás pestañas. La tarjeta las pinta con el parcial de siempre (`_imagenes-lista`), así que la imagen se
+     * guarda con la etiqueta de su examen y se ve y se quita como las demás.
+     */
+    public function imagenes(): ?ImagenesDeLaConsultaVista
+    {
+        return $this->imagenes;
     }
 
     /**

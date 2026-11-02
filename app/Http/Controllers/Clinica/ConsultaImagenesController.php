@@ -10,6 +10,7 @@ use App\Clinica\Archivos\ArchivosClinicos;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\ImagenDelExamen;
 use App\Clinica\Consulta\ImagenesDeLaConsulta;
+use App\Clinica\Consulta\Interna\MapaDelInternista;
 use App\Clinica\Consulta\TagDeImagen;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
@@ -225,6 +226,9 @@ class ConsultaImagenesController extends Controller
      * La vuelta: a la **galería de la solapa *Imágenes* de Evaluación física** (O-22: era la sección genérica
      * de exámenes) o, si la subida vino de la solapa de un examen, a **esa** solapa (con la consulta adentro,
      * como arma el shell todas las secciones).
+     *
+     * Hay dos destinos que no son «una solapa del examen»: el **estudio ecográfico** (vuelve a su estudio) y la
+     * **Rx de tórax del internista** (O-44, vuelve a la pestaña `rx` del plan de diagnóstico).
      */
     private function volver(Consulta $consulta, ?string $examen = null)
     {
@@ -233,6 +237,16 @@ class ConsultaImagenesController extends Controller
 
         if ($tipoDeEco !== null) {
             return redirect()->route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO, 'tipo' => $tipoDeEco]);
+        }
+
+        // La **foto de la placa de la Rx de tórax** (O-44) no es una solapa del examen: es la pestaña `rx` del plan de
+        // diagnóstico del internista, así que vuelve ahí y no a Evaluación física.
+        if ($examen !== null && TagDeImagen::deLaSolapa($examen) === TagDeImagen::RX) {
+            return redirect()->route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => MapaDelInternista::SECCION_PLAN,
+                'pestana' => 'rx',
+            ]);
         }
 
         // La galería general vuelve a su lugar, *Solicitudes → Imágenes* (2026-10-23); la imagen de una solapa de examen, a esa solapa.
