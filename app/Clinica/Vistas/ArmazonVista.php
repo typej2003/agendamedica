@@ -168,6 +168,7 @@ final class ArmazonVista
             $accesos[] = ['texto' => 'Invitaciones', 'icono' => 'bi-envelope-paper', 'url' => route('clinica.invitaciones'), 'primario' => false];
             $accesos[] = ['texto' => 'Mis Latidos', 'icono' => 'bi-stars', 'url' => route('clinica.latidos'), 'primario' => false];
             $accesos[] = ['texto' => 'Invita y gana', 'icono' => 'bi-gift', 'url' => route('clinica.referidos'), 'primario' => false];
+            $accesos[] = ['texto' => 'Mis ingresos', 'icono' => 'bi-graph-up-arrow', 'url' => route('clinica.ingresos'), 'primario' => false];
             $accesos[] = ['texto' => 'Mi plan', 'icono' => 'bi-credit-card', 'url' => route('clinica.plan'), 'primario' => false];
         }
 

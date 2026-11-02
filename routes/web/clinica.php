@@ -79,6 +79,8 @@ use App\Http\Controllers\Clinica\HorarioController;
 use App\Http\Controllers\Clinica\ImpresionDeRecipeController;
 use App\Http\Controllers\Clinica\LatidoDeSesionController;
 use App\Http\Controllers\Clinica\LinkDeCitaController;
+use App\Http\Controllers\Clinica\CobroEnElMostradorController;
+use App\Http\Controllers\Clinica\IngresosController;
 use App\Http\Controllers\Clinica\LinkDePagoController;
 use App\Http\Controllers\Clinica\ListadosController;
 use App\Http\Controllers\Clinica\MostradorController;
@@ -180,6 +182,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // O-50: la invitación por correo a un colega (una por vez, tope de 10 al día por médico).
                 Route::post('/referidos/invitar', [ReferidosController::class, 'invitar'])
                     ->middleware('throttle:20,1')->name('referidos.invitar');
+// **Mis ingresos** (O-53): los pagos de cita del médico con sus estados y los totales del
+                // período. Es la vista del médico; el panel de pagos de la plataforma es /admin/pagos.
+                Route::get('/ingresos', [IngresosController::class, 'index'])->name('ingresos');
                 Route::get('/plan', [PlanController::class, 'index'])->name('plan');
                 // Prender/apagar la renovación automática con Latidos (preferencia del consultorio).
                 Route::post('/plan/renovacion', [PlanController::class, 'renovacion'])->name('plan.renovacion');
@@ -799,6 +804,13 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // **Compartir la cita** (O-52): el link firmado de la ficha pública con la fecha y el motivo ya
             // elegidos. No reserva ni cobra: el paciente confirma con su código.
             Route::get('/agenda/{cola}/link-de-cita', [LinkDeCitaController::class, 'mostrar'])->name('agenda.link-de-cita');
+            // **Cobrar la cita en el mostrador** (O-53): la pantalla con los dos caminos —pasarela con OTP o
+            // registro manual en efectivo, punto de venta o transferencia—. No cobra dos veces: la Action lo
+            // comprueba bajo el bloqueo de la fila. Mismos roles que el resto de la agenda.
+            Route::get('/agenda/{cola}/cobro', [CobroEnElMostradorController::class, 'mostrar'])->name('agenda.cobro');
+            Route::post('/agenda/{cola}/cobro/pasarela', [CobroEnElMostradorController::class, 'pasarela'])->name('agenda.cobro.pasarela');
+            Route::post('/agenda/{cola}/cobro/pasarela/{pago}', [CobroEnElMostradorController::class, 'confirmar'])->name('agenda.cobro.confirmar');
+            Route::post('/agenda/{cola}/cobro/manual', [CobroEnElMostradorController::class, 'manual'])->name('agenda.cobro.manual');
             Route::post('/agenda/{cola}/eliminar', [CitaController::class, 'eliminar'])->name('agenda.eliminar');
             Route::get('/agenda/{cola}/editar', [CitaController::class, 'editar'])->name('agenda.editar');
             // La última: cualquier POST a `/agenda/<algo>` que no haya matcheado antes cae acá como

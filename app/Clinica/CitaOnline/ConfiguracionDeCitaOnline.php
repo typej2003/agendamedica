@@ -13,9 +13,9 @@ use App\Pagos\Porcentaje;
  * Los valores por defecto viven **acá** y no en la base, porque las dos columnas de `evolucion` son
  * nullable y los consultorios que ya existen no tienen nada escrito:
  *
- *  - **sin porcentaje = 100 %**: hoy no se cobra al reservar, así que la cita online no puede arrancar
- *    cobrando una parte sin que el médico lo haya elegido. `10000` puntos base es el 100 %, como todo el
- *    dinero de la plataforma (`ReglaDeComision::porcentaje_bp`).
+ *  - **sin porcentaje = 100 %**: el cobro al reservar existe (porcentaje configurable: 100, 30 o 0),
+ *    y el consultorio que no eligió nada arranca cobrando la consulta entera. `10000` puntos base es el
+ *    100 %, como todo el dinero de la plataforma (`ReglaDeComision::porcentaje_bp`).
  *  - **sin marca = publicada**: el portal ya muestra a todo médico con horarios y no se puede vaciar de
  *    golpe el día que se despliega esta columna. El médico la apaga desde la pantalla y ahí sí queda
  *    `false`.
