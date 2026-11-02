@@ -174,6 +174,29 @@ final class OrdenDeCatalogoVista
         return $this->urls['resumen'];
     }
 
+    /** A dónde postea «Guardar los resultados» (O-47): el resultado de cada examen y cuáles salen en el informe. */
+    public function urlResultados(): string
+    {
+        return $this->urls['resultados'] ?? '';
+    }
+
+    /** ¿La pantalla pide resultado y «Reporte» por examen? Sólo el laboratorio de la paciente (O-47). */
+    public function pideResultados(): bool
+    {
+        return $this->orden->pideResultados();
+    }
+
+    /** El tope del campo «Resultado». */
+    public function largoDelResultado(): int
+    {
+        return $this->orden->largoDelResultado();
+    }
+
+    public function textoDeGuardarResultados(): string
+    {
+        return 'Guardar los resultados';
+    }
+
     /** La baja inmediata de un examen o estudio: la URL de esa fila (no se puede concatenar: lleva el código). */
     public function urlQuitarDe(string $codigo): string
     {

@@ -578,6 +578,8 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // ruta sin sufijo guarda **sólo el resumen clínico**, que sigue siendo un formulario con su botón. El buscador JSON
                 // (`catalogo`) y las rutinas por GET quedan para el editor de la orden de la **pareja**, que se sigue guardando entera.
                 Route::post('/consulta/{consulta}/laboratorio', [ConsultaLaboratorioController::class, 'guardar'])->name('consulta.laboratorio.guardar');
+                // El **resultado** de cada examen y cuáles salen en el informe (O-47): su propio botón, como el resumen.
+                Route::post('/consulta/{consulta}/laboratorio/resultados', [ConsultaLaboratorioController::class, 'resultados'])->name('consulta.laboratorio.resultados');
                 Route::delete('/consulta/{consulta}/laboratorio', [ConsultaLaboratorioController::class, 'eliminar'])->name('consulta.laboratorio.eliminar');
                 Route::post('/consulta/{consulta}/laboratorio/examen', [ConsultaLaboratorioController::class, 'agregar'])->name('consulta.laboratorio.agregar');
                 Route::delete('/consulta/{consulta}/laboratorio/examen', [ConsultaLaboratorioController::class, 'quitar'])->name('consulta.laboratorio.quitar');

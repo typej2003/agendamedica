@@ -148,6 +148,22 @@ final class OrdenVista
         return $this->items;
     }
 
+    /**
+     * ¿La pantalla pide el **resultado** de cada examen y cuáles **salen en el informe** (O-47)? Sólo la orden de
+     * laboratorio de la paciente: la de la pareja vive en otra tabla (`examen_pareja`) y la de estudios, en
+     * `radiologia_paciente`; ninguna de las dos tiene esas columnas.
+     */
+    public function pideResultados(): bool
+    {
+        return $this->clave === self::LABORATORIO;
+    }
+
+    /** El tope del campo «Resultado»: `examen_paciente.resultado` es `varchar(30)`. */
+    public function largoDelResultado(): int
+    {
+        return LaboratorioDeLaConsulta::LARGO_RESULTADO;
+    }
+
     public function total(): int
     {
         return count($this->items);

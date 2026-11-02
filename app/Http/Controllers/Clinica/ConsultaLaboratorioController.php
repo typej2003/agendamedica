@@ -75,6 +75,49 @@ class ConsultaLaboratorioController extends Controller
         return $destino->with('estado', 'Resumen clínico guardado.');
     }
 
+    /**
+     * **Guardar el resultado de los exámenes y cuáles salen en el informe** (O-47, 2026-11-02).
+     *
+     * El formulario manda `resultados[codigo]` por cada fila y `reportes[]` con las marcadas. Es un botón aparte del
+     * resumen clínico, como el resto de la pestaña: cada bloque escribe lo suyo. La regla (qué columnas, sólo lo que
+     * cambió, el rastro y el `'S'` del informe) vive en la Action.
+     */
+    public function resultados(Request $request, Consulta $consulta, GuardarOrdenDeLaboratorio $guardar)
+    {
+        $consulta = $this->delContexto($request, $consulta);
+
+        $datos = $request->validate([
+            'resultados' => 'nullable|array',
+            'resultados.*' => 'nullable|string|max:' . LaboratorioDeLaConsulta::LARGO_RESULTADO,
+            'reportes' => 'nullable|array',
+            'reportes.*' => 'string|max:8',
+        ], [
+            'resultados.*.max' => 'El resultado de un examen no puede tener más de ' . LaboratorioDeLaConsulta::LARGO_RESULTADO . ' caracteres.',
+        ]);
+
+        try {
+            $resultado = $guardar->guardarResultados(
+                $consulta,
+                (array) ($datos['resultados'] ?? []),
+                (array) ($datos['reportes'] ?? []),
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            throw ValidationException::withMessages(['resultados' => $excepcion->getMessage()]);
+        }
+
+        $destino = $this->destino($consulta);
+
+        if ($resultado->huboConflicto()) {
+            return $destino->with('error', 'Hay un resultado más reciente (de otro equipo) y no se pisó: vuelve a cargarlo y guárdalo de nuevo.');
+        }
+
+        if ($resultado->sinCambios()) {
+            return $destino->with('estado', 'Los resultados ya estaban guardados así.');
+        }
+
+        return $destino->with('estado', 'Resultados guardados.');
+    }
+
     /** **Agregar un examen** del catálogo a la orden (O-29): la escritura de un clic en «Pasar». */
     public function agregar(Request $request, Consulta $consulta, GuardarOrdenDeLaboratorio $agregar, CatalogoParaPedirExamenes $catalogo)
     {

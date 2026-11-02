@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Actions\Consulta\GuardarOrdenDeLaboratorio;
 use App\Actions\Pacientes\SembrarTiposDeAntecedente;
 use App\Clinica\Agenda\ArmadorDeAgenda;
 use App\Clinica\Agenda\MotivosDeCita;
@@ -1761,6 +1762,10 @@ class ConsultaController extends Controller
             'nombre' => $fila->nombre,
             'tipo' => $fila->tipo,
             'aviso' => $fila->nombre === $fila->codigo ? 'No está en tu catálogo: se muestra el código.' : null,
+            // El **resultado** y si **sale en el informe** (O-47): las dos columnas del escritorio, que esta pantalla
+            // ahora edita. `vinculante = 'S'` es «sale»; `NULL` y `'N'` son «no sale».
+            'resultado' => (string) ($fila->resultado ?? ''),
+            'reporte' => trim((string) ($fila->vinculante ?? '')) === GuardarOrdenDeLaboratorio::REPORTE,
         ])->all();
 
         $orden = OrdenVista::laboratorio(
@@ -1787,6 +1792,7 @@ class ConsultaController extends Controller
             'agregar' => route('clinica.consulta.laboratorio.agregar', $id),
             'quitar' => route('clinica.consulta.laboratorio.quitar', $id),
             'resumen' => route('clinica.consulta.laboratorio.guardar', $id),
+            'resultados' => route('clinica.consulta.laboratorio.resultados', $id),
             'rutina' => route('clinica.consulta.laboratorio.rutinas.agregar', [$id, '__TIPO__']),
             'administrar' => route('clinica.catalogos.examenes'),
         ]);
