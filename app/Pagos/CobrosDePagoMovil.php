@@ -8,6 +8,7 @@ use App\Models\PagoTransaccion;
 use App\Pagos\Conciliacion\Conciliadores;
 use App\Pagos\Conciliacion\ConsultaDePago;
 use App\Pagos\Conciliacion\ResultadoDeConsulta;
+use App\Pagos\Correos\AvisoDePagoPorConfirmar;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -75,7 +76,7 @@ final class CobrosDePagoMovil
         $datos = $this->datosDelPagador($pagador);
         $pago->update(['datos_pagador' => array_merge((array) ($pago->datos_pagador ?? []), $datos)]);
 
-        $transaccion = $this->transaccionDeclarada($pago, $cuenta->id, $referencia, $tipo, (int) $pago->monto_e2, $origen);
+        $transaccion = $this->transaccionDeclarada($pago, $cuenta->id, $referencia, $tipo, max(1, $pago->saldoE2()), $origen);
 
         if ($transaccion->estaAprobada()) {
             return ResultadoDeCobro::ok('Ese pago ya estaba confirmado.', $pago);
@@ -89,6 +90,11 @@ final class CobrosDePagoMovil
         ], $pago->estado);
 
         if (! $cuenta->conciliaSola()) {
+            // Quien confirma tiene que enterarse: el médico si recauda él, los Root si recauda la
+            // plataforma. Un SMTP caído no deshace la declaración.
+            $pago->load('transacciones');
+            app(AvisoDePagoPorConfirmar::class)->enviar($pago);
+
             return ResultadoDeCobro::ok(
                 'Recibimos tu aviso. El consultorio va a confirmar el pago y te avisamos.',
                 $pago,
@@ -262,26 +268,55 @@ final class CobrosDePagoMovil
             );
         }
 
-        // El banco confirma el monto que él ve. Si no cubre lo esperado, no se aprueba: por ahora se
-        // rechaza con el motivo (los abonos son la fase siguiente).
+        // El banco confirma el monto que él ve. Si no cubre lo esperado, es un **abono**: se acredita y el
+        // pago sigue abierto para que el paciente complete el resto en el momento (sólo en citas).
         $montoBanco = (int) $resultado->montoE2;
         $saldo = $pago->saldoE2();
+        // Lo ya acreditado **antes** de esta transacción: después de marcarla aprobada, la suma la incluye.
+        $previo = $pago->montoConfirmado();
 
         if ($montoBanco < $saldo) {
+            if (! $pago->esDeCita()) {
+                $transaccion->update([
+                    'estado' => PagoTransaccion::RECHAZADA,
+                    'respuesta' => $resultado->respuesta,
+                    'mensaje' => 'El monto no cubre el total y los abonos son sólo para citas.',
+                ]);
+
+                return ResultadoDeCobro::error(
+                    'El monto no coincide: el banco confirma ' . Centavos::formatear($montoBanco, (string) $pago->moneda)
+                    . ' y el pago es de ' . Centavos::formatear((int) $pago->monto_e2, (string) $pago->moneda) . '.',
+                    $pago,
+                );
+            }
+
             $transaccion->update([
-                'estado' => PagoTransaccion::RECHAZADA,
+                'estado' => PagoTransaccion::APROBADA,
                 'respuesta' => $resultado->respuesta,
-                'mensaje' => 'El banco confirma ' . Centavos::formatear($montoBanco, (string) $pago->moneda)
-                    . ' y el pago es de ' . Centavos::formatear((int) $pago->monto_e2, (string) $pago->moneda)
-                    . '. Todavía no aceptamos abonos.',
+                'mensaje' => null,
+                'confirmada_el' => now(),
             ]);
 
-            return ResultadoDeCobro::error(
-                'El monto no coincide: el banco confirma ' . Centavos::formatear($montoBanco, (string) $pago->moneda)
-                . ' y el pago es de ' . Centavos::formatear((int) $pago->monto_e2, (string) $pago->moneda) . '.',
+            $pago->update(['monto_confirmado_e2' => $previo + $montoBanco]);
+
+            $pago->registrarEvento($origen, 'abono_recibido', [
+                'referencia' => $transaccion->referencia,
+                'monto_e2' => $montoBanco,
+                'saldo_e2' => $pago->fresh()->saldoE2(),
+            ], $pago->estado);
+
+            return ResultadoDeCobro::ok(
+                'Recibimos un abono de ' . Centavos::formatear($montoBanco, (string) $pago->moneda)
+                . '. Faltan ' . Centavos::formatear($pago->fresh()->saldoE2(), (string) $pago->moneda)
+                . ': paga el resto para completar.',
                 $pago,
+                $resultado->respuesta,
             );
         }
+
+        // Cubre o supera el saldo. Si pagó de más, la diferencia queda a favor del paciente y se registra:
+        // la devolución la resuelve el consultorio (los reembolsos no son automáticos).
+        $diferencia = $montoBanco - $saldo;
 
         $transaccion->update([
             'estado' => PagoTransaccion::APROBADA,
@@ -290,7 +325,16 @@ final class CobrosDePagoMovil
             'confirmada_el' => now(),
         ]);
 
-        $pago->update(['monto_confirmado_e2' => $montoBanco]);
+        $pago->update(['monto_confirmado_e2' => $previo + $montoBanco]);
+
+        if ($diferencia > 0) {
+            $pago->registrarEvento($origen, 'diferencia_a_favor', [
+                'referencia' => $transaccion->referencia,
+                'monto_e2' => $montoBanco,
+                'esperado_e2' => $saldo,
+                'diferencia_e2' => $diferencia,
+            ], $pago->estado);
+        }
 
         return $this->cobros->aprobarConciliado($pago, $resultado->respuesta, $origen);
     }

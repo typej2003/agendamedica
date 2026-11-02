@@ -183,6 +183,19 @@
                     </button>
                 </form>
             @else
+                @if ($vm->abonado())
+                    <div class="alert alert-info" role="status">
+                        <h2 class="alert-heading h5">
+                            <i class="bi bi-wallet2 me-1" aria-hidden="true"></i> Recibimos una parte
+                        </h2>
+                        <p class="mb-0">
+                            Ya acreditamos {{ $vm->montoConfirmadoTexto() }}. Faltan
+                            <strong>{{ $vm->saldoTexto() }}</strong>: paga el resto con el mismo procedimiento y
+                            decláralo acá para completar.
+                        </p>
+                    </div>
+                @endif
+
                 @if ($declarado && $ultima && $ultima->mensaje)
                     <div class="alert alert-warning" role="alert">
                         <h2 class="alert-heading h5">

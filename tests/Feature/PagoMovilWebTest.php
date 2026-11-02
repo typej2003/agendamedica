@@ -18,6 +18,7 @@ use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
@@ -216,32 +217,78 @@ class PagoMovilWebTest extends TestCase
         $this->assertEqualsWithDelta(50.0, (float) $cita->monto_pagado, 0.01);
     }
 
-    public function test_un_monto_distinto_no_aprueba_el_pago(): void
+    public function test_un_abono_deja_el_pago_abierto_y_los_demas_completa(): void
+    {
+        // El banco confirma 1.000 la primera vez (falta) y el resto la segunda.
+        Http::fake(function ($request) {
+            if ($request->url() === self::TOKEN_URL) {
+                return Http::response(['access_token' => 'token-de-prueba', 'expires_in' => 3600]);
+            }
+
+            $monto = ($request['referencia'] ?? '') === '000945672280' ? '825.00' : '1000.00';
+
+            return Http::response([
+                'estadoTransaccion' => 'EJ',
+                'descripcion' => 'EJECUTADO CORRECTAMENTE',
+                'monto' => $monto,
+            ]);
+        });
+
+        $medico = $this->medicoDePrueba();
+        $pago = $this->pagoDePrueba($medico, $this->cuentaDePagoMovil());
+
+        $this->post(route('pagar.declarar', $pago->token_publico), $this->declaracion())
+            ->assertSessionHas('estado');
+
+        $pago->refresh();
+        $this->assertSame(Pago::PENDIENTE, $pago->estado);
+        $this->assertSame(100000, (int) $pago->monto_confirmado_e2);
+        $this->assertSame(82500, $pago->saldoE2());
+        $this->assertSame(PagoTransaccion::APROBADA, $pago->transacciones()->firstOrFail()->estado);
+
+        // La cita todavía no está paga: el abono no la cierra.
+        $this->assertEqualsWithDelta(0.0, (float) $pago->cita()->monto_pagado, 0.01);
+
+        $this->post(route('pagar.declarar', $pago->token_publico), $this->declaracion(['referencia' => '000945672280']))
+            ->assertSessionHas('estado');
+
+        $pago->refresh();
+        $this->assertSame(Pago::APROBADO, $pago->estado);
+        $this->assertSame(182500, (int) $pago->monto_confirmado_e2);
+        $this->assertEqualsWithDelta(50.0, (float) $pago->cita()->monto_pagado, 0.01);
+    }
+
+    public function test_un_pago_de_mas_se_confirma_con_la_diferencia_a_favor(): void
     {
         $this->falsificarBancaribe([
             'estadoTransaccion' => 'EJ',
             'descripcion' => 'EJECUTADO CORRECTAMENTE',
-            'monto' => '1000.00',
+            'monto' => '2000.00',
             'codigoConfirmacion' => '000945672279',
         ]);
 
         $medico = $this->medicoDePrueba();
         $pago = $this->pagoDePrueba($medico, $this->cuentaDePagoMovil());
 
-        $this->post(route('pagar.declarar', $pago->token_publico), $this->declaracion())
-            ->assertSessionHas('error');
+        $this->post(route('pagar.declarar', $pago->token_publico), $this->declaracion());
 
         $pago->refresh();
-        $this->assertSame(Pago::PENDIENTE, $pago->estado);
+        $this->assertSame(Pago::APROBADO, $pago->estado);
+        $this->assertSame(200000, (int) $pago->monto_confirmado_e2);
 
-        $transaccion = $pago->transacciones()->firstOrFail();
-        $this->assertSame(PagoTransaccion::RECHAZADA, $transaccion->estado);
-        $this->assertNotEmpty($transaccion->mensaje);
+        $this->assertTrue(
+            $pago->eventos()->where('evento', 'diferencia_a_favor')->exists(),
+            'La diferencia tiene que quedar registrada para devolverla.',
+        );
+
+        // La cita se paga por lo que valía, no por el excedente.
+        $this->assertEqualsWithDelta(50.0, (float) $pago->cita()->monto_pagado, 0.01);
     }
 
     public function test_una_cuenta_manual_deja_el_pago_pendiente_y_avisa_al_consultorio(): void
     {
         Http::fake();
+        Mail::fake();
 
         $medico = $this->medicoDePrueba();
         $pago = $this->pagoDePrueba($medico, $this->cuentaDePagoMovil(CuentaBancaria::CONCILIACION_MANUAL));
@@ -252,6 +299,10 @@ class PagoMovilWebTest extends TestCase
         $pago->refresh();
         $this->assertSame(Pago::PENDIENTE, $pago->estado);
         $this->assertSame(1, $pago->transacciones()->count());
+
+        // El aviso sale para quien puede confirmar: el médico si recauda él, los Root si recauda la
+        // plataforma (que es el caso del método de esta prueba).
+        Mail::assertSent(\App\Mail\PagoMovilPorConfirmar::class);
 
         // No se consultó a ningún banco.
         Http::assertNothingSent();

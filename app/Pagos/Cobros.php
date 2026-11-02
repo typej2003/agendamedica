@@ -601,6 +601,10 @@ final class Cobros
                 'respuesta' => $respuesta,
                 'referencia_externa' => $this->referenciaExterna($respuesta) ?? $bloqueado->referencia_externa,
                 'operation_secret' => $this->operationSecret($respuesta) ?? $bloqueado->operation_secret,
+                // Lo que la plataforma recaudó para el médico queda disponible para liquidar a los T+N.
+                'disponible_el' => $bloqueado->estado_liquidacion === Pago::LIQUIDACION_PENDIENTE
+                    ? now()->addDays(max(0, (int) ConfiguracionPago::actual()->liquidacion_dias))->toDateString()
+                    : $bloqueado->disponible_el,
             ]);
             $bloqueado->registrarEvento($origen, 'aprobado', $respuesta, $anterior);
 

@@ -231,6 +231,24 @@ final class PagoPublicoVista
         return $this->pago->transacciones()->latest('id')->first();
     }
 
+    /** ¿Ya entró una parte y falta el resto? */
+    public function abonado(): bool
+    {
+        return ! $this->pago->estaAprobado() && $this->pago->montoConfirmado() > 0;
+    }
+
+    /** Lo que ya se acreditó, para el aviso del abono. */
+    public function montoConfirmadoTexto(): string
+    {
+        return Centavos::formatear($this->pago->montoConfirmado(), (string) $this->pago->moneda);
+    }
+
+    /** Lo que falta para completar el pago. */
+    public function saldoTexto(): string
+    {
+        return Centavos::formatear($this->pago->saldoE2(), (string) $this->pago->moneda);
+    }
+
     /** Ya se pidió el código y se puede escribir. */
     public function enOtp(): bool
     {
