@@ -1358,7 +1358,7 @@ class AgendaWebTest extends TestCase
 
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->post('/clinica/agenda/' . $cita->id . '/cobrar', ['recibido' => 5])
-            ->assertSessionHasErrors(['recibido' => 'Lo recibido (5,00) supera lo que falta por cobrar (0,00).']);
+            ->assertSessionHasErrors(['recibido' => 'Esta cita ya está pagada.']);
 
         $this->assertSame(50.0, (float) $cita->fresh()->monto_pagado);
     }

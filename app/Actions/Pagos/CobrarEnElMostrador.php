@@ -48,17 +48,32 @@ final class CobrarEnElMostrador
         return app(GenerarLinkDePagoDeCita::class)->metodo();
     }
 
-    /** ¿La cita ya está cobrada? Misma vara que el link de pago: los montos de la agenda o un pago aprobado. */
+    /**
+     * ¿La cita ya está cobrada?
+     *
+     * La autoridad es `Cola::estadoPago()` (los montos de la agenda), que es lo que el médico ve. El
+     * respaldo de los pagos aprobados sólo cuenta cuando **cubren el precio**: un abono parcial deja un pago
+     * aprobado y la cita sigue debiendo, así que mirar «hay algún pago aprobado» bloquearía el segundo abono
+     * (O-53). Sin precio, cualquier pago aprobado la deja cobrada, que es la regla de `estadoPago()`.
+     */
     public function estaPagada(Cola $cita): bool
     {
         if ($cita->estadoPago() === Cola::PAGO_PAGADA) {
             return true;
         }
 
-        return Pago::where('pagable_tipo', Pago::PAGABLE_CITA)
+        $aprobadoUsdE2 = (int) Pago::where('pagable_tipo', Pago::PAGABLE_CITA)
             ->where('pagable_id', $cita->id)
             ->where('estado', Pago::APROBADO)
-            ->exists();
+            ->sum('monto_usd_e2');
+
+        if ($aprobadoUsdE2 <= 0) {
+            return false;
+        }
+
+        $precioUsdE2 = (int) Centavos::deDecimal((float) ($cita->monto ?? 0));
+
+        return $precioUsdE2 <= 0 || $aprobadoUsdE2 >= $precioUsdE2;
     }
 
     /** Lo que falta cobrar, en centavos de USD (`cola.monto` − `cola.monto_pagado`). */

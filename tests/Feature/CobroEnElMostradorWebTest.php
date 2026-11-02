@@ -225,6 +225,50 @@ class CobroEnElMostradorWebTest extends TestCase
         $this->assertSame(50.0, (float) $cita->fresh()->monto_pagado);
     }
 
+    /** El abono rápido del diálogo «Cobrar» registra su pago: la plata no puede faltar en «Mis ingresos». */
+    public function test_el_abono_del_dialogo_de_la_agenda_deja_un_pago_y_aparece_en_los_ingresos(): void
+    {
+        $cita = $this->cita();
+
+        $this->conContexto()->actingAs($this->user)
+            ->post(route('clinica.agenda.cobrar', $cita->id), ['recibido' => '20', 'monto' => '50'])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('estado', 'Cobro registrado.');
+
+        $pago = Pago::where('pagable_tipo', Pago::PAGABLE_CITA)->where('pagable_id', $cita->id)->firstOrFail();
+
+        $this->assertSame(Pago::APROBADO, $pago->estado);
+        $this->assertSame(Pago::CANAL_MOSTRADOR, $pago->canal);
+        $this->assertSame('efectivo', $pago->medio_manual);
+        // El pago lleva lo que entró, no el saldo entero: el abono es parcial.
+        $this->assertSame(2000, (int) $pago->monto_usd_e2);
+        $this->assertSame(20.0, (float) $cita->fresh()->monto_pagado);
+
+        $this->conContexto()->actingAs($this->user)
+            ->get(route('clinica.ingresos'))
+            ->assertOk()
+            ->assertSee('20,00');
+    }
+
+    /** Las dos puertas comparten el guard: cobrado el total por una, la otra no duplica. */
+    public function test_un_segundo_abono_por_la_otra_puerta_no_duplica_el_cobro(): void
+    {
+        $cita = $this->cita();
+
+        // Por el diálogo: el precio y el abono completo.
+        $this->conContexto()->actingAs($this->user)
+            ->post(route('clinica.agenda.cobrar', $cita->id), ['recibido' => '50', 'monto' => '50'])
+            ->assertSessionHasNoErrors();
+
+        // Por la pantalla nueva: ya está cobrada, no crea otro pago.
+        $this->conContexto()->actingAs($this->user)
+            ->post(route('clinica.agenda.cobro.manual', $cita->id), ['recibido' => '50', 'medio' => 'efectivo'])
+            ->assertSessionHasErrors('recibido');
+
+        $this->assertSame(1, Pago::where('pagable_tipo', Pago::PAGABLE_CITA)->where('pagable_id', $cita->id)->count());
+    }
+
     public function test_la_cita_de_otro_medico_no_se_cobra(): void
     {
         $ajena = Cola::create([
