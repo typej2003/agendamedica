@@ -111,6 +111,52 @@ final class MapaDelInternista
     private const ESPECIALES = ['A' => 'Nefropatías', 'B' => 'Hepatopatías', 'C' => 'Trastornos neurológicos', 'D' => 'Endocrinopatías', 'E' => 'Otros'];
 
     /**
+     * **El texto que el escritorio escribe en «Descripción» al elegir cada opción** (O-47, parte 2a), transcrito de
+     * `fuentes-cirugia/ventana_consulta/w_consulta_principal.srw` (el `doubleclicked` de cada `dw_*` de la
+     * `tabpage_19`): espirometría `:25073-25086`, infección `:24952-24971`, trombosis `:25024-25037`, ASA
+     * `:24848-24877` y situaciones especiales `:24895-24917`.
+     *
+     * La clave es la **tabla** de la escala (`pre_espiro`…), y el texto se copia **tal cual el escritorio**, con sus
+     * mayúsculas, su doble espacio, su salto de línea y hasta sus erratas: lo que se imprime es lo que el médico vio
+     * siempre. El marcador `{emergencia}` es el «en Emergencia,» que el escritorio interpola en la clase ASA según la
+     * casilla de emergencia; lo resuelve quien lo pinta con el estado de esa casilla.
+     *
+     * @var array<string,array<string,string>>
+     */
+    private const TEXTOS_DE_LAS_ESCALAS = [
+        'pre_espiro' => [
+            'A' => 'RIESGO BAJO',
+            'B' => "RIESGO ELEVADO\nFVC < 50% de lo anticipado   FEV1 < 40%    FEV1/FVC < 50% Ó 2LT    MBC<50% Ó 50 Lt/min   FVE 25-75: < 50%",
+            'C' => "INOPERABILIDAD\nFVC 1.5Lt ó 20cc/Kg   FEV1 1Lt    FEV1/FVC: 35%  FVE 25-75: 1Lt/seg",
+        ],
+        'pre_trombo' => [
+            'A' => "BAJO RIESGO\nEDAD < ó > 40 años   INTERVENCIÓN < 30 min Ausencia de otros factores de riesgo",
+            'B' => "RIESGO MODERADO\nEDAD > 40 años   INTERVENCIÓN > 30 min Factores de riesgo secundario",
+            'C' => "RIESGO ALTO\nEDAD > 40 años   INTERVENCIÓN > 30 min Ortopédica, pélvica ó abdominal po Ca.  TVP/TEP primario,  Factores de riesgo secundario Coagulopatías heredadas o adquiridas",
+        ],
+        'pre_infec' => [
+            'A' => "HERIDAS LIMPIAS\nNo traumáticas Tec Qx sin complicación Tracto respirat, genitour y gástrico normal.",
+            'B' => "HERIDAS LIMPIAS CONTAMINADAS\nApendicectomía, Ruptura vaginal, Entrada del tracto urinario o el tracto biliar en ausencia de infección, Ruptura menor en el tec Qx",
+            'C' => "HERIDAS CONTAMINADAS\nMayor a compromiso de ruptura en el tec Qx, Heridas traumáticas, Cirugía del tracto biliar y genitourinario en presencia de infección.",
+            'D' => "HERIDAS SUCIAS E INFECTADAS\nInflamación bac. aguda sin pus. Transección de tejido sano debido adrenaje de colección de pus, Heridas traumáticas con desvitalización del tejido, Contaminación fecal o cuerpos extraños.",
+        ],
+        'pre_aneste' => [
+            'A' => "CLASE I\nPaciente {emergencia}normal con un proceso localizado sin afección sistémica.",
+            'B' => "CLASE II\nPaciente {emergencia}con enfermedad sistémica leve.",
+            'C' => "CLASE III\nPaciente {emergencia}con enfermedad sistémica grave, no incapacitante.",
+            'D' => "CLASE IV\nPaciente {emergencia}con enfermedad sistémica grave, e incapacitante, lo que constituye una amenaza permanebte para su vida.",
+            'E' => "CLASE V\nPaciente {emergencia}enfermo moribundo, cuya expectativa de vida no excede la 24 horas se efectue o no el tratamiento quirúrgico.",
+        ],
+        'pre_espec' => [
+            'A' => 'NEFROPATIAS',
+            'B' => 'HEPATOPATIAS',
+            'C' => 'TRASTORNO NEUROLÓGICO',
+            'D' => 'ENDOCRINOPATIAS',
+            'E' => 'OTROS',
+        ],
+    ];
+
+    /**
      * Los campos de cada pestaña: pestaña => lista de campos, en el orden de la pantalla del escritorio.
      *
      * @return array<string,array<int,array<string,mixed>>>
@@ -271,5 +317,36 @@ final class MapaDelInternista
         }
 
         return trim($valor);
+    }
+
+    /**
+     * **El texto de cada opción de una escala** (O-47): valor guardado => lo que el escritorio escribe en
+     * «Descripción». Acepta la clave del campo (`pre_espiro_tipo`) o la de la tabla (`pre_espiro`).
+     *
+     * Lo usan la pantalla —para cargar el texto al elegir la opción— y la hoja impresa, que así no lo repite.
+     *
+     * @return array<string,string>
+     */
+    public static function textosDeLaEscala(string $clave): array
+    {
+        return self::TEXTOS_DE_LAS_ESCALAS[self::escalaDeLaClave($clave)] ?? [];
+    }
+
+    /** El texto completo de una opción de escala, o `null` si el valor está vacío o no es de esa escala. */
+    public static function textoCompletoDeLaOpcion(string $clave, ?string $valor): ?string
+    {
+        $valor = trim((string) $valor);
+
+        if ($valor === '') {
+            return null;
+        }
+
+        return self::textosDeLaEscala($clave)[$valor] ?? null;
+    }
+
+    /** La tabla de una escala a partir de la clave de su campo (`pre_espiro_tipo` → `pre_espiro`). */
+    private static function escalaDeLaClave(string $clave): string
+    {
+        return str_ends_with($clave, '_tipo') ? substr($clave, 0, -strlen('_tipo')) : $clave;
     }
 }

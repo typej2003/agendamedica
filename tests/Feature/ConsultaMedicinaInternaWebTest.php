@@ -236,6 +236,32 @@ class ConsultaMedicinaInternaWebTest extends TestCase
             ->assertOk()->assertSee('Guardar el riesgo');
     }
 
+    /**
+     * **El texto de cada opción** (O-47): la pantalla de *Estimaciones* lleva el texto del escritorio en el
+     * `data-texto` de su `<option>` y dice a qué cuadro copiarlo; el cuadro «Descripción» conserva lo guardado, y la
+     * clase ASA deja el marcador de la emergencia para que lo resuelva la pantalla.
+     */
+    public function test_las_estimaciones_traen_el_texto_de_cada_opcion(): void
+    {
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->conContexto($user, $medico, $mi)->post(route('clinica.consulta.internista.guardar', $consulta->id), [
+            'pestana' => 'estimaciones', 'pre_espiro_tipo' => 'B', 'pre_espiro_resultado' => 'Lo que escribió el médico.',
+        ])->assertRedirect();
+
+        $this->conContexto($user, $medico, $mi)->get($this->seccion($consulta, 'preoperatoria', 'estimaciones'))
+            ->assertOk()
+            ->assertSee('data-descripcion-de="interna-pre_espiro_resultado"', false)
+            ->assertSee('data-descripcion-de="interna-pre_aneste_resultado"', false)
+            // El texto del escritorio viaja en el atributo de su opción (Blade lo escapa).
+            ->assertSee('FVC &lt; 50% de lo anticipado', false)
+            ->assertSee('EDAD &lt; ó &gt; 40 años', false)
+            ->assertSee('Paciente {emergencia}con enfermedad sistémica leve.', false)
+            // Y lo que el médico escribió sigue en su cuadro.
+            ->assertSee('Lo que escribió el médico.');
+    }
+
     public function test_el_analisis_evolutivo_junta_las_consultas_de_la_historia(): void
     {
         [$user, $medico, $mi] = $this->medico();

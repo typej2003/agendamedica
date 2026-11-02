@@ -108,11 +108,17 @@
                                                   id="{{ $campo['id'] }}" name="{{ $campo['clave'] }}"
                                                   @if ($campo['max']) maxlength="{{ $campo['max'] }}" @endif>{{ $campo['valor'] }}</textarea>
                                     @elseif ($campo['tipo'] === 'opcion')
+                                        {{-- **El texto de la opción** (O-47): cada opción lleva el suyo en `data-texto` y
+                                             `consulta-internista.js` lo copia al cuadro «Descripción» de la escala cuando
+                                             cambia, como el `doubleclicked` del escritorio. Sin guardar nada por su
+                                             cuenta: el texto queda en el cuadro y se guarda con la sección. --}}
                                         <select class="form-select @error($campo['clave']) is-invalid @enderror"
-                                                id="{{ $campo['id'] }}" name="{{ $campo['clave'] }}">
+                                                id="{{ $campo['id'] }}" name="{{ $campo['clave'] }}"
+                                                @if ($campo['descripcionDe']) data-descripcion-de="{{ $campo['descripcionDe'] }}" @endif>
                                             <option value="">— Sin dato —</option>
                                             @foreach ($campo['opciones'] as $valor => $texto)
-                                                <option value="{{ $valor }}" @selected($campo['valor'] === (string) $valor)>{{ $texto }}</option>
+                                                <option value="{{ $valor }}" @selected($campo['valor'] === (string) $valor)
+                                                        @if (isset($campo['textos'][$valor])) data-texto="{{ $campo['textos'][$valor] }}" @endif>{{ $texto }}</option>
                                             @endforeach
                                         </select>
                                     @else

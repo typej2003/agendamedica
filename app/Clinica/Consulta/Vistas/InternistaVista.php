@@ -220,6 +220,11 @@ final class InternistaVista
                 'unidad' => $campo['unidad'] ?? null,
                 'max' => $campo['max'] ?? null,
                 'opciones' => $campo['opciones'] ?? [],
+                // **El texto de cada opción de la escala** (O-47): el que el escritorio escribe en «Descripción» al
+                // elegir el radio. Viaja en el `data-texto` de cada `<option>` y `consulta-internista.js` lo copia al
+                // cuadro de la descripción, que es el campo `…_resultado` de la misma escala.
+                'textos' => isset($campo['opciones']) ? MapaDelInternista::textosDeLaEscala($campo['clave']) : [],
+                'descripcionDe' => isset($campo['opciones']) ? 'interna-' . $campo['tabla'] . '_resultado' : null,
                 'valor' => $valor,
                 'marcado' => $valor === 'S',
                 'columna' => match (true) {

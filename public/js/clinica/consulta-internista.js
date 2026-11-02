@@ -44,6 +44,54 @@
         pintarAviso();
     });
 
+    // **El texto de la opción elegida** (O-47): al cambiar una escala de *Estimaciones*, su texto pasa al cuadro
+    // «Descripción» de esa escala (`…_resultado`), igual que el `doubleclicked` del escritorio. No guarda nada: deja
+    // el texto escrito para que se guarde con la sección. Se respeta lo que el médico haya escrito a mano: sólo se
+    // reemplaza si el cuadro está vacío o si todavía tiene el texto de otra opción del mismo catálogo.
+    const escalas = Array.from(formulario.querySelectorAll('select[data-descripcion-de]'));
+    const emergencia = document.getElementById('interna-pre_aneste_emergencia');
+
+    function marcaDeEmergencia() {
+        return emergencia && emergencia.checked ? 'en Emergencia, ' : '';
+    }
+
+    function textosDeLaEscala(select) {
+        return Array.from(select.options)
+            .map(function (opcion) { return (opcion.dataset.texto || '').replace('{emergencia}', marcaDeEmergencia()); })
+            .filter(function (texto) { return texto !== ''; });
+    }
+
+    function cargarDescripcion(select) {
+        const destino = document.getElementById(select.dataset.descripcionDe);
+        if (!destino) return;
+
+        const opcion = select.options[select.selectedIndex];
+        const texto = ((opcion && opcion.dataset.texto) || '').replace('{emergencia}', marcaDeEmergencia());
+        if (texto === '') return;
+
+        const actual = destino.value.trim();
+        const esDelCatalogo = textosDeLaEscala(select).indexOf(actual) !== -1;
+
+        // Un texto escrito a mano no se pisa; uno vacío o generado por otra opción sí.
+        if (actual !== '' && !esDelCatalogo && actual !== texto) return;
+
+        destino.value = texto;
+        destino.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    escalas.forEach(function (select) {
+        select.addEventListener('change', function () { cargarDescripcion(select); });
+    });
+
+    // La clase ASA dice «en Emergencia,» según esa casilla: al cambiarla se vuelve a cargar el texto vigente.
+    if (emergencia) {
+        emergencia.addEventListener('change', function () {
+            escalas
+                .filter(function (select) { return select.dataset.descripcionDe === 'interna-pre_aneste_resultado'; })
+                .forEach(cargarDescripcion);
+        });
+    }
+
     const cancelar = formulario.querySelector('a[href]');
     if (cancelar) {
         cancelar.addEventListener('click', function (evento) {

@@ -97,4 +97,54 @@ class InternistaVistaTest extends TestCase
         $this->assertNull(GuardarDatosDelInternista::normalizar($opcion, 'Z'));
         $this->assertSame('ab', GuardarDatosDelInternista::normalizar(['tipo' => 'texto', 'max' => 2], 'abc'));
     }
+
+    /**
+     * **Cada opción de las cinco escalas trae su texto** (O-47): el mismo que el escritorio escribe en «Descripción».
+     * Un valor que no es de la escala, o vacío, devuelve `null`; la escala ASA deja el marcador `{emergencia}` para
+     * que lo resuelva quien la pinta.
+     */
+    public function test_cada_opcion_de_las_escalas_trae_el_texto_del_escritorio(): void
+    {
+        $escalas = [
+            'pre_espiro' => [['A', 'RIESGO BAJO'], ['B', 'RIESGO ELEVADO'], ['C', 'INOPERABILIDAD']],
+            'pre_trombo' => [['A', 'BAJO RIESGO'], ['B', 'RIESGO MODERADO'], ['C', 'RIESGO ALTO']],
+            'pre_infec' => [['A', 'HERIDAS LIMPIAS'], ['B', 'HERIDAS LIMPIAS CONTAMINADAS'], ['C', 'HERIDAS CONTAMINADAS'], ['D', 'HERIDAS SUCIAS E INFECTADAS']],
+            'pre_aneste' => [['A', 'CLASE I'], ['B', 'CLASE II'], ['C', 'CLASE III'], ['D', 'CLASE IV'], ['E', 'CLASE V']],
+            'pre_espec' => [['A', 'NEFROPATIAS'], ['B', 'HEPATOPATIAS'], ['C', 'TRASTORNO NEUROLÓGICO'], ['D', 'ENDOCRINOPATIAS'], ['E', 'OTROS']],
+        ];
+
+        foreach ($escalas as $escala => $opciones) {
+            $textos = MapaDelInternista::textosDeLaEscala($escala);
+
+            $this->assertCount(count($opciones), $textos, $escala);
+
+            foreach ($opciones as [$valor, $titulo]) {
+                $texto = MapaDelInternista::textoCompletoDeLaOpcion($escala . '_tipo', $valor);
+
+                $this->assertNotNull($texto, "{$escala} {$valor}");
+                $this->assertStringStartsWith($titulo, $texto, "{$escala} {$valor}");
+            }
+        }
+
+        // La clase ASA interpola la emergencia: el marcador queda en el texto para que lo resuelva la pantalla.
+        $this->assertStringContainsString('{emergencia}', (string) MapaDelInternista::textoCompletoDeLaOpcion('pre_aneste_tipo', 'A'));
+
+        // Un valor que no es de la escala y uno vacío no inventan texto.
+        $this->assertNull(MapaDelInternista::textoCompletoDeLaOpcion('pre_espiro_tipo', 'Z'));
+        $this->assertNull(MapaDelInternista::textoCompletoDeLaOpcion('pre_espiro_tipo', ''));
+        $this->assertNull(MapaDelInternista::textoCompletoDeLaOpcion('peso', 'A'));
+        $this->assertSame([], MapaDelInternista::textosDeLaEscala('peso'));
+    }
+
+    /** La escala de *Estimaciones* le pasa a la pantalla el texto de cada opción y el cuadro al que va. */
+    public function test_los_campos_de_la_escala_traen_sus_textos_y_su_descripcion(): void
+    {
+        $vm = $this->vista(MapaDelInternista::SECCION_PREOPERATORIA, 'estimaciones', ['pre_espiro_tipo' => 'B']);
+        $campos = collect($vm->campos())->keyBy('clave');
+
+        $this->assertSame('interna-pre_espiro_resultado', $campos['pre_espiro_tipo']['descripcionDe']);
+        $this->assertStringContainsString('FVC < 50%', $campos['pre_espiro_tipo']['textos']['B']);
+        $this->assertStringContainsString('EDAD < ó > 40 años', $campos['pre_trombo_tipo']['textos']['A']);
+        $this->assertSame([], $campos['peso']['textos'] ?? [], 'un campo que no es escala no lleva textos');
+    }
 }
