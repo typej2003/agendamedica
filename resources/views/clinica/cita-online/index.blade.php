@@ -13,6 +13,37 @@
         $publicada = old('porcentaje') !== null ? old('publicar_agenda') !== null : $vm->publicaAgenda();
     @endphp
 
+    @if ($vm->hayLinkPublico())
+        {{-- **El link de la ficha pública** (O-52): el mismo que abre el paciente para reservar. Se copia o se muestra
+             el QR en el consultorio; no lleva datos de pacientes. --}}
+        <x-ui.tarjeta titulo="Tu link para reservar" icono="bi-qr-code" class="mb-3">
+            <p class="texto-tenue">
+                Es tu página pública: el paciente elige horario y confirma. Cópiala o muestra el código para que la
+                escanee con la cámara.
+            </p>
+
+            <div class="d-flex flex-wrap align-items-start gap-4">
+                <div class="flex-grow-1" style="min-width: 260px">
+                    <div class="input-group">
+                        <label class="visually-hidden" for="link-publico">Tu link público</label>
+                        <input type="text" class="form-control" id="link-publico" readonly value="{{ $vm->urlPublica() }}">
+                        <button class="btn btn-outline-secondary" type="button" data-copiar="link-publico">
+                            <i class="bi bi-clipboard" aria-hidden="true"></i> Copiar
+                        </button>
+                    </div>
+                    <p class="form-text mb-0">Sólo aparece en el portal si la agenda está publicada.</p>
+                </div>
+
+                @if ($vm->qr() !== null)
+                    <div class="text-center">
+                        <div style="width: 150px; height: 150px">{!! $vm->qr() !!}</div>
+                        <p class="texto-tenue small mb-0 mt-1">Escanealo y reserva</p>
+                    </div>
+                @endif
+            </div>
+        </x-ui.tarjeta>
+    @endif
+
     <form method="POST" action="{{ $vm->urlGuardar() }}">
         @csrf
 
@@ -110,4 +141,8 @@
             </div>
         </x-ui.tarjeta>
     </form>
+@endsection
+
+@section('scripts')
+    <script src="{{ asset('js/clinica/compartir-cita.js') }}?v={{ @filemtime(public_path('js/clinica/compartir-cita.js')) }}"></script>
 @endsection

@@ -400,6 +400,25 @@ final class FilaDeCitaVista
         return ['url' => route('clinica.agenda.link-de-pago', $this->cita->id)];
     }
 
+    /**
+     * **«Compartir la cita»** (O-52): la pantalla con el link firmado de la ficha pública, ya con la fecha y el
+     * motivo elegidos, y su QR.
+     *
+     * Se ofrece mientras la cita sea algo que el paciente todavía puede reservar: no en una **atendida** (ya
+     * ocurrió), ni en una **movida** (esa fila es de otro día), ni en una cuyo médico no exista —sin médico no hay
+     * ficha pública—. La pantalla, si igual se llega, lo explica.
+     *
+     * @return array{url:string}|null
+     */
+    public function linkDeCompartir(): ?array
+    {
+        if ($this->movida() || $this->atendida()) {
+            return null;
+        }
+
+        return ['url' => route('clinica.agenda.link-de-cita', $this->cita->id)];
+    }
+
     /** Una cita atendida ya ocurrió (y tiene la consulta colgando): no se edita. */
     public function urlEditar(): ?string
     {

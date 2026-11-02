@@ -67,6 +67,14 @@ class CatalogoDeReservasController extends Controller
             ? $agenda[$fecha]
             : ($this->primerasDelMapa($agenda, 5) ?: $disponibilidad->opciones($medico));
 
+        $motivos = MotivoCita::where('reg_medico', $medico->regMedicoPrincipal())
+            ->whereNotNull('precio')
+            ->where('precio', '>', 0)
+            ->orderBy('tipo_atencion')
+            ->get()
+            ->unique('codigo')
+            ->values();
+
         return view('reservas.medico', [
             'medico' => $medico,
             'especialidades' => $medico->specialties()->where('activo', true)->orderBy('name')->get(),
@@ -83,14 +91,53 @@ class CatalogoDeReservasController extends Controller
             // El motivo con precio es lo que le da precio a la cita y, con el porcentaje de «Cita
             // Online», el monto que se cobra al reservar. Sin motivos con precio la reserva sigue igual,
             // sin cobro. El servidor vuelve a validar el motivo contra la sede elegida.
-            'motivos' => MotivoCita::where('reg_medico', $medico->regMedicoPrincipal())
-                ->whereNotNull('precio')
-                ->where('precio', '>', 0)
-                ->orderBy('tipo_atencion')
-                ->get()
-                ->unique('codigo')
-                ->values(),
+            'motivos' => $motivos,
+            // **El link que compartió el consultorio** (O-52): si viene firmado por nosotros, la ficha abre con
+            // el horario y el motivo ya elegidos. Un link vencido o manipulado no impone nada: se abre la ficha
+            // normal y se avisa que el enlace ya no sirve.
+            'enlace' => $this->enlaceCompartido($request, $opciones, $motivos),
         ]);
+    }
+
+    /**
+     * **Lo que el link firmado pide pre-elegir** (O-52), o `null` si la visita es normal.
+     *
+     * La firma es la de `URL::temporarySignedRoute` (`EnlaceDeCitaCompartida`): sin firma válida los parámetros
+     * **no se leen**, y un motivo que no es del catálogo del médico se descarta igual que un horario que ya no
+     * existe. Nada de esto da permisos: el paciente confirma con su código y el cupo se vuelve a comprobar.
+     *
+     * @param  array<int,\App\Reservas\OpcionDeReserva>  $opciones
+     * @param  \Illuminate\Support\Collection<int,\App\Models\MotivoCita>  $motivos
+     * @return array{valido:bool, vencido:bool, fecha:?string, hora:?string, motivo:?string}|null
+     */
+    private function enlaceCompartido(Request $request, array $opciones, $motivos): ?array
+    {
+        $traeFirma = $request->has('signature');
+
+        if (! $request->hasValidSignature()) {
+            return $traeFirma ? ['valido' => false, 'vencido' => true, 'fecha' => null, 'hora' => null, 'motivo' => null] : null;
+        }
+
+        $fecha = trim((string) $request->query('fecha', ''));
+        $hora = trim((string) $request->query('hora', ''));
+        $motivo = trim((string) $request->query('motivo', ''));
+
+        // El horario se acepta sólo si es uno de los que la ficha está mostrando: si la agenda cambió, no se
+        // marca ninguno y el paciente ve los que hay.
+        $existe = $fecha !== '' && $hora !== '';
+        $existe = $existe && collect($opciones)->contains(
+            fn ($opcion) => $opcion->fecha === $fecha && $opcion->hora === $hora,
+        );
+
+        return [
+            'valido' => true,
+            'vencido' => false,
+            'fecha' => $existe ? $fecha : null,
+            'hora' => $existe ? $hora : null,
+            'motivo' => $motivo !== '' && $motivos->contains(fn ($delCatalogo) => (string) $delCatalogo->codigo === $motivo)
+                ? $motivo
+                : null,
+        ];
     }
 
     /**

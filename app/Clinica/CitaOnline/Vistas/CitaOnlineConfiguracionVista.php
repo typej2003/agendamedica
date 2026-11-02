@@ -20,7 +20,27 @@ final class CitaOnlineConfiguracionVista
     public function __construct(
         private ConfiguracionDeCitaOnline $configuracion,
         private ?MotivoCita $motivo = null,
+        // **El link público de la ficha del médico** y su QR (O-52): lo que comparte con sus pacientes.
+        private ?string $urlPublica = null,
+        private ?string $qr = null,
     ) {
+    }
+
+    /** ¿Hay ficha pública que compartir? (Sin médico en el contexto no se ofrece el bloque.) */
+    public function hayLinkPublico(): bool
+    {
+        return $this->urlPublica !== null;
+    }
+
+    public function urlPublica(): string
+    {
+        return (string) $this->urlPublica;
+    }
+
+    /** El SVG del QR listo para incrustar, o `null`. */
+    public function qr(): ?string
+    {
+        return $this->qr;
     }
 
     public function titulo(): string

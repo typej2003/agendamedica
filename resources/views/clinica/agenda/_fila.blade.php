@@ -60,6 +60,7 @@
                 $atender = $fila->atender();
                 $cobro = $fila->cobro();
                 $linkDePago = $fila->linkDePago();
+                $compartirCita = $fila->linkDeCompartir();
                 $recordatorio = $fila->recordatorio();
                 $imprimirDocumentos = $fila->imprimirDocumentos();
                 $quitar = $fila->quitarConfirmacion();
@@ -74,6 +75,7 @@
                 $secundarias = array_filter([
                     'recordatorio' => (bool) $recordatorio,
                     'link' => (bool) $linkDePago,
+                    'compartir' => (bool) $compartirCita,
                     'atender' => (bool) ($confirmar && $atender),
                     'quitar' => (bool) $quitar,
                     'citas' => (bool) $fila->pacienteId(),
@@ -169,7 +171,7 @@
                      colgando) y una con pago registrado no se borra: la regla la aplica `EliminarCita`;
                      acá solo no se ofrece. El menú se muestra aunque no haya ninguna de esas acciones
                      cuando el paciente tiene ficha: "Citas del paciente" siempre está. --}}
-                @if (! $soloCitasDelPaciente && ($recordatorio || $linkDePago || $quitar || ($confirmar && $atender) || $fila->urlEditar() || $fila->urlEliminar() || $fila->pacienteId()))
+                @if (! $soloCitasDelPaciente && ($recordatorio || $linkDePago || $compartirCita || $quitar || ($confirmar && $atender) || $fila->urlEditar() || $fila->urlEliminar() || $fila->pacienteId()))
                     <x-ui.menu>
                         @if ($recordatorio)
                             <button type="button" class="menu-item" data-dialogo="recordatorio"
@@ -189,6 +191,12 @@
                         @if ($linkDePago)
                             <a class="menu-item" href="{{ $linkDePago['url'] }}">
                                 <i class="bi bi-link-45deg" aria-hidden="true"></i> Link de pago
+                            </a>
+                        @endif
+
+                        @if ($compartirCita)
+                            <a class="menu-item" href="{{ $compartirCita['url'] }}">
+                                <i class="bi bi-share" aria-hidden="true"></i> Compartir la cita
                             </a>
                         @endif
 

@@ -78,6 +78,7 @@ use App\Http\Controllers\Clinica\HistoriaPediatricaController;
 use App\Http\Controllers\Clinica\HorarioController;
 use App\Http\Controllers\Clinica\ImpresionDeRecipeController;
 use App\Http\Controllers\Clinica\LatidoDeSesionController;
+use App\Http\Controllers\Clinica\LinkDeCitaController;
 use App\Http\Controllers\Clinica\LinkDePagoController;
 use App\Http\Controllers\Clinica\ListadosController;
 use App\Http\Controllers\Clinica\MostradorController;
@@ -795,6 +796,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
             // no cobra, sólo deja la intención. Mismos roles que el resto de la agenda y la cita del
             // `reg_medico` del contexto.
             Route::get('/agenda/{cola}/link-de-pago', [LinkDePagoController::class, 'mostrar'])->name('agenda.link-de-pago');
+            // **Compartir la cita** (O-52): el link firmado de la ficha pública con la fecha y el motivo ya
+            // elegidos. No reserva ni cobra: el paciente confirma con su código.
+            Route::get('/agenda/{cola}/link-de-cita', [LinkDeCitaController::class, 'mostrar'])->name('agenda.link-de-cita');
             Route::post('/agenda/{cola}/eliminar', [CitaController::class, 'eliminar'])->name('agenda.eliminar');
             Route::get('/agenda/{cola}/editar', [CitaController::class, 'editar'])->name('agenda.editar');
             // La última: cualquier POST a `/agenda/<algo>` que no haya matcheado antes cae acá como

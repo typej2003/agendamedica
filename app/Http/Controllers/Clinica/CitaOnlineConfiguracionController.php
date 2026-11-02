@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Clinica;
 
 use App\Clinica\CitaOnline\ConfiguracionDeCitaOnline;
 use App\Clinica\CitaOnline\Vistas\CitaOnlineConfiguracionVista;
+use App\Clinica\Verificacion\GeneradorDeQr;
 use App\Http\Controllers\Controller;
 use App\Models\Evolucion;
 use App\Models\MotivoCita;
@@ -30,8 +31,18 @@ class CitaOnlineConfiguracionController extends Controller
             Evolucion::where('reg_medico', $contexto['reg_medico'])->first(),
         );
 
+        // **El link público de su ficha** (O-52): el mismo que abre el paciente para reservar, con su QR para
+        // imprimir o mostrar en el consultorio. Es la página pública del médico: no lleva datos de pacientes.
+        $medico = $contexto['medico'] ?? null;
+        $urlPublica = $medico !== null ? route('reservas.medico', ['medico' => $medico->id]) : null;
+
         return view('clinica.cita-online.index', [
-            'vm' => new CitaOnlineConfiguracionVista($configuracion, $this->motivoConPrecio($contexto['reg_medico'])),
+            'vm' => new CitaOnlineConfiguracionVista(
+                $configuracion,
+                $this->motivoConPrecio($contexto['reg_medico']),
+                $urlPublica,
+                $urlPublica === null ? null : app(GeneradorDeQr::class)->svg($urlPublica),
+            ),
         ]);
     }
 

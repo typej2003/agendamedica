@@ -187,11 +187,29 @@
                         <p class="reservas-ayuda"><strong>Próximos horarios</strong></p>
                     @endif
 
+                    @if (($enlace['valido'] ?? false) && (($enlace['hora'] ?? null) !== null || ($enlace['motivo'] ?? null) !== null))
+                        {{-- El link que el consultorio le compartió al paciente (O-52): el horario y el motivo ya vienen elegidos. --}}
+                        <div class="alert alert-info py-2 d-flex align-items-start gap-2" role="status" data-enlace>
+                            <i class="bi bi-calendar2-check" aria-hidden="true"></i>
+                            <span>Te compartieron esta cita: revisa el horario y el motivo, y confirma con tu código.</span>
+                        </div>
+                    @elseif ($enlace['vencido'] ?? false)
+                        <div class="alert alert-warning py-2 d-flex align-items-start gap-2" role="status" data-enlace-vencido>
+                            <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                            <span>El enlace que te compartieron ya venció o no es válido. Elige el horario y el motivo acá abajo.</span>
+                        </div>
+                    @endif
+
                     <div class="reservas-opciones">
                         @foreach ($opciones as $opcion)
+                            @php
+                                // El link que compartió el consultorio (O-52): si el horario sigue existiendo, viene marcado.
+                                $elegidaPorElEnlace = ($enlace['hora'] ?? null) !== null
+                                    && $opcion->fecha === $enlace['fecha'] && $opcion->hora === $enlace['hora'];
+                            @endphp
                             <label class="reservas-opcion">
                                 <input type="radio" name="horario" value="{{ $opcion->clave() }}"
-                                       {{ old('horario') === $opcion->clave() ? 'checked' : '' }} required>
+                                       {{ old('horario') === $opcion->clave() || ($enlace['hora'] ?? null) !== null && $elegidaPorElEnlace ? 'checked' : '' }} required>
                                 <span class="reservas-opcion-contenido">
                                     <span class="reservas-opcion-dia">{{ $opcion->dia() }}</span>
                                     <span class="reservas-opcion-hora">{{ $opcion->horaLegible() }}</span>
@@ -210,7 +228,8 @@
                             <select class="form-select @error('motivo') is-invalid @enderror" id="motivo" name="motivo" required>
                                 <option value="">Elige el motivo</option>
                                 @foreach ($motivos as $motivo)
-                                    <option value="{{ $motivo->codigo }}" {{ old('motivo') === $motivo->codigo ? 'selected' : '' }}>
+                                    <option value="{{ $motivo->codigo }}"
+                                            {{ old('motivo') === $motivo->codigo || ($enlace['motivo'] ?? null) === (string) $motivo->codigo ? 'selected' : '' }}>
                                         {{ $motivo->tipo_atencion }}
                                         · {{ \App\Pagos\Centavos::formatear(\App\Pagos\Centavos::deDecimal((string) $motivo->precio), 'USD') }}
                                     </option>
