@@ -4,12 +4,14 @@ namespace App\Clinica\Consulta\Vistas;
 
 use App\Clinica\Consulta\Interna\DatosDelInternista;
 use App\Clinica\Consulta\Interna\MapaDelInternista;
+use App\Clinica\Escaneo\HojaEscaneada;
 
 /**
- * **Las secciones propias de la consulta del internista** (MI-2 a MI-5): evaluación física, plan de diagnóstico, observaciones,
- * análisis evolutivo y evaluación pre-operatoria. Un solo ViewModel porque las cinco tienen la misma forma: pestañas, un
- * formulario de campos del `MapaDelInternista` y, según la sección, una hoja para imprimir, la evolución entre consultas o el
- * riesgo operatorio (que reusa el de cirugía pediátrica).
+ * **Las secciones propias de la consulta del internista** (MI-2 a MI-5, más O-49): evaluación física, plan de
+ * diagnóstico, resultados de exámenes, observaciones, análisis evolutivo y evaluación pre-operatoria. Un solo
+ * ViewModel porque todas tienen la misma forma: pestañas, un formulario de campos del `MapaDelInternista` y, según
+ * la sección, una hoja para imprimir, la lectura de la hoja escaneada, la evolución entre consultas o el riesgo
+ * operatorio (que reusa el de cirugía pediátrica).
  *
  * Se llama `$seccion` en el parcial, como el resto de las secciones de la consulta.
  */
@@ -42,6 +44,9 @@ final class InternistaVista
         private ?string $urlResumen = null,
         // Las **fotos de la placa** de la Rx de tórax (O-44): la lista y la subida de la pestaña `rx`, o `null`.
         private ?ImagenesDeLaConsultaVista $imagenes = null,
+        // La **lectura de la hoja escaneada** (O-49): la URL del POST, o `null` si esta sección no la ofrece o el
+        // servidor no tiene proveedor con qué leer.
+        private ?string $urlEscanear = null,
     ) {
     }
 
@@ -57,6 +62,8 @@ final class InternistaVista
             MapaDelInternista::SECCION_PLAN => 'bi-clipboard2-pulse',
             MapaDelInternista::SECCION_OBSERVACIONES => 'bi-journal-text',
             MapaDelInternista::SECCION_ANALISIS => 'bi-graph-up',
+            // O-49: la sección propia de los resultados informados por el laboratorio.
+            MapaDelInternista::SECCION_RESULTADOS => 'bi-file-earmark-medical',
             default => 'bi-scissors',
         };
     }
@@ -147,6 +154,47 @@ final class InternistaVista
     public function imagenes(): ?ImagenesDeLaConsultaVista
     {
         return $this->imagenes;
+    }
+
+    /**
+     * **¿Esta pestaña ofrece «Escanear hoja»?** (O-49, la misma pieza de WEB-13.15). Sólo cuando el servidor tiene un
+     * proveedor de lectura: sin la clave, el botón no aparece y el médico escribe el texto a mano.
+     */
+    public function ofreceEscanear(): bool
+    {
+        return $this->urlEscanear !== null;
+    }
+
+    /** La URL de la lectura (`POST …/resultados/escanear`); `''` si la pestaña no la ofrece. */
+    public function urlEscanear(): string
+    {
+        return $this->urlEscanear ?? '';
+    }
+
+    /** El campo al que `escanear-hoja.js` agrega el texto leído (`#interna-resultados_examenes`). */
+    public function campoDelEscanear(): string
+    {
+        $campos = MapaDelInternista::deLaPestana($this->pestana);
+
+        return 'interna-' . ($campos[0]['clave'] ?? 'resultados_examenes');
+    }
+
+    /** El id del aviso de la lectura (el `aria-live` que llena el JS). */
+    public function claveDelEscanear(): string
+    {
+        return 'interna-' . $this->pestana . '-escaneo';
+    }
+
+    /** Lo que acepta el selector de archivos; la regla real la aplica el servidor (`HojaEscaneada::tipo()`). */
+    public function aceptaEscaneo(): string
+    {
+        return HojaEscaneada::ACEPTA;
+    }
+
+    /** El tope del archivo, en texto («10 MB»). */
+    public function maximoDelEscanear(): string
+    {
+        return (int) (HojaEscaneada::MAXIMO_KB / 1024) . ' MB';
     }
 
     /**

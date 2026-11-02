@@ -381,6 +381,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                     ->middleware('throttle:20,1,escaneo-de-hojas')
                     ->name('consulta.examen.escanear');
 
+                // La misma lectura para la sección propia del internista (O-49): no es una solapa de `TextosDelExamen`,
+                // así que tiene su ruta, con el mismo tope por usuario y el mismo lector. El texto no se guarda acá.
+                Route::post('/consulta/{consulta}/resultados/escanear', [ConsultaEscaneoController::class, 'leerResultados'])
+                    ->middleware('throttle:20,1,escaneo-de-hojas')
+                    ->name('consulta.resultados.escanear');
+
                 Route::post('/consulta/{consulta}/examen/{solapa}', [ConsultaTextoDelExamenController::class, 'guardar'])
                     ->where('solapa', implode('|', TextosDelExamen::claves(true)))
                     ->name('consulta.examen.texto.guardar');

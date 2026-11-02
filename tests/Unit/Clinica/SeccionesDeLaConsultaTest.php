@@ -172,11 +172,12 @@ class SeccionesDeLaConsultaTest extends TestCase
     {
         $this->assertFalse(config('clinica.facturacion.prefactura'), 'La bandera tiene que venir apagada del archivo.');
 
-        // Doce en ginecología (trece menos la pre-factura), trece en pediatría y trece en medicina interna.
+        // Doce en ginecología (trece menos la pre-factura), trece en pediatría y catorce en medicina interna
+        // (los trece del escritorio más *Resultados de exámenes*, que es una sección nuestra: O-49).
         $this->assertSame(12, SeccionesDeLaConsulta::total('ginecologia-y-obstetricia'));
         $this->assertSame(12, SeccionesDeLaConsulta::disponibles('ginecologia-y-obstetricia'));
         $this->assertSame(13, SeccionesDeLaConsulta::total('pediatria'));
-        $this->assertSame(13, SeccionesDeLaConsulta::total('medicina-interna'));
+        $this->assertSame(14, SeccionesDeLaConsulta::total('medicina-interna'));
         $this->assertSame(10, SeccionesDeLaConsulta::total());
 
         foreach (['ginecologia-y-obstetricia', 'pediatria', 'medicina-interna'] as $especialidad) {
@@ -208,14 +209,19 @@ class SeccionesDeLaConsultaTest extends TestCase
         $items = SeccionesDeLaConsulta::todas('medicina-interna');
         $titulos = array_column($items, 'titulo');
 
-        $this->assertSame(8, array_search('Récipes', $titulos, true));
-        $this->assertSame(9, array_search('Evaluación pre-operatoria', $titulos, true));
-        $this->assertSame(10, array_search('Solicitudes', $titulos, true));
+        // O-49: *Resultados de exámenes* es la sección propia y va detrás de *Plan de diagnóstico*.
+        $this->assertSame(4, array_search('Plan de diagnóstico', $titulos, true));
+        $this->assertSame(5, array_search('Resultados de exámenes', $titulos, true));
 
-        // El número del legado no se toca: numera el ítem, no el orden.
-        $this->assertSame(14, $items[9]['numero']);
+        $this->assertSame(9, array_search('Récipes', $titulos, true));
+        $this->assertSame(10, array_search('Evaluación pre-operatoria', $titulos, true));
+        $this->assertSame(11, array_search('Solicitudes', $titulos, true));
+
+        // El número del legado no se toca: numera el ítem, no el orden. El 15 es el de la sección nueva.
+        $this->assertSame(14, $items[10]['numero']);
+        $this->assertSame(15, $items[5]['numero']);
         $this->assertSame(
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 10, 11, 12],
+            [1, 2, 3, 4, 5, 15, 6, 7, 8, 9, 14, 10, 11, 12],
             array_column($items, 'numero'),
         );
     }

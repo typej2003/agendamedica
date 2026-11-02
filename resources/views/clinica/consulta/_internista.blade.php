@@ -17,13 +17,28 @@
     @endif
 
     <x-ui.tarjeta :titulo="$seccion->titulo()" :icono="$seccion->icono()">
-        @if ($seccion->urlImprimir() || $seccion->ofrecePlantillas())
+        @if ($seccion->urlImprimir() || $seccion->ofrecePlantillas() || $seccion->ofreceEscanear())
             <x-slot name="acciones">
                 {{-- Las plantillas del **examen funcional** (`formato_print` tipo `EF`, Alexander 2026-10-29): se copian
                      al cuadro de texto, como en las solapas de texto del examen. --}}
                 @if ($seccion->ofrecePlantillas())
                     <x-ui.plantillas :plantillas="$seccion->plantillas()" destino="#{{ $seccion->campoDePlantillas() }}"
                                      :tipo="$seccion->tipoDePlantillas()" nombre="examen funcional" />
+                @endif
+                {{-- **Escanear la hoja** (O-49, la pieza de WEB-13.15): foto o PDF → texto que se agrega al final del
+                     campo, editable. `escanear-hoja.js` lo resuelve desde los `data-*`; el archivo no tiene `name`, así
+                     que queda fuera del formulario y el guardado no lo manda. La lectura no guarda: el texto se guarda
+                     con el botón de la sección. Sin proveedor de lectura el ViewModel no da URL y el botón no aparece. --}}
+                @if ($seccion->ofreceEscanear())
+                    <span class="escanear-hoja" data-escanear-hoja data-url="{{ $seccion->urlEscanear() }}"
+                          data-destino="#{{ $seccion->campoDelEscanear() }}" data-estado="#{{ $seccion->claveDelEscanear() }}">
+                        <input type="file" id="{{ $seccion->claveDelEscanear() }}-archivo" accept="{{ $seccion->aceptaEscaneo() }}"
+                               hidden data-escanear-archivo>
+                        <label class="btn btn-sm btn-outline-primary mb-0" for="{{ $seccion->claveDelEscanear() }}-archivo"
+                               title="Toma una foto de la hoja del laboratorio (o elige un PDF de hasta {{ $seccion->maximoDelEscanear() }}) y el texto aparece en el campo para que lo revises">
+                            <i class="bi bi-upc-scan" aria-hidden="true"></i> Escanear hoja
+                        </label>
+                    </span>
                 @endif
                 @if ($seccion->urlImprimir())
                     <a class="btn btn-sm btn-outline-secondary" href="{{ $seccion->urlImprimir() }}" id="internista-imprimir">
@@ -43,6 +58,12 @@
                   @if ($seccion->urlResumen()) data-url-resumen="{{ $seccion->urlResumen() }}" @endif>
                 @csrf
                 <input type="hidden" name="pestana" value="{{ $seccion->pestana() }}">
+
+                @if ($seccion->ofreceEscanear())
+                    {{-- El estado de la lectura: «Leyendo la hoja…», el aviso de revisar o el error. Lo llena `escanear-hoja.js`. --}}
+                    <p class="alert py-2 d-flex align-items-center gap-2 mb-3" id="{{ $seccion->claveDelEscanear() }}"
+                       role="status" aria-live="polite" hidden></p>
+                @endif
 
                 @if ($seccion->esResumen())
                     {{-- El **resumen físico** del internista (el `ue_resume` del escritorio): «Actualizar» lo arma con

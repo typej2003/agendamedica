@@ -511,6 +511,11 @@ class ConsultaController extends Controller
             $pestana === 'resumen' ? route('clinica.consulta.internista.resumen', $consulta->id) : null,
             // Las **fotos de la placa** de la Rx de tórax (O-44): la lista y la subida de esa pestaña.
             $seccion === $mapa::SECCION_PLAN && $pestana === 'rx' ? $this->imagenesDeLaRx($consulta, $regMedico, $imagenes) : null,
+            // **Escanear la hoja** de resultados (O-49): la misma lectura de WEB-13.15, en la sección propia del
+            // internista. Sin proveedor configurado el botón no aparece.
+            $seccion === $mapa::SECCION_RESULTADOS && app(LectorDeHojas::class)->disponible()
+                ? route('clinica.consulta.resultados.escanear', $consulta->id)
+                : null,
         );
     }
 

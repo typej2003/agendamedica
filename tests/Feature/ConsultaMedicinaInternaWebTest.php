@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Clinica\Archivos\ArchivosClinicos;
 use App\Clinica\Consulta\Interna\MapaDelInternista;
 use App\Clinica\Consulta\TagDeImagen;
+use App\Clinica\Escaneo\LecturaFallida;
+use App\Clinica\Escaneo\LectorDeHojas;
 use App\Models\Consulta;
 use App\Models\DatosGrafica;
 use App\Models\Ekg;
@@ -442,5 +444,120 @@ class ConsultaMedicinaInternaWebTest extends TestCase
 
         $this->assertNull(ImagenConsulta::find($placa->id));
         Storage::disk(ArchivosClinicos::DISCO)->assertMissing($placa->imagen);
+    }
+
+    /**
+     * **Resultados de exámenes** (O-49): una sección propia del internista, detrás de *Plan de diagnóstico*, que guarda
+     * en la columna nueva `consultas.resultados_examenes`. La columna no se reusa: en medicina interna el escritorio
+     * rotula `oido` como «EXAMEN FÍSICO» y `resultadoexamencomp` es el resumen físico.
+     */
+    public function test_resultados_de_examenes_es_una_seccion_propia_y_guarda_en_su_columna(): void
+    {
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        // Está en el árbol, después de Plan de diagnóstico, y su bloque se abre.
+        $arbol = $this->conContexto($user, $medico, $mi)->get(route('clinica.consulta', $consulta->id))->assertOk();
+        $arbol->assertSee('Resultados de exámenes');
+        $this->assertStringContainsString('Resultados de exámenes', (string) $arbol->getContent());
+
+        $destino = $this->seccion($consulta, MapaDelInternista::SECCION_RESULTADOS, 'resultados');
+
+        $this->conContexto($user, $medico, $mi)->get($destino)
+            ->assertOk()
+            ->assertSee('Resultados de exámenes')
+            ->assertSee('id="interna-resultados_examenes"', false)
+            ->assertSee('Guardar resultados de exámenes');
+
+        $this->conContexto($user, $medico, $mi)->post(route('clinica.consulta.internista.guardar', $consulta->id), [
+            'pestana' => 'resultados',
+            'resultados_examenes' => "HEMOGLOBINA: 12,8 g/dL\nGLUCOSA: 92 mg/dL",
+        ])->assertRedirect($destino);
+
+        $consulta->refresh();
+        $this->assertSame("HEMOGLOBINA: 12,8 g/dL\nGLUCOSA: 92 mg/dL", $consulta->resultados_examenes);
+        $this->assertNull($consulta->oido, 'no se reusa la columna que en medicina interna es el examen físico');
+        $this->assertNull($consulta->resultadoexamencomp, 'ni la del resumen físico');
+        $this->assertTrue(
+            SyncChange::where('table_name', 'consultas')->where('column_name', 'resultados_examenes')->where('source', 'web')->exists(),
+            'deja su rastro por columna para el sync',
+        );
+    }
+
+    /**
+     * **Escanear la hoja** (O-49): la misma lectura de WEB-13.15, con la ruta propia de la sección. Devuelve el texto y
+     * **no escribe nada** —ni la consulta ni el rastro—: el médico revisa y guarda con el botón de la sección.
+     */
+    public function test_la_hoja_de_resultados_se_lee_y_no_se_guarda(): void
+    {
+        $lecturas = new \ArrayObject();
+        $this->app->instance(LectorDeHojas::class, new class($lecturas) implements LectorDeHojas {
+            public function __construct(private \ArrayObject $lecturas)
+            {
+            }
+
+            public function disponible(): bool
+            {
+                return true;
+            }
+
+            public function leer(string $contenido, string $mime): string
+            {
+                $this->lecturas[] = ['mime' => $mime, 'bytes' => strlen($contenido)];
+
+                return "HEMOGLOBINA: 12,8 g/dL\nGLUCOSA: 92 mg/dL";
+            }
+        });
+
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+        $rastros = SyncChange::count();
+
+        // El botón está en la tarjeta y apunta a la ruta de la sección.
+        $this->conContexto($user, $medico, $mi)->get($this->seccion($consulta, MapaDelInternista::SECCION_RESULTADOS))
+            ->assertOk()
+            ->assertSee('Escanear hoja')
+            ->assertSee('data-escanear-hoja', false)
+            ->assertSee(route('clinica.consulta.resultados.escanear', $consulta->id), false);
+
+        $this->conContexto($user, $medico, $mi)
+            ->post(route('clinica.consulta.resultados.escanear', $consulta->id), [
+                'hoja' => UploadedFile::fake()->createWithContent('hoja.png', base64_decode(
+                    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+                )),
+            ], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('texto', "HEMOGLOBINA: 12,8 g/dL\nGLUCOSA: 92 mg/dL")
+            ->assertJsonStructure(['texto', 'aviso']);
+
+        $this->assertCount(1, $lecturas);
+        $this->assertSame('image/png', $lecturas[0]['mime']);
+        $this->assertNull($consulta->fresh()->resultados_examenes, 'la lectura no escribe: eso es del guardado');
+        $this->assertSame($rastros, SyncChange::count(), 'la lectura no deja rastro de sync');
+    }
+
+    /** Sin proveedor de lectura, el botón no aparece: el médico escribe el resultado a mano. */
+    public function test_sin_proveedor_de_lectura_no_se_ofrece_escanear(): void
+    {
+        $this->app->instance(LectorDeHojas::class, new class implements LectorDeHojas {
+            public function disponible(): bool
+            {
+                return false;
+            }
+
+            public function leer(string $contenido, string $mime): string
+            {
+                throw LecturaFallida::noDisponible();
+            }
+        });
+
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->conContexto($user, $medico, $mi)->get($this->seccion($consulta, MapaDelInternista::SECCION_RESULTADOS))
+            ->assertOk()
+            ->assertSee('id="interna-resultados_examenes"', false)
+            ->assertDontSee('data-escanear-hoja', false)
+            ->assertDontSee('Escanear hoja');
     }
 }

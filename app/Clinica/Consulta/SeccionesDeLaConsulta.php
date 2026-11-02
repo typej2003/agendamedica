@@ -279,6 +279,11 @@ final class SeccionesDeLaConsulta
         ['numero' => 5, 'grupo' => 'Consulta', 'titulo' => 'Plan de diagnóstico', 'icono' => 'bi-clipboard2-pulse',
             'detalle' => 'E.K.G., Rx de tórax y laboratorio.', 'tarea' => 'MI-3', 'estado' => 'listo',
             'seccion' => Interna\MapaDelInternista::SECCION_PLAN],
+        // **O-49 (2026-11-02): una sección nuestra, no del escritorio.** Va detrás de *Plan de diagnóstico* por
+        // pedido del usuario; el `numero` 15 es propio (el árbol del escritorio llega al 14) y no renumera nada.
+        ['numero' => 15, 'grupo' => 'Consulta', 'titulo' => 'Resultados de exámenes', 'icono' => 'bi-file-earmark-medical',
+            'detalle' => 'Lo que informó el laboratorio, en texto libre o escaneando la hoja.', 'tarea' => 'O-49', 'estado' => 'listo',
+            'seccion' => Interna\MapaDelInternista::SECCION_RESULTADOS],
         ['numero' => 6, 'grupo' => 'Consulta', 'titulo' => 'Diagnóstico', 'icono' => 'bi-clipboard2-check',
             'detalle' => 'Catálogo del médico; se propaga a constancias y presupuesto.', 'tarea' => 'WEB-4.5', 'estado' => 'listo',
             'seccion' => self::SECCION_DIAGNOSTICO],

@@ -36,6 +36,13 @@ final class MapaDelInternista
     public const SECCION_ANALISIS = 'analisis-evolutivo';
     public const SECCION_PREOPERATORIA = 'preoperatoria';
 
+    /**
+     * **Resultados de exámenes** (O-49, 2026-11-02): una sección **nuestra**, no del escritorio, para el texto con
+     * lo que informó el laboratorio. Guarda en la columna nueva `consultas.resultados_examenes` (nullable) y no en
+     * `oido`, que en medicina interna el escritorio rotula «EXAMEN FÍSICO» (`d_preoperatoria_imprimir.srd`).
+     */
+    public const SECCION_RESULTADOS = 'resultados-examenes';
+
     /** La pestaña del riesgo quirúrgico dentro de la evaluación pre-operatoria: reusa el de cirugía pediátrica. */
     public const PESTANA_RIESGO = 'riesgo';
 
@@ -75,6 +82,10 @@ final class MapaDelInternista
         self::SECCION_OBSERVACIONES => [
             'observaciones' => 'Observaciones',
         ],
+        // La sección propia de la web (O-49): una sola pestaña, así que la tarjeta no dibuja la barra.
+        self::SECCION_RESULTADOS => [
+            'resultados' => 'Resultados de exámenes',
+        ],
         self::SECCION_PREOPERATORIA => [
             'estimaciones' => 'Estimaciones',
             self::PESTANA_RIESGO => 'Riesgo operatorio',
@@ -88,6 +99,8 @@ final class MapaDelInternista
         self::SECCION_OBSERVACIONES => 'Observaciones',
         self::SECCION_ANALISIS => 'Análisis evolutivo',
         self::SECCION_PREOPERATORIA => 'Evaluación pre-operatoria',
+        // Propia de la web (O-49): el escritorio no tiene esta sección en medicina interna.
+        self::SECCION_RESULTADOS => 'Resultados de exámenes',
     ];
 
     /** Las opciones de los radio del escritorio (`d_pre_*.srd`, `values=`): valor guardado => texto. */
@@ -204,6 +217,11 @@ final class MapaDelInternista
             // Observaciones (`tabpage_21`, `mle_observaciones` → `consultas.observaciones`).
             'observaciones' => [
                 ['clave' => 'observaciones', 'etiqueta' => 'Observaciones', 'tabla' => 'consultas', 'columna' => 'observaciones', 'tipo' => 'parrafo'],
+            ],
+            // Resultados de exámenes (O-49): la columna **nueva** `consultas.resultados_examenes` (nullable). No es del
+            // escritorio y no reusa `oido` —allí «EXAMEN FÍSICO»— ni `resultadoexamencomp` —el resumen físico—.
+            'resultados' => [
+                ['clave' => 'resultados_examenes', 'etiqueta' => 'Resultados de exámenes', 'tabla' => 'consultas', 'columna' => 'resultados_examenes', 'tipo' => 'parrafo'],
             ],
             // Evaluación pre-operatoria → Estimaciones (`tabpage_37`): las cinco escalas, una fila por consulta en cada tabla.
             'estimaciones' => array_merge(
