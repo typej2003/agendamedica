@@ -271,6 +271,7 @@ final class DocumentoImpreso
         public readonly ?InformeDeEco $informe = null,
         public readonly array $imagenes = [],
         public readonly ?string $pagina = null,
+        public readonly ?InformePreoperatorio $preoperatorio = null,
     ) {
     }
 
@@ -279,11 +280,13 @@ final class DocumentoImpreso
      *
      * No se decide acá: el documento lo **declara** con su clave en `ModoDeLaHoja`, que es la única tabla de esa regla. Un
      * documento con `informe` (los ecos, WEB-11.13) va siempre a hoja completa, porque su informe es un formulario lleno y
-     * ocupa una página entera.
+     * ocupa una página entera. El **informe pre-operatorio** (O-47) también: son dos páginas fijas.
      */
     public function modo(): string
     {
-        return $this->informe !== null ? ModoDeLaHoja::COMPLETA : ModoDeLaHoja::de($this->tipo, $this->pagina);
+        return $this->informe !== null || $this->preoperatorio !== null
+            ? ModoDeLaHoja::COMPLETA
+            : ModoDeLaHoja::de($this->tipo, $this->pagina);
     }
 
     /** ¿Se imprime en hoja completa vertical (una por A4) y no en media hoja? */
@@ -295,13 +298,23 @@ final class DocumentoImpreso
     /** El mismo documento con la **página elegida** (`grande`/`pequena`); sólo cambia la hoja de las solicitudes (`ModoDeLaHoja::seEligeLaPagina`). */
     public function conPagina(?string $pagina): self
     {
-        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $this->imagenes, $pagina);
+        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $this->imagenes, $pagina, $this->preoperatorio);
     }
 
     /** El mismo documento con su **informe a hoja completa** (WEB-11.13): una eco se imprime como un formulario lleno, no en mitades. */
     public function conInforme(InformeDeEco $informe): self
     {
-        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $informe, $this->imagenes, $this->pagina);
+        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $informe, $this->imagenes, $this->pagina, $this->preoperatorio);
+    }
+
+    /**
+     * El mismo documento con su **informe pre-operatorio** (O-47): la hoja de dos páginas con todo lo cargado en la
+     * consulta. Reemplaza al bloque de texto que se imprimía antes; el título, la fecha y la cabecera del paciente no
+     * cambian.
+     */
+    public function conPreoperatorio(InformePreoperatorio $preoperatorio): self
+    {
+        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $this->imagenes, $this->pagina, $preoperatorio);
     }
 
     /**
@@ -312,7 +325,7 @@ final class DocumentoImpreso
      */
     public function conPersona(array $persona): self
     {
-        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $this->imagenes, $this->pagina);
+        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $this->imagenes, $this->pagina, $this->preoperatorio);
     }
 
     /**
@@ -324,7 +337,7 @@ final class DocumentoImpreso
      */
     public function conImagenes(array $imagenes): self
     {
-        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $imagenes, $this->pagina);
+        return new self($this->tipo, $this->clave, $this->titulo, $this->nombre, $this->fecha, $this->persona, $this->fijos, $this->parrafos, $this->para, $this->informe, $imagenes, $this->pagina, $this->preoperatorio);
     }
 
     /** ¿Tiene imágenes propias para la hoja de su informe (la colposcopía y la histeroscopía)? */

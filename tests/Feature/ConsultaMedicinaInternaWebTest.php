@@ -10,6 +10,7 @@ use App\Clinica\Escaneo\LectorDeHojas;
 use App\Models\Consulta;
 use App\Models\DatosGrafica;
 use App\Models\Ekg;
+use App\Models\ExamenPaciente;
 use App\Models\FormatoPrint;
 use App\Models\Historia;
 use App\Models\ImagenConsulta;
@@ -17,6 +18,8 @@ use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\PreTrombo;
+use App\Models\RiesgoPaciente;
+use App\Models\RiesgoPacienteOpera;
 use App\Models\Specialty;
 use App\Models\SyncChange;
 use App\Models\User;
@@ -230,7 +233,9 @@ class ConsultaMedicinaInternaWebTest extends TestCase
             ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'evaluacion-preoperatoria']))
             ->assertOk()
             ->assertSee('Clase II')
-            ->assertSee('Riesgo de trombosis venosa y tromboembolismo: Riesgo medio. Usar heparina profiláctica.');
+            ->assertSee('RIESGO DE TROMBOSIS VENOSA PROFUNDA Y TROMBOEMBOLISMO PULMONAR')
+            ->assertSee('Riesgo medio')
+            ->assertSee('Usar heparina profiláctica.');
 
         $this->conContexto($user, $medico, $mi)->get($this->seccion($consulta, 'preoperatoria', 'riesgo'))
             ->assertOk()->assertSee('Guardar el riesgo');
@@ -585,5 +590,89 @@ class ConsultaMedicinaInternaWebTest extends TestCase
             ->assertSee('id="interna-resultados_examenes"', false)
             ->assertDontSee('data-escanear-hoja', false)
             ->assertDontSee('Escanear hoja');
+    }
+
+    /**
+     * **El informe pre-operatorio de dos páginas** (O-47): arma cada sección con lo cargado y sólo imprime el examen
+     * marcado como «sale en el informe».
+     */
+    public function test_el_informe_preoperatorio_arma_las_dos_paginas_con_lo_cargado(): void
+    {
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $consulta->forceFill([
+            'enfermedadactual' => 'Dolor abdominal de tres días de evolución.',
+            'resultadoexamencomp' => 'PESO: 70 kg. ABDOMEN: blando, depresible.',
+            'faringe' => 'Índice cardiotorácico normal.',
+        ])->save();
+
+        // Dos exámenes: sólo el marcado con «Reporte» (`vinculante = 'S'`) sale en la hoja.
+        ExamenPaciente::create(['reg_medico' => $medico->reg_medico, 'nrohistoria' => 2001, 'nroconsulta' => 1,
+            'codeexamen' => 'L01', 'resultado' => '12.5', 'vinculante' => 'S']);
+        ExamenPaciente::create(['reg_medico' => $medico->reg_medico, 'nrohistoria' => 2001, 'nroconsulta' => 1,
+            'codeexamen' => 'L02', 'resultado' => '9', 'vinculante' => null]);
+
+        $this->conContexto($user, $medico, $mi)->post(route('clinica.consulta.internista.guardar', $consulta->id), [
+            'pestana' => 'ekg', 'ekg_ritmo' => 'SINUSAL', 'ekg_conclusiones' => 'SINUSAL sin signos de isquemia.',
+        ])->assertRedirect();
+
+        $this->conContexto($user, $medico, $mi)->post(route('clinica.consulta.internista.guardar', $consulta->id), [
+            'pestana' => 'estimaciones', 'pre_aneste_tipo' => 'A', 'pre_aneste_emergencia' => 'N',
+            'pre_espiro_tipo' => 'B', 'pre_trombo_tipo' => 'A', 'pre_trombo_resultado' => 'Sin profilaxis.',
+        ])->assertRedirect();
+
+        RiesgoPacienteOpera::create(['reg_medico' => $medico->reg_medico, 'historia' => 2001, 'consulta' => 1,
+            'puntos' => 3, 'clase' => 'I', 'conclusion' => 'Individuo Sano', 'recomendaciones' => 'Apto',
+            'nombre_intervencion' => 'Aumento de mamas']);
+
+        // Los puntos del cierre son la suma de los riesgos marcados (lo mismo que muestra la pantalla).
+        RiesgoPaciente::create(['reg_medico' => $medico->reg_medico, 'historia' => 2001,
+            'descripcion' => 'Asma', 'sub_tipo' => 'Respiratorio', 'punto' => 3]);
+
+        $respuesta = $this->conContexto($user, $medico, $mi)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'evaluacion-preoperatoria']))
+            ->assertOk()
+            // Página 1: las secciones del informe, cada una con su dato.
+            ->assertSee('EVALUACIÓN PRE-OPERATORIA')
+            ->assertSee('Aumento de mamas')
+            ->assertSee('ENFERMEDAD ACTUAL')
+            ->assertSee('Dolor abdominal de tres días de evolución.')
+            ->assertSee('EXÁMEN FÍSICO')
+            ->assertSee('PESO: 70 kg.')
+            ->assertSee('LABORATORIO')
+            ->assertSee('L01')
+            ->assertSee('12.5')
+            ->assertSee('E.K.G.')
+            ->assertSee('SINUSAL sin signos de isquemia.')
+            ->assertSee('R.X. TÓRAX')
+            ->assertSee('Índice cardiotorácico normal.')
+            // Página 2: las escalas, las recomendaciones y el cierre con los puntos.
+            ->assertSee('ESPIROMETRÍA')
+            ->assertSee('RIESGO DE TROMBOSIS VENOSA PROFUNDA Y TROMBOEMBOLISMO PULMONAR')
+            ->assertSee('Sin profilaxis.')
+            ->assertSee('CLASIFICACIÓN DEL ESTADO FÍSICO')
+            ->assertSee('RECOMENDACIONES')
+            ->assertSee('RIESGO: Clase I - Individuo Sano - Puntos: 3');
+
+        // El examen sin «Reporte» no sale, y la hoja son dos páginas.
+        $respuesta->assertDontSee('L02');
+        $this->assertSame(2, substr_count($respuesta->getContent(), 'class="informe-hoja'));
+    }
+
+    /** Un bloque sin dato no se imprime: sin E.K.G. cargado no aparece su sección (O-47). */
+    public function test_el_informe_preoperatorio_no_imprime_los_bloques_vacios(): void
+    {
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $consulta->forceFill(['faringe' => 'Índice cardiotorácico normal.'])->save();
+
+        $this->conContexto($user, $medico, $mi)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'evaluacion-preoperatoria']))
+            ->assertOk()
+            ->assertSee('R.X. TÓRAX')
+            ->assertDontSee('E.K.G.')
+            ->assertDontSee('LABORATORIO');
     }
 }

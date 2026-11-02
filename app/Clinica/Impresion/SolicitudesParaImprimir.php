@@ -4,9 +4,6 @@ namespace App\Clinica\Impresion;
 
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\EndoscopiaDigestiva;
-use App\Clinica\Consulta\EvaluacionPreoperatoria;
-use App\Clinica\Consulta\IntervencionesDeLaConsulta;
-use App\Clinica\Consulta\RiesgoQuirurgico;
 use App\Clinica\Consulta\TextoDelExamen;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
@@ -302,9 +299,9 @@ final class SolicitudesParaImprimir
             ];
         }
 
-        // El **informe de la evaluación pre-operatoria** (cirugía pediátrica, 2026-10-19): se ofrece si hay algo
-        // cargado en la consulta (la evaluación, el riesgo o las intervenciones).
-        if ($this->textoDeLaCirugia($consulta) !== null) {
+        // El **informe de la evaluación pre-operatoria** (O-47): se ofrece si hay algo cargado en la consulta
+        // (cualquiera de las doce fuentes del informe).
+        if ((new PreoperatorioDeLaConsulta())->de($consulta)->tieneDatos()) {
             $disponibles[] = [
                 'clave' => DocumentoImpreso::EVALUACION_PREOPERATORIA,
                 'tipo' => DocumentoImpreso::EVALUACION_PREOPERATORIA,
@@ -601,11 +598,14 @@ final class SolicitudesParaImprimir
         }
 
         if ($clave === DocumentoImpreso::EVALUACION_PREOPERATORIA) {
-            // La evaluación pre-operatoria de cirugía pediátrica (2026-10-19): una hoja con la intervención, la
-            // evaluación pre-anestésica, el riesgo (puntos y clase) y su conclusión.
-            $texto = $this->textoDeLaCirugia($consulta);
+            // La evaluación pre-operatoria (O-47, 2026-11-02): la hoja de dos páginas con todo lo cargado —antecedentes,
+            // enfermedad actual, resumen físico, laboratorio con sus resultados, E.K.G., R.X., diagnóstico, las cinco
+            // escalas, las recomendaciones y el riesgo—. Antes era un bloque de seis líneas de texto.
+            $informe = (new PreoperatorioDeLaConsulta())->de($consulta);
 
-            return $texto === null ? null : $this->textoDelExamen($paciente, $clave, $texto, $fechaDeLaConsulta);
+            return $informe->tieneDatos()
+                ? $this->textoDelExamen($paciente, $clave, '', $fechaDeLaConsulta)->conPreoperatorio($informe)
+                : null;
         }
 
         if ($clave === DocumentoImpreso::ENDOSCOPIA_SUPERIOR || $clave === DocumentoImpreso::ENDOSCOPIA_INFERIOR) {
@@ -1593,107 +1593,6 @@ final class SolicitudesParaImprimir
         );
     }
 
-    /**
-     * Las escalas de las estimaciones pre-operatorias de medicina interna (MI-5) como líneas del informe, o `[]` si no hay.
-     *
-     * @return array<int,string>
-     */
-    private function escalasDelInternista(Consulta $consulta): array
-    {
-        if (! \Illuminate\Support\Facades\Schema::hasTable('pre_trombo')) {
-            return [];
-        }
-
-        $datos = new \App\Clinica\Consulta\Interna\DatosDelInternista();
-        $valores = $datos->valores($consulta, 'estimaciones');
-        $lineas = [];
-
-        foreach ([
-            'pre_trombo' => 'Riesgo de trombosis venosa y tromboembolismo',
-            'pre_infec' => 'Infección de heridas operatorias',
-            'pre_espiro' => 'Espirometría',
-            'pre_espec' => 'Situaciones especiales',
-        ] as $tabla => $titulo) {
-            $tipo = \App\Clinica\Consulta\Interna\MapaDelInternista::textoDeOpcion($tabla . '_tipo', $valores[$tabla . '_tipo'] ?? null);
-            $resultado = $valores[$tabla . '_resultado'] ?? null;
-
-            if ($tipo === null && $resultado === null) {
-                continue;
-            }
-
-            $lineas[] = $titulo . ': ' . trim(($tipo ?? '') . ($tipo !== null && $resultado !== null ? '. ' : '') . ($resultado ?? '')) . '.';
-        }
-
-        return $lineas;
-    }
-
-    private function textoDeLaCirugia(Consulta $consulta): ?string
-    {
-        $preoperatoria = new EvaluacionPreoperatoria();
-        $riesgo = new RiesgoQuirurgico();
-        $intervenciones = new IntervencionesDeLaConsulta();
-
-        $evaluacion = $preoperatoria->de($consulta);
-        $resumen = $riesgo->de($consulta);
-        $lista = $intervenciones->de($consulta);
-        $puntos = $riesgo->puntos($consulta);
-
-        if (! $preoperatoria->tieneDatos($consulta) && $puntos === 0 && $lista->isEmpty()
-            && array_filter(array_map('trim', array_map('strval', $resumen))) === []
-            && $this->escalasDelInternista($consulta) === []) {
-            return null;
-        }
-
-        $partes = [];
-
-        if ($lista->isNotEmpty()) {
-            $partes[] = 'Intervenciones: ' . $lista->map(
-                fn ($intervencion) => trim($intervencion->codigo_inter . ' ' . ($intervencion->descripcion ?? '')),
-            )->implode('; ') . '.';
-        }
-
-        if ($preoperatoria->tieneDatos($consulta)) {
-            $linea = 'Evaluación pre-anestésica';
-
-            if (($evaluacion['tipo'] ?? '') !== '') {
-                // Los radio del escritorio guardan una letra (`d_pre_aneste`: A = clase I … E = clase V).
-                $linea .= ': ' . \App\Clinica\Consulta\Interna\MapaDelInternista::textoDeOpcion('pre_aneste_tipo', $evaluacion['tipo']);
-            }
-
-            if (($evaluacion['resultado'] ?? '') !== '') {
-                $linea .= '. ' . $evaluacion['resultado'];
-            }
-
-            $emergencia = \App\Clinica\Consulta\EvaluacionPreoperatoria::emergenciaLegible($evaluacion['emergencia'] ?? null);
-
-            if ($emergencia !== null) {
-                $linea .= ' Emergencia: ' . mb_strtolower($emergencia) . '.';
-            }
-
-            $partes[] = $linea;
-        }
-
-        // Las otras escalas de las estimaciones de medicina interna (MI-5): trombosis, infección, espirometría y situaciones especiales.
-        array_push($partes, ...$this->escalasDelInternista($consulta));
-
-        $lineaRiesgo = 'Riesgo quirúrgico: ' . $puntos . ' puntos';
-
-        if (($resumen['clase'] ?? '') !== '') {
-            $lineaRiesgo .= ', clase ' . $resumen['clase'];
-        }
-
-        $partes[] = $lineaRiesgo . '.';
-
-        if (($resumen['nombre_intervencion'] ?? '') !== '') {
-            $partes[] = 'Intervención: ' . $resumen['nombre_intervencion'] . '.';
-        }
-
-        if (($resumen['conclusion'] ?? '') !== '') {
-            $partes[] = 'Conclusión: ' . $resumen['conclusion'];
-        }
-
-        return implode("\n\n", $partes);
-    }
 
     /**
      * **El texto de una endoscopía digestiva**, o `null` si todavía no tiene nada que imprimir.
