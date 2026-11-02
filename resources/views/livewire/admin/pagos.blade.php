@@ -59,6 +59,51 @@
         </div>
     </div>
 
+    {{-- ============ Pendiente de cobro, por médico (O-53) ============ --}}
+    @if ($pendientes->isNotEmpty())
+        <div class="card mb-3">
+            <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2 bg-white">
+                <span class="fw-semibold"><i class="bi bi-wallet2 me-1" aria-hidden="true"></i> Pendiente de cobro por médico</span>
+                <span class="badge bg-warning text-dark">{{ \App\Pagos\Centavos::formatear($totalPendienteUsdE2, 'USD') }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Médico</th>
+                            <th scope="col" class="text-end">Pagos</th>
+                            <th scope="col" class="text-end">Pendiente (USD)</th>
+                            <th scope="col" class="text-end">Pendiente (VES)</th>
+                            <th scope="col"><span class="visually-hidden">Pagos del médico</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($pendientes as $fila)
+                            <tr wire:key="pendiente-{{ $fila['reg_medico'] }}">
+                                <td>
+                                    {{ $fila['medico'] ? trim($fila['medico']->name . ' ' . $fila['medico']->lastname) : '—' }}
+                                    <div><small class="text-muted">{{ $fila['reg_medico'] }}</small></div>
+                                </td>
+                                <td class="text-end">{{ $fila['cantidad'] }}</td>
+                                <td class="text-end fw-semibold">{{ \App\Pagos\Centavos::formatear($fila['pendiente_usd_e2'], 'USD') }}</td>
+                                <td class="text-end">{{ \App\Pagos\Centavos::formatear($fila['pendiente_ves_e2'], 'VES') }}</td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            wire:click="$set('search', '{{ $fila['reg_medico'] }}')">
+                                        Ver sus pagos
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white text-muted small">
+                Los planes no entran acá: se aprueban contra la pasarela, no se le pagan a un médico.
+            </div>
+        </div>
+    @endif
+
     <div class="d-flex flex-wrap gap-2 mb-3">
         @foreach ($estados as $clave => $etiqueta)
             <button type="button" wire:click="$set('estado', '{{ $clave }}')" wire:key="chip-{{ $clave }}"
@@ -337,6 +382,55 @@
                                 <summary class="small text-muted">Respuesta de SyPago</summary>
                                 <pre class="small mb-0" style="max-height: 18rem; overflow: auto;">{{ json_encode($respuestaSegura, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</pre>
                             </details>
+                        @endif
+
+                        {{-- ============ Administrar el pago (O-53) ============ --}}
+                        @if ($this->administrable($seleccionado))
+                            <hr class="my-4">
+
+                            <h6 class="mb-3"><i class="bi bi-sliders me-1" aria-hidden="true"></i> Administrar este pago</h6>
+
+                            @error('motivo')
+                                <div class="alert alert-warning py-2">{{ $message }}</div>
+                            @enderror
+
+                            @if ($accionId === $seleccionado->id && $accion !== '')
+                                <div class="mb-3">
+                                    <label class="form-label" for="motivo-pago">
+                                        Motivo {{ $accion === 'aprobar' ? '(opcional)' : '' }}
+                                    </label>
+                                    <input type="text" id="motivo-pago" class="form-control" maxlength="200"
+                                           wire:model="motivo" placeholder="Lo que corresponde dejar dicho en la bitácora">
+                                    <div class="d-flex gap-2 mt-2">
+                                        <button type="button" class="btn btn-primary" wire:click="aplicarAccion"
+                                                wire:loading.attr="disabled" wire:target="aplicarAccion">
+                                            {{ $accion === 'aprobar' ? 'Dar por pagado' : ($accion === 'rechazar' ? 'Rechazar' : 'Reembolsar') }}
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" wire:click="cerrarAccion">Cancelar</button>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="d-flex flex-wrap gap-2">
+                                    @if ($this->puedeAprobar($seleccionado))
+                                        <button type="button" class="btn btn-outline-success" wire:click="administrar({{ $seleccionado->id }}, 'aprobar')">
+                                            <i class="bi bi-check2-circle me-1" aria-hidden="true"></i> Dar por pagado
+                                        </button>
+                                    @endif
+                                    @if ($this->puedeRechazar($seleccionado))
+                                        <button type="button" class="btn btn-outline-danger" wire:click="administrar({{ $seleccionado->id }}, 'rechazar')">
+                                            <i class="bi bi-x-circle me-1" aria-hidden="true"></i> Rechazar
+                                        </button>
+                                    @endif
+                                    @if ($this->puedeReembolsar($seleccionado))
+                                        <button type="button" class="btn btn-outline-primary" wire:click="administrar({{ $seleccionado->id }}, 'reembolsar')">
+                                            <i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i> Reembolsar
+                                        </button>
+                                    @endif
+                                </div>
+                                <p class="text-muted small mb-0 mt-2">
+                                    Reembolsar devuelve la plata y deja la cita sin ese monto pagado; no le quita el turno al paciente.
+                                </p>
+                            @endif
                         @endif
                     </div>
                     <div class="modal-footer">
