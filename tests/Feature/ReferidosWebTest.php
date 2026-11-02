@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Actions\Medicos\AprobarSolicitudDeMedico;
 use App\Latidos\Latidos;
+use App\Mail\InvitacionDeReferido;
 use App\Mail\LatidosGanadosPorReferido;
 use App\Models\ConfiguracionLatidos;
 use App\Models\Medico;
@@ -277,6 +278,9 @@ class ReferidosWebTest extends TestCase
             ->assertSee('/r/' . $codigo, false)
             ->assertSee('Copiar link')
             ->assertSee('Compartir')
+            ->assertSee('Invitar por correo')
+            ->assertSee('Enviar la invitación')
+            ->assertSee(route('clinica.referidos.invitar'), false)
             ->assertSee('js/clinica/referidos.js', false);
     }
 
@@ -317,5 +321,106 @@ class ReferidosWebTest extends TestCase
         $this->assertSame(0, app(Latidos::class)->disponibles($referente->reg_medico));
         $this->assertSame(0, app(Latidos::class)->disponibles($colega->reg_medico));
         $this->assertSame($admin->id, (int) $referido->fresh()->anulado_por);
+    }
+
+    // ----------------------------------------------------------------------------------- O-50: invitación por correo
+
+    /** El POST de «Invitar por correo», con el contexto del médico ya fijado. */
+    private function invitar(User $user, Medico $referente, string $email)
+    {
+        $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
+
+        return $this->withSession(['clinica.contexto' => [
+            'reg_medico' => $referente->reg_medico,
+            'specialty_id' => $gineco->id,
+            'office_id' => null,
+        ]])->actingAs($user)->post(route('clinica.referidos.invitar'), ['email' => $email]);
+    }
+
+    public function test_invita_a_un_colega_por_correo_y_deja_la_fila(): void
+    {
+        [$user, $referente] = $this->referente();
+        $email = 'colega-' . uniqid() . '@example.com';
+
+        $this->invitar($user, $referente, $email)->assertSessionHas('estado');
+
+        Mail::assertSent(InvitacionDeReferido::class, function (InvitacionDeReferido $correo) use ($email) {
+            return $correo->hasTo($email)
+                && str_contains($correo->url, '/r/')
+                && str_contains($correo->invitador, 'Referente')
+                && $correo->latidosReferente === 2000
+                && $correo->latidosReferido === 2000;
+        });
+
+        $fila = \App\Models\InvitacionDeReferido::where('email', $email)->firstOrFail();
+        $this->assertSame(1, $fila->veces);
+        $this->assertSame($referente->reg_medico, $fila->reg_medico);
+        $this->assertNotNull($fila->ultima_vez);
+        $this->assertSame($user->id, (int) $fila->enviada_por);
+    }
+
+    public function test_no_se_repite_la_invitacion_el_mismo_dia(): void
+    {
+        [$user, $referente] = $this->referente();
+        $email = 'colega-' . uniqid() . '@example.com';
+
+        $this->invitar($user, $referente, $email)->assertSessionHas('estado');
+        $this->invitar($user, $referente, $email)->assertSessionHas('error');
+
+        Mail::assertSent(InvitacionDeReferido::class, 1);
+        $this->assertSame(1, (int) \App\Models\InvitacionDeReferido::where('email', $email)->value('veces'));
+    }
+
+    public function test_el_reenvio_de_otro_dia_cuenta_otra_vez(): void
+    {
+        [$user, $referente] = $this->referente();
+        $email = 'colega-' . uniqid() . '@example.com';
+
+        $this->invitar($user, $referente, $email)->assertSessionHas('estado');
+
+        $fila = \App\Models\InvitacionDeReferido::where('email', $email)->firstOrFail();
+        $fila->ultima_vez = now()->subDay();
+        $fila->save();
+
+        $this->invitar($user, $referente, $email)->assertSessionHas('estado');
+
+        Mail::assertSent(InvitacionDeReferido::class, 2);
+        $this->assertSame(2, (int) $fila->fresh()->veces);
+    }
+
+    public function test_no_se_invita_a_un_correo_de_un_medico_registrado(): void
+    {
+        [$user, $referente] = $this->referente();
+        $registrado = Medico::create([
+            'name' => 'Ya', 'lastname' => 'Registrado', 'email' => 'ya-registrado-' . uniqid() . '@example.com',
+            'reg_medico' => 'MPPS-YA-' . random_int(1000, 9999), 'is_active' => true,
+        ]);
+
+        $this->invitar($user, $referente, mb_strtoupper($registrado->email))->assertSessionHas('error');
+
+        Mail::assertNothingSent();
+        $this->assertSame(0, \App\Models\InvitacionDeReferido::count());
+    }
+
+    public function test_el_tope_diario_corta_en_diez(): void
+    {
+        [$user, $referente] = $this->referente();
+        $codigo = app(CodigosDeReferido::class)->para($referente->reg_medico);
+
+        for ($i = 1; $i <= 10; $i++) {
+            \App\Models\InvitacionDeReferido::create([
+                'codigo_id' => $codigo->id,
+                'reg_medico' => $referente->reg_medico,
+                'email' => "ya-invitado-{$i}-" . uniqid() . '@example.com',
+                'veces' => 1,
+                'enviada_el' => now(),
+                'ultima_vez' => now(),
+            ]);
+        }
+
+        $this->invitar($user, $referente, 'once-' . uniqid() . '@example.com')->assertSessionHas('error');
+
+        Mail::assertNothingSent();
+        $this->assertSame(10, \App\Models\InvitacionDeReferido::count());
     }
 }

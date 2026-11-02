@@ -176,6 +176,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 // **Invita y gana** (fase 4): el link y los referidos del consultorio. Sólo el médico.
                 Route::get('/referidos', [ReferidosController::class, 'index'])->name('referidos');
                 Route::post('/referidos/regenerar', [ReferidosController::class, 'regenerar'])->name('referidos.regenerar');
+                // O-50: la invitación por correo a un colega (una por vez, tope de 10 al día por médico).
+                Route::post('/referidos/invitar', [ReferidosController::class, 'invitar'])
+                    ->middleware('throttle:20,1')->name('referidos.invitar');
                 Route::get('/plan', [PlanController::class, 'index'])->name('plan');
                 // Prender/apagar la renovación automática con Latidos (preferencia del consultorio).
                 Route::post('/plan/renovacion', [PlanController::class, 'renovacion'])->name('plan.renovacion');
