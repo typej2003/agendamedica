@@ -220,6 +220,13 @@ final class PreoperatorioDeLaConsulta
                 continue;
             }
 
+            // El escritorio imprime el **párrafo**, y ese párrafo ya arranca con el rótulo de la opción
+            // («RIESGO ALTO», «CLASE II»). Cuando es así, la etiqueta de arriba sobra y se calla: repetirla es
+            // ruido en la hoja y fue justo lo que se vio al abrir el informe en Chrome (2026-11-02).
+            if ($etiqueta !== null && $texto !== null && $this->empiezaConElRotulo($texto, $etiqueta)) {
+                $etiqueta = null;
+            }
+
             $escalas[] = ['titulo' => $titulo, 'etiqueta' => $etiqueta, 'texto' => $texto];
         }
 
@@ -272,5 +279,21 @@ final class PreoperatorioDeLaConsulta
         }
 
         return $limpio;
+    }
+
+    /**
+     * ¿El párrafo ya arranca con el rótulo de su opción? Se compara sin distinguir mayúsculas y sin acentos, porque
+     * el rótulo viene del catálogo y el párrafo del fuente del escritorio (que escribe en mayúsculas y a veces sin
+     * tilde).
+     */
+    private function empiezaConElRotulo(string $texto, string $rotulo): bool
+    {
+        $normalizar = static function (string $valor): string {
+            $valor = mb_strtolower(trim($valor));
+
+            return strtr($valor, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u']);
+        };
+
+        return str_starts_with($normalizar($texto), $normalizar($rotulo));
     }
 }

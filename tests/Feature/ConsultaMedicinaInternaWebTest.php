@@ -232,13 +232,36 @@ class ConsultaMedicinaInternaWebTest extends TestCase
         $this->conContexto($user, $medico, $mi)
             ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'evaluacion-preoperatoria']))
             ->assertOk()
-            ->assertSee('Clase II')
+            ->assertSee('CLASE II')
             ->assertSee('RIESGO DE TROMBOSIS VENOSA PROFUNDA Y TROMBOEMBOLISMO PULMONAR')
             ->assertSee('Riesgo medio')
             ->assertSee('Usar heparina profiláctica.');
 
         $this->conContexto($user, $medico, $mi)->get($this->seccion($consulta, 'preoperatoria', 'riesgo'))
             ->assertOk()->assertSee('Guardar el riesgo');
+    }
+
+    /**
+     * **El rótulo no se repite** (O-47, 2026-11-02): el párrafo que guarda el escritorio ya arranca con el rótulo de
+     * la opción («RIESGO ALTO»), así que la hoja no lo imprime dos veces. Se vio al abrir el informe en Chrome.
+     */
+    public function test_el_informe_no_repite_el_rotulo_de_la_escala_cuando_el_texto_ya_empieza_por_el(): void
+    {
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->conContexto($user, $medico, $mi)->post(route('clinica.consulta.internista.guardar', $consulta->id), [
+            'pestana' => 'estimaciones', 'pre_trombo_tipo' => 'C',
+            'pre_trombo_resultado' => "RIESGO ALTO\nEDAD > 40 años INTERVENCIÓN > 30 min",
+        ])->assertRedirect($this->seccion($consulta, 'preoperatoria', 'estimaciones'));
+
+        $hoja = $this->conContexto($user, $medico, $mi)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'evaluacion-preoperatoria']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertSame(1, substr_count($hoja, 'RIESGO ALTO'), 'El rótulo aparece una sola vez: el párrafo ya lo trae.');
+        $this->assertStringContainsString('EDAD &gt; 40', $hoja);
     }
 
     /**
