@@ -105,7 +105,8 @@ final class SolicitarCodigoDeReserva
         }
 
         $codigo = $this->codigos->generar();
-        $envio = $this->codigos->enviar($telefono, $codigo);
+        // El correo del formulario es el tercer canal (O-54): si no hay WhatsApp ni SMS, el código sale por ahí.
+        $envio = $this->codigos->enviar($telefono, $codigo, trim((string) ($datos['email'] ?? '')) ?: null);
 
         if (! $envio['ok']) {
             throw ValidationException::withMessages([

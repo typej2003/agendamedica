@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Mail\CodigoDeReserva;
 use App\Reservas\CodigoDeVerificacion;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
@@ -15,6 +17,7 @@ use Tests\TestCase;
  *  - con Twilio configurado, el SMS sale con el `To` en E.164, el `From` del `.env` y el código en el texto;
  *  - si hay plantilla de WhatsApp, se usa primero y **no** se manda SMS;
  *  - si WhatsApp falla, cae a Twilio (el respaldo que hace que el portal siga funcionando);
+ *  - si WhatsApp y SMS no están, y el paciente dejó un correo, el código sale por **correo** (O-54);
  *  - sin ningún canal, en testing se simula y no se hace ninguna petición.
  */
 class CodigoDeVerificacionTest extends TestCase
@@ -114,5 +117,52 @@ class CodigoDeVerificacionTest extends TestCase
         $this->assertTrue($resultado['ok']);
         $this->assertSame(CodigoDeVerificacion::CANAL_SIMULADO, $resultado['canal']);
         Http::assertNothingSent();
+    }
+
+    public function test_si_whatsapp_y_sms_fallan_el_codigo_sale_por_correo(): void
+    {
+        Mail::fake();
+        Http::fake();
+
+        $resultado = app(CodigoDeVerificacion::class)->enviar('584145556677', '123456', 'ana@example.com');
+
+        $this->assertTrue($resultado['ok']);
+        $this->assertSame(CodigoDeVerificacion::CANAL_CORREO, $resultado['canal']);
+        Http::assertNothingSent();
+
+        Mail::assertSent(CodigoDeReserva::class, function (CodigoDeReserva $correo) {
+            return $correo->hasTo('ana@example.com') && $correo->codigo === '123456';
+        });
+    }
+
+    public function test_sin_correo_del_paciente_y_sin_canales_el_error_dice_que_se_intento(): void
+    {
+        // En producción no existe el canal simulado: es el camino que ve el paciente del portal.
+        $entorno = app()['env'];
+        app()['env'] = 'production';
+
+        config()->set('services.whatsapp.token', 'token-meta');
+        config()->set('services.whatsapp.phone_number_id', '123456789');
+        config()->set('services.whatsapp.template_codigo', 'codigo_cita');
+        config()->set('services.twilio.sid', 'AC123');
+        config()->set('services.twilio.token', 'token-de-prueba');
+        config()->set('services.twilio.from', '+15551234567');
+
+        Http::fake([
+            'graph.facebook.com/*' => Http::response(['error' => ['message' => 'rechazada']], 500),
+            'api.twilio.com/*' => Http::response(['message' => 'rechazado'], 400),
+        ]);
+
+        try {
+            $resultado = app(CodigoDeVerificacion::class)->enviar('584145556677', '123456');
+        } finally {
+            app()['env'] = $entorno;
+        }
+
+        $this->assertFalse($resultado['ok']);
+        $this->assertSame('ninguno', $resultado['canal']);
+        $this->assertStringContainsString('No pudimos enviarte el código', $resultado['error']);
+        $this->assertStringContainsString('WhatsApp y SMS', $resultado['error']);
+        $this->assertStringNotContainsString('Twilio', $resultado['error']);
     }
 }

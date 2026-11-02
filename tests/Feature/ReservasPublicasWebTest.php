@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\CodigoDeReserva;
 use App\Models\Cola;
 use App\Models\MedicalCenter;
 use App\Models\Medico;
@@ -10,9 +11,11 @@ use App\Models\Office;
 use App\Models\OfficeSchedule;
 use App\Models\Paciente;
 use App\Models\Specialty;
+use App\Reservas\CodigoDeVerificacion;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
@@ -493,5 +496,55 @@ class ReservasPublicasWebTest extends TestCase
     public function test_un_medico_inexistente_da_404(): void
     {
         $this->get('/reservar/999999')->assertNotFound();
+    }
+
+    public function test_sin_whatsapp_ni_sms_el_codigo_sale_por_correo_y_la_reserva_se_cierra(): void
+    {
+        Mail::fake();
+
+        $datos = $this->datos();
+
+        $this->post(route('reservas.codigo.enviar', $this->medico), $datos)
+            ->assertRedirect(route('reservas.codigo', $this->medico));
+
+        $this->assertSame(CodigoDeVerificacion::CANAL_CORREO, session('reservas.pendiente.canal'));
+        Mail::assertSent(CodigoDeReserva::class, function (CodigoDeReserva $correo) use ($datos) {
+            return $correo->hasTo($datos['email']) && $correo->codigo === $this->codigo();
+        });
+
+        // La pantalla del código dice a dónde fue, en vez de hablar del teléfono.
+        $this->get(route('reservas.codigo', $this->medico))
+            ->assertOk()
+            ->assertSee($datos['email']);
+
+        $this->post(route('reservas.confirmar', $this->medico), ['codigo' => $this->codigo()])
+            ->assertRedirect(route('reservas.confirmada'));
+
+        $this->assertSame(1, Cola::where('reg_medico', $this->medico->reg_medico)->count());
+    }
+
+    public function test_sin_correo_del_paciente_y_sin_canales_no_crea_la_cita(): void
+    {
+        // En producción no hay canal simulado: es el caso del paciente que no dejó correo y del servidor sin
+        // WhatsApp ni SMS. Se apaga el CSRF porque Laravel sólo lo salta cuando el entorno es `testing`.
+        $this->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
+
+        $entorno = app()['env'];
+        app()['env'] = 'production';
+
+        $datos = $this->datos();
+        unset($datos['email']);
+
+        try {
+            $this->from(route('reservas.medico', $this->medico))
+                ->post(route('reservas.codigo.enviar', $this->medico), $datos)
+                ->assertRedirect(route('reservas.medico', $this->medico))
+                ->assertSessionHasErrors('telefono');
+        } finally {
+            app()['env'] = $entorno;
+        }
+
+        $this->assertNull(session('reservas.pendiente'));
+        $this->assertSame(0, Cola::where('reg_medico', $this->medico->reg_medico)->count());
     }
 }
