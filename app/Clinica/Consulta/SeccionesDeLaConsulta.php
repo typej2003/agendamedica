@@ -30,7 +30,11 @@ namespace App\Clinica\Consulta;
  *  - `seccion`: la clave de `?seccion=` que lo abre **dentro de la misma consulta**; `null` en un ítem que
  *    todavía no tenga pantalla (desde F9, con la pre-factura, no queda ninguno).
  *
- * El orden del catálogo es el del legado y no se reordena.
+ * El orden del catálogo es el del legado y no se reordena; la única excepción es la evaluación pre-operatoria de medicina
+ * interna, que va detrás de Récipes por decisión del usuario (O-46).
+ *
+ * **Una sección puede estar apagada por una bandera de configuración** (O-45): hoy la pre-factura, mientras el módulo de
+ * facturación no esté terminado. Apagada no se lista, no cuenta y no se resuelve por URL; ver `oculta()`.
  */
 final class SeccionesDeLaConsulta
 {
@@ -254,6 +258,10 @@ final class SeccionesDeLaConsulta
      *
      * No tiene «Tratamiento» (el escritorio de medicina interna no lo ofrece) ni los ítems ocultos de su fuente (Indicadores,
      * I.Q., Nutrición): lo que no está en el árbol del escritorio se omite (decisión del usuario, 2026-10-28).
+     *
+     * **La única excepción al orden del escritorio es la evaluación pre-operatoria** (O-46, 2026-11-01): el escritorio la
+     * tiene al final, después de la pre-factura (`:3283`), y acá va detrás de Récipes por decisión del usuario. No se
+     * reordena nada más.
      */
     private const ITEMS_MEDICINA_INTERNA = [
         ['numero' => 1, 'grupo' => 'Consulta', 'titulo' => 'Motivos de consulta', 'icono' => 'bi-list-check',
@@ -271,6 +279,11 @@ final class SeccionesDeLaConsulta
         ['numero' => 5, 'grupo' => 'Consulta', 'titulo' => 'Plan de diagnóstico', 'icono' => 'bi-clipboard2-pulse',
             'detalle' => 'E.K.G., Rx de tórax y laboratorio.', 'tarea' => 'MI-3', 'estado' => 'listo',
             'seccion' => Interna\MapaDelInternista::SECCION_PLAN],
+        // **O-49 (2026-11-02): una sección nuestra, no del escritorio.** Va detrás de *Plan de diagnóstico* por
+        // pedido del usuario; el `numero` 15 es propio (el árbol del escritorio llega al 14) y no renumera nada.
+        ['numero' => 15, 'grupo' => 'Consulta', 'titulo' => 'Resultados de exámenes', 'icono' => 'bi-file-earmark-medical',
+            'detalle' => 'Lo que informó el laboratorio, en texto libre o escaneando la hoja.', 'tarea' => 'O-49', 'estado' => 'listo',
+            'seccion' => Interna\MapaDelInternista::SECCION_RESULTADOS],
         ['numero' => 6, 'grupo' => 'Consulta', 'titulo' => 'Diagnóstico', 'icono' => 'bi-clipboard2-check',
             'detalle' => 'Catálogo del médico; se propaga a constancias y presupuesto.', 'tarea' => 'WEB-4.5', 'estado' => 'listo',
             'seccion' => self::SECCION_DIAGNOSTICO],
@@ -283,6 +296,12 @@ final class SeccionesDeLaConsulta
         ['numero' => 9, 'grupo' => 'Documentos', 'titulo' => 'Récipes', 'icono' => 'bi-prescription2',
             'detalle' => 'Varios por consulta, por medicamento o por tratamiento.', 'tarea' => 'WEB-5.1', 'estado' => 'listo',
             'seccion' => self::SECCION_RECIPES],
+        // **O-46 (2026-11-01): la evaluación pre-operatoria va después de Récipes.** Es una decisión del usuario y
+        // **no** la paridad con el escritorio, que la tiene al final, después de la pre-factura
+        // (`w_consulta_principal.srw:3283`). El `numero` sigue siendo el del legado (14): numera el ítem, no el orden.
+        ['numero' => 14, 'grupo' => 'Documentos', 'titulo' => 'Evaluación pre-operatoria', 'icono' => 'bi-scissors',
+            'detalle' => 'Estimaciones (ASA, trombosis, infección, espirometría, situaciones especiales) y riesgo operatorio.', 'tarea' => 'MI-5', 'estado' => 'listo',
+            'seccion' => Interna\MapaDelInternista::SECCION_PREOPERATORIA],
         ['numero' => 10, 'grupo' => 'Documentos', 'titulo' => 'Solicitudes', 'icono' => 'bi-send',
             'detalle' => 'Laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe médico y dieta / recomendaciones.', 'tarea' => 'WEB-5.3a', 'estado' => 'listo',
             'seccion' => self::SECCION_SOLICITUDES],
@@ -295,9 +314,6 @@ final class SeccionesDeLaConsulta
         ['numero' => 13, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
             'detalle' => 'Los conceptos que se cobran por la consulta, del catálogo del consultorio, con su total.', 'tarea' => 'F9', 'estado' => 'listo',
             'seccion' => self::SECCION_PREFACTURA],
-        ['numero' => 14, 'grupo' => 'Documentos', 'titulo' => 'Evaluación pre-operatoria', 'icono' => 'bi-scissors',
-            'detalle' => 'Estimaciones (ASA, trombosis, infección, espirometría, situaciones especiales) y riesgo operatorio.', 'tarea' => 'MI-5', 'estado' => 'listo',
-            'seccion' => Interna\MapaDelInternista::SECCION_PREOPERATORIA],
     ];
 
     /**
@@ -323,6 +339,30 @@ final class SeccionesDeLaConsulta
             'icono' => 'bi-scissors', 'detalle' => 'Intervenciones, evaluación pre-operatoria y riesgo quirúrgico (cirugía pediátrica).',
             'tarea' => 'F7', 'estado' => 'listo', 'seccion' => self::SECCION_QUIRURGICO, 'despues_de' => self::SECCION_PREFACTURA],
     ];
+
+    /**
+     * **Las secciones que apaga una bandera de configuración** (O-45): la clave de la sección => la clave de
+     * configuración que la enciende.
+     *
+     * Con la bandera apagada la sección **no existe para la consulta**: no la lista ningún catálogo, no cuenta
+     * en «X de Y» y `porSeccion()` tampoco la resuelve, así que un `?seccion=` guardado en un marcador cae en
+     * el estado vacío del shell como cualquier sección inventada. Los datos que tenga cargados no se tocan.
+     *
+     * Hoy sólo la pre-factura, mientras el módulo de facturación no esté terminado.
+     *
+     * @var array<string,string>
+     */
+    private const APAGADAS_POR_BANDERA = [
+        self::SECCION_PREFACTURA => 'clinica.facturacion.prefactura',
+    ];
+
+    /** ¿La sección está apagada por su bandera de configuración? (Encendida o sin bandera, no lo está.) */
+    public static function oculta(?string $seccion): bool
+    {
+        $bandera = self::APAGADAS_POR_BANDERA[$seccion ?? ''] ?? null;
+
+        return $bandera !== null && ! config($bandera, false);
+    }
 
     /** ¿La especialidad es pediatría? Su catálogo es el suyo, no el de ginecología. */
     private static function esPediatria(?string $especialidad): bool
@@ -398,7 +438,9 @@ final class SeccionesDeLaConsulta
             }
         }
 
-        return $salida;
+        // Las secciones apagadas por su bandera (O-45) se quitan **al final**: así la que agrega un postgrado
+        // sigue encontrando su ancla (`despues_de`) y lo único que desaparece es la apagada.
+        return array_values(array_filter($salida, fn (array $item) => ! self::oculta($item['seccion'])));
     }
 
     public static function total(?string $especialidad = null, array $seccionesPostgrados = []): int
@@ -406,7 +448,10 @@ final class SeccionesDeLaConsulta
         return count(self::delaEspecialidad($especialidad, $seccionesPostgrados));
     }
 
-    /** Cuántos ítems ya tienen pantalla: desde F9 (la pre-factura), todos: 13 de 13 en ginecología, 14 de 14 en pediatría y 11 de 11 en el modo medicina general. */
+    /**
+     * Cuántos ítems ya tienen pantalla: desde F9 (la pre-factura), todos —13 en ginecología, 14 en pediatría y 11 en el
+     * modo medicina general—. Con la pre-factura apagada (O-45) son uno menos, y también uno menos en `total()`.
+     */
     public static function disponibles(?string $especialidad = null, array $seccionesPostgrados = []): int
     {
         return count(array_filter(self::delaEspecialidad($especialidad, $seccionesPostgrados), fn (array $item) => $item['estado'] === 'listo'));

@@ -11,6 +11,7 @@ use App\Models\Paciente;
 use App\Models\Specialty;
 use App\Models\User;
 use App\Notificaciones\Canal;
+use App\Services\SmsService;
 use Carbon\Carbon;
 use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -241,6 +242,9 @@ class CumpleanosWebTest extends TestCase
     public function test_la_configuracion_se_guarda_con_interruptor_canal_hora_y_mensaje(): void
     {
         [$user, $medico, $gineco] = $this->medico();
+
+        // O-51: el SMS sólo se puede guardar si el servidor tiene proveedor. Acá se usa el de desarrollo.
+        config(['services.sms.proveedor' => SmsService::LOG]);
 
         $this->conContexto($user, $medico, $gineco)
             ->patch('/clinica/cumpleanos/configuracion', [
@@ -511,5 +515,169 @@ class CumpleanosWebTest extends TestCase
             ->assertOk()
             ->assertSee('Hoy cumple años 1 paciente.')
             ->assertSee(route('clinica.cumpleanos'), false);
+    }
+
+    // ------------------------------------------------------------------- Fallos y proveedor de SMS (O-51)
+
+    /**
+     * Un saludo que se intentó y no salió no puede verse igual que uno que nunca se mandó: la fila dice
+     * a qué hora falló y **por qué**, con el motivo sacado de la respuesta del proveedor y no del JSON.
+     */
+    public function test_la_fila_muestra_por_que_fallo_el_ultimo_intento(): void
+    {
+        [$user, $medico, $gineco] = $this->medico();
+        $this->configurar($medico, ['canal' => Canal::SMS]);
+        $paciente = $this->paciente($medico, '1990-10-10');
+
+        NotificacionCumple::create([
+            'reg_medico'  => $medico->reg_medico,
+            'paciente_id' => $paciente->id,
+            'fecha_cumple' => self::HOY,
+            'canal'       => Canal::SMS,
+            'destino'     => '584141234567',
+            'plantilla'   => 'saludo_por_defecto',
+            'mensaje'     => 'Feliz cumpleaños',
+            'estado'      => NotificacionCumple::ESTADO_FALLIDA,
+            'respuesta'   => json_encode(['code' => 21211, 'message' => 'The To number is not a valid phone number']),
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->get('/clinica/cumpleanos?fecha=' . self::HOY);
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('Falló');
+        $respuesta->assertSee('The To number is not a valid phone number');
+        $respuesta->assertSee('código 21211');
+        // El JSON crudo no se vuelca en la pantalla.
+        $respuesta->assertDontSee('"code":21211', false);
+    }
+
+    /** Sin proveedor de SMS el canal no se ofrece: el radio queda deshabilitado y se dice por qué. */
+    public function test_sin_proveedor_de_sms_el_canal_no_se_ofrece(): void
+    {
+        config(['services.sms.proveedor' => SmsService::NINGUNO]);
+
+        [$user, $medico, $gineco] = $this->medico();
+        $this->paciente($medico, '1990-10-10');
+
+        $html = $this->conContexto($user, $medico, $gineco)
+            ->get('/clinica/cumpleanos?fecha=' . self::HOY)
+            ->assertOk()
+            ->assertSee('El servidor no tiene proveedor de SMS configurado.')
+            ->getContent();
+
+        $this->assertMatchesRegularExpression('/id="canal-sms"[^>]*disabled/', $html);
+        // Los otros dos canales siguen disponibles.
+        $this->assertDoesNotMatchRegularExpression('/id="canal-correo"[^>]*disabled/', $html);
+    }
+
+    /** Y el POST tampoco lo acepta: el tope de la pantalla no puede quedar guardado como canal. */
+    public function test_sin_proveedor_de_sms_la_configuracion_rechaza_ese_canal(): void
+    {
+        config(['services.sms.proveedor' => SmsService::NINGUNO]);
+
+        [$user, $medico, $gineco] = $this->medico();
+
+        $this->conContexto($user, $medico, $gineco)
+            ->patch('/clinica/cumpleanos/configuracion', ['canal' => Canal::SMS, 'hora' => '09:00'])
+            ->assertSessionHasErrors('canal');
+
+        $this->assertNull(Evolucion::where('reg_medico', $medico->reg_medico)->first());
+    }
+
+    /** El envío manual avisa sin llamar al proveedor, y no deja un intento fallido en el registro. */
+    public function test_sin_proveedor_de_sms_el_envio_manual_avisa_y_no_registra(): void
+    {
+        config(['services.sms.proveedor' => SmsService::NINGUNO]);
+
+        [$user, $medico, $gineco] = $this->medico();
+        $this->configurar($medico, ['canal' => Canal::SMS]);
+        $paciente = $this->paciente($medico, '1990-10-10');
+
+        $this->conContexto($user, $medico, $gineco)
+            ->post('/clinica/cumpleanos', ['paciente' => $paciente->id, 'canal' => Canal::SMS, 'mensaje' => 'Feliz'])
+            ->assertSessionHas('error');
+
+        $this->assertSame(0, NotificacionCumple::where('paciente_id', $paciente->id)->count());
+    }
+
+    /**
+     * **El reintento reescribe la fila del día** (O-51): la clave es paciente + cumpleaños, así que un saludo
+     * que falló a la mañana y se manda a mano después deja **una** sola fila, con el estado real.
+     */
+    public function test_reintentar_un_saludo_que_fallo_reescribe_la_fila_del_dia(): void
+    {
+        Mail::fake();
+
+        [$user, $medico, $gineco] = $this->medico();
+        $this->configurar($medico, ['canal' => Canal::CORREO]);
+        $paciente = $this->paciente($medico, '1990-10-10');
+
+        // El intento de la mañana: el proveedor no aceptó.
+        NotificacionCumple::create([
+            'reg_medico'  => $medico->reg_medico,
+            'paciente_id' => $paciente->id,
+            'fecha_cumple' => self::HOY,
+            'canal'       => Canal::CORREO,
+            'destino'     => 'ana@example.com',
+            'plantilla'   => 'saludo_por_defecto',
+            'mensaje'     => 'Feliz cumpleaños',
+            'estado'      => NotificacionCumple::ESTADO_FALLIDA,
+            'respuesta'   => json_encode(['error' => 'Connection refused']),
+        ]);
+
+        $this->conContexto($user, $medico, $gineco)
+            ->post('/clinica/cumpleanos', ['paciente' => $paciente->id, 'canal' => 'automatico', 'mensaje' => 'Feliz cumpleaños'])
+            ->assertSessionHas('estado');
+
+        $filas = NotificacionCumple::where('paciente_id', $paciente->id)
+            ->whereDate('fecha_cumple', self::HOY)
+            ->get();
+
+        $this->assertCount(1, $filas, 'El reintento reescribe la fila del día: no se duplica.');
+        $this->assertSame(NotificacionCumple::ESTADO_ENVIADA, $filas->first()->estado);
+        $this->assertSame(Canal::CORREO, $filas->first()->canal);
+        Mail::assertSent(\App\Mail\SaludoDeCumpleanos::class);
+    }
+
+    /**
+     * **El comando decide el canal igual que la pantalla** (O-51): con `sms` guardado y sin proveedor, manda
+     * por el recomendado en vez de fallar todas las noches, y lo deja registrado con el canal que usó.
+     */
+    public function test_el_comando_con_sms_guardado_y_sin_proveedor_manda_por_el_recomendado(): void
+    {
+        Mail::fake();
+        config(['services.sms.proveedor' => SmsService::NINGUNO]);
+
+        [$user, $medico, $gineco] = $this->medico();
+        $this->configurar($medico, ['canal' => Canal::SMS, 'hora' => '09:00:00']);
+        $paciente = $this->paciente($medico, '1990-10-10');
+
+        $this->artisan('cumpleanos:enviar', ['--fecha' => self::HOY])->assertExitCode(0);
+
+        $notificacion = NotificacionCumple::where('paciente_id', $paciente->id)->firstOrFail();
+
+        $this->assertSame(Canal::CORREO, $notificacion->canal);
+        $this->assertSame(NotificacionCumple::ESTADO_ENVIADA, $notificacion->estado);
+        Mail::assertSent(\App\Mail\SaludoDeCumpleanos::class);
+    }
+
+    /**
+     * Sin proveedor **y** sin un canal que sirva, el saludo falla como corresponde: se avisa y **no se
+     * inventa** un envío. Es el caso que antes dejaba una notificación «enviada» fabricada.
+     */
+    public function test_sin_proveedor_y_sin_correo_el_saludo_falla_y_no_inventa_el_estado(): void
+    {
+        config(['services.sms.proveedor' => SmsService::NINGUNO]);
+
+        [$user, $medico, $gineco] = $this->medico();
+        $this->configurar($medico, ['canal' => Canal::SMS, 'hora' => '09:00:00']);
+        // Sin correo: el canal efectivo es el correo y el paciente no lo tiene.
+        $paciente = $this->paciente($medico, '1990-10-10', ['email' => null]);
+
+        $this->artisan('cumpleanos:enviar', ['--fecha' => self::HOY])
+            ->expectsOutputToContain('El paciente no tiene un correo válido registrado.')
+            ->assertExitCode(0);
+
+        $this->assertSame(0, NotificacionCumple::where('paciente_id', $paciente->id)->count());
     }
 }

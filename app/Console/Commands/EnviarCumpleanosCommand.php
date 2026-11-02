@@ -9,7 +9,9 @@ use App\Cumpleanos\CumpleanosDeHoy;
 use App\Cumpleanos\RegistroDeCumpleanos;
 use App\Models\Evolucion;
 use App\Models\NotificacionCumple;
+use App\Notificaciones\Canal;
 use App\Notificaciones\ExcepcionDeEnvio;
+use App\Services\SmsService;
 use Illuminate\Console\Command;
 use InvalidArgumentException;
 use Throwable;
@@ -97,7 +99,12 @@ class EnviarCumpleanosCommand extends Command
                 continue;
             }
 
-            $this->line('  ' . $regMedico . ': ' . $cumpleanosDelMedico->count() . ' cumpleaños, por ' . $configuracion->etiquetaDelCanal() . '.');
+            // **El mismo canal que muestra la pantalla** (O-51): si el guardado es SMS y el servidor no
+            // tiene proveedor, cae al recomendado en vez de fallar todas las noches. La regla vive en
+            // `ConfiguracionDeCumpleanos::canalEfectivo`, no acá.
+            $canal = $configuracion->canalEfectivo(app(SmsService::class)->configurado());
+
+            $this->line('  ' . $regMedico . ': ' . $cumpleanosDelMedico->count() . ' cumpleaños, por ' . Canal::etiqueta($canal) . '.');
 
             foreach ($cumpleanosDelMedico as $cumpleano) {
                 if ($registro->yaSeLeMando($cumpleano->pacienteId(), $dia)) {
@@ -116,7 +123,7 @@ class EnviarCumpleanosCommand extends Command
                     // proveedor rechace un mensaje no puede abortar el resto del envío. La Action ya es
                     // idempotente por el registro: si otro ya lo mandó, devuelve **lo que pasó** sin
                     // volver a mandarlo.
-                    $notificacion = $accion->ejecutar($cumpleano, $regMedico, $configuracion->canal());
+                    $notificacion = $accion->ejecutar($cumpleano, $regMedico, $canal);
                 } catch (ExcepcionDeEnvio|InvalidArgumentException $excepcion) {
                     // El envío ni se intentó (le falta el dato, o el proveedor no está configurado):
                     // no hay nada que registrar y el intento del día siguiente lo vuelve a intentar.

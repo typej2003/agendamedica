@@ -50,6 +50,20 @@ return [
      * configuran proveedores de comunicación (decisión de Alexander, 2026-10-09) — el servidor manda
      * por todos y el gasto se mide por médico con `notificaciones_cita`.
      */
+    /*
+     * **El proveedor de SMS** (O-55, 2026-11-02): qué hay detrás de `App\Services\SmsService`. Los que lo
+     * llaman (código de reserva, saludo de cumpleaños, recordatorios) no saben cuál es.
+     *
+     *  - `twilio` (por defecto, y lo que hace si la variable no está): los SMS de verdad.
+     *  - `log`: sólo desarrollo; el mensaje va al log y devuelve ok.
+     *  - `ninguno`: apagado a propósito; `configurado()` es `false` y las pantallas no ofrecen el canal.
+     *
+     * Cambiar de operador es cambiar esta variable (y su credencial), no el código.
+     */
+    'sms' => [
+        'proveedor' => env('SMS_PROVEEDOR', 'twilio'),
+    ],
+
     'twilio' => [
         'sid'   => env('TWILIO_ACCOUNT_SID'),
         'token' => env('TWILIO_AUTH_TOKEN'),

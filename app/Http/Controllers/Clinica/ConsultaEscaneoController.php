@@ -24,13 +24,29 @@ use Illuminate\Support\Facades\Log;
  * Lo del HTTP: de quién es la consulta (el 404 del consultorio ajeno, igual que el guardado), qué solapa es (la ruta
  * sólo acepta las escaneables), el tipo **real** del archivo y su tope, y qué se le contesta al médico. El log deja
  * que hubo una lectura (consulta y usuario), nunca su contenido.
+ *
+ * **Dos entradas, una sola lectura** (O-49): las solapas de `TextosDelExamen` (ginecología y pediatría) y la sección
+ * propia del internista *Resultados de exámenes*, que llega por su ruta con `leerResultados()`. Lo único que cambia
+ * es la etiqueta que queda en el log; el tope, el lector y la respuesta son los mismos.
  */
 class ConsultaEscaneoController extends Controller
 {
     use ResuelveLosRegistrosDelMedico;
 
+    /** La etiqueta con la que la sección del internista (O-49) aparece en el log de la lectura. */
+    public const SOLAPA_DEL_INTERNISTA = 'resultados-examenes';
+
     public function __construct(private ConsultasDelContexto $consultas)
     {
+    }
+
+    /**
+     * **La lectura de la hoja de la sección del internista** (O-49): su ruta no lleva `{solapa}`, así que la etiqueta
+     * del log se fija acá y el resto es la misma lectura.
+     */
+    public function leerResultados(Request $request, Consulta $consulta, LectorDeHojas $lector): JsonResponse
+    {
+        return $this->leer($request, $consulta, self::SOLAPA_DEL_INTERNISTA, $lector);
     }
 
     public function leer(Request $request, Consulta $consulta, string $solapa, LectorDeHojas $lector): JsonResponse

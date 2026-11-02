@@ -68,6 +68,18 @@ final class TagDeImagen
     public const DOPPLER = 'ed';
 
     /**
+     * La de la **foto de la placa de la Rx de tórax** del internista (O-44, 2026-11-02).
+     *
+     * No es del escritorio: en medicina interna no hay una grilla de imágenes por etiqueta para la Rx
+     * (`fuentes-cirugia/ventana_consulta/w_consulta_principal.srw` sólo consulta `imagen_consulta` para
+     * comprobar que la ruta no esté repetida, L17046-17051), así que la etiqueta es nuestra. Se elige `rx`
+     * —dos letras, en minúscula— para no chocar con las del legado, que son de un carácter (`@`, `H`, `p`,
+     * `m`, `a`, `f`) o de dos (`o1`, `o2`, `o3`, `ed`). El escritorio verá la fila como una imagen más de
+     * la consulta, sin rótulo.
+     */
+    public const RX = 'rx';
+
+    /**
      * La etiqueta **canónica** de cada solapa del examen: es la que la web escribe al subir una foto desde esa
      * solapa. Una solapa que todavía no existe no está en la lista.
      *
@@ -85,6 +97,8 @@ final class TagDeImagen
         'eco-fetal' => self::FETAL,
         'eco-mamario' => self::MAMAS,
         'eco-abdominal' => self::ABDOMINAL,
+        // La placa de la Rx de tórax del internista (O-44): la clave es la pestaña del plan de diagnóstico.
+        'rx' => self::RX,
     ];
 
     /**
@@ -104,6 +118,7 @@ final class TagDeImagen
         'eco-fetal' => [self::FETAL],
         'eco-mamario' => [self::MAMAS],
         'eco-abdominal' => [self::ABDOMINAL],
+        'rx' => [self::RX],
     ];
 
     /**
@@ -124,6 +139,8 @@ final class TagDeImagen
         self::OBSTETRICO_3 => 'eco obstétrico (3.er trimestre)',
         self::FETAL => 'ecocardiograma fetal',
         self::DOPPLER => 'eco Doppler perinatal',
+        // O-44: el nombre con el que la lista y el vacío de la tarjeta hablan de la placa.
+        self::RX => 'Rx de tórax',
     ];
 
     /** La clave con la que un estudio ecográfico sube y lee sus imágenes (`eco-ginecologico`…). */

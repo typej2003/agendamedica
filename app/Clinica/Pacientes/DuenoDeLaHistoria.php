@@ -66,6 +66,53 @@ final class DuenoDeLaHistoria
     }
 
     /**
+     * **El paciente de un número que sólo vive en el vínculo** (`medico_pacientes`, trampa 143), mirando todos los
+     * registros del médico; o `null`.
+     *
+     * Existe para las pantallas que caían a los demás registros cuando el de la consulta o la cita no tenía a
+     * nadie con ese número. Ese atajo estaba mal cuando el número **sí** es una historia registrada en otro
+     * consultorio del médico: ahí es **otra historia y otro paciente**, y mostrarlo hacía que el informe o
+     * «Atender» nombraran a una persona que no es la de la consulta (visto el 2026-11-02 imprimiendo la hoja
+     * pre-operatoria). Sólo se tolera el número huérfano: el que no está en `historias` de ninguno de sus
+     * registros.
+     *
+     * @param  array<int,string>  $registros  los `reg_medico` del médico
+     */
+    public function huerfanoEn(array $registros, $numhistoria): ?int
+    {
+        $numero = CamposDePaciente::historiaNumerica($numhistoria);
+
+        $registros = array_values(array_unique(array_filter(
+            array_map(fn ($registro) => trim((string) $registro), $registros),
+            fn (string $registro) => $registro !== ''
+        )));
+
+        if ($numero === null || $registros === []) {
+            return null;
+        }
+
+        $formas = $this->formas($numhistoria, $numero);
+
+        // Si el número es la historia registrada de alguno de sus consultorios, no se toca: es otra historia.
+        $registrado = Historia::whereIn('reg_medico', $registros)
+            ->whereIn('numhistoria', $formas)
+            ->whereNotNull('paciente_id')
+            ->exists();
+
+        if ($registrado) {
+            return null;
+        }
+
+        $enElVinculo = MedicoPaciente::whereIn('reg_medico', $registros)
+            ->whereIn('numhistoria', $formas)
+            ->whereNotNull('paciente_id')
+            ->orderBy('id')
+            ->value('paciente_id');
+
+        return $enElVinculo !== null ? (int) $enElVinculo : null;
+    }
+
+    /**
      * La misma regla, en lote: `[numero => pacientes.id]` para los números que tengan dueño.
      *
      * La usa la agenda, que resuelve el nombre de cada cita de una jornada en **una** consulta (no una

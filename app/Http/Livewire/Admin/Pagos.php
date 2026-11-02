@@ -5,6 +5,8 @@ namespace App\Http\Livewire\Admin;
 use App\Models\Medico;
 use App\Models\Pago;
 use App\Models\PagoEvento;
+use App\Pagos\Admin\AccionesDelPago;
+use App\Pagos\Admin\PendientesPorMedico;
 use App\Pagos\Cobros;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -32,6 +34,16 @@ class Pagos extends Component
 
     /** El pago abierto en el detalle, si hay uno. */
     public $pagoId = null;
+
+    /**
+     * El motivo de la acción que se está confirmando (O-53). Es obligatorio para rechazar y para reembolsar;
+     * opcional para dar por pagado.
+     */
+    public $motivo = '';
+
+    /** El pago sobre el que se va a actuar y qué acción se está confirmando (`aprobar`, `rechazar`, `reembolsar`). */
+    public $accionId = null;
+    public $accion = '';
 
     public function mount(): void
     {
@@ -77,6 +89,121 @@ class Pagos extends Component
     {
         $this->pagoId = null;
         $this->resetErrorBag();
+        $this->cerrarAccion();
+    }
+
+    // --------------------------------------------------------------------- Administrar un pago (O-53)
+
+    /**
+     * **Empezar una acción sobre un pago**: dar por pagado, rechazar o reembolsar. La pantalla pide el motivo
+     * (obligatorio en los dos últimos) y recién después se aplica.
+     */
+    public function administrar(int $pagoId, string $accion): void
+    {
+        $pago = Pago::findOrFail($pagoId);
+
+        $this->accionId = $pago->id;
+        $this->accion = in_array($accion, ['aprobar', 'rechazar', 'reembolsar'], true) ? $accion : '';
+        $this->motivo = '';
+        $this->resetErrorBag();
+
+        // El pago tiene que poder recibir esa acción: se avisa antes de que el admin escriba el motivo.
+        $this->validarAccionPosible($pago, $this->accion);
+    }
+
+    public function cerrarAccion(): void
+    {
+        $this->accionId = null;
+        $this->accion = '';
+        $this->motivo = '';
+        $this->resetErrorBag();
+    }
+
+    /**
+     * **Aplicar la acción confirmada.** Todo el criterio vive en `AccionesDelPago`; acá sólo se valida lo que
+     * es de la pantalla (el motivo) y se traduce el error a un aviso.
+     */
+    public function aplicarAccion(AccionesDelPago $acciones): void
+    {
+        $pago = Pago::findOrFail((int) $this->accionId);
+        $usuario = auth()->user();
+
+        $this->validarAccionPosible($pago, $this->accion);
+
+        $motivo = trim((string) $this->motivo);
+
+        if (in_array($this->accion, ['rechazar', 'reembolsar'], true) && $motivo === '') {
+            $this->addError('motivo', 'Escribe el motivo: queda en la bitácora del pago.');
+
+            return;
+        }
+
+        try {
+            match ($this->accion) {
+                'aprobar' => $acciones->marcarPagado($pago, $usuario, $motivo),
+                'rechazar' => $acciones->rechazar($pago, $usuario, $motivo),
+                'reembolsar' => $acciones->reembolsar($pago, $usuario, $motivo),
+            };
+        } catch (\RuntimeException $e) {
+            $this->addError('motivo', $e->getMessage());
+
+            return;
+        }
+
+        session()->flash('message', match ($this->accion) {
+            'aprobar' => 'Pago dado por pagado.',
+            'rechazar' => 'Pago rechazado.',
+            'reembolsar' => 'Pago reembolsado.',
+        });
+
+        $pago->refresh();
+        $this->cerrarAccion();
+    }
+
+    /** ¿La acción tiene sentido para el estado del pago? Si no, se dice antes de pedir el motivo. */
+    private function validarAccionPosible(Pago $pago, string $accion): void
+    {
+        if (! $this->administrable($pago)) {
+            $this->addError('motivo', 'Desde acá sólo se administran los pagos de citas. Los planes se aprueban contra la pasarela.');
+
+            return;
+        }
+
+        $estado = $pago->estado;
+
+        $posible = match ($accion) {
+            'aprobar' => in_array($estado, PendientesPorMedico::ESTADOS, true),
+            'rechazar' => in_array($estado, PendientesPorMedico::ESTADOS, true),
+            'reembolsar' => $estado === Pago::APROBADO,
+            default => false,
+        };
+
+        if (! $posible) {
+            $this->addError('motivo', 'Ese pago no admite esa acción en su estado actual.');
+        }
+    }
+
+    // --------------------------------------------------------------------- Lo que la pantalla necesita
+
+    /** ¿Se puede administrar este pago desde acá? Sólo los de citas (los planes van por la pasarela). */
+    public function administrable(Pago $pago): bool
+    {
+        return $pago->esDeCita();
+    }
+
+    public function puedeAprobar(Pago $pago): bool
+    {
+        return $this->administrable($pago) && in_array($pago->estado, PendientesPorMedico::ESTADOS, true);
+    }
+
+    public function puedeRechazar(Pago $pago): bool
+    {
+        return $this->puedeAprobar($pago);
+    }
+
+    public function puedeReembolsar(Pago $pago): bool
+    {
+        return $this->administrable($pago) && $pago->estado === Pago::APROBADO;
     }
 
     /**
@@ -194,6 +321,9 @@ class Pagos extends Component
             'eventos' => $eventos,
             'aprobadoUsdE2' => (int) Pago::where('estado', Pago::APROBADO)->sum('monto_usd_e2'),
             'aprobadoVesE2' => (int) Pago::where('estado', Pago::APROBADO)->where('moneda', 'VES')->sum('monto_e2'),
+            // Lo que está pendiente de cobro, por médico (O-53): es la deuda real con cada consultorio.
+            'pendientes' => app(PendientesPorMedico::class)->todos(),
+            'totalPendienteUsdE2' => app(PendientesPorMedico::class)->totalUsdE2(),
         ]);
     }
 

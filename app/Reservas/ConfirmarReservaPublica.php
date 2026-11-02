@@ -144,6 +144,11 @@ final class ConfirmarReservaPublica
                 // El motivo con precio (si se eligió) es el que decide `cola.monto`: el cobro al reservar
                 // sale de ese precio.
                 'motivo' => $datos['motivo'] ?? null,
+                // Quién reservó (O-52): sólo cuando lo hizo un representante. La cita lo guarda en sus
+                // columnas nullable y el consultorio lo ve al abrirla.
+                'reservado_por' => ($datos['reservado_por'] ?? 'P') === 'R' ? 'R' : null,
+                'reservado_por_nombre' => ($datos['reservado_por'] ?? 'P') === 'R' ? ($datos['representante_nombre'] ?? null) : null,
+                'reservado_por_documento' => ($datos['reservado_por'] ?? 'P') === 'R' ? ($datos['representante_documento'] ?? null) : null,
             ],
             $registros,
             [
@@ -188,6 +193,9 @@ final class ConfirmarReservaPublica
             // Para ofrecer la cuenta de paciente en el comprobante, con los datos ya escritos.
             'cedula' => $datos['cedula'],
             'telefono' => $datos['telefono'],
+            // Si reservó un representante, el comprobante lo dice (O-52).
+            'representante_nombre' => ($datos['reservado_por'] ?? 'P') === 'R' ? ($datos['representante_nombre'] ?? null) : null,
+            'representante_documento' => ($datos['reservado_por'] ?? 'P') === 'R' ? ($datos['representante_documento'] ?? null) : null,
         ];
     }
 

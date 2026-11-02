@@ -39,8 +39,8 @@ final class PacienteDeLaCita
      * `DuenoDeLaHistoria` (el dueño en `historias`): el número es único por registro, y salir a los demás
      * registros del médico con un `whereIn` devolvía el primer vínculo que coincidiera —el paciente de
      * otro registro— y «Atender» abría la historia de otra persona. Los demás registros siguen mirándose
-     * **sólo si el de la cita no tiene a nadie** con ese número (una cita vieja enlazada al vínculo de
-     * otro registro).
+     * **sólo si el número es huérfano** de todos ellos (`DuenoDeLaHistoria::huerfanoEn`): el que vive sólo en el
+     * vínculo (trampa 143). Si el número es la historia registrada de otro consultorio, no se toca.
      */
     public function opcional(Cola $cita, array $registrosMedicos): ?int
     {
@@ -51,13 +51,10 @@ final class PacienteDeLaCita
                 return $duenio;
             }
 
-            $pacienteId = MedicoPaciente::whereIn('reg_medico', $registrosMedicos)
-                ->where('numhistoria', (string) (int) $cita->numhistoria)
-                ->orderBy('id')
-                ->value('paciente_id');
+            $pacienteId = $this->duenios->huerfanoEn($registrosMedicos, $cita->numhistoria);
 
             if ($pacienteId !== null) {
-                return (int) $pacienteId;
+                return $pacienteId;
             }
         }
 

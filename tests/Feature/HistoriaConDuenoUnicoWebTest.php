@@ -282,4 +282,71 @@ class HistoriaConDuenoUnicoWebTest extends TestCase
         $this->assertSame('KARLA RONDON', trim($paciente->apellidos . ' ' . $paciente->nombres));
         $this->assertSame('21', (string) $paciente->numhistoria);
     }
+
+    /**
+     * **No se nombra al paciente de otra historia del mismo médico** (2026-11-02): el número es único **por
+     * registro**, así que el 21 del consultorio B es otra historia y otro paciente. Antes, cuando el registro de la
+     * consulta no tenía a nadie con ese número, se caía al vínculo de cualquier registro y se nombraba a otra
+     * persona: se vio al imprimir la hoja pre-operatoria de una consulta cuyo número coincidía con el de otro
+     * consultorio del mismo médico.
+     */
+    public function test_la_consulta_no_nombra_al_paciente_de_otra_historia_del_mismo_medico(): void
+    {
+        [$user, $medico] = $this->medicoDePediatria();
+
+        $otroRegistro = $medico->reg_medico . '-b';
+        \App\Models\MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $otroRegistro]);
+
+        // El paciente vive en el **otro** consultorio del médico: es el dueño registrado del 21 y su vínculo está
+        // ahí, no en el registro de la consulta (que es lo que hacía caer al atajo).
+        $ajeno = DB::table('pacientes')->insertGetId([
+            'nombres' => 'MATEO', 'apellidos' => 'AJENO', 'cedula' => '99999999', 'sexo' => 'M',
+            'fnacimiento' => '2018-05-04', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        MedicoPaciente::create([
+            'medico_id' => $medico->id, 'paciente_id' => $ajeno, 'numhistoria' => '21', 'reg_medico' => $otroRegistro,
+        ]);
+        Historia::create([
+            'numhistoria' => '21',
+            'reg_medico'  => $otroRegistro,
+            'paciente_id' => $ajeno,
+            'medico_id'   => $medico->id,
+        ]);
+
+        $consulta = Consulta::create([
+            'reg_medico'  => $medico->reg_medico,
+            'numhistoria' => 21,
+            'nroconsulta' => 1,
+            'fecha'       => $this->hoy->toDateString(),
+        ]);
+
+        $registros = $medico->registrosDeTrabajo();
+
+        $this->assertNull(
+            app(ConsultasDelContexto::class)->paciente($consulta, $registros),
+            'la historia 21 es de otro consultorio: la consulta no puede nombrar a ese paciente',
+        );
+
+        $this->assertNull(
+            app(PacienteDeLaCita::class)->opcional($this->cita($medico, $this->sede($medico), 21), $registros),
+            '«Atender» tampoco puede abrir la historia de otro consultorio',
+        );
+    }
+
+    /**
+     * La tolerancia del legado sigue en pie: el número que **sólo** vive en el vínculo (trampa 143) y no es la
+     * historia registrada de ningún consultorio del médico se sigue resolviendo, para que las consultas viejas no
+     * se queden sin paciente.
+     */
+    public function test_el_numero_que_solo_vive_en_el_vinculo_se_sigue_tolerando(): void
+    {
+        [$user, $medico] = $this->medicoDePediatria();
+
+        $suelto = $this->paciente($medico, 'VIEJO', 'SUELTO', 33, false);
+
+        $this->assertSame(
+            $suelto,
+            app(\App\Clinica\Pacientes\DuenoDeLaHistoria::class)->huerfanoEn([$medico->reg_medico], 33),
+        );
+    }
 }

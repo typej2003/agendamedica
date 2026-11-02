@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Verificar teléfono · Reservar cita')
-
 @push('estilos')
     <link rel="stylesheet" href="{{ asset('css/reservas.css') }}">
 @endpush
@@ -10,20 +8,28 @@
     $dia = ucfirst(\Carbon\Carbon::createFromFormat('!Y-m-d', $pendiente['fecha'])->locale('es')->isoFormat('dddd D [de] MMMM'));
     $hora = \App\Support\HoraLocal::reloj($pendiente['hora']);
     $horario = $pendiente['fecha'] . '|' . $pendiente['hora'] . '|' . $pendiente['office_id'];
+    // El código pudo salir por correo (O-54): en ese caso la pantalla no habla del teléfono.
+    $porCorreo = ($pendiente['canal'] ?? '') === \App\Reservas\CodigoDeVerificacion::CANAL_CORREO && filled($pendiente['email'] ?? null);
 @endphp
+
+@section('title', $porCorreo ? 'Verificar correo · Reservar cita' : 'Verificar teléfono · Reservar cita')
 
 @section('content')
     <div class="container reservas-cuerpo reservas-cuerpo-angosto">
         <div class="reservas-pasos" aria-label="Pasos de la reserva">
             <span class="reservas-paso-hecho"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Horario y datos</span>
-            <span class="reservas-paso-activo"><span class="reservas-paso-numero">2</span> Verificar teléfono</span>
+            <span class="reservas-paso-activo"><span class="reservas-paso-numero">2</span> {{ $porCorreo ? 'Verificar correo' : 'Verificar teléfono' }}</span>
             <span class="reservas-paso-pendiente"><span class="reservas-paso-numero">3</span> Confirmación</span>
         </div>
 
         <div class="card reservas-panel">
-            <h1 class="reservas-titulo reservas-titulo-chico">Confirma tu teléfono</h1>
+            <h1 class="reservas-titulo reservas-titulo-chico">{{ $porCorreo ? 'Confirma tu correo' : 'Confirma tu teléfono' }}</h1>
             <p class="reservas-bajada">
-                Enviamos un código de 6 dígitos a <strong>{{ $telefonoVisible }}</strong>.
+                @if ($porCorreo)
+                    Enviamos un código de 6 dígitos a <strong>{{ $pendiente['email'] }}</strong>.
+                @else
+                    Enviamos un código de 6 dígitos a <strong>{{ $telefonoVisible }}</strong>.
+                @endif
                 Escríbelo para reservar la cita.
             </p>
 
@@ -36,7 +42,7 @@
             @if ($codigoDesarrollo)
                 <div class="alert alert-warning" role="status">
                     <strong>Modo desarrollo:</strong> el código es <span class="reservas-codigo-dev">{{ $codigoDesarrollo }}</span>.
-                    En producción se envía por WhatsApp o SMS y no se muestra.
+                    En producción se envía por WhatsApp, SMS o correo y no se muestra.
                 </div>
             @endif
 

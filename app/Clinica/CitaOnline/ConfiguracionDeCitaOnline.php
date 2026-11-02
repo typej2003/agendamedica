@@ -13,9 +13,9 @@ use App\Pagos\Porcentaje;
  * Los valores por defecto viven **acá** y no en la base, porque las dos columnas de `evolucion` son
  * nullable y los consultorios que ya existen no tienen nada escrito:
  *
- *  - **sin porcentaje = 100 %**: hoy no se cobra al reservar, así que la cita online no puede arrancar
- *    cobrando una parte sin que el médico lo haya elegido. `10000` puntos base es el 100 %, como todo el
- *    dinero de la plataforma (`ReglaDeComision::porcentaje_bp`).
+ *  - **sin porcentaje = 100 %**: el cobro al reservar existe (porcentaje configurable: 100, 30 o 0),
+ *    y el consultorio que no eligió nada arranca cobrando la consulta entera. `10000` puntos base es el
+ *    100 %, como todo el dinero de la plataforma (`ReglaDeComision::porcentaje_bp`).
  *  - **sin marca = publicada**: el portal ya muestra a todo médico con horarios y no se puede vaciar de
  *    golpe el día que se despliega esta columna. El médico la apaga desde la pantalla y ahí sí queda
  *    `false`.
@@ -88,6 +88,38 @@ final class ConfiguracionDeCitaOnline
     public function evolucion(): ?Evolucion
     {
         return $this->evolucion;
+    }
+
+    // ---------------------------------------------------------------- Lo que el paciente lee antes de venir (O-52)
+
+    /** Cuántos minutos antes de la cita conviene llegar, o `null` si el médico no lo dijo. */
+    public function minutosAntes(): ?int
+    {
+        $minutos = $this->evolucion?->cita_linea_minutos_antes;
+
+        return $minutos === null ? null : max(0, (int) $minutos);
+    }
+
+    /** Cuántos acompañantes se admiten, o `null` si el médico no lo dijo (no es lo mismo que cero). */
+    public function acompanantes(): ?int
+    {
+        $acompanantes = $this->evolucion?->cita_linea_acompanantes;
+
+        return $acompanantes === null ? null : max(0, (int) $acompanantes);
+    }
+
+    /** Una línea libre de indicaciones para la cita («trae tus exámenes»), o `null`. */
+    public function indicaciones(): ?string
+    {
+        $texto = trim((string) ($this->evolucion?->cita_linea_indicaciones ?? ''));
+
+        return $texto === '' ? null : $texto;
+    }
+
+    /** ¿Hay algo de esto que contarle al paciente? */
+    public function tieneIndicacionesParaLaCita(): bool
+    {
+        return $this->minutosAntes() !== null || $this->acompanantes() !== null || $this->indicaciones() !== null;
     }
 
     /**

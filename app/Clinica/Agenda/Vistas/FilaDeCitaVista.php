@@ -381,6 +381,24 @@ final class FilaDeCitaVista
     }
 
     /**
+     * **«Cobrar la cita»** (O-53): la pantalla del mostrador con los dos caminos —pasarela con OTP o registro
+     * manual en efectivo, punto de venta o transferencia—.
+     *
+     * Se ofrece mientras haya algo que cobrar: no en una cita movida (esa fila ocurrió en otro día) ni en una
+     * ya pagada. La pantalla, si igual se llega, lo explica; y una cita sin precio también la abre, porque es
+     * donde se ofrece el cobro manual con su monto.
+     *
+     * @return array{url:string}|null
+     */
+    public function cobrarLaCita(): ?array
+    {
+        if ($this->movida() || $this->cita->estadoPago() === Cola::PAGO_PAGADA) {
+            return null;
+        }
+
+        return ['url' => route('clinica.agenda.cobro', $this->cita->id)];
+    }
+    /**
      * **«Link de pago»** (punto 3 del cobro de citas): la pantalla que genera el link público de la cita
      * para mandárselo al paciente y que pague con SyPago. La pantalla decide qué falta (precio, método) y
      * lo avisa, así que la acción se ofrece aunque la cita todavía no tenga precio: es justamente donde se
@@ -398,6 +416,25 @@ final class FilaDeCitaVista
         }
 
         return ['url' => route('clinica.agenda.link-de-pago', $this->cita->id)];
+    }
+
+    /**
+     * **«Compartir la cita»** (O-52): la pantalla con el link firmado de la ficha pública, ya con la fecha y el
+     * motivo elegidos, y su QR.
+     *
+     * Se ofrece mientras la cita sea algo que el paciente todavía puede reservar: no en una **atendida** (ya
+     * ocurrió), ni en una **movida** (esa fila es de otro día), ni en una cuyo médico no exista —sin médico no hay
+     * ficha pública—. La pantalla, si igual se llega, lo explica.
+     *
+     * @return array{url:string}|null
+     */
+    public function linkDeCompartir(): ?array
+    {
+        if ($this->movida() || $this->atendida()) {
+            return null;
+        }
+
+        return ['url' => route('clinica.agenda.link-de-cita', $this->cita->id)];
     }
 
     /** Una cita atendida ya ocurrió (y tiene la consulta colgando): no se edita. */

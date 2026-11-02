@@ -1,0 +1,76 @@
+/*
+ * El **informe de evaluación pre-operatoria** en dos páginas (O-47). Lo carga la vista previa de las hojas
+ * (`clinica/imprimir/hojas`) junto con `clinica-informe-eco.css`, que pone la hoja A4 vertical, el membrete, los
+ * bloques y el pie. Acá sólo va lo propio del informe: la lista del laboratorio, las escalas de la segunda página y
+ * el renglón del riesgo.
+ */
+
+/* La segunda página arranca siempre en hoja nueva: el primer artículo ya deja `break-after: page`. */
+.preop-hoja {
+    break-inside: auto;
+}
+
+.preop-dato {
+    margin: 0 0 1mm;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.preop-dato-etiqueta {
+    font-weight: 700;
+}
+
+/* El laboratorio: el nombre del examen a la izquierda y su resultado a la derecha, un renglón por examen. */
+.preop-lista {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.preop-lista th,
+.preop-lista td {
+    padding: .5mm 1.5mm;
+    border-bottom: .2mm solid #bbb;
+    text-align: left;
+    font-weight: 400;
+    vertical-align: top;
+}
+
+.preop-lista th {
+    width: 62%;
+}
+
+.preop-lista tr:last-child th,
+.preop-lista tr:last-child td {
+    border-bottom: 0;
+}
+
+/* Las cinco escalas de la segunda página: el rótulo corto y, debajo, el texto del escritorio. */
+.preop-escala-etiqueta {
+    margin: 0 0 .5mm;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.preop-escala-texto {
+    margin: 0;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.preop-continuacion {
+    margin: 0 0 3mm;
+    padding-bottom: 1mm;
+    border-bottom: .2mm solid #999;
+    font-size: 8pt;
+    text-align: right;
+}
+
+.preop-riesgo {
+    margin: 2mm 0 0;
+    padding: 1mm 2.5mm;
+    border: .25mm solid #444;
+    border-radius: 1mm;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: .03em;
+}

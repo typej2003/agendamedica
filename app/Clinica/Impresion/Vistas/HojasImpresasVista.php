@@ -57,7 +57,7 @@ final class HojasImpresasVista
         $actual = ModoDeLaHoja::PAGINA_GRANDE;
 
         foreach ($this->documentos as $documento) {
-            if ($documento instanceof DocumentoImpreso && $documento->informe === null && ModoDeLaHoja::seEligeLaPagina($documento->tipo)) {
+            if ($documento instanceof DocumentoImpreso && $documento->informe === null && $documento->preoperatorio === null && ModoDeLaHoja::seEligeLaPagina($documento->tipo)) {
                 $conPaginaAElegir = true;
                 $actual = ModoDeLaHoja::pagina($documento->pagina);
             }
@@ -198,6 +198,14 @@ final class HojasImpresasVista
                 foreach ($delRecipe as $hoja) {
                     $hojas[] = ['tipo' => 'recipe'] + $hoja;
                 }
+
+                continue;
+            }
+
+            // El **informe pre-operatorio** (O-47) es una hoja fija de dos páginas: no se reparte en mitades ni elige
+            // página. Una sola entrada, y el parcial `_informe-preoperatorio` pinta las dos páginas.
+            if ($documento->preoperatorio !== null) {
+                $hojas[] = ['tipo' => 'preoperatorio', 'etiqueta' => null, 'tamano' => 10, 'mitades' => [], 'documento' => $documento];
 
                 continue;
             }

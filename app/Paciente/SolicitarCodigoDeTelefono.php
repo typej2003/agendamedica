@@ -58,7 +58,8 @@ final class SolicitarCodigoDeTelefono
         }
 
         $codigo = $this->codigos->generar();
-        $envio = $this->codigos->enviar($normalizado, $codigo);
+        // El correo de la cuenta es el tercer canal (O-54), después de WhatsApp y SMS.
+        $envio = $this->codigos->enviar($normalizado, $codigo, $user->email);
 
         if (! $envio['ok']) {
             throw ValidationException::withMessages([

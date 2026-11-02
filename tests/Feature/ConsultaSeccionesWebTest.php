@@ -639,6 +639,9 @@ class ConsultaSeccionesWebTest extends TestCase
 
     public function test_el_menu_muestra_el_grupo_consulta_con_sus_items_y_abre_sus_secciones(): void
     {
+        // El catálogo completo, con la pre-factura encendida (O-45).
+        config(['clinica.facturacion.prefactura' => true]);
+
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $this->paciente($medico, 1001);
         $consulta = Consulta::create([
@@ -747,6 +750,33 @@ class ConsultaSeccionesWebTest extends TestCase
         $respuesta->assertSee('id="consulta-enfermedad"', false);
         $respuesta->assertDontSee('id="consulta-motivos"', false);
         $respuesta->assertDontSee('Elige una sección en el menú', false);
+    }
+
+    /**
+     * **O-45: con la pre-factura apagada** —el default— la sección no aparece en el menú y **no se abre por URL**:
+     * un `?seccion=prefactura` guardado en un marcador cae en el estado vacío, como cualquier sección inventada.
+     * No se enciende la bandera: se comprueba el default.
+     */
+    public function test_con_la_prefactura_apagada_la_url_no_abre_la_seccion(): void
+    {
+        $this->assertFalse(config('clinica.facturacion.prefactura'));
+
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'prefactura']));
+
+        $respuesta->assertOk();
+        // El estado vacío del shell, no la pre-factura.
+        $respuesta->assertSee('Elige una sección en el menú', false);
+        $respuesta->assertDontSee('id="consulta-prefactura"', false);
+        $respuesta->assertDontSee('Sin cargar', false);
+
+        // Y en el menú lateral del armazón no queda el ítem ni su enlace.
+        $html = $respuesta->getContent();
+        $this->assertStringNotContainsString('Pre-factura', $html);
+        $this->assertStringNotContainsString(route('clinica.consulta', [$consulta->id, 'seccion' => 'prefactura']), $html);
     }
 
     public function test_una_seccion_inventada_en_la_url_no_rompe_la_pantalla(): void

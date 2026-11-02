@@ -17,6 +17,18 @@ use Tests\TestCase;
  */
 class SeccionesPediatricasTest extends TestCase
 {
+    /**
+     * Este archivo describe el **catálogo completo** de pediatría, así que enciende la pre-factura (O-45): con la
+     * bandera apagada —el default— la sección no existe y el árbol tiene un ítem menos. Lo que ve el médico con la
+     * bandera apagada se prueba en `SeccionesDeLaConsultaTest` y en `ConsultaSeccionesWebTest`.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['clinica.facturacion.prefactura' => true]);
+    }
+
     /** @return array<int,array<string,mixed>> */
     private function items(array $seccionesPostgrados = []): array
     {

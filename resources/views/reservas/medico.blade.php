@@ -28,7 +28,7 @@
                 </p>
 
                 @if ($medico->biography)
-                    <p class="reservas-bio">{{ \Illuminate\Support\Str::limit($medico->biography, 260) }}</p>
+                    <p class="reservas-bio">{{ $medico->biography }}</p>
                 @endif
             </div>
         </header>
@@ -42,9 +42,43 @@
                         @if ($sede->address)
                             — {{ $sede->address }}
                         @endif
+                        @if ($sede->medicalCenter?->phone)
+                            <br>
+                            <a href="tel:{{ preg_replace('/[^0-9+]/', '', $sede->medicalCenter->phone) }}" class="reservas-telefono">
+                                <i class="bi bi-telephone" aria-hidden="true"></i> {{ $sede->medicalCenter->phone }}
+                            </a>
+                        @endif
                     </p>
                 @endforeach
             </div>
+        @endif
+
+        @if ($citaLinea->tieneIndicacionesParaLaCita())
+            {{-- Lo que el médico quiere que sepas antes de venir (O-52). --}}
+            <section class="reservas-aviso" aria-labelledby="antes-de-venir">
+                <h2 class="reservas-aviso-titulo" id="antes-de-venir">
+                    <i class="bi bi-info-circle" aria-hidden="true"></i> Antes de venir
+                </h2>
+                <ul class="reservas-aviso-lista">
+                    @if ($citaLinea->minutosAntes() !== null)
+                        <li>Llega <strong>{{ $citaLinea->minutosAntes() }} minutos antes</strong> de tu cita.</li>
+                    @endif
+                    @if ($citaLinea->acompanantes() !== null)
+                        <li>
+                            @if ($citaLinea->acompanantes() === 0)
+                                Esta consulta no admite acompañantes.
+                            @elseif ($citaLinea->acompanantes() === 1)
+                                Se admite <strong>un acompañante</strong>.
+                            @else
+                                Se admiten hasta <strong>{{ $citaLinea->acompanantes() }} acompañantes</strong>.
+                            @endif
+                        </li>
+                    @endif
+                    @if ($citaLinea->indicaciones() !== null)
+                        <li>{{ $citaLinea->indicaciones() }}</li>
+                    @endif
+                </ul>
+            </section>
         @endif
 
         @if (session('estado'))
@@ -82,14 +116,100 @@
                         <span class="reservas-paso-numero">1</span> Elige el horario
                     </legend>
                     <p class="reservas-ayuda">
-                        Estos son los próximos horarios con lugar. Si no te sirve ninguno, comunícate con el consultorio.
+                        Los días marcados tienen lugar. Elige uno para ver sus horarios.
+                        Si no te sirve ninguno, comunícate con el consultorio.
                     </p>
+
+                    {{-- El calendario del mes (O-52): los días con lugar son enlaces, así se usa sin JavaScript. --}}
+                    <div class="reservas-calendario">
+                        <div class="reservas-calendario-cabecera">
+                            @if ($calendario['anterior'] !== null)
+                                <a class="reservas-calendario-flecha"
+                                   href="{{ route('reservas.medico', ['medico' => $medico, 'mes' => $calendario['anterior']]) }}"
+                                   aria-label="Mes anterior">
+                                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                                </a>
+                            @else
+                                <span class="reservas-calendario-flecha reservas-calendario-flecha-muerta" aria-hidden="true">
+                                    <i class="bi bi-chevron-left"></i>
+                                </span>
+                            @endif
+
+                            <p class="reservas-calendario-mes" id="calendario-mes">{{ $calendario['titulo'] }}</p>
+
+                            @if ($calendario['siguiente'] !== null)
+                                <a class="reservas-calendario-flecha"
+                                   href="{{ route('reservas.medico', ['medico' => $medico, 'mes' => $calendario['siguiente']]) }}"
+                                   aria-label="Mes siguiente">
+                                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                                </a>
+                            @else
+                                <span class="reservas-calendario-flecha reservas-calendario-flecha-muerta" aria-hidden="true">
+                                    <i class="bi bi-chevron-right"></i>
+                                </span>
+                            @endif
+                        </div>
+
+                        <ol class="reservas-calendario-rejilla" aria-labelledby="calendario-mes">
+                            @foreach (['L', 'M', 'X', 'J', 'V', 'S', 'D'] as $letra)
+                                <li class="reservas-calendario-letra" aria-hidden="true">{{ $letra }}</li>
+                            @endforeach
+
+                            @foreach ($calendario['dias'] as $dia)
+                                @if ($dia === null)
+                                    <li class="reservas-calendario-hueco" aria-hidden="true"></li>
+                                @elseif ($dia['disponible'])
+                                    <li>
+                                        <a class="reservas-calendario-dia reservas-calendario-dia-libre {{ $dia['elegido'] ? 'reservas-calendario-dia-elegido' : '' }} {{ $dia['hoy'] ? 'reservas-calendario-dia-hoy' : '' }}"
+                                           href="{{ route('reservas.medico', ['medico' => $medico, 'mes' => $mes->format('Y-m'), 'fecha' => $dia['fecha']]) }}"
+                                           @if ($dia['elegido']) aria-current="date" @endif
+                                           aria-label="{{ \Carbon\Carbon::createFromFormat('!Y-m-d', $dia['fecha'])->locale('es')->isoFormat('D [de] MMMM') }}, con horarios">
+                                            {{ $dia['numero'] }}
+                                        </a>
+                                    </li>
+                                @else
+                                    <li>
+                                        <span class="reservas-calendario-dia reservas-calendario-dia-ocupado {{ $dia['hoy'] ? 'reservas-calendario-dia-hoy' : '' }}"
+                                              aria-disabled="true">{{ $dia['numero'] }}</span>
+                                    </li>
+                                @endif
+                            @endforeach
+                        </ol>
+                    </div>
+
+                    @if ($fechaElegida !== null)
+                        <p class="reservas-ayuda reservas-dia-elegido">
+                            Horarios del
+                            <strong>{{ \Carbon\Carbon::createFromFormat('!Y-m-d', $fechaElegida)->locale('es')->isoFormat('dddd D [de] MMMM') }}</strong>.
+                            <a href="{{ route('reservas.medico', ['medico' => $medico, 'mes' => $mes->format('Y-m')]) }}">Ver todos los próximos horarios</a>
+                        </p>
+                    @else
+                        <p class="reservas-ayuda"><strong>Próximos horarios</strong></p>
+                    @endif
+
+                    @if (($enlace['valido'] ?? false) && (($enlace['hora'] ?? null) !== null || ($enlace['motivo'] ?? null) !== null))
+                        {{-- El link que el consultorio le compartió al paciente (O-52): el horario y el motivo ya vienen elegidos. --}}
+                        <div class="alert alert-info py-2 d-flex align-items-start gap-2" role="status" data-enlace>
+                            <i class="bi bi-calendar2-check" aria-hidden="true"></i>
+                            <span>Te compartieron esta cita: revisa el horario y el motivo, y confirma con tu código.</span>
+                        </div>
+                    @elseif ($enlace['vencido'] ?? false)
+                        <div class="alert alert-warning py-2 d-flex align-items-start gap-2" role="status" data-enlace-vencido>
+                            <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                            <span>El enlace que te compartieron ya venció o no es válido. Elige el horario y el motivo acá abajo.</span>
+                        </div>
+                    @endif
 
                     <div class="reservas-opciones">
                         @foreach ($opciones as $opcion)
+                            @php
+                                // El link que compartió el consultorio (O-52): si el horario sigue existiendo, viene marcado.
+                                $elegidaPorElEnlace = ($enlace['hora'] ?? null) !== null
+                                    && $opcion->fecha === $enlace['fecha'] && $opcion->hora === $enlace['hora'];
+                            @endphp
                             <label class="reservas-opcion">
                                 <input type="radio" name="horario" value="{{ $opcion->clave() }}"
-                                       {{ old('horario') === $opcion->clave() ? 'checked' : '' }} required>
+                                       {{ old('horario') === $opcion->clave() || ($enlace['hora'] ?? null) !== null && $elegidaPorElEnlace ? 'checked' : '' }} required>
                                 <span class="reservas-opcion-contenido">
                                     <span class="reservas-opcion-dia">{{ $opcion->dia() }}</span>
                                     <span class="reservas-opcion-hora">{{ $opcion->horaLegible() }}</span>
@@ -108,7 +228,8 @@
                             <select class="form-select @error('motivo') is-invalid @enderror" id="motivo" name="motivo" required>
                                 <option value="">Elige el motivo</option>
                                 @foreach ($motivos as $motivo)
-                                    <option value="{{ $motivo->codigo }}" {{ old('motivo') === $motivo->codigo ? 'selected' : '' }}>
+                                    <option value="{{ $motivo->codigo }}"
+                                            {{ old('motivo') === $motivo->codigo || ($enlace['motivo'] ?? null) === (string) $motivo->codigo ? 'selected' : '' }}>
                                         {{ $motivo->tipo_atencion }}
                                         · {{ \App\Pagos\Centavos::formatear(\App\Pagos\Centavos::deDecimal((string) $motivo->precio), 'USD') }}
                                     </option>
@@ -129,6 +250,50 @@
                     </p>
 
                     <div class="row g-3">
+                        <div class="col-12">
+                            {{-- ¿Quién reserva? (O-52). Los campos del representante son opcionales hasta que
+                                 se elige «su representante», y en ese caso se validan en el servidor. --}}
+                            <fieldset class="reservas-quien">
+                                <legend class="form-label mb-2">¿Quién reserva?</legend>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="reservado_por" id="reservado_por_p"
+                                           value="P" {{ old('reservado_por', 'P') === 'P' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="reservado_por_p">Soy el paciente</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="reservado_por" id="reservado_por_r"
+                                           value="R" {{ old('reservado_por') === 'R' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="reservado_por_r">
+                                        Soy su representante
+                                    </label>
+                                </div>
+
+                                <div class="row g-3 mt-1">
+                                    <div class="col-md-6">
+                                        <label for="representante_nombre" class="form-label">
+                                            Tu nombre <span class="text-muted">(si eres el representante)</span>
+                                        </label>
+                                        <input type="text" class="form-control @error('representante_nombre') is-invalid @enderror"
+                                               id="representante_nombre" name="representante_nombre"
+                                               value="{{ old('representante_nombre') }}" autocomplete="name">
+                                        @error('representante_nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="representante_documento" class="form-label">
+                                            Tu documento <span class="text-muted">(si eres el representante)</span>
+                                        </label>
+                                        <input type="text" class="form-control @error('representante_documento') is-invalid @enderror"
+                                               id="representante_documento" name="representante_documento"
+                                               value="{{ old('representante_documento') }}" inputmode="numeric">
+                                        @error('representante_documento') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+
                         <div class="col-md-4">
                             <label for="cedula" class="form-label">Cédula</label>
                             <input type="text" class="form-control @error('cedula') is-invalid @enderror"

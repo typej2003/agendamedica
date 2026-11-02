@@ -168,6 +168,9 @@ class ConsultaShellVistaTest extends TestCase
 
     public function test_el_panel_tiene_los_trece_items_en_su_orden_y_con_su_tarea(): void
     {
+        // El catálogo completo, con la pre-factura encendida (O-45).
+        config(['clinica.facturacion.prefactura' => true]);
+
         // El panel del legado es el de ginecología: sin especialidad (2026-10-30) el shell muestra el núcleo de once.
         $vm = $this->vista(['especialidad' => 'ginecologia-y-obstetricia']);
         $panel = $vm->panel();
@@ -201,6 +204,9 @@ class ConsultaShellVistaTest extends TestCase
 
     public function test_el_panel_marca_disponibles_los_items_de_la_consulta_y_la_ficha(): void
     {
+        // Con la pre-factura encendida (O-45) vuelven a ser trece los ítems del catálogo completo.
+        config(['clinica.facturacion.prefactura' => true]);
+
         $vm = $this->vista(['especialidad' => 'ginecologia-y-obstetricia']);
 
         $disponibles = [];

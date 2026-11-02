@@ -168,8 +168,60 @@ class CitaOnlineConfiguracionWebTest extends TestCase
         }
     }
 
-    public function test_un_porcentaje_fuera_de_rango_no_se_guarda_y_muestra_el_error(): void
+    /**
+     * **Lo que el paciente lee antes de venir** (O-52): minutos antes, acompañantes e indicaciones. Se
+     * guardan en la fila del médico y vaciar un campo lo deja en NULL (la ficha pública deja de decirlo).
+     */
+    public function test_guarda_y_borra_lo_que_el_paciente_lee_antes_de_venir(): void
     {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $this->conContexto($user, $medico, $gineco)
+            ->post(self::URL, [
+                'porcentaje' => '0',
+                'minutos_antes' => '15',
+                'acompanantes' => '1',
+                'indicaciones' => 'Trae tus exámenes.',
+            ])
+            ->assertRedirect(route('clinica.configuracion.cita-online'));
+
+        $evolucion = Evolucion::where('reg_medico', $medico->reg_medico)->firstOrFail();
+
+        $this->assertSame(15, (int) $evolucion->cita_linea_minutos_antes);
+        $this->assertSame(1, (int) $evolucion->cita_linea_acompanantes);
+        $this->assertSame('Trae tus exámenes.', $evolucion->cita_linea_indicaciones);
+
+        // La pantalla los muestra tal como quedaron.
+        $this->conContexto($user, $medico, $gineco)->get(self::URL)
+            ->assertOk()
+            ->assertSee('Lo que el paciente ve antes de venir')
+            ->assertSee('Trae tus exámenes.');
+
+        // Vaciar los tres campos los deja en NULL, no en cero ni en cadena vacía.
+        $this->conContexto($user, $medico, $gineco)
+            ->post(self::URL, ['porcentaje' => '0', 'minutos_antes' => '', 'acompanantes' => '', 'indicaciones' => '']);
+
+        $evolucion->refresh();
+
+        $this->assertNull($evolucion->cita_linea_minutos_antes);
+        $this->assertNull($evolucion->cita_linea_acompanantes);
+        $this->assertNull($evolucion->cita_linea_indicaciones);
+    }
+
+    /** Los topes: 240 minutos y 10 acompañantes; fuera de eso, no se guarda nada. */
+    public function test_la_informacion_de_la_cita_tiene_topes(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $this->conContexto($user, $medico, $gineco)
+            ->from(self::URL)
+            ->post(self::URL, ['porcentaje' => '0', 'minutos_antes' => '241', 'acompanantes' => '11'])
+            ->assertSessionHasErrors(['minutos_antes', 'acompanantes']);
+
+        $this->assertNull(Evolucion::where('reg_medico', $medico->reg_medico)->first());
+    }
+
+    public function test_un_porcentaje_fuera_de_rango_no_se_guarda_y_muestra_el_error(): void    {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
 
         $this->conContexto($user, $medico, $gineco)
