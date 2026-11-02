@@ -53,6 +53,7 @@ return [
     'apps' => [
         'ginecoreport.exe',
         'pediareport.exe',
+        'medicalreport.exe',
     ],
 
     /*
