@@ -13,8 +13,20 @@ use Tests\TestCase;
  */
 class SeccionesDeLaConsultaTest extends TestCase
 {
+    /**
+     * Enciende la pre-factura (O-45): con la bandera apagada —el default— la sección no existe para la consulta.
+     * Los tests que describen el **catálogo completo** la encienden; el que prueba lo que ve el médico con la
+     * bandera apagada no la toca, y por eso comprueba el default de verdad.
+     */
+    private function conPrefactura(): void
+    {
+        config(['clinica.facturacion.prefactura' => true]);
+    }
+
     public function test_el_catalogo_tiene_los_trece_items_en_el_orden_del_legado(): void
     {
+        $this->conPrefactura();
+
         $todas = SeccionesDeLaConsulta::todas('ginecologia-y-obstetricia');
 
         // O-22 (2026-10-17) retiró *Exámenes* (el ítem 7): la numeración del legado **no se renumera**, así
@@ -39,6 +51,8 @@ class SeccionesDeLaConsultaTest extends TestCase
      */
     public function test_sin_especialidad_el_catalogo_es_el_del_nucleo(): void
     {
+        $this->conPrefactura();
+
         $todas = SeccionesDeLaConsulta::todas();
 
         $this->assertCount(11, $todas);
@@ -49,6 +63,8 @@ class SeccionesDeLaConsultaTest extends TestCase
 
     public function test_la_seccion_se_normaliza_contra_el_catalogo(): void
     {
+        $this->conPrefactura();
+
         $this->assertSame('motivos', SeccionesDeLaConsulta::normalizar('motivos'));
         $this->assertTrue(SeccionesDeLaConsulta::existeSeccion('recipes'));
         // La pre-factura es una sección desde F9; un valor inventado o vacío no abre ninguna.
@@ -65,6 +81,8 @@ class SeccionesDeLaConsultaTest extends TestCase
 
     public function test_el_submenu_del_menu_lateral_lleva_a_cada_seccion_y_marca_el_activo(): void
     {
+        $this->conPrefactura();
+
         $items = SeccionesDeLaConsulta::submenu(42, 'diagnostico', 'ginecologia-y-obstetricia');
 
         $this->assertCount(13, $items);
@@ -99,6 +117,8 @@ class SeccionesDeLaConsultaTest extends TestCase
 
     public function test_el_icono_y_el_estado_de_cada_item_salen_del_catalogo(): void
     {
+        $this->conPrefactura();
+
         $items = SeccionesDeLaConsulta::submenu(7, null, 'ginecologia-y-obstetricia');
 
         $this->assertSame('bi-list-check', $items[0]['icono']);
@@ -139,5 +159,64 @@ class SeccionesDeLaConsultaTest extends TestCase
         foreach (['Laboratorio', 'estudios', 'constancia', 'reposo', 'referencia', 'hospitalización', 'informe', 'dieta'] as $parte) {
             $this->assertStringContainsString($parte, $solicitudes['detalle']);
         }
+    }
+
+    /**
+     * **O-45: la pre-factura está apagada por defecto**, mientras el módulo de facturación no esté terminado. No la
+     * lista ninguna de las tres especialidades, no cuenta en «X de Y» y **no se resuelve por URL**: un
+     * `?seccion=prefactura` guardado en un marcador cae en el estado vacío como cualquier sección inventada.
+     *
+     * Este test **no enciende la bandera**: es el que comprueba el default de verdad.
+     */
+    public function test_con_la_prefactura_apagada_no_se_ofrece_ni_se_resuelve(): void
+    {
+        $this->assertFalse(config('clinica.facturacion.prefactura'), 'La bandera tiene que venir apagada del archivo.');
+
+        // Doce en ginecología (trece menos la pre-factura), trece en pediatría y trece en medicina interna.
+        $this->assertSame(12, SeccionesDeLaConsulta::total('ginecologia-y-obstetricia'));
+        $this->assertSame(12, SeccionesDeLaConsulta::disponibles('ginecologia-y-obstetricia'));
+        $this->assertSame(13, SeccionesDeLaConsulta::total('pediatria'));
+        $this->assertSame(13, SeccionesDeLaConsulta::total('medicina-interna'));
+        $this->assertSame(10, SeccionesDeLaConsulta::total());
+
+        foreach (['ginecologia-y-obstetricia', 'pediatria', 'medicina-interna'] as $especialidad) {
+            $titulos = array_column(SeccionesDeLaConsulta::todas($especialidad), 'titulo');
+            $this->assertNotContains('Pre-factura', $titulos, $especialidad);
+            $this->assertNull(SeccionesDeLaConsulta::normalizar('prefactura', $especialidad), $especialidad);
+            $this->assertNull(SeccionesDeLaConsulta::porSeccion('prefactura', $especialidad), $especialidad);
+            $this->assertFalse(SeccionesDeLaConsulta::existeSeccion('prefactura', $especialidad), $especialidad);
+        }
+
+        // El menú lateral tampoco la lleva, y el resto de los ítems sigue en su lugar.
+        $items = SeccionesDeLaConsulta::submenu(42, null, 'ginecologia-y-obstetricia');
+        $this->assertCount(12, $items);
+        $this->assertNotContains('Pre-factura', array_column($items, 'texto'));
+        $this->assertSame('Datos personales', $items[11]['texto']);
+
+        // Y una sección apagada no se puede «activar» pidiéndola: el shell se queda sin ítem activo.
+        $activos = array_filter(SeccionesDeLaConsulta::submenu(42, 'prefactura'), fn (array $item) => $item['activo']);
+        $this->assertSame([], array_values($activos));
+    }
+
+    /**
+     * **O-46: en medicina interna la evaluación pre-operatoria va detrás de Récipes**, antes de Solicitudes. Es una
+     * decisión del usuario y no la paridad con el escritorio (que la tiene al final, después de la pre-factura): el
+     * `numero` sigue siendo el 14 del legado y sólo cambia el orden del arreglo.
+     */
+    public function test_en_medicina_interna_la_evaluacion_preoperatoria_va_despues_de_recipes(): void
+    {
+        $items = SeccionesDeLaConsulta::todas('medicina-interna');
+        $titulos = array_column($items, 'titulo');
+
+        $this->assertSame(8, array_search('Récipes', $titulos, true));
+        $this->assertSame(9, array_search('Evaluación pre-operatoria', $titulos, true));
+        $this->assertSame(10, array_search('Solicitudes', $titulos, true));
+
+        // El número del legado no se toca: numera el ítem, no el orden.
+        $this->assertSame(14, $items[9]['numero']);
+        $this->assertSame(
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 10, 11, 12],
+            array_column($items, 'numero'),
+        );
     }
 }

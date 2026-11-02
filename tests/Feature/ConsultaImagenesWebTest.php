@@ -269,7 +269,9 @@ class ConsultaImagenesWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Pre-factura', false);
+        // El panel sigue pintando sus ítems (con la pre-factura apagada por defecto desde O-45, el último del
+        // árbol de ginecología es Datos personales; Récipes es un ítem que siempre está).
+        $respuesta->assertSee('Récipes', false);
         // O-22: *Exámenes* salió del panel; la sección de evaluación física sigue ofrecida.
         $respuesta->assertDontSee('?seccion=examenes', false);
         $respuesta->assertSee('?seccion=evaluacion', false);

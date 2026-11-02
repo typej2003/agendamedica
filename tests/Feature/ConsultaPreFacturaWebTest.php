@@ -32,6 +32,17 @@ class ConsultaPreFacturaWebTest extends TestCase
 {
     use DatabaseTransactions;
 
+    /**
+     * La pre-factura está **apagada por defecto** (O-45): este archivo prueba el módulo **encendido**, que es como
+     * queda cuando el módulo de facturación cierre y se active la bandera.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['clinica.facturacion.prefactura' => true]);
+    }
+
     /** @return array{0:User, 1:Medico, 2:Specialty} */
     private function medicoConAcceso(string $especialidad = 'pediatria'): array
     {

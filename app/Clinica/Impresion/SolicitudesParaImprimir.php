@@ -29,6 +29,7 @@ use App\Clinica\Consulta\ReposoDeLaConsulta;
 use App\Clinica\Consulta\ResumenMedico;
 use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\ResumenMedicoDeLaConsulta;
+use App\Clinica\Consulta\SeccionesDeLaConsulta;
 use App\Clinica\Consulta\TextoDeLaConsulta;
 use App\Clinica\Embarazo\InformePrenatal;
 use App\Models\PreNatalDesarrolloFino;
@@ -445,8 +446,12 @@ final class SolicitudesParaImprimir
             ];
         }
 
-        // La **pre-factura** (F9): se ofrece si tiene algún concepto. La lista de la cita lleva sólo la cuenta, no los montos.
-        $conceptos = $this->preFacturas->de($consulta)->count();
+        // La **pre-factura** (F9): se ofrece si tiene algún concepto **y si la sección está encendida** (O-45: con la
+        // bandera apagada el documento no se ofrece y lo cargado queda intacto). La lista de la cita lleva sólo la
+        // cuenta, no los montos.
+        $conceptos = SeccionesDeLaConsulta::oculta(SeccionesDeLaConsulta::SECCION_PREFACTURA)
+            ? 0
+            : $this->preFacturas->de($consulta)->count();
         if ($conceptos > 0) {
             $disponibles[] = [
                 'clave' => DocumentoImpreso::PREFACTURA,
@@ -503,6 +508,12 @@ final class SolicitudesParaImprimir
      */
     private function armarDocumento(Consulta $consulta, int $pacienteId, array $registros, string $clave, ?int $gesta = null): ?DocumentoImpreso
     {
+        // La **pre-factura** con la sección apagada (O-45) tampoco se arma: pedirla por URL directa cae en la hoja de
+        // «no hay nada que imprimir», igual que un documento que la consulta no tiene. No se ofrece y no se sirve.
+        if ($clave === DocumentoImpreso::PREFACTURA && SeccionesDeLaConsulta::oculta(SeccionesDeLaConsulta::SECCION_PREFACTURA)) {
+            return null;
+        }
+
         $paciente = Paciente::find($pacienteId);
 
         if ($paciente === null) {

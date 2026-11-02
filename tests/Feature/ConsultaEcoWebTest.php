@@ -194,7 +194,7 @@ class ConsultaEcoWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($this->urlSeccion($consulta));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Pre-factura');
+        $respuesta->assertSee('Datos personales');
 
         // El contenedor con su tipo y el formulario con sus bloques.
         $respuesta->assertSee('Eco ginecológico');
@@ -228,11 +228,11 @@ class ConsultaEcoWebTest extends TestCase
         $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Pre-factura');
+        $respuesta->assertSee('Datos personales');
         $respuesta->assertSee('Estudio ecográfico');
         // El enlace del panel es el de la sección a secas: el tipo por defecto es el ginecológico.
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => ConsultaShellVista::SECCION_ESTUDIO]), false);
-        // El control de embarazo (WEB-6.6) también está disponible, y desde F9 la pre-factura: ningún ítem va deshabilitado.
+        // El control de embarazo (WEB-6.6) también está disponible y, desde O-45, la pre-factura no se ofrece: ningún ítem va deshabilitado.
         $respuesta->assertSee('Control de embarazo');
         $respuesta->assertDontSee('aria-disabled="true"', false);
     }

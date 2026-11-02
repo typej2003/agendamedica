@@ -51,4 +51,23 @@ return [
         'url' => env('VERIFICACION_URL'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Facturación (O-45)
+    |--------------------------------------------------------------------------
+    |
+    | La **pre-factura** de la consulta existe y funciona, pero el módulo de facturación todavía no está
+    | terminado. Con la bandera **apagada** —el default— la sección no aparece en el árbol de ninguna
+    | especialidad, no se resuelve por URL (cae en el estado vacío del shell), no cuenta en «X de Y» y su
+    | documento no se ofrece para imprimir. Lo ya cargado en `his_con_pre_factura` queda intacto.
+    |
+    | Encenderla cuando cierre el módulo es cambiar este valor (`FACTURACION_PREFACTURA=true`), no desandar
+    | código.
+    |
+    */
+
+    'facturacion' => [
+        'prefactura' => env('FACTURACION_PREFACTURA', false),
+    ],
+
 ];

@@ -230,7 +230,7 @@ class SubespecialidadesTest extends TestCase
 
         foreach (['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física',
             'Exámenes/Estudios', 'Inmunizaciones', 'Diagnóstico', 'Alimentación', 'Evolución', 'Récipes',
-            'Solicitudes', 'Datos del paciente', 'Representante', 'Pre-factura'] as $item) {
+            'Solicitudes', 'Datos del paciente', 'Representante'] as $item) {
             $this->assertStringContainsString($item, $html, "Falta «{$item}» en el menú de pediatría.");
         }
 

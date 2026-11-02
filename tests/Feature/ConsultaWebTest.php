@@ -452,7 +452,7 @@ class ConsultaWebTest extends TestCase
         foreach ([
             'Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física',
             'Estudio ecográfico', 'Control de embarazo', 'Exámenes', 'Diagnóstico', 'Evolución',
-            'Récipes', 'Solicitudes', 'Datos personales', 'Pre-factura',
+            'Récipes', 'Solicitudes', 'Datos personales',
         ] as $item) {
             $respuesta->assertSee($item, false);
         }

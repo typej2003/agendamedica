@@ -290,7 +290,7 @@ class ConsultaRecipesWebTest extends TestCase
 
         $panel = $this->conContexto($user, $medico, $gineco)->actingAs($user)->get(route('clinica.consulta', $consulta->id));
         $panel->assertOk();
-        $panel->assertSee('Pre-factura', false);
+        $panel->assertSee('Solicitudes', false);
         $panel->assertSee('seccion=recipes', false);
         // Desde F9 (la pre-factura) no falta ninguno: el grupo «Consulta» del menú no dibuja ítems deshabilitados.
         $this->assertSame(0, substr_count($panel->getContent(), 'aria-disabled="true"'));

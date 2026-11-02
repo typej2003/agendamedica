@@ -173,7 +173,7 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
 
         $this->como($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id))
             ->assertOk()
-            ->assertSee('Pre-factura', false)
+            ->assertSee('Solicitudes', false)
             // El ítem de Solicitudes está en el grupo «Consulta» del menú; su detalle (que incluye laboratorio,
             // estudios, constancia, reposo, referencia, hospitalización, informe y dieta) vive en el catálogo y lo
             // fija `Unit/Clinica/SeccionesDeLaConsultaTest`.
