@@ -105,7 +105,7 @@ class MedicinaInternaSyncTest extends TestCase
     public function test_la_carga_inicial_guarda_el_ekg_el_analisis_evolutivo_y_la_consulta(): void
     {
         $carga = $this->post_('carga-inicial/iniciar', ['reg_medico' => self::REG_MI, 'tablas' => [
-            'pacientes' => 1, 'consultas' => 1, 'ekg' => 1, 'datos_grafica' => 1, 'pre_trombo' => 1,
+            'pacientes' => 1, 'consultas' => 1, 'cola' => 1, 'ekg' => 1, 'datos_grafica' => 1, 'pre_trombo' => 1,
         ]])->assertOk();
         $id = $carga->json('carga_id');
 
@@ -119,6 +119,9 @@ class MedicinaInternaSyncTest extends TestCase
         ]);
         $lote('consultas', [
             'numhistoria' => 1, 'nroconsulta' => 1, 'fecha' => '2026-10-01', 'tem_oral' => 36.8, 'funcionae' => 'CONSERVADO',
+        ]);
+        $lote('cola', [
+            'numhistoria' => 1, 'fecha' => '2026-10-01', 'hora_ini' => null, 'motivo' => 'CONTROL',
         ]);
         $lote('ekg', [
             'numhistoria' => 1, 'numconsulta' => 1, 'ritmo' => 'SINUSAL', 'fc' => '72', 'conclusiones' => 'EKG NORMAL',
@@ -137,5 +140,10 @@ class MedicinaInternaSyncTest extends TestCase
         $consulta = DB::table('consultas')->where('reg_medico', self::REG_MI)->first();
         $this->assertEqualsWithDelta(36.8, (float) $consulta->tem_oral, 0.0001);
         $this->assertSame('CONSERVADO', $consulta->funcionae);
+
+        // La agenda del internista es por orden de llegada: la cita puede no tener hora.
+        $cita = DB::table('cola')->where('reg_medico', self::REG_MI)->first();
+        $this->assertNotNull($cita, 'la cita sin hora tiene que entrar en la carga inicial');
+        $this->assertNull($cita->hora_ini);
     }
 }

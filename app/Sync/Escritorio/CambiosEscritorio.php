@@ -359,13 +359,10 @@ class CambiosEscritorio
             throw new RechazoCambio('cola sin fecha');
         }
         // La hora viene en la clave de las bases cuya clave primaria es `fecha` + `hora_ini` y en la fila
-        // en las demás: en pediatría la clave primaria es `fecha` + `numhistoria` (trampa 109).
+        // en las demás: en pediatría y en medicina interna la clave primaria es `fecha` + `numhistoria`
+        // (trampa 109). Puede no haber hora: la agenda del internista es por orden de llegada y el
+        // escritorio la deja nula (`cola.hora_ini` admite NULL desde el 2026-11-02).
         $hora = $this->horaDelCambio($clave, $fila);
-        if ($hora === null) {
-            // `cola.hora_ini` no es nula en el API (el escritorio la completa al agendar): sin hora la
-            // cita no se puede identificar ni guardar, y el rechazo lo dice en el log.
-            throw new RechazoCambio('cola sin fecha/hora_ini');
-        }
 
         $cita = $this->citaDelCambio($carga, $clave, $this->numhistoriaDelCambio($clave, $fila));
 
@@ -384,7 +381,9 @@ class CambiosEscritorio
         $datos = $this->traducir($carga, $this->tablas->filtrar('cola', $delEscritorio, $ignoradas));
         $datos = array_diff_key($datos, array_flip($delApp['columnas']));
         $datos['reg_medico'] = $carga->reg_medico;
-        $datos['clave_escritorio'] = TablasLegado::claveCola($clave['fecha'], $hora);
+        // La clave del escritorio de una cita es `fecha|hora_ini`: sin hora no hay clave (la cita se
+        // reconoce por su fecha y su historia, que es la clave primaria de esas bases).
+        $datos['clave_escritorio'] = $hora === null ? null : TablasLegado::claveCola($clave['fecha'], $hora);
         $datos['updated_at'] = now();
 
         if ($cita) {
