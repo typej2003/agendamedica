@@ -37,8 +37,14 @@ class CumpleanosVistaTest extends TestCase
         return new Cumpleano($modelo, Carbon::parse('2026-10-10'), $exacto);
     }
 
-    private function vista(array $cumpleanos = [], array $enviadosEl = [], string $canal = Canal::CORREO, string $plantilla = ''): CumpleanosVista
-    {
+    private function vista(
+        array $cumpleanos = [],
+        array $enviadosEl = [],
+        string $canal = Canal::CORREO,
+        string $plantilla = '',
+        array $fallidosEl = [],
+        bool $smsDisponible = true
+    ): CumpleanosVista {
         return new CumpleanosVista(
             Carbon::parse('2026-10-10'),
             new Collection($cumpleanos),
@@ -48,7 +54,40 @@ class CumpleanosVistaTest extends TestCase
             'Dr. Carlos Mendoza',
             new MensajeDeCumpleanos(),
             $enviadosEl,
+            $fallidosEl,
+            null,
+            $smsDisponible,
         );
+    }
+
+    /** **El canal efectivo es el mismo que usa el comando** (O-51): con el SMS guardado y sin proveedor, cae al recomendado. */
+    public function test_con_el_sms_guardado_y_sin_proveedor_el_canal_efectivo_es_el_recomendado(): void
+    {
+        $vm = $this->vista([$this->cumpleano()], [], Canal::SMS, '', [], false);
+
+        $this->assertSame(Canal::CORREO, $vm->canalEfectivo());
+        $this->assertTrue($vm->canalGuardadoNoDisponible());
+
+        $sms = collect($vm->opcionesDeCanal())->firstWhere('valor', Canal::SMS);
+        $this->assertFalse($sms['disponible']);
+        $this->assertFalse($sms['elegido']);
+
+        $correo = collect($vm->opcionesDeCanal())->firstWhere('valor', Canal::CORREO);
+        $this->assertTrue($correo['elegido']);
+    }
+
+    /** El fallo del día se ve en la fila: estado «Falló» y el motivo del proveedor, no un JSON. */
+    public function test_la_fila_muestra_el_motivo_del_fallo(): void
+    {
+        $vm = $this->vista([$this->cumpleano()], [], Canal::CORREO, '', [
+            1 => ['momento' => '2026-10-10 09:03:00', 'canal' => Canal::CORREO, 'motivo' => 'Connection refused'],
+        ]);
+
+        $fila = $vm->filas()[0];
+
+        $this->assertStringStartsWith('Falló', $fila['estado']['texto']);
+        $this->assertSame('aviso', $fila['estado']['tono']);
+        $this->assertSame('Por Correo: Connection refused', $fila['fallo']);
     }
 
     public function test_el_subtitulo_dice_el_dia_el_conteo_y_el_medico(): void

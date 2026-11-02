@@ -14,6 +14,7 @@ use App\Models\Evolucion;
 use App\Models\NotificacionCumple;
 use App\Notificaciones\Canal;
 use App\Notificaciones\ExcepcionDeEnvio;
+use App\Services\SmsService;
 use App\Support\HoraLocal;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
@@ -89,6 +90,14 @@ class CumpleanosController extends Controller
 
         $activo = (bool) ($datos['enviar'] ?? false);
 
+        // El SMS depende de que el servidor tenga proveedor (O-55): si no lo tiene, no se puede dejar
+        // guardado como canal, porque el envío automático fallaría todas las mañanas.
+        if ($datos['canal'] === Canal::SMS && ! app(SmsService::class)->configurado()) {
+            return back()->withInput()->withErrors([
+                'canal' => 'El servidor no tiene proveedor de SMS configurado. Elige correo o WhatsApp.',
+            ]);
+        }
+
         $evolucion = Evolucion::firstOrNew(['reg_medico' => $contexto['reg_medico']]);
         $evolucion->enviar_cumpleanos = $activo ? 1 : null;
         $evolucion->canal_cumpleanos = $datos['canal'];
@@ -142,6 +151,12 @@ class CumpleanosController extends Controller
             return back()->with('error', 'Elige uno de los canales de envío.');
         }
 
+        // El SMS sin proveedor no llega a intentarse (O-51): el servidor no puede mandarlo y el mensaje de
+        // error del proveedor confundiría al médico. Se dice qué hacer.
+        if ($canal === Canal::SMS && ! app(SmsService::class)->configurado()) {
+            return back()->with('error', 'El envío por SMS no está configurado en el servidor. Elige correo o WhatsApp en la configuración.');
+        }
+
         $cumpleano = $this->cumpleanos->delMedico($contexto['reg_medico'], $dia)
             ->first(fn ($c) => $c->pacienteId() === (int) $datos['paciente']);
 
@@ -186,8 +201,12 @@ class CumpleanosController extends Controller
             (string) ($contexto['medico']->nombreMostrar ?? ''),
             $this->mensajes,
             $this->registro->cuandoSeSaludo($dia, $cumpleanos->map(fn ($c) => $c->pacienteId())->all()),
+            // El motivo del último intento fallido del día (O-51): sin esto, «falló» y «no se mandó» se ven igual.
+            $this->registro->fallidosDe($dia, $cumpleanos->map(fn ($c) => $c->pacienteId())->all()),
             // «Editar el mensaje» (WEB-8.4) sólo para quien puede entrar a esa pantalla: la secretaría no escribe las palabras del médico.
             $puedeEditarElMensaje ? route('clinica.mensajes') : null,
+            // O-55: sin proveedor de SMS el canal no se ofrece ni se puede elegir.
+            app(SmsService::class)->configurado(),
         );
     }
 }

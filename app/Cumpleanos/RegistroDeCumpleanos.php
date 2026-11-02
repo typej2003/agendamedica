@@ -63,6 +63,21 @@ class RegistroDeCumpleanos
     }
 
     /**
+     * **El intento de hoy**, sea exitoso o fallido: la fila que existe para ese paciente y ese cumpleaños.
+     *
+     * Es lo que usa el envío para no inventar un estado cuando el índice único choca (O-51): devuelve lo
+     * que hay registrado, que puede ser un intento fallido, en vez de fabricar un «enviada».
+     */
+    public function intentoDe(int $pacienteId, CarbonInterface $fecha): ?NotificacionCumple
+    {
+        return NotificacionCumple::query()
+            ->where('paciente_id', $pacienteId)
+            ->whereDate('fecha_cumple', $fecha->toDateString())
+            ->latest('id')
+            ->first();
+    }
+
+    /**
      * ¿Este error de base es el choque contra el índice único de `notificaciones_cumple`?
      *
      * Laravel 8 no tiene `UniqueConstraintViolationException` (llega en el 9), así que hay que mirar el
@@ -111,6 +126,52 @@ class RegistroDeCumpleanos
                 (int) $notificacion->paciente_id => (string) $notificacion->created_at,
             ])
             ->all();
+    }
+
+    /**
+     * **El último intento fallido** de cada paciente en esa fecha, con su motivo ya legible (O-51): es lo
+     * que la pantalla muestra debajo del estado para que un saludo que no salió no se vea igual que uno
+     * que nunca se mandó.
+     *
+     * Se toma el `id` más alto de los fallidos —el intento más reciente del día— y se traduce la
+     * `respuesta` cruda con `MotivoDelFallo`. El motivo puede venir en `null` si el proveedor no dijo nada
+     * útil: la fila igual dice que falló y a qué hora.
+     *
+     * @param  iterable<int>  $pacienteIds
+     * @return array<int,array{momento:string, canal:string, motivo:?string}>
+     */
+    public function fallidosDe(CarbonInterface $fecha, iterable $pacienteIds): array
+    {
+        $ids = Collection::make($pacienteIds)
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $filas = NotificacionCumple::query()
+            ->whereDate('fecha_cumple', $fecha->toDateString())
+            ->where('estado', NotificacionCumple::ESTADO_FALLIDA)
+            ->whereIn('paciente_id', $ids)
+            ->orderBy('id')
+            ->get(['paciente_id', 'canal', 'respuesta', 'updated_at']);
+
+        $fallidos = [];
+
+        // Ordenado por `id`: el último que se escribió es el que manda. La hora es la del último intento
+        // (`updated_at`), que en la primera escritura es la misma que la de la fila.
+        foreach ($filas as $fila) {
+            $fallidos[(int) $fila->paciente_id] = [
+                'momento' => (string) $fila->updated_at,
+                'canal'   => (string) $fila->canal,
+                'motivo'  => MotivoDelFallo::de($fila->respuesta),
+            ];
+        }
+
+        return $fallidos;
     }
 
     /**

@@ -60,12 +60,22 @@
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="canal"
                                    id="canal-{{ $canal['valor'] }}" value="{{ $canal['valor'] }}"
-                                   {{ $canal['elegido'] ? 'checked' : '' }}>
+                                   {{ $canal['elegido'] ? 'checked' : '' }}
+                                   @if (! $canal['disponible']) disabled @endif>
                             <label class="form-check-label" for="canal-{{ $canal['valor'] }}">
                                 {{ $canal['texto'] }}@if ($canal['porDefecto']) <span class="texto-tenue small">(recomendado)</span>@endif
+                                @if (! $canal['disponible'])
+                                    <span class="texto-tenue small d-block">{{ $canal['nota'] }}</span>
+                                @endif
                             </label>
                         </div>
                     @endforeach
+                    @if ($vm->canalGuardadoNoDisponible())
+                        <p class="alert alert-warning py-2 mt-2 mb-0 small">
+                            <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                            El canal guardado no está disponible en el servidor: elige correo o WhatsApp y guarda.
+                        </p>
+                    @endif
                     <p class="form-text mb-0">
                         El correo es el recomendado para un envío que nadie mira: no se cobra por mensaje y lleva el
                         texto tal cual. {{ $vm->ayudaDelCanal('whatsapp') }}
@@ -153,6 +163,13 @@
 
                         <td data-etiqueta="Saludo">
                             <x-ui.estado :tono="$fila['estado']['tono']" :icono="$fila['estado']['icono']">{{ $fila['estado']['texto'] }}</x-ui.estado>
+                            {{-- O-51: por qué falló el último intento, para no confundirlo con «no se mandó». --}}
+                            @if ($fila['fallo'])
+                                <p class="texto-tenue small mb-0 mt-1">
+                                    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                                    {{ $fila['fallo'] }}
+                                </p>
+                            @endif
                         </td>
 
                         <td class="celda-acciones text-end">
