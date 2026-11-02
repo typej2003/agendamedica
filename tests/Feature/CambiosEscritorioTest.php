@@ -342,6 +342,37 @@ class CambiosEscritorioTest extends TestCase
         $this->assertNotNull(Cola::find($primera->id), 'la de la historia 1 sigue');
     }
 
+    /**
+     * **Medicina interna** agenda por orden de llegada: la cita puede nacer **sin hora** (3.742 de
+     * 19.428 en la base real del internista) y su clave primaria es `fecha` + `numhistoria`. Se guarda
+     * con `hora_ini` nula y se reconoce por la fecha y la historia, no por la hora.
+     */
+    public function test_una_cita_sin_hora_se_guarda_se_edita_y_se_borra_por_fecha_e_historia(): void
+    {
+        $this->subir([[
+            'id' => 201, 'tabla' => 'cola', 'op' => 'I', 'fecha' => '2026-10-03 09:00:00',
+            'clave' => ['fecha' => '2026-10-03', 'numhistoria' => '1'],
+            'fila' => ['fecha' => '2026-10-03', 'hora_ini' => null, 'numhistoria' => 1, 'motivo' => 'CONTROL'],
+        ]]);
+
+        $cita = Cola::where('reg_medico', self::REG)->whereDate('fecha', '2026-10-03')->firstOrFail();
+        $this->assertNull($cita->hora_ini);
+        $this->assertNull($cita->clave_escritorio, 'sin hora no hay clave del escritorio');
+
+        $this->subir([[
+            'id' => 202, 'tabla' => 'cola', 'op' => 'U', 'fecha' => '2026-10-03 09:05:00',
+            'clave' => ['fecha' => '2026-10-03', 'numhistoria' => '1'],
+            'fila' => ['fecha' => '2026-10-03', 'hora_ini' => null, 'numhistoria' => 1, 'motivo' => 'EDITADA'],
+        ]]);
+        $this->assertSame('EDITADA', (string) $cita->fresh()->motivo);
+
+        $this->subir([[
+            'id' => 203, 'tabla' => 'cola', 'op' => 'D', 'fecha' => '2026-10-03 10:00:00',
+            'clave' => ['fecha' => '2026-10-03', 'numhistoria' => '1'],
+        ]]);
+        $this->assertNull(Cola::find($cita->id));
+    }
+
     /** Una cita nueva a una hora que **ya** tiene otro paciente no puede pisarla: son dos filas. */
     public function test_una_cita_nueva_de_pediatria_a_la_misma_hora_no_pisa_la_del_otro_paciente(): void
     {
@@ -373,17 +404,17 @@ class CambiosEscritorioTest extends TestCase
     }
 
     /**
-     * `cola.hora_ini` no es nula en el API (el escritorio la completa al agendar), así que una cita sin
-     * hora no se puede guardar: el rechazo lo dice, en vez de morir con un error de la base.
+     * Sin hora **y** sin historia no se puede saber qué cita es (ni crearla): el rechazo lo dice, en vez
+     * de morir con un error de la base. Medicina interna no manda hora, pero sí la historia de la cita.
      */
-    public function test_una_cita_sin_hora_se_rechaza_con_un_mensaje_claro(): void
+    public function test_una_cita_sin_hora_ni_historia_se_rechaza_con_un_mensaje_claro(): void
     {
         $respuesta = $this->subir([['id' => 107, 'tabla' => 'cola', 'op' => 'I', 'fecha' => '2026-10-02 10:00:00',
-            'clave' => ['fecha' => '2026-10-07', 'numhistoria' => '1'],
-            'fila' => ['fecha' => '2026-10-07', 'numhistoria' => 1, 'motivo' => 'SIN HORA']]]);
+            'clave' => ['fecha' => '2026-10-07'],
+            'fila' => ['fecha' => '2026-10-07', 'motivo' => 'SIN HORA NI HISTORIA']]]);
 
-        $this->assertStringContainsString('107:cola sin fecha/hora_ini', (string) $respuesta->json('rechazados'));
-        $this->assertSame(0, Cola::where('reg_medico', self::REG)->where('motivo', 'SIN HORA')->count());
+        $this->assertStringContainsString('107:cola sin fecha/hora_ini ni numhistoria', (string) $respuesta->json('rechazados'));
+        $this->assertSame(0, Cola::where('reg_medico', self::REG)->where('motivo', 'SIN HORA NI HISTORIA')->count());
     }
 
     /** La cita del setUp (historia 1), que comparte clave con la gemela. */
