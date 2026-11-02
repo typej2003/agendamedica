@@ -47,6 +47,40 @@
 
             <hr class="my-3">
 
+            {{-- Lo que el paciente lee en el portal antes de venir (O-52). Todo opcional. --}}
+            <div class="row g-3" id="indicaciones-de-la-cita">
+                <div class="col-12">
+                    <h3 class="h6 mb-1">
+                        <i class="bi bi-info-circle" aria-hidden="true"></i> Lo que el paciente ve antes de venir
+                    </h3>
+                    <p class="form-text mb-0">
+                        Se muestra en tu ficha del portal de reservas. Si lo dejas vacío, no aparece nada.
+                    </p>
+                </div>
+
+                <x-ui.campo etiqueta="Minutos antes" for="minutos_antes" class="col-md-3"
+                            ayuda="Cuánto antes conviene llegar.">
+                    <input type="number" class="form-control" id="minutos_antes" name="minutos_antes"
+                           min="0" max="240" step="1" inputmode="numeric"
+                           value="{{ old('minutos_antes', $vm->minutosAntes()) }}">
+                </x-ui.campo>
+
+                <x-ui.campo etiqueta="Acompañantes" for="acompanantes" class="col-md-3"
+                            ayuda="Cuántos se admiten. 0 es ninguno.">
+                    <input type="number" class="form-control" id="acompanantes" name="acompanantes"
+                           min="0" max="10" step="1" inputmode="numeric"
+                           value="{{ old('acompanantes', $vm->acompanantes()) }}">
+                </x-ui.campo>
+
+                <x-ui.campo etiqueta="Indicaciones" for="indicaciones" class="col-md-6"
+                            ayuda="Por ejemplo: trae tus exámenes o tu cédula.">
+                    <input type="text" class="form-control" id="indicaciones" name="indicaciones"
+                           maxlength="255" value="{{ old('indicaciones', $vm->indicaciones()) }}">
+                </x-ui.campo>
+            </div>
+
+            <hr class="my-3">
+
             @if ($referencia = $vm->referencia())
                 {{-- Referencia con un motivo real del médico: no inventa un precio de ejemplo. --}}
                 <div class="border rounded p-3 bg-body-tertiary" id="referencia-de-precio">

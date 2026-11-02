@@ -23,6 +23,18 @@
                     <dt>Paciente</dt>
                     <dd>{{ $reserva['paciente'] }}</dd>
                 </div>
+                @if (! empty($reserva['representante_nombre']))
+                    {{-- La reserva la sacó un representante (O-52): el consultorio sabe con quién hablar. --}}
+                    <div>
+                        <dt>Reservada por</dt>
+                        <dd>
+                            {{ $reserva['representante_nombre'] }}
+                            @if (! empty($reserva['representante_documento']))
+                                <span class="text-muted">· C.I. {{ $reserva['representante_documento'] }}</span>
+                            @endif
+                        </dd>
+                    </div>
+                @endif
                 <div>
                     <dt>Médico</dt>
                     <dd>{{ $reserva['medico'] }}</dd>

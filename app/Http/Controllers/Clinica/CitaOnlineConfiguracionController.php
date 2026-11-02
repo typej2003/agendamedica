@@ -49,17 +49,33 @@ class CitaOnlineConfiguracionController extends Controller
         $datos = $request->validate([
             'porcentaje' => ['required', 'numeric', 'min:0', 'max:100'],
             'publicar_agenda' => ['nullable', 'boolean'],
+            // Lo que el paciente lee en el portal antes de venir (O-52). Todo opcional: sin configurar, la
+            // ficha pública no dice nada de esto.
+            'minutos_antes' => ['nullable', 'integer', 'min:0', 'max:240'],
+            'acompanantes' => ['nullable', 'integer', 'min:0', 'max:10'],
+            'indicaciones' => ['nullable', 'string', 'max:255'],
         ], [
             'porcentaje.required' => 'Indica el porcentaje que se cobra al reservar.',
             'porcentaje.numeric' => 'El porcentaje tiene que ser un número.',
             'porcentaje.min' => 'El porcentaje no puede ser menor que 0.',
             'porcentaje.max' => 'El porcentaje no puede ser mayor que 100.',
             'publicar_agenda.boolean' => 'La casilla de publicación no es válida.',
+            'minutos_antes.integer' => 'Los minutos antes tienen que ser un número entero.',
+            'minutos_antes.min' => 'Los minutos antes no pueden ser negativos.',
+            'minutos_antes.max' => 'Los minutos antes no pueden pasar de 240.',
+            'acompanantes.integer' => 'Los acompañantes tienen que ser un número entero.',
+            'acompanantes.min' => 'Los acompañantes no pueden ser negativos.',
+            'acompanantes.max' => 'Los acompañantes no pueden pasar de 10.',
+            'indicaciones.max' => 'Las indicaciones no pueden pasar de 255 caracteres.',
         ]);
 
         $evolucion = Evolucion::firstOrNew(['reg_medico' => $contexto['reg_medico']]);
         $evolucion->porcentaje_cita_online_bp = ConfiguracionDeCitaOnline::puntosBaseDe($datos['porcentaje']);
         $evolucion->publicar_agenda = $request->boolean('publicar_agenda');
+        // Vaciar un campo lo deja en NULL: la ficha pública vuelve a no decir nada de eso.
+        $evolucion->cita_linea_minutos_antes = $this->enteroONulo($datos['minutos_antes'] ?? null);
+        $evolucion->cita_linea_acompanantes = $this->enteroONulo($datos['acompanantes'] ?? null);
+        $evolucion->cita_linea_indicaciones = trim((string) ($datos['indicaciones'] ?? '')) ?: null;
 
         // `clave` es NOT NULL en el esquema legado sin default: una fila nueva de un médico que nunca
         // guardó su configuración rompería el insert (misma trampa que en `CumpleanosController`).
@@ -82,5 +98,11 @@ class CitaOnlineConfiguracionController extends Controller
             ->where('precio', '>', 0)
             ->orderBy('tipo_atencion')
             ->first();
+    }
+
+    /** Un entero del formulario, o `null` si viene vacío (vaciar el campo borra el dato, no lo pone en cero). */
+    private function enteroONulo(mixed $valor): ?int
+    {
+        return $valor === null || $valor === '' ? null : (int) $valor;
     }
 }

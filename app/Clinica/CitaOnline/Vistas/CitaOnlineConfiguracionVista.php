@@ -44,6 +44,24 @@ final class CitaOnlineConfiguracionVista
         return $this->configuracion->publicaAgenda();
     }
 
+    /** Los minutos antes de la cita que el paciente lee en el portal (O-52), o `''` si no hay. */
+    public function minutosAntes(): string
+    {
+        return (string) ($this->configuracion->minutosAntes() ?? '');
+    }
+
+    /** Los acompañantes que se admiten, o `''` si no hay configurado. */
+    public function acompanantes(): string
+    {
+        return (string) ($this->configuracion->acompanantes() ?? '');
+    }
+
+    /** La línea de indicaciones para la cita, o `''`. */
+    public function indicaciones(): string
+    {
+        return (string) ($this->configuracion->indicaciones() ?? '');
+    }
+
     public function urlGuardar(): string
     {
         return route('clinica.configuracion.cita-online.guardar');

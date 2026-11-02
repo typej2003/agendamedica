@@ -62,6 +62,40 @@ final class DisponibilidadPublica
     }
 
     /**
+     * **La agenda de un rango de días, día por día** (O-52): lo que necesita el calendario del portal para
+     * marcar los días con lugar y, del día elegido, sus horarios.
+     *
+     * Se resuelve en **una sola pasada**: 31 días por defecto, que es el mes que muestra el calendario. Los
+     * días se piden al mismo `lugaresDelDia` del chatbot, así que lo que el calendario marca es exactamente
+     * lo que después se puede reservar (y `opcionEn` lo vuelve a comprobar al confirmar).
+     *
+     * @return array<string,array<int,OpcionDeReserva>> fecha (`Y-m-d`) => opciones de ese día; los días sin
+     *                                                   lugar no aparecen en el mapa
+     */
+    public function agendaDelRango(Medico $medico, int $dias = 31, ?Carbon $desde = null): array
+    {
+        $regMedico = $medico->regMedicoPrincipal();
+
+        if ($regMedico === null) {
+            return [];
+        }
+
+        $desde ??= FechaDelConsultorio::hoyComoFecha();
+        $agenda = [];
+
+        for ($i = 0; $i < $dias; $i++) {
+            $dia = $desde->copy()->addDays($i);
+            $opciones = $this->lugaresDelDia($regMedico, $medico, $dia);
+
+            if ($opciones !== []) {
+                $agenda[$dia->toDateString()] = $opciones;
+            }
+        }
+
+        return $agenda;
+    }
+
+    /**
      * **La comprobación del horario elegido**: ¿sigue ofreciéndose ese bloque (hora y sede) con la agenda de
      * este momento y con la anticipación mínima? Si no (se llenó, se movió, quedó a menos de 24 h), la
      * reserva no se crea.

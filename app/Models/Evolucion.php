@@ -25,6 +25,8 @@ class Evolucion extends Model
         'sms_sexo_medico', 'sms_proveedor', 'correo_med', 'pais', 'prefi_1',
         'prefi_2', 'prefi_3', 'nom_moneda', 'nom_impuesto', 'impuesto_vale', 'slug',
         'plantilla_cita', 'plantilla_cumple', 'porcentaje_cita_online_bp', 'publicar_agenda',
+        // Lo que el paciente lee en el portal antes de venir (O-52).
+        'cita_linea_minutos_antes', 'cita_linea_acompanantes', 'cita_linea_indicaciones',
     ];
 
     protected $casts = [

@@ -90,6 +90,38 @@ final class ConfiguracionDeCitaOnline
         return $this->evolucion;
     }
 
+    // ---------------------------------------------------------------- Lo que el paciente lee antes de venir (O-52)
+
+    /** Cuántos minutos antes de la cita conviene llegar, o `null` si el médico no lo dijo. */
+    public function minutosAntes(): ?int
+    {
+        $minutos = $this->evolucion?->cita_linea_minutos_antes;
+
+        return $minutos === null ? null : max(0, (int) $minutos);
+    }
+
+    /** Cuántos acompañantes se admiten, o `null` si el médico no lo dijo (no es lo mismo que cero). */
+    public function acompanantes(): ?int
+    {
+        $acompanantes = $this->evolucion?->cita_linea_acompanantes;
+
+        return $acompanantes === null ? null : max(0, (int) $acompanantes);
+    }
+
+    /** Una línea libre de indicaciones para la cita («trae tus exámenes»), o `null`. */
+    public function indicaciones(): ?string
+    {
+        $texto = trim((string) ($this->evolucion?->cita_linea_indicaciones ?? ''));
+
+        return $texto === '' ? null : $texto;
+    }
+
+    /** ¿Hay algo de esto que contarle al paciente? */
+    public function tieneIndicacionesParaLaCita(): bool
+    {
+        return $this->minutosAntes() !== null || $this->acompanantes() !== null || $this->indicaciones() !== null;
+    }
+
     /**
      * El porcentaje que escribe el médico (0–100, con coma o punto) en puntos base: `30` → `3000`,
      * `12,5` → `1250`. La validación de rango la hace el formulario antes; acá sólo se convierte sin pasar

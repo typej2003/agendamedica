@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\CodigoDeReserva;
 use App\Models\Cola;
+use App\Models\Evolucion;
 use App\Models\MedicalCenter;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
@@ -546,5 +547,92 @@ class ReservasPublicasWebTest extends TestCase
 
         $this->assertNull(session('reservas.pendiente'));
         $this->assertSame(0, Cola::where('reg_medico', $this->medico->reg_medico)->count());
+    }
+
+    /**
+     * **El calendario del portal** (O-52): marca los días que tienen lugar y, al elegir uno, muestra sus
+     * horarios. Los días sin lugar no son enlaces, así que la rejilla se usa sin JavaScript.
+     */
+    public function test_la_ficha_marca_los_dias_con_lugar_y_muestra_los_horarios_del_dia_elegido(): void
+    {
+        $html = $this->get(route('reservas.medico', $this->medico))->assertOk()->getContent();
+
+        $this->assertStringContainsString('reservas-calendario', $html);
+        // El lunes 19 tiene bloque: es un enlace. El domingo 18 (hoy) no tiene: queda como texto.
+        $this->assertStringContainsString('fecha=2026-10-19', $html);
+        $this->assertStringNotContainsString('fecha=2026-10-18', $html);
+
+        $this->get(route('reservas.medico', ['medico' => $this->medico, 'mes' => '2026-10', 'fecha' => '2026-10-19']))
+            ->assertOk()
+            ->assertSee('Horarios del')
+            // La opción de ese día sigue siendo la del bloque de la agenda.
+            ->assertSee('2026-10-19|08:00', false);
+    }
+
+    /** **Lo que el médico pide antes de venir** (O-52): minutos antes, acompañantes e indicaciones. */
+    public function test_la_ficha_muestra_lo_que_el_medico_pide_antes_de_venir(): void
+    {
+        Evolucion::create([
+            'reg_medico' => $this->medico->reg_medico,
+            'clave' => 0,
+            'cita_linea_minutos_antes' => 15,
+            'cita_linea_acompanantes' => 1,
+            'cita_linea_indicaciones' => 'Trae tus exámenes.',
+        ]);
+
+        $this->get(route('reservas.medico', $this->medico))
+            ->assertOk()
+            ->assertSee('Antes de venir')
+            ->assertSee('15 minutos antes')
+            ->assertSee('un acompañante')
+            ->assertSee('Trae tus exámenes.');
+    }
+
+    /** **Quién reserva** (O-52): un representante deja su nombre y documento en la cita y en el comprobante. */
+    public function test_una_reserva_de_un_representante_guarda_quien_la_hizo(): void
+    {
+        $this->post(route('reservas.codigo.enviar', $this->medico), $this->datos() + [
+            'reservado_por' => 'R',
+            'representante_nombre' => 'Marta Tutora',
+            'representante_documento' => '12345678',
+        ])->assertRedirect();
+
+        $this->post(route('reservas.confirmar', $this->medico), ['codigo' => $this->codigo()])
+            ->assertRedirect(route('reservas.confirmada'));
+
+        $cita = Cola::where('reg_medico', $this->medico->reg_medico)->latest('id')->firstOrFail();
+
+        $this->assertSame('R', $cita->reservado_por);
+        $this->assertSame('Marta Tutora', $cita->reservado_por_nombre);
+        $this->assertSame('12345678', $cita->reservado_por_documento);
+
+        $this->get(route('reservas.confirmada'))
+            ->assertOk()
+            ->assertSee('Reservada por')
+            ->assertSee('Marta Tutora')
+            ->assertSee('12345678');
+    }
+
+    /** Si dice que es el representante, sus datos son obligatorios: es con quien habla el consultorio. */
+    public function test_la_reserva_del_representante_exige_sus_datos(): void
+    {
+        $this->from(route('reservas.medico', $this->medico))
+            ->post(route('reservas.codigo.enviar', $this->medico), $this->datos() + ['reservado_por' => 'R'])
+            ->assertSessionHasErrors(['representante_nombre', 'representante_documento']);
+
+        $this->assertNull(session('reservas.pendiente'));
+    }
+
+    /** Una reserva del propio paciente no escribe las columnas del representante: quedan en NULL. */
+    public function test_la_reserva_del_paciente_no_marca_representante(): void
+    {
+        $this->post(route('reservas.codigo.enviar', $this->medico), $this->datos() + ['reservado_por' => 'P']);
+
+        $this->post(route('reservas.confirmar', $this->medico), ['codigo' => $this->codigo()]);
+
+        $cita = Cola::where('reg_medico', $this->medico->reg_medico)->latest('id')->firstOrFail();
+
+        $this->assertNull($cita->reservado_por);
+        $this->assertNull($cita->reservado_por_nombre);
     }
 }
