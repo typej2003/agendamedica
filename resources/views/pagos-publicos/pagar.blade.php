@@ -155,6 +155,157 @@
                     Si crees que es un error, comunícate con el consultorio.
                 </p>
             </div>
+        @elseif ($vm->esPagoMovil())
+            {{-- Pago móvil o transferencia: el paciente **envía** desde su banco y deja la referencia. --}}
+            @php($cuenta = $vm->datosDeLaCuenta())
+            @php($declarado = $vm->pagoMovilDeclarado())
+            @php($ultima = $vm->ultimaTransaccion())
+
+            @if ($declarado && $ultima && $ultima->estaPendiente())
+                <div class="alert alert-info" role="status">
+                    <h2 class="alert-heading h5">
+                        <i class="bi bi-hourglass-split me-1" aria-hidden="true"></i> Estamos verificando tu pago
+                    </h2>
+                    <p class="mb-0">
+                        Nos dijiste que pagaste con la referencia <strong>{{ $ultima->referencia }}</strong>.
+                        @if ($vm->cuentaDeCobro()?->conciliaSola())
+                            Le estamos preguntando al banco; puede tardar unos minutos.
+                        @else
+                            El consultorio va a confirmar el pago y te avisamos.
+                        @endif
+                    </p>
+                </div>
+
+                <form method="POST" action="{{ route('pagar.consultar', $vm->token()) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i> Volver a consultar
+                    </button>
+                </form>
+            @else
+                @if ($declarado && $ultima && $ultima->mensaje)
+                    <div class="alert alert-warning" role="alert">
+                        <h2 class="alert-heading h5">
+                            <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i> No pudimos confirmarlo
+                        </h2>
+                        <p class="mb-0">{{ $ultima->mensaje }}</p>
+                    </div>
+                @endif
+
+                <div class="reservas-panel">
+                    <h2 class="reservas-paso-titulo">
+                        <span class="reservas-paso-numero">1</span> Paga desde tu banco
+                    </h2>
+                    <p class="reservas-ayuda">
+                        Envía el monto exacto a estos datos. Después vuelve acá y escribe el número de referencia
+                        que te dio tu banco.
+                    </p>
+
+                    <dl class="reservas-detalle">
+                        <div>
+                            <dt>Banco</dt>
+                            <dd>{{ $cuenta['banco'] }}</dd>
+                        </div>
+                        @if ($cuenta['aceptaPagoMovil'] && $cuenta['telefono'] !== '')
+                            <div>
+                                <dt>Pago móvil · teléfono</dt>
+                                <dd>{{ $cuenta['telefono'] }}</dd>
+                            </div>
+                        @endif
+                        @if ($cuenta['aceptaTransferencia'] && $cuenta['cuenta'] !== '')
+                            <div>
+                                <dt>Transferencia · cuenta</dt>
+                                <dd>{{ $cuenta['cuenta'] }}</dd>
+                            </div>
+                        @endif
+                        <div>
+                            <dt>Documento del titular</dt>
+                            <dd>{{ $cuenta['documento'] }}</dd>
+                        </div>
+                        @if ($cuenta['titular'] !== '')
+                            <div>
+                                <dt>Titular</dt>
+                                <dd>{{ $cuenta['titular'] }}</dd>
+                            </div>
+                        @endif
+                        <div>
+                            <dt>Monto</dt>
+                            <dd>{{ $vm->monto() }}</dd>
+                        </div>
+                    </dl>
+
+                    <h2 class="reservas-paso-titulo mt-4">
+                        <span class="reservas-paso-numero">2</span> Dinos que ya pagaste
+                    </h2>
+
+                    <form method="POST" action="{{ route('pagar.declarar', $vm->token()) }}" id="pago-movil-form">
+                        @csrf
+
+                        <div class="mb-3">
+                            <label class="form-label" for="tipo_pago">¿Cómo pagaste?</label>
+                            <select name="tipo_pago" id="tipo_pago" class="form-select" required>
+                                @if ($cuenta['aceptaPagoMovil'])
+                                    <option value="PM" {{ old('tipo_pago', 'PM') === 'PM' ? 'selected' : '' }}>Pago móvil</option>
+                                @endif
+                                @if ($cuenta['aceptaTransferencia'])
+                                    <option value="TRF" {{ old('tipo_pago') === 'TRF' ? 'selected' : '' }}>Transferencia</option>
+                                @endif
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label" for="documento_tipo">Tipo</label>
+                                <select name="documento_tipo" id="documento_tipo" class="form-select" required>
+                                    @foreach (\App\Models\CuentaBancaria::DOCUMENTOS as $tipo)
+                                        <option value="{{ $tipo }}" {{ old('documento_tipo', 'V') === $tipo ? 'selected' : '' }}>{{ $tipo }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-md-5 mb-3">
+                                <label class="form-label" for="documento_numero">Tu documento</label>
+                                <input type="text" name="documento_numero" id="documento_numero"
+                                       class="form-control @error('documento_numero') is-invalid @enderror"
+                                       value="{{ old('documento_numero') }}" maxlength="20" autocomplete="off" required>
+                                @error('documento_numero') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label" for="telefono">Tu teléfono</label>
+                                <input type="text" name="telefono" id="telefono"
+                                       class="form-control @error('telefono') is-invalid @enderror"
+                                       value="{{ old('telefono') }}" maxlength="15" inputmode="numeric"
+                                       placeholder="04141234567" autocomplete="off">
+                                <div class="form-text">El del pago móvil; en una transferencia no hace falta.</div>
+                                @error('telefono') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="nombre">Nombre del titular que pagó</label>
+                            <input type="text" name="nombre" id="nombre"
+                                   class="form-control @error('nombre') is-invalid @enderror"
+                                   value="{{ old('nombre') }}" maxlength="120" autocomplete="off" required>
+                            @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="referencia">Número de referencia</label>
+                            <input type="text" name="referencia" id="referencia"
+                                   class="form-control @error('referencia') is-invalid @enderror"
+                                   value="{{ old('referencia') }}" maxlength="40" inputmode="numeric"
+                                   autocomplete="off" required>
+                            <div class="form-text">Es el que aparece en el comprobante de tu banco.</div>
+                            @error('referencia') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check2-circle me-1" aria-hidden="true"></i> Ya pagué: verificar el pago
+                        </button>
+                    </form>
+                </div>
+            @endif
         @elseif ($vm->enOtp())
             {{-- Ya se pidió el código: el pagador sólo lo escribe. --}}
             <div class="reservas-panel">

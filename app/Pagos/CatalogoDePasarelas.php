@@ -10,12 +10,19 @@ final class CatalogoDePasarelas
 {
     public const SYPAGO = 'sypago';
     public const MANUAL = 'manual';
+    /** Pago móvil o transferencia a la cuenta del médico (o de la plataforma). */
+    public const PAGO_MOVIL = 'pago_movil';
 
     public const VARIANTES = [
         // SyPago tiene un solo producto de cobro inmediato: el débito con OTP. Si es cuenta o teléfono
         // (pago móvil) lo decide el número que escribe el pagador, no el método.
         self::SYPAGO => [
             'debito_inmediato' => 'Débito inmediato',
+        ],
+        // El paciente **envía** el pago desde su banco y el sistema lo confirma: consultando la API del
+        // banco que recibe (si la cuenta la tiene configurada) o con el consultorio.
+        self::PAGO_MOVIL => [
+            'pago_movil' => 'Pago móvil o transferencia',
         ],
         self::MANUAL => [
             'transferencia' => 'Transferencia o pago móvil',
@@ -24,6 +31,7 @@ final class CatalogoDePasarelas
 
     public const PASARELAS = [
         self::SYPAGO => 'SyPago',
+        self::PAGO_MOVIL => 'Pago móvil',
         self::MANUAL => 'Manual',
     ];
 

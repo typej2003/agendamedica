@@ -5,6 +5,7 @@ namespace App\Actions\Pagos;
 use App\Models\Cola;
 use App\Models\MetodoPago;
 use App\Models\Pago;
+use App\Models\PreferenciaDeCobro;
 use App\Models\PagoEvento;
 use App\Pagos\CatalogoDePasarelas;
 use App\Pagos\Centavos;
@@ -40,21 +41,44 @@ final class GenerarLinkDePagoDeCita
     }
 
     /**
-     * El método de pago de la plataforma para cobrar citas: el primero por `orden`/`id` que sea SyPago y
-     * esté configurado. `null` significa que todavía no hay con qué cobrar.
+     * El método de pago de la plataforma para cobrar citas: el primero por `orden`/`id` que sea SyPago o
+     * pago móvil y esté configurado. `null` significa que todavía no hay con qué cobrar.
      */
-    public function metodo(): ?MetodoPago
+    public function metodo(?string $regMedico = null): ?MetodoPago
     {
+        // Si el médico eligió cobrar con sus propias cuentas y tiene un método configurado, ése manda.
+        if (trim((string) $regMedico) !== '' && PreferenciaDeCobro::de($regMedico) === PreferenciaDeCobro::MEDICO) {
+            $propio = MetodoPago::delMedico(trim((string) $regMedico))
+                ->activos()
+                ->paraUso(MetodoPago::COBROS)
+                ->orderBy('orden')
+                ->orderBy('id')
+                ->get()
+                ->filter(fn (MetodoPago $metodo): bool => $this->puedeSostenerElLink($metodo))
+                ->first();
+
+            if ($propio !== null) {
+                return $propio;
+            }
+        }
+
         return MetodoPago::deLaPlataforma()
             ->activos()
             ->paraUso(MetodoPago::COBROS)
             ->orderBy('orden')
             ->orderBy('id')
             ->get()
-            // El cobro de la cita es con SyPago; un método manual no puede debitar el link.
-            ->filter(fn (MetodoPago $metodo): bool => $metodo->pasarela === CatalogoDePasarelas::SYPAGO
-                && $metodo->estaConfigurado())
+            ->filter(fn (MetodoPago $metodo): bool => $this->puedeSostenerElLink($metodo))
             ->first();
+    }
+
+    /** El cobro de la cita es con una pasarela que pueda cobrar sola: SyPago o pago móvil. */
+    private function puedeSostenerElLink(MetodoPago $metodo): bool
+    {
+        return in_array($metodo->pasarela, [
+            CatalogoDePasarelas::SYPAGO,
+            CatalogoDePasarelas::PAGO_MOVIL,
+        ], true) && $metodo->estaConfigurado();
     }
 
     public function ejecutar(Cola $cita, ?int $usuarioId = null): ResultadoDeLinkDePago
@@ -70,7 +94,7 @@ final class GenerarLinkDePagoDeCita
             return ResultadoDeLinkDePago::sinPrecio();
         }
 
-        $metodo = $this->metodo();
+        $metodo = $this->metodo((string) $cita->reg_medico);
         if ($metodo === null) {
             return ResultadoDeLinkDePago::sinMetodo();
         }

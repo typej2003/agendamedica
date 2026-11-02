@@ -266,7 +266,8 @@ final class Cobros
             throw new RuntimeException('El monto de la cita supera el máximo permitido.');
         }
 
-        if (! $metodo->activo || $metodo->pasarela !== CatalogoDePasarelas::SYPAGO || ! $metodo->estaConfigurado()) {
+        if (! $metodo->activo || ! $metodo->estaConfigurado()
+            || ! in_array($metodo->pasarela, [CatalogoDePasarelas::SYPAGO, CatalogoDePasarelas::PAGO_MOVIL], true)) {
             throw new RuntimeException('El método de pago elegido no está disponible.');
         }
 
@@ -493,6 +494,53 @@ final class Cobros
         }
 
         return $this->procesarRespuesta($pago, $respuesta, $origen);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Pago móvil y transferencia (confirmación externa)                   */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * **Aprueba un pago que se confirmó por fuera del débito con OTP**: una consulta al banco, el
+     * consultorio a mano o una transferencia. Pasa por la misma transición con candado y los mismos
+     * efectos que un pago de SyPago (renovar el plan, marcar la cita, avisar).
+     *
+     * @param  array<string,mixed>  $respuesta
+     */
+    public function aprobarConciliado(
+        Pago $pago,
+        array $respuesta = [],
+        string $origen = PagoEvento::ORIGEN_SISTEMA
+    ): ResultadoDeCobro {
+        return $this->aprobar($pago, $respuesta, $origen);
+    }
+
+    /**
+     * **Rechaza un pago confirmado por fuera**: no hay Plata que aplicar, sólo el estado y su motivo. El
+     * pago no se puede volver a usar; el paciente tiene que empezar uno nuevo.
+     */
+    public function rechazarConciliado(
+        Pago $pago,
+        string $motivo,
+        string $origen = PagoEvento::ORIGEN_SISTEMA
+    ): ResultadoDeCobro {
+        $resultado = DB::transaction(function () use ($pago, $motivo, $origen) {
+            /** @var Pago $bloqueado */
+            $bloqueado = Pago::whereKey($pago->id)->lockForUpdate()->firstOrFail();
+
+            if ($bloqueado->estaAprobado()) {
+                return ResultadoDeCobro::ok('Este pago ya estaba aprobado.', $bloqueado);
+            }
+
+            $anterior = $bloqueado->estado;
+            $bloqueado->update(['estado' => Pago::RECHAZADO]);
+            $bloqueado->registrarEvento($origen, 'rechazado', ['motivo' => $motivo], $anterior);
+            $this->liberarCupoSiEsReservaOnline($bloqueado);
+
+            return ResultadoDeCobro::error($motivo, $bloqueado);
+        });
+
+        return $resultado;
     }
 
     /* ------------------------------------------------------------------ */
@@ -791,7 +839,7 @@ final class Cobros
     /** @param array<string,mixed> $respuesta */
     private function referenciaExterna(array $respuesta): ?string
     {
-        foreach (['transaction_id', 'ref_ibp', 'id'] as $clave) {
+        foreach (['transaction_id', 'ref_ibp', 'id', 'codigoConfirmacion', 'referencia'] as $clave) {
             if (! empty($respuesta[$clave]) && is_scalar($respuesta[$clave])) {
                 return (string) $respuesta[$clave];
             }

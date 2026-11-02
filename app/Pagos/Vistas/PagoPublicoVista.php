@@ -3,6 +3,7 @@
 namespace App\Pagos\Vistas;
 
 use App\Models\Cola;
+use App\Models\CuentaBancaria;
 use App\Models\Medico;
 use App\Models\Pago;
 use App\Models\TasaDeCambio;
@@ -176,6 +177,58 @@ final class PagoPublicoVista
     public function enDatos(): bool
     {
         return $this->pago->estaPendiente() && empty($this->pago->datos_pagador);
+    }
+
+    /** El cobro es por pago móvil o transferencia: el paciente envía y declara la referencia. */
+    public function esPagoMovil(): bool
+    {
+        return $this->pago->metodoPago?->esDePagoMovil() ?? false;
+    }
+
+    /** La cuenta que recibe, con los datos que el paciente tiene que ver. */
+    public function cuentaDeCobro(): ?CuentaBancaria
+    {
+        return $this->pago->metodoPago?->cuentaBancaria;
+    }
+
+    /**
+     * Los datos del pago móvil para poner en pantalla: banco, teléfono, cuenta, documento y titular. Sólo
+     * lo que el paciente necesita para pagar; nada del paciente.
+     *
+     * @return array{banco:string, telefono:string, cuenta:string, documento:string, titular:string, aceptaPagoMovil:bool, aceptaTransferencia:bool}
+     */
+    public function datosDeLaCuenta(): array
+    {
+        $cuenta = $this->cuentaDeCobro();
+
+        if (! $cuenta) {
+            return [
+                'banco' => '', 'telefono' => '', 'cuenta' => '', 'documento' => '',
+                'titular' => '', 'aceptaPagoMovil' => false, 'aceptaTransferencia' => false,
+            ];
+        }
+
+        return [
+            'banco' => $cuenta->bancoNombre(),
+            'telefono' => $cuenta->numeroDePagoMovil(),
+            'cuenta' => $cuenta->numeroDeCuenta(),
+            'documento' => $cuenta->documentoDelTitular(),
+            'titular' => (string) $cuenta->titular,
+            'aceptaPagoMovil' => $cuenta->aceptaPagoMovil(),
+            'aceptaTransferencia' => $cuenta->aceptaTransferencia(),
+        ];
+    }
+
+    /** Ya declaró el pago y se está esperando la confirmación (automática o del consultorio). */
+    public function pagoMovilDeclarado(): bool
+    {
+        return $this->esPagoMovil() && $this->pago->transacciones()->exists();
+    }
+
+    /** La última transacción declarada, para mostrar su estado. */
+    public function ultimaTransaccion(): ?\App\Models\PagoTransaccion
+    {
+        return $this->pago->transacciones()->latest('id')->first();
     }
 
     /** Ya se pidió el código y se puede escribir. */
