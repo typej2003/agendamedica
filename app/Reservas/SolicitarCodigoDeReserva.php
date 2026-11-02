@@ -105,7 +105,8 @@ final class SolicitarCodigoDeReserva
         }
 
         $codigo = $this->codigos->generar();
-        $envio = $this->codigos->enviar($telefono, $codigo);
+        // El correo del formulario es el tercer canal (O-54): si no hay WhatsApp ni SMS, el código sale por ahí.
+        $envio = $this->codigos->enviar($telefono, $codigo, trim((string) ($datos['email'] ?? '')) ?: null);
 
         if (! $envio['ok']) {
             throw ValidationException::withMessages([
@@ -173,6 +174,11 @@ final class SolicitarCodigoDeReserva
             'telefono' => $telefono,
             'email' => trim((string) ($datos['email'] ?? '')) ?: null,
             'motivo' => trim((string) ($datos['motivo'] ?? '')) ?: null,
+            // Quién reserva (O-52): el paciente o su representante, con el nombre y el documento del que
+            // escribe. Viaja en el trámite para que la cita lo guarde al confirmarse.
+            'reservado_por' => ($datos['reservado_por'] ?? 'P') === 'R' ? 'R' : 'P',
+            'representante_nombre' => trim((string) ($datos['representante_nombre'] ?? '')) ?: null,
+            'representante_documento' => trim((string) ($datos['representante_documento'] ?? '')) ?: null,
         ]);
     }
 }

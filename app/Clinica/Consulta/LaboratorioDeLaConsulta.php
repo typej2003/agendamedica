@@ -18,8 +18,10 @@ use Illuminate\Support\Collection;
  *
  *  - **`examen_paciente`** — un examen pedido: `nrohistoria` + `nroconsulta` + `codeexamen` (la clave). El *Agregar/Pasar* del escritorio
  *    es `INSERT … (nrohistoria, nroconsulta, codeexamen)` (`w_consulta_principal.srw:16093` y `:16201`; la rutina, `:16630-16640`) y el *Eliminar* un
- *    `DELETE` por las tres claves (`:16152` y `:16578`). **`resultado` y `vinculante` no las escribe nadie**: vacías en las
- *    318.490 filas de la base de desarrollo. Esta pestaña no las edita ni las toca.
+ *    `DELETE` por las tres claves (`:16152` y `:16578`). **`resultado` y `vinculante` son las columnas del escritorio** que la web ahora
+ *    también escribe (O-47, 2026-11-02): `resultado` es el texto del resultado (`varchar(30)`) y `vinculante = 'S'` marca el examen
+ *    que **sale en el informe** (las cinco hojas del escritorio filtran por esa letra; `NULL` y `'N'` son «no sale»). Las escribía la
+ *    pantalla `ventana_consulta/d_resultados_examenes.srd` (`update="examen_paciente"`); estaban vacías en toda la base real.
  *  - **`examen_obs.observacion`** — el campo **«Resumen clínico»** de la solicitud (`d_observecion_examenes.srd`, el `dw_14`; en la hoja
  *    impresa sale como «IDX. / Resumen Clinico»): un texto por consulta. El escritorio crea la fila vacía cada vez que agrega un examen
  *    (`:16103`, `:16211` y `:16646`).
@@ -35,6 +37,12 @@ final class LaboratorioDeLaConsulta
 {
     /** `examen_obs.observacion` es `long varchar` (32.766 en el DataWindow): la web admite 20.000, como el informe. */
     public const LARGO_OBSERVACION = 20000;
+
+    /**
+     * `examen_paciente.resultado` es `varchar(30)` en el esquema del legado (O-47): un resultado corto —un número, «normal»,
+     * «negativo»—, no el texto del informe. No se agrega columna: si algún día no alcanza, es una decisión aparte.
+     */
+    public const LARGO_RESULTADO = 30;
 
     public function __construct(private ExamenesDeLaConsulta $examenes)
     {

@@ -73,6 +73,10 @@ class Cola extends Model
         'sms',
         'sms_text',
         'medico',
+        // Quién reservó la cita cuando no fue el paciente (O-52). Nullable y del portal: el escritorio no las usa.
+        'reservado_por',
+        'reservado_por_nombre',
+        'reservado_por_documento',
         // ⚠️ `medico_id` **no** es `medico`: `medico` es la `clave` de `evolucion` con la que el legado
         // identifica al doctor. `medico_id` es el `medicos.id` del **doctor asignado a la cita** (columna
         // nueva de la migración del 2026-10-20). Nullable: la cita sin doctor queda con `null`.

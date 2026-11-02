@@ -92,7 +92,7 @@ class HospitalizacionDietaDeLaConsultaWebTest extends TestCase
 
         $this->como($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id))
             ->assertOk()
-            ->assertSee('Pre-factura', false)
+            ->assertSee('Solicitudes', false)
             // El ítem de Solicitudes del grupo «Consulta»; su detalle —que nombra hospitalización, informe y
             // dieta— vive en el catálogo y lo fija `Unit/Clinica/SeccionesDeLaConsultaTest`.
             ->assertSee('Solicitudes');

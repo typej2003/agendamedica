@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Actions\Consulta\GuardarOrdenDeLaboratorio;
 use App\Actions\Pacientes\SembrarTiposDeAntecedente;
 use App\Clinica\Agenda\ArmadorDeAgenda;
 use App\Clinica\Agenda\MotivosDeCita;
@@ -425,7 +426,7 @@ class ConsultaController extends Controller
      * análisis evolutivo y evaluación pre-operatoria) y, en el análisis evolutivo, la evolución de la historia. El riesgo
      * operatorio reusa el de cirugía pediátrica (`riesgo`, `riesgo_paciente`, `riesgo_paciente_opera`).
      */
-    private function seccionDelInternista(string $seccion, Consulta $consulta): \App\Clinica\Consulta\Vistas\InternistaVista
+    private function seccionDelInternista(string $seccion, Consulta $consulta, string $regMedico, ImagenesDeLaConsulta $imagenes): \App\Clinica\Consulta\Vistas\InternistaVista
     {
         $mapa = \App\Clinica\Consulta\Interna\MapaDelInternista::class;
         $datos = new \App\Clinica\Consulta\Interna\DatosDelInternista();
@@ -509,6 +510,32 @@ class ConsultaController extends Controller
             $pestana === 'funcional' ? PlantillasDelTexto::de((string) $consulta->reg_medico, 'EF')->all() : [],
             // El «Actualizar» del resumen físico: lo arma el servidor con los signos y el examen guardados.
             $pestana === 'resumen' ? route('clinica.consulta.internista.resumen', $consulta->id) : null,
+            // Las **fotos de la placa** de la Rx de tórax (O-44): la lista y la subida de esa pestaña.
+            $seccion === $mapa::SECCION_PLAN && $pestana === 'rx' ? $this->imagenesDeLaRx($consulta, $regMedico, $imagenes) : null,
+            // **Escanear la hoja** de resultados (O-49): la misma lectura de WEB-13.15, en la sección propia del
+            // internista. Sin proveedor configurado el botón no aparece.
+            $seccion === $mapa::SECCION_RESULTADOS && app(LectorDeHojas::class)->disponible()
+                ? route('clinica.consulta.resultados.escanear', $consulta->id)
+                : null,
+        );
+    }
+
+    /**
+     * **La lista y la subida de las fotos de la placa de la Rx de tórax** (O-44).
+     *
+     * Es el ViewModel de siempre (`ImagenesDeLaConsultaVista`) con la etiqueta `rx` de `TagDeImagen`: la subida
+     * sigue siendo `ConsultaImagenesController`, que marca la fila con esa etiqueta y, desde esta pestaña, vuelve
+     * acá y no a Evaluación física. Se pueden cargar **varias** (una placa puede ser PA y lateral), así que no
+     * entra en el camino de «una sola imagen» de la colposcopía.
+     */
+    private function imagenesDeLaRx(Consulta $consulta, string $regMedico, ImagenesDeLaConsulta $imagenes): ImagenesDeLaConsultaVista
+    {
+        return new ImagenesDeLaConsultaVista(
+            $imagenes->deUnExamen($regMedico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta, 'rx'),
+            route('clinica.consulta.examenes.subir', $consulta->id),
+            fn (int $fila) => route('clinica.consulta.examenes.descargar', [$consulta->id, $fila]),
+            fn (int $fila) => route('clinica.consulta.examenes.quitar', [$consulta->id, $fila]),
+            'rx',
         );
     }
 
@@ -618,7 +645,7 @@ class ConsultaController extends Controller
     ): ?object {
         // **Las secciones del internista** (MI-2 a MI-5, 2026-10-28): las arma `seccionDelInternista`.
         if ($this->alcance()->esMedicinaInterna() && \App\Clinica\Consulta\Interna\MapaDelInternista::esSeccion($seccion)) {
-            return $this->seccionDelInternista($seccion, $consulta);
+            return $this->seccionDelInternista($seccion, $consulta, $regMedico, $imagenes);
         }
 
         $numero = (int) $consulta->numhistoria;
@@ -1735,6 +1762,10 @@ class ConsultaController extends Controller
             'nombre' => $fila->nombre,
             'tipo' => $fila->tipo,
             'aviso' => $fila->nombre === $fila->codigo ? 'No está en tu catálogo: se muestra el código.' : null,
+            // El **resultado** y si **sale en el informe** (O-47): las dos columnas del escritorio, que esta pantalla
+            // ahora edita. `vinculante = 'S'` es «sale»; `NULL` y `'N'` son «no sale».
+            'resultado' => (string) ($fila->resultado ?? ''),
+            'reporte' => trim((string) ($fila->vinculante ?? '')) === GuardarOrdenDeLaboratorio::REPORTE,
         ])->all();
 
         $orden = OrdenVista::laboratorio(
@@ -1761,6 +1792,7 @@ class ConsultaController extends Controller
             'agregar' => route('clinica.consulta.laboratorio.agregar', $id),
             'quitar' => route('clinica.consulta.laboratorio.quitar', $id),
             'resumen' => route('clinica.consulta.laboratorio.guardar', $id),
+            'resultados' => route('clinica.consulta.laboratorio.resultados', $id),
             'rutina' => route('clinica.consulta.laboratorio.rutinas.agregar', [$id, '__TIPO__']),
             'administrar' => route('clinica.catalogos.examenes'),
         ]);

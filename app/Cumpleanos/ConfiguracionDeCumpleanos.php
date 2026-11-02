@@ -5,6 +5,7 @@ namespace App\Cumpleanos;
 use App\Models\Evolucion;
 use App\Notificaciones\Canal;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Log;
 
 /**
  * La configuración del **saludo de cumpleaños automático** de un médico (WEB-2.9): si se manda, por
@@ -79,15 +80,35 @@ final class ConfiguracionDeCumpleanos
         return $this->canal;
     }
 
+    /**
+     * **El canal con el que se manda de verdad** (O-51), que es el guardado salvo que el servidor no
+     * pueda usarlo: hoy sólo el SMS depende de tener proveedor (O-55). Es **la única versión de la
+     * regla**: la usan la pantalla (para decidir a quién se le puede mandar y qué radio marcar) y el
+     * comando, así que los dos dicen lo mismo.
+     *
+     * Si cae al recomendado se anota en el log con el canal pedido y el usado: es una configuración que
+     * quedó vieja (el proveedor de SMS se fue) y conviene que quede rastro.
+     *
+     * @param  bool  $smsDisponible  lo que dice `SmsService::configurado()`
+     */
+    public function canalEfectivo(bool $smsDisponible): string
+    {
+        if ($this->canal === Canal::SMS && ! $smsDisponible) {
+            Log::info('Cumpleaños: el canal configurado no está disponible; se usa el recomendado.', [
+                'pedido' => $this->canal,
+                'usado'  => self::CANAL_POR_DEFECTO,
+            ]);
+
+            return self::CANAL_POR_DEFECTO;
+        }
+
+        return $this->canal;
+    }
+
     /** `HH:MM`, como se muestra y como se compara. */
     public function hora(): string
     {
         return $this->hora;
-    }
-
-    public function etiquetaDelCanal(): string
-    {
-        return Canal::etiqueta($this->canal);
     }
 
     /** La fila de `evolucion` si ya existía; `null` cuando el médico todavía no tiene configuración. */

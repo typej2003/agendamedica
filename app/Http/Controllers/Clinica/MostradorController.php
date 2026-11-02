@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Clinica;
 use App\Actions\Agenda\AsignarMedicoACita;
 use App\Actions\Agenda\AtenderCita;
 use App\Actions\Agenda\CitaNoAtendible;
-use App\Actions\Agenda\CobrarCita;
 use App\Actions\Agenda\ConfirmarCita;
 use App\Actions\Agenda\ReordenarCola;
 use App\Actions\Consulta\AbrirConsulta;
@@ -14,6 +13,7 @@ use App\Clinica\Consulta\PacienteDeLaCita;
 use App\Clinica\FechaDelConsultorio;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLaCitaDelContexto;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
+use App\Actions\Pagos\CobrarEnElMostrador;
 use App\Http\Controllers\Controller;
 use App\Models\Cola;
 use App\Models\Medico;
@@ -21,8 +21,10 @@ use App\Models\MedicoPaciente;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
+use RuntimeException;
 
 /**
  * Las acciones del mostrador sobre una cita —confirmar, **atender (que ahora abre la consulta, WEB-4.1)**,
@@ -271,27 +273,38 @@ class MostradorController extends Controller
         return 'Esta cita no tiene un paciente identificable al que atender.';
     }
 
-    /** Cobrar: abono parcial, sumado a lo ya pagado (ver `CobrarCita`). */
-    public function cobrar(Request $request, Cola $cola, CobrarCita $accion)
+    /**
+     * **Cobrar en el mostrador** (abono parcial o total, en efectivo).
+     *
+     * El diálogo es la puerta rápida de la misma acción que la pantalla de cobro (O-53): el abono se
+     * registra con `CobrarEnElMostrador::registrarManual`, que crea el **pago** con canal `mostrador` y su
+     * medio, escribe la cita con `CobrarCita` y comprueba bajo bloqueo que no se cobre dos veces. Antes
+     * sólo se escribía el monto de la cita, así que esa plata no aparecía en «Mis ingresos».
+     *
+     * El medio se puede mandar en el formulario (si algún día el diálogo lo pregunta); sin él es efectivo.
+     */
+    public function cobrar(Request $request, Cola $cola, CobrarEnElMostrador $accion)
     {
         $cita = $this->citaDelContexto($request, $cola);
 
         $datos = $request->validate([
             'recibido' => ['required', 'numeric', 'min:0'],
             'monto'    => ['nullable', 'numeric', 'min:0'],
+            'medio'    => ['nullable', Rule::in(array_keys(CobrarEnElMostrador::MEDIOS))],
+        ], [
+            'medio.in' => 'Ese medio de cobro no existe.',
         ]);
 
         try {
-            $accion->recibir(
+            $accion->registrarManual(
                 $cita,
                 (float) $datos['recibido'],
+                $datos['medio'] ?? 'efectivo',
                 isset($datos['monto']) ? (float) $datos['monto'] : null,
-                null,
-                'web'
+                $request->user()?->id,
             );
-        } catch (InvalidArgumentException $excepcion) {
-            // Cobrar de más: vuelve con el aviso en el campo `recibido` y sin escribir nada (la Action
-            // revisa antes de tocar la cita, así que tampoco queda el precio fijado a medias).
+        } catch (InvalidArgumentException|RuntimeException $excepcion) {
+            // Cobrar de más (o una cita ya pagada): vuelve con el aviso y sin escribir nada.
             throw ValidationException::withMessages(['recibido' => $excepcion->getMessage()]);
         }
 

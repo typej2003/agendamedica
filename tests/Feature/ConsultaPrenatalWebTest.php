@@ -185,7 +185,7 @@ class ConsultaPrenatalWebTest extends TestCase
 
         $respuesta->assertOk();
         // El panel ya no dice "Próximamente" de este ítem: pasó a 12 de 13.
-        $respuesta->assertSee('Pre-factura');
+        $respuesta->assertSee('Datos personales');
         $respuesta->assertSee('Control de embarazo');
 
         // La pestaña y sus campos, con los rótulos del escritorio.

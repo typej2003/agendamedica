@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="{{ asset('css/clinica-documento.css') }}">
     {{-- El informe de una eco a hoja completa, A4 vertical (WEB-11.13). --}}
     <link rel="stylesheet" href="{{ asset('css/clinica-informe-eco.css') }}">
+    {{-- El informe pre-operatorio, también A4 vertical, en dos páginas (O-47). --}}
+    <link rel="stylesheet" href="{{ asset('css/clinica-informe-preoperatorio.css') }}">
 @endsection
 
 @section('barra')
@@ -49,6 +51,11 @@
 @section('contenido')
     <main class="recipe-hojas" id="recipe-hojas" data-recipe-hojas>
         @foreach ($vm->hojas() as $hoja)
+            @if (($hoja['tipo'] ?? '') === 'preoperatorio')
+                @include('clinica.imprimir._informe-preoperatorio', ['hoja' => $hoja, 'membrete' => $vm->membrete()])
+                @continue
+            @endif
+
             @if (($hoja['tipo'] ?? '') === 'informe')
                 @include('clinica.imprimir._informe-eco', ['hoja' => $hoja, 'membrete' => $vm->membrete()])
                 @continue

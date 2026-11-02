@@ -145,6 +145,12 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
         return route('clinica.consulta.laboratorio.guardar', $consulta->id);
     }
 
+    /** El resultado de cada examen y cuáles salen en el informe (O-47). */
+    private function urlResultados(Consulta $consulta): string
+    {
+        return route('clinica.consulta.laboratorio.resultados', $consulta->id);
+    }
+
     private function urlRutina(Consulta $consulta, string $tipo): string
     {
         return route('clinica.consulta.laboratorio.rutinas.agregar', [$consulta->id, $tipo]);
@@ -173,7 +179,7 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
 
         $this->como($user, $medico, $gineco)->get(route('clinica.consulta', $consulta->id))
             ->assertOk()
-            ->assertSee('Pre-factura', false)
+            ->assertSee('Solicitudes', false)
             // El ítem de Solicitudes está en el grupo «Consulta» del menú; su detalle (que incluye laboratorio,
             // estudios, constancia, reposo, referencia, hospitalización, informe y dieta) vive en el catálogo y lo
             // fija `Unit/Clinica/SeccionesDeLaConsultaTest`.
@@ -288,8 +294,156 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
             ->assertSee(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'laboratorio']), false);
     }
 
-    public function test_la_lista_se_ve_por_tipo_y_por_nombre_y_las_filas_sin_catalogo_se_muestran_con_su_codigo(): void
+    // ------------------------------------------------- El resultado y el «Reporte» de cada examen (O-47)
+
+    /** Las filas de la orden del médico, por código sin relleno. */
+    private function filasPorCodigo(Medico $medico)
     {
+        return DB::table('examen_paciente')
+            ->where('reg_medico', $medico->reg_medico)
+            ->get()
+            ->keyBy(fn ($fila) => trim((string) $fila->codeexamen));
+    }
+
+    public function test_el_resultado_y_la_marca_de_reporte_se_guardan_y_se_releen(): void
+    {
+        [$user, $medico, $gineco, $consulta] = $this->escenario();
+        $this->examen($medico, '001');
+        $this->examen($medico, '003');
+
+        $this->como($user, $medico, $gineco)->post($this->urlResultados($consulta), [
+            'resultados' => ['001' => ' 12.5 ', '003' => ''],
+            'reportes' => ['001'],
+        ])->assertRedirect($this->seccion($consulta, 'laboratorio'))
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('estado', 'Resultados guardados.');
+
+        $filas = $this->filasPorCodigo($medico);
+
+        $this->assertSame('12.5', $filas['001']->resultado, 'el texto se guarda recortado');
+        $this->assertSame('S', trim((string) $filas['001']->vinculante), 'la casilla marcada es la S del escritorio');
+        $this->assertNull($filas['003']->resultado, 'vaciar el campo lo deja sin resultado');
+        $this->assertNull($filas['003']->vinculante, 'sin marcar no se inventa una N');
+
+        $this->assertSame(1, $this->trazas('examen_paciente', 'updated', 'resultado'));
+        $this->assertSame(1, $this->trazas('examen_paciente', 'updated', 'vinculante'));
+
+        $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'laboratorio'))
+            ->assertOk()
+            ->assertSee('Escribe el resultado de cada examen y marca «Reporte»')
+            ->assertSee('name="resultados[001]"', false)
+            ->assertSee('value="12.5"', false)
+            ->assertSee('name="reportes[]"', false)
+            ->assertSee('Guardar los resultados');
+    }
+
+    public function test_el_resultado_sobrevive_a_otro_guardado_de_la_orden(): void
+    {
+        [$user, $medico, $gineco, $consulta] = $this->escenario();
+        $this->examen($medico, '001');
+
+        $this->como($user, $medico, $gineco)->post($this->urlResultados($consulta), [
+            'resultados' => ['001' => 'Negativo'],
+            'reportes' => ['001'],
+        ])->assertSessionHasNoErrors();
+
+        // Un alta y un resumen posteriores no tienen por qué tocar el resultado ya cargado.
+        $this->como($user, $medico, $gineco)->post($this->urlAgregarExamen($consulta), ['codigo' => '003'])->assertSessionHasNoErrors();
+        $this->como($user, $medico, $gineco)->post($this->urlResumenDeExamenes($consulta), ['observacion' => 'Control'])->assertSessionHasNoErrors();
+
+        $filas = $this->filasPorCodigo($medico);
+
+        $this->assertSame('Negativo', $filas['001']->resultado);
+        $this->assertSame('S', trim((string) $filas['001']->vinculante));
+    }
+
+    public function test_un_resultado_de_mas_de_treinta_caracteres_se_rechaza(): void
+    {
+        [$user, $medico, $gineco, $consulta] = $this->escenario();
+        $this->examen($medico, '001');
+
+        $this->como($user, $medico, $gineco)->post($this->urlResultados($consulta), [
+            'resultados' => ['001' => str_repeat('a', 31)],
+        ])->assertSessionHasErrors('resultados.001');
+
+        $this->assertNull($this->filasPorCodigo($medico)['001']->resultado);
+        $this->assertSame(0, $this->trazas('examen_paciente', 'updated'));
+
+        // Treinta justos sí entran: es el ancho de la columna.
+        $this->como($user, $medico, $gineco)->post($this->urlResultados($consulta), [
+            'resultados' => ['001' => str_repeat('b', 30)],
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame(str_repeat('b', 30), $this->filasPorCodigo($medico)['001']->resultado);
+    }
+
+    public function test_la_casilla_de_reporte_se_puede_destildar(): void
+    {
+        [$user, $medico, $gineco, $consulta] = $this->escenario();
+        $this->examen($medico, '001');
+
+        $this->como($user, $medico, $gineco)->post($this->urlResultados($consulta), [
+            'resultados' => ['001' => 'Normal'],
+            'reportes' => ['001'],
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('S', trim((string) $this->filasPorCodigo($medico)['001']->vinculante));
+
+        // El segundo envío llega sin la casilla: vuelve a «no sale», sin inventar una letra. Como en el resto de la
+        // pestaña, el last-write-wins del sync necesita que pase el segundo.
+        $this->travel(5)->seconds();
+        $this->como($user, $medico, $gineco)->post($this->urlResultados($consulta), [
+            'resultados' => ['001' => 'Normal'],
+        ])->assertSessionHasNoErrors();
+
+        $this->assertNull($this->filasPorCodigo($medico)['001']->vinculante);
+        $this->assertSame('Normal', $this->filasPorCodigo($medico)['001']->resultado, 'el texto sigue');
+    }
+
+    public function test_un_codigo_que_no_esta_en_la_orden_no_se_escribe(): void
+    {
+        [$user, $medico, $gineco, $consulta] = $this->escenario();
+        $this->examen($medico, '001');
+
+        $this->como($user, $medico, $gineco)->post($this->urlResultados($consulta), [
+            'resultados' => ['999' => 'Inventado', '001' => 'Real'],
+        ])->assertSessionHasNoErrors();
+
+        $filas = $this->filasPorCodigo($medico);
+
+        $this->assertFalse(isset($filas['999']), 'no crea filas para códigos inventados');
+        $this->assertSame('Real', $filas['001']->resultado);
+    }
+
+    public function test_guardar_los_mismos_resultados_no_escribe_ni_deja_rastro(): void
+    {
+        [$user, $medico, $gineco, $consulta] = $this->escenario();
+        $this->examen($medico, '001', ['resultado' => 'Normal', 'vinculante' => 'S']);
+
+        $antes = $this->trazas('examen_paciente', 'updated');
+
+        $this->como($user, $medico, $gineco)->post($this->urlResultados($consulta), [
+            'resultados' => ['001' => 'Normal'],
+            'reportes' => ['001'],
+        ])->assertSessionHasNoErrors()
+            ->assertSessionHas('estado', 'Los resultados ya estaban guardados así.');
+
+        $this->assertSame($antes, $this->trazas('examen_paciente', 'updated'));
+    }
+
+    public function test_los_estudios_no_piden_resultado(): void
+    {
+        [$user, $medico, $gineco, $consulta] = $this->escenario();
+        $this->estudio($medico, '099');
+
+        $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'estudios'))
+            ->assertOk()
+            ->assertDontSee('name="resultados[', false)
+            ->assertDontSee('name="reportes[]"', false)
+            ->assertDontSee('Guardar los resultados');
+    }
+
+    public function test_la_lista_se_ve_por_tipo_y_por_nombre_y_las_filas_sin_catalogo_se_muestran_con_su_codigo(): void    {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         foreach (['010', '003', '002', '777'] as $codigo) {
             $this->examen($medico, $codigo);

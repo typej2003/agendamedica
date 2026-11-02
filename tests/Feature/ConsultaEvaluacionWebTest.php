@@ -770,7 +770,7 @@ class ConsultaEvaluacionWebTest extends TestCase
             ->get(route('clinica.consulta', $consulta->id));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('Pre-factura', false);
+        $respuesta->assertSee('Datos personales', false);
         $respuesta->assertSee(route('clinica.consulta', [$consulta->id, 'seccion' => 'evaluacion']), false);
     }
 

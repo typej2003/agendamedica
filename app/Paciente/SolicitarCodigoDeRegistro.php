@@ -120,7 +120,8 @@ final class SolicitarCodigoDeRegistro
         }
 
         $codigo = $this->codigos->generar();
-        $envio = $this->codigos->enviar($telefono, $codigo);
+        // El correo de la cuenta es el tercer canal (O-54), después de WhatsApp y SMS.
+        $envio = $this->codigos->enviar($telefono, $codigo, $email);
 
         if (! $envio['ok']) {
             throw ValidationException::withMessages([
@@ -166,7 +167,7 @@ final class SolicitarCodigoDeRegistro
         }
 
         $codigo = $this->codigos->generar();
-        $envio = $this->codigos->enviar((string) $pendiente['telefono'], $codigo);
+        $envio = $this->codigos->enviar((string) $pendiente['telefono'], $codigo, (string) ($pendiente['email'] ?? '') ?: null);
 
         if (! $envio['ok']) {
             throw ValidationException::withMessages([

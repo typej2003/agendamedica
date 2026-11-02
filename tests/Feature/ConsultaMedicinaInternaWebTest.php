@@ -2,22 +2,33 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\Archivos\ArchivosClinicos;
+use App\Clinica\Consulta\Interna\MapaDelInternista;
+use App\Clinica\Consulta\TagDeImagen;
+use App\Clinica\Escaneo\LecturaFallida;
+use App\Clinica\Escaneo\LectorDeHojas;
 use App\Models\Consulta;
 use App\Models\DatosGrafica;
 use App\Models\Ekg;
+use App\Models\ExamenPaciente;
 use App\Models\FormatoPrint;
 use App\Models\Historia;
+use App\Models\ImagenConsulta;
 use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\PreTrombo;
+use App\Models\RiesgoPaciente;
+use App\Models\RiesgoPacienteOpera;
 use App\Models\Specialty;
 use App\Models\SyncChange;
 use App\Models\User;
 use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -221,11 +232,62 @@ class ConsultaMedicinaInternaWebTest extends TestCase
         $this->conContexto($user, $medico, $mi)
             ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'evaluacion-preoperatoria']))
             ->assertOk()
-            ->assertSee('Clase II')
-            ->assertSee('Riesgo de trombosis venosa y tromboembolismo: Riesgo medio. Usar heparina profiláctica.');
+            ->assertSee('CLASE II')
+            ->assertSee('RIESGO DE TROMBOSIS VENOSA PROFUNDA Y TROMBOEMBOLISMO PULMONAR')
+            ->assertSee('Riesgo medio')
+            ->assertSee('Usar heparina profiláctica.');
 
         $this->conContexto($user, $medico, $mi)->get($this->seccion($consulta, 'preoperatoria', 'riesgo'))
             ->assertOk()->assertSee('Guardar el riesgo');
+    }
+
+    /**
+     * **El rótulo no se repite** (O-47, 2026-11-02): el párrafo que guarda el escritorio ya arranca con el rótulo de
+     * la opción («RIESGO ALTO»), así que la hoja no lo imprime dos veces. Se vio al abrir el informe en Chrome.
+     */
+    public function test_el_informe_no_repite_el_rotulo_de_la_escala_cuando_el_texto_ya_empieza_por_el(): void
+    {
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->conContexto($user, $medico, $mi)->post(route('clinica.consulta.internista.guardar', $consulta->id), [
+            'pestana' => 'estimaciones', 'pre_trombo_tipo' => 'C',
+            'pre_trombo_resultado' => "RIESGO ALTO\nEDAD > 40 años INTERVENCIÓN > 30 min",
+        ])->assertRedirect($this->seccion($consulta, 'preoperatoria', 'estimaciones'));
+
+        $hoja = $this->conContexto($user, $medico, $mi)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'evaluacion-preoperatoria']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertSame(1, substr_count($hoja, 'RIESGO ALTO'), 'El rótulo aparece una sola vez: el párrafo ya lo trae.');
+        $this->assertStringContainsString('EDAD &gt; 40', $hoja);
+    }
+
+    /**
+     * **El texto de cada opción** (O-47): la pantalla de *Estimaciones* lleva el texto del escritorio en el
+     * `data-texto` de su `<option>` y dice a qué cuadro copiarlo; el cuadro «Descripción» conserva lo guardado, y la
+     * clase ASA deja el marcador de la emergencia para que lo resuelva la pantalla.
+     */
+    public function test_las_estimaciones_traen_el_texto_de_cada_opcion(): void
+    {
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->conContexto($user, $medico, $mi)->post(route('clinica.consulta.internista.guardar', $consulta->id), [
+            'pestana' => 'estimaciones', 'pre_espiro_tipo' => 'B', 'pre_espiro_resultado' => 'Lo que escribió el médico.',
+        ])->assertRedirect();
+
+        $this->conContexto($user, $medico, $mi)->get($this->seccion($consulta, 'preoperatoria', 'estimaciones'))
+            ->assertOk()
+            ->assertSee('data-descripcion-de="interna-pre_espiro_resultado"', false)
+            ->assertSee('data-descripcion-de="interna-pre_aneste_resultado"', false)
+            // El texto del escritorio viaja en el atributo de su opción (Blade lo escapa).
+            ->assertSee('FVC &lt; 50% de lo anticipado', false)
+            ->assertSee('EDAD &lt; ó &gt; 40 años', false)
+            ->assertSee('Paciente {emergencia}con enfermedad sistémica leve.', false)
+            // Y lo que el médico escribió sigue en su cuadro.
+            ->assertSee('Lo que escribió el médico.');
     }
 
     public function test_el_analisis_evolutivo_junta_las_consultas_de_la_historia(): void
@@ -370,5 +432,270 @@ class ConsultaMedicinaInternaWebTest extends TestCase
         $paciente = (int) MedicoPaciente::where('reg_medico', $medico->reg_medico)->value('paciente_id');
         $this->conContexto($user, $medico, $gineco)->get(route('clinica.pacientes.historia.imprimir', $paciente))
             ->assertOk()->assertSee('Faringe: Normal.')->assertDontSee('Rx de tórax');
+    }
+
+    /**
+     * **Las fotos de la placa de la Rx de tórax** (O-44): la pestaña `rx` del plan de diagnóstico acepta varias
+     * imágenes —la placa y su lateral—, las guarda con la etiqueta `rx` y vuelve a su pestaña (no a Evaluación
+     * física), y el campo de los hallazgos sigue igual.
+     */
+    public function test_la_rx_de_torax_sube_varias_placas_y_vuelve_a_su_pestana(): void
+    {
+        Storage::fake(ArchivosClinicos::DISCO);
+
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+        $consulta->forceFill(['faringe' => 'Índice cardiotorácico normal.'])->save();
+
+        $destino = $this->seccion($consulta, MapaDelInternista::SECCION_PLAN, 'rx');
+
+        // La tarjeta de la pestaña ya ofrece la lista y la subida, y el campo de los hallazgos sigue ahí.
+        $this->conContexto($user, $medico, $mi)->get($destino)
+            ->assertOk()
+            ->assertSee('Fotos de la placa')
+            ->assertSee('Índice cardiotorácico normal.')
+            ->assertSee('id="rx-placa-subida"', false);
+
+        $this->conContexto($user, $medico, $mi)
+            ->post(route('clinica.consulta.examenes.subir', $consulta->id), [
+                'examen' => 'rx',
+                'imagen' => UploadedFile::fake()->image('placa-pa.jpg', 800, 600),
+            ])
+            ->assertRedirect($destino);
+
+        $placa = ImagenConsulta::where('reg_medico', $medico->reg_medico)
+            ->where('observacion', TagDeImagen::RX)
+            ->firstOrFail();
+
+        $this->assertSame(2001, (int) $placa->nrohistoria);
+        $this->assertSame(1, (int) $placa->nroconsulta);
+        Storage::disk(ArchivosClinicos::DISCO)->assertExists($placa->imagen);
+
+        // Se ven en la tarjeta, y una segunda sube sin pisar la primera (son varias). El nombre del archivo no se
+        // muestra —lo pone el servidor—: la fila se anuncia por su examen.
+        $this->conContexto($user, $medico, $mi)->get($destino)
+            ->assertOk()
+            ->assertSee('Imagen de Rx de tórax')
+            ->assertDontSee('Todavía no hay imágenes en Rx de tórax');
+
+        $this->conContexto($user, $medico, $mi)
+            ->post(route('clinica.consulta.examenes.subir', $consulta->id), [
+                'examen' => 'rx',
+                'imagen' => UploadedFile::fake()->image('placa-lateral.jpg', 800, 600),
+            ])
+            ->assertRedirect($destino);
+
+        $this->assertSame(2, ImagenConsulta::where('reg_medico', $medico->reg_medico)->where('observacion', TagDeImagen::RX)->count());
+
+        // Se puede abrir y se puede quitar, y vuelve a la misma pestaña.
+        $this->conContexto($user, $medico, $mi)
+            ->get(route('clinica.consulta.examenes.descargar', [$consulta->id, $placa->id]))
+            ->assertOk();
+
+        $this->conContexto($user, $medico, $mi)
+            ->delete(route('clinica.consulta.examenes.quitar', [$consulta->id, $placa->id]), ['examen' => 'rx'])
+            ->assertRedirect($destino);
+
+        $this->assertNull(ImagenConsulta::find($placa->id));
+        Storage::disk(ArchivosClinicos::DISCO)->assertMissing($placa->imagen);
+    }
+
+    /**
+     * **Resultados de exámenes** (O-49): una sección propia del internista, detrás de *Plan de diagnóstico*, que guarda
+     * en la columna nueva `consultas.resultados_examenes`. La columna no se reusa: en medicina interna el escritorio
+     * rotula `oido` como «EXAMEN FÍSICO» y `resultadoexamencomp` es el resumen físico.
+     */
+    public function test_resultados_de_examenes_es_una_seccion_propia_y_guarda_en_su_columna(): void
+    {
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        // Está en el árbol, después de Plan de diagnóstico, y su bloque se abre.
+        $arbol = $this->conContexto($user, $medico, $mi)->get(route('clinica.consulta', $consulta->id))->assertOk();
+        $arbol->assertSee('Resultados de exámenes');
+        $this->assertStringContainsString('Resultados de exámenes', (string) $arbol->getContent());
+
+        $destino = $this->seccion($consulta, MapaDelInternista::SECCION_RESULTADOS, 'resultados');
+
+        $this->conContexto($user, $medico, $mi)->get($destino)
+            ->assertOk()
+            ->assertSee('Resultados de exámenes')
+            ->assertSee('id="interna-resultados_examenes"', false)
+            ->assertSee('Guardar resultados de exámenes');
+
+        $this->conContexto($user, $medico, $mi)->post(route('clinica.consulta.internista.guardar', $consulta->id), [
+            'pestana' => 'resultados',
+            'resultados_examenes' => "HEMOGLOBINA: 12,8 g/dL\nGLUCOSA: 92 mg/dL",
+        ])->assertRedirect($destino);
+
+        $consulta->refresh();
+        $this->assertSame("HEMOGLOBINA: 12,8 g/dL\nGLUCOSA: 92 mg/dL", $consulta->resultados_examenes);
+        $this->assertNull($consulta->oido, 'no se reusa la columna que en medicina interna es el examen físico');
+        $this->assertNull($consulta->resultadoexamencomp, 'ni la del resumen físico');
+        $this->assertTrue(
+            SyncChange::where('table_name', 'consultas')->where('column_name', 'resultados_examenes')->where('source', 'web')->exists(),
+            'deja su rastro por columna para el sync',
+        );
+    }
+
+    /**
+     * **Escanear la hoja** (O-49): la misma lectura de WEB-13.15, con la ruta propia de la sección. Devuelve el texto y
+     * **no escribe nada** —ni la consulta ni el rastro—: el médico revisa y guarda con el botón de la sección.
+     */
+    public function test_la_hoja_de_resultados_se_lee_y_no_se_guarda(): void
+    {
+        $lecturas = new \ArrayObject();
+        $this->app->instance(LectorDeHojas::class, new class($lecturas) implements LectorDeHojas {
+            public function __construct(private \ArrayObject $lecturas)
+            {
+            }
+
+            public function disponible(): bool
+            {
+                return true;
+            }
+
+            public function leer(string $contenido, string $mime): string
+            {
+                $this->lecturas[] = ['mime' => $mime, 'bytes' => strlen($contenido)];
+
+                return "HEMOGLOBINA: 12,8 g/dL\nGLUCOSA: 92 mg/dL";
+            }
+        });
+
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+        $rastros = SyncChange::count();
+
+        // El botón está en la tarjeta y apunta a la ruta de la sección.
+        $this->conContexto($user, $medico, $mi)->get($this->seccion($consulta, MapaDelInternista::SECCION_RESULTADOS))
+            ->assertOk()
+            ->assertSee('Escanear hoja')
+            ->assertSee('data-escanear-hoja', false)
+            ->assertSee(route('clinica.consulta.resultados.escanear', $consulta->id), false);
+
+        $this->conContexto($user, $medico, $mi)
+            ->post(route('clinica.consulta.resultados.escanear', $consulta->id), [
+                'hoja' => UploadedFile::fake()->createWithContent('hoja.png', base64_decode(
+                    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+                )),
+            ], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('texto', "HEMOGLOBINA: 12,8 g/dL\nGLUCOSA: 92 mg/dL")
+            ->assertJsonStructure(['texto', 'aviso']);
+
+        $this->assertCount(1, $lecturas);
+        $this->assertSame('image/png', $lecturas[0]['mime']);
+        $this->assertNull($consulta->fresh()->resultados_examenes, 'la lectura no escribe: eso es del guardado');
+        $this->assertSame($rastros, SyncChange::count(), 'la lectura no deja rastro de sync');
+    }
+
+    /** Sin proveedor de lectura, el botón no aparece: el médico escribe el resultado a mano. */
+    public function test_sin_proveedor_de_lectura_no_se_ofrece_escanear(): void
+    {
+        $this->app->instance(LectorDeHojas::class, new class implements LectorDeHojas {
+            public function disponible(): bool
+            {
+                return false;
+            }
+
+            public function leer(string $contenido, string $mime): string
+            {
+                throw LecturaFallida::noDisponible();
+            }
+        });
+
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->conContexto($user, $medico, $mi)->get($this->seccion($consulta, MapaDelInternista::SECCION_RESULTADOS))
+            ->assertOk()
+            ->assertSee('id="interna-resultados_examenes"', false)
+            ->assertDontSee('data-escanear-hoja', false)
+            ->assertDontSee('Escanear hoja');
+    }
+
+    /**
+     * **El informe pre-operatorio de dos páginas** (O-47): arma cada sección con lo cargado y sólo imprime el examen
+     * marcado como «sale en el informe».
+     */
+    public function test_el_informe_preoperatorio_arma_las_dos_paginas_con_lo_cargado(): void
+    {
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $consulta->forceFill([
+            'enfermedadactual' => 'Dolor abdominal de tres días de evolución.',
+            'resultadoexamencomp' => 'PESO: 70 kg. ABDOMEN: blando, depresible.',
+            'faringe' => 'Índice cardiotorácico normal.',
+        ])->save();
+
+        // Dos exámenes: sólo el marcado con «Reporte» (`vinculante = 'S'`) sale en la hoja.
+        ExamenPaciente::create(['reg_medico' => $medico->reg_medico, 'nrohistoria' => 2001, 'nroconsulta' => 1,
+            'codeexamen' => 'L01', 'resultado' => '12.5', 'vinculante' => 'S']);
+        ExamenPaciente::create(['reg_medico' => $medico->reg_medico, 'nrohistoria' => 2001, 'nroconsulta' => 1,
+            'codeexamen' => 'L02', 'resultado' => '9', 'vinculante' => null]);
+
+        $this->conContexto($user, $medico, $mi)->post(route('clinica.consulta.internista.guardar', $consulta->id), [
+            'pestana' => 'ekg', 'ekg_ritmo' => 'SINUSAL', 'ekg_conclusiones' => 'SINUSAL sin signos de isquemia.',
+        ])->assertRedirect();
+
+        $this->conContexto($user, $medico, $mi)->post(route('clinica.consulta.internista.guardar', $consulta->id), [
+            'pestana' => 'estimaciones', 'pre_aneste_tipo' => 'A', 'pre_aneste_emergencia' => 'N',
+            'pre_espiro_tipo' => 'B', 'pre_trombo_tipo' => 'A', 'pre_trombo_resultado' => 'Sin profilaxis.',
+        ])->assertRedirect();
+
+        RiesgoPacienteOpera::create(['reg_medico' => $medico->reg_medico, 'historia' => 2001, 'consulta' => 1,
+            'puntos' => 3, 'clase' => 'I', 'conclusion' => 'Individuo Sano', 'recomendaciones' => 'Apto',
+            'nombre_intervencion' => 'Aumento de mamas']);
+
+        // Los puntos del cierre son la suma de los riesgos marcados (lo mismo que muestra la pantalla).
+        RiesgoPaciente::create(['reg_medico' => $medico->reg_medico, 'historia' => 2001,
+            'descripcion' => 'Asma', 'sub_tipo' => 'Respiratorio', 'punto' => 3]);
+
+        $respuesta = $this->conContexto($user, $medico, $mi)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'evaluacion-preoperatoria']))
+            ->assertOk()
+            // Página 1: las secciones del informe, cada una con su dato.
+            ->assertSee('EVALUACIÓN PRE-OPERATORIA')
+            ->assertSee('Aumento de mamas')
+            ->assertSee('ENFERMEDAD ACTUAL')
+            ->assertSee('Dolor abdominal de tres días de evolución.')
+            ->assertSee('EXÁMEN FÍSICO')
+            ->assertSee('PESO: 70 kg.')
+            ->assertSee('LABORATORIO')
+            ->assertSee('L01')
+            ->assertSee('12.5')
+            ->assertSee('E.K.G.')
+            ->assertSee('SINUSAL sin signos de isquemia.')
+            ->assertSee('R.X. TÓRAX')
+            ->assertSee('Índice cardiotorácico normal.')
+            // Página 2: las escalas, las recomendaciones y el cierre con los puntos.
+            ->assertSee('ESPIROMETRÍA')
+            ->assertSee('RIESGO DE TROMBOSIS VENOSA PROFUNDA Y TROMBOEMBOLISMO PULMONAR')
+            ->assertSee('Sin profilaxis.')
+            ->assertSee('CLASIFICACIÓN DEL ESTADO FÍSICO')
+            ->assertSee('RECOMENDACIONES')
+            ->assertSee('RIESGO: Clase I - Individuo Sano - Puntos: 3');
+
+        // El examen sin «Reporte» no sale, y la hoja son dos páginas.
+        $respuesta->assertDontSee('L02');
+        $this->assertSame(2, substr_count($respuesta->getContent(), 'class="informe-hoja'));
+    }
+
+    /** Un bloque sin dato no se imprime: sin E.K.G. cargado no aparece su sección (O-47). */
+    public function test_el_informe_preoperatorio_no_imprime_los_bloques_vacios(): void
+    {
+        [$user, $medico, $mi] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $consulta->forceFill(['faringe' => 'Índice cardiotorácico normal.'])->save();
+
+        $this->conContexto($user, $medico, $mi)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'evaluacion-preoperatoria']))
+            ->assertOk()
+            ->assertSee('R.X. TÓRAX')
+            ->assertDontSee('E.K.G.')
+            ->assertDontSee('LABORATORIO');
     }
 }

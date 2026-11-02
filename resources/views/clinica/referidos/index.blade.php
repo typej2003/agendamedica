@@ -85,6 +85,70 @@
         </div>
     </div>
 
+    <div class="card mb-3">
+        <div class="card-header bg-white py-3"><strong>Invitar por correo</strong></div>
+        <div class="card-body">
+            <p class="small text-muted">
+                Escribe el correo de un colega y le mandamos la invitación con tu link. Va una por vez y
+                puedes mandar hasta {{ $topeInvitaciones }} al día
+                ({{ $invitacionesHoy }} de {{ $topeInvitaciones }} hoy).
+            </p>
+            <form method="POST" action="{{ route('clinica.referidos.invitar') }}" class="row g-2 align-items-end">
+                @csrf
+                <div class="col-12 col-md-8">
+                    <label class="form-label" for="invitar-email">Correo del colega</label>
+                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="invitar-email"
+                           name="email" value="{{ old('email') }}" maxlength="191" required
+                           placeholder="colega@ejemplo.com" autocomplete="off">
+                    @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-12 col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-envelope me-1" aria-hidden="true"></i> Enviar la invitación
+                    </button>
+                </div>
+            </form>
+            <p class="small text-muted mb-0 mt-2">
+                La manda Doctorísimo; el colega ve tu nombre y el link. Al correo de un médico que ya está
+                registrado no se le manda: compártele el link.
+            </p>
+        </div>
+    </div>
+
+    @if ($invitaciones->isNotEmpty())
+        <div class="card mb-3">
+            <div class="card-header bg-white py-3"><strong>Invitaciones enviadas</strong></div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Correo</th>
+                                <th>Última vez</th>
+                                <th class="text-end">Envíos</th>
+                                <th>Registrado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($invitaciones as $invitacion)
+                                <tr>
+                                    <td class="small">{{ $invitacion->email }}</td>
+                                    <td class="small text-nowrap">
+                                        {{ $invitacion->ultima_vez?->format('d/m/Y H:i') ?? '—' }}
+                                    </td>
+                                    <td class="text-end small">{{ (int) $invitacion->veces }}</td>
+                                    <td class="small">
+                                        {{ $invitacion->registrada_el ? 'Sí' : 'Todavía no' }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-header bg-white py-3"><strong>Colegas que invitaste</strong></div>
         <div class="card-body p-0">

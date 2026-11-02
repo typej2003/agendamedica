@@ -353,3 +353,127 @@
     .reservas-cuerpo { padding: 0 !important; max-width: none !important; }
     .reservas-panel { border: 0 !important; box-shadow: none !important; }
 }
+
+/* ==========================================================================
+   O-52: lo que el médico dice antes de venir, el calendario y quién reserva
+   ========================================================================== */
+
+.reservas-aviso {
+    margin: 1.25rem 0;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--ds-borde);
+    border-left: 4px solid var(--ds-violeta-700);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie-2);
+}
+
+.reservas-aviso-titulo {
+    margin: 0 0 .4rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ds-tinta);
+}
+
+.reservas-aviso-lista {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: var(--ds-texto-2);
+}
+
+.reservas-aviso-lista li + li { margin-top: .3rem; }
+
+/* El calendario: la rejilla son enlaces, así que se usa con teclado y sin JavaScript. */
+.reservas-calendario {
+    margin: 1rem 0 1.25rem;
+    padding: .75rem;
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio);
+    background: var(--ds-superficie);
+}
+
+.reservas-calendario-cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .5rem;
+}
+
+.reservas-calendario-mes {
+    margin: 0;
+    font-weight: 700;
+    color: var(--ds-tinta);
+    text-align: center;
+}
+
+.reservas-calendario-flecha {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    color: var(--ds-violeta-700);
+    text-decoration: none;
+}
+
+.reservas-calendario-flecha:hover { background: var(--ds-violeta-50); }
+
+.reservas-calendario-flecha-muerta { color: var(--ds-borde-control); }
+
+.reservas-calendario-rejilla {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: .2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.reservas-calendario-letra {
+    padding: .2rem 0;
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--ds-texto-2);
+    text-align: center;
+}
+
+.reservas-calendario-hueco { min-height: 2.5rem; }
+
+.reservas-calendario-dia {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.reservas-calendario-dia-libre {
+    color: var(--ds-violeta-800);
+    background: var(--ds-violeta-50);
+}
+
+.reservas-calendario-dia-libre:hover { background: var(--ds-violeta-700); color: #fff; }
+
+.reservas-calendario-dia-ocupado { color: var(--ds-borde-control); }
+
+.reservas-calendario-dia-hoy { box-shadow: inset 0 0 0 2px var(--ds-celeste-700); }
+
+.reservas-calendario-dia-elegido { background: var(--ds-violeta-700); color: #fff; }
+
+.reservas-dia-elegido { margin-top: .25rem; }
+
+/* Quién reserva. */
+.reservas-quien {
+    margin: 0 0 .25rem;
+    padding: .75rem .9rem;
+    border: 1px dashed var(--ds-borde);
+    border-radius: var(--ds-radio);
+}
+
+@media (max-width: 575.98px) {
+    .reservas-calendario-dia,
+    .reservas-calendario-hueco { min-height: 2.75rem; }
+}

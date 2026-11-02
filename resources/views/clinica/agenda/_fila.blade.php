@@ -59,7 +59,9 @@
                 $confirmar = $fila->confirmar();
                 $atender = $fila->atender();
                 $cobro = $fila->cobro();
+                $cobrarLaCita = $fila->cobrarLaCita();
                 $linkDePago = $fila->linkDePago();
+                $compartirCita = $fila->linkDeCompartir();
                 $recordatorio = $fila->recordatorio();
                 $imprimirDocumentos = $fila->imprimirDocumentos();
                 $quitar = $fila->quitarConfirmacion();
@@ -73,7 +75,9 @@
                 // que ya no tiene nada más que hacer— va como botón directo, al lado de las demás.
                 $secundarias = array_filter([
                     'recordatorio' => (bool) $recordatorio,
+                    'cobrarLaCita' => (bool) $cobrarLaCita,
                     'link' => (bool) $linkDePago,
+                    'compartir' => (bool) $compartirCita,
                     'atender' => (bool) ($confirmar && $atender),
                     'quitar' => (bool) $quitar,
                     'citas' => (bool) $fila->pacienteId(),
@@ -169,7 +173,7 @@
                      colgando) y una con pago registrado no se borra: la regla la aplica `EliminarCita`;
                      acá solo no se ofrece. El menú se muestra aunque no haya ninguna de esas acciones
                      cuando el paciente tiene ficha: "Citas del paciente" siempre está. --}}
-                @if (! $soloCitasDelPaciente && ($recordatorio || $linkDePago || $quitar || ($confirmar && $atender) || $fila->urlEditar() || $fila->urlEliminar() || $fila->pacienteId()))
+                @if (! $soloCitasDelPaciente && ($recordatorio || $cobrarLaCita || $linkDePago || $compartirCita || $quitar || ($confirmar && $atender) || $fila->urlEditar() || $fila->urlEliminar() || $fila->pacienteId()))
                     <x-ui.menu>
                         @if ($recordatorio)
                             <button type="button" class="menu-item" data-dialogo="recordatorio"
@@ -186,9 +190,23 @@
 
                         {{-- El link público que el paciente abre para pagar la cita (punto 3 del cobro). La
                              pantalla lo genera al abrirse y lo comparte; no cobra nada. --}}
+                        {{-- **Cobrar la cita en el mostrador** (O-53): la pantalla con la pasarela y el registro
+                             manual. Es la misma acción «Cobrar» de siempre, con los dos caminos y el OTP. --}}
+                        @if ($cobrarLaCita)
+                            <a class="menu-item" href="{{ $cobrarLaCita['url'] }}">
+                                <i class="bi bi-cash-stack" aria-hidden="true"></i> Cobrar la cita
+                            </a>
+                        @endif
+
                         @if ($linkDePago)
                             <a class="menu-item" href="{{ $linkDePago['url'] }}">
                                 <i class="bi bi-link-45deg" aria-hidden="true"></i> Link de pago
+                            </a>
+                        @endif
+
+                        @if ($compartirCita)
+                            <a class="menu-item" href="{{ $compartirCita['url'] }}">
+                                <i class="bi bi-share" aria-hidden="true"></i> Compartir la cita
                             </a>
                         @endif
 

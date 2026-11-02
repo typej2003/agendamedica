@@ -28,6 +28,8 @@ use InvalidArgumentException;
  *    el escritorio cargó y el médico no tocó: la tabla se sube **por fila** (trampa 75) y no hay ningún «lo marcado es lo que queda»
  *    en el camino de la web.
  *  - `guardarResumen($consulta, $observacion)`: escribe **sólo** el «Resumen clínico», que sigue siendo un formulario con su botón.
+ *  - `guardarResultados($consulta, $resultados, $reportes)` (O-47, 2026-11-02): el **resultado** de cada examen y cuáles
+ *    **salen en el informe** (`examen_paciente.resultado` y `.vinculante`), también con su botón y también sólo lo que cambió.
  *
  * Las tres reusan la comprobación de catálogo (`CatalogoParaPedirExamenes::resolver`) y el rastro (`EscribeConRastro`).
  *
@@ -50,6 +52,9 @@ use InvalidArgumentException;
 final class GuardarOrdenDeLaboratorio
 {
     use EscribeConRastro;
+
+    /** La letra con la que `examen_paciente.vinculante` dice que el examen **sale en el informe** (O-47). */
+    public const REPORTE = 'S';
 
     public function __construct(private LaboratorioDeLaConsulta $ordenes, private CatalogoParaPedirExamenes $catalogo)
     {
@@ -128,6 +133,75 @@ final class GuardarOrdenDeLaboratorio
     }
 
     /**
+     * **Guardar el resultado de los exámenes y cuáles salen en el informe** (O-47, 2026-11-02).
+     *
+     * Son las dos columnas que el escritorio usa para los resultados y que hasta ahora la web no tocaba:
+     * `examen_paciente.resultado` (el texto corto, `varchar(30)`) y `vinculante` (`'S'` = sale en el informe; las cinco
+     * hojas del escritorio filtran por esa letra). La pantalla del escritorio es
+     * `ventana_consulta/d_resultados_examenes.srd`, con `update="examen_paciente"`.
+     *
+     * El formulario manda el mapa `codeexamen => resultado` y la lista de los códigos marcados. **Una fila que no viene en
+     * el mapa no se toca**: así un envío parcial no borra resultados, y vaciar el campo (que llega como `''`) sí los deja
+     * en `NULL`.
+     *
+     * Escribe **sólo lo que cambió**, columna por columna, con el rastro de siempre (`source = web` y el last-write-wins
+     * del sync). Un código que no es de la orden de esta consulta se ignora: el formulario no puede escribir filas ajenas.
+     *
+     * @param  array<string,?string>  $resultados  `codeexamen` => texto del resultado
+     * @param  array<int,string>  $reportes  los `codeexamen` marcados como «sale en el informe»
+     *
+     * @throws InvalidArgumentException si un resultado no entra en la columna
+     */
+    public function guardarResultados(
+        Consulta $consulta,
+        array $resultados,
+        array $reportes = [],
+        ?CarbonInterface $cuando = null,
+        ?string $origen = 'web',
+    ): ResultadoDeOrden {
+        $resultados = $this->resultadosNormalizados($resultados);
+        $marcados = array_flip($this->normalizar($reportes));
+
+        $cuando = $this->ahora($cuando);
+
+        return DB::transaction(function () use ($consulta, $resultados, $marcados, $cuando, $origen) {
+            $filas = ExamenPaciente::where('reg_medico', $consulta->reg_medico)
+                ->where('nrohistoria', (int) $consulta->numhistoria)
+                ->where('nroconsulta', (int) $consulta->nroconsulta)
+                ->orderBy('id')
+                ->get();
+
+            $columnas = [];
+            $bloqueadas = [];
+
+            foreach ($filas as $fila) {
+                $codigo = trim((string) $fila->codeexamen);
+
+                if (! array_key_exists($codigo, $resultados)) {
+                    continue;
+                }
+
+                [$escritas, $sinEscribir] = $this->corregirFila($fila, 'examen_paciente', [
+                    'resultado' => $resultados[$codigo],
+                    // `'S'` o nada: el legado deja `NULL` para «no sale» y no se inventa un `'N'` que no estaba.
+                    'vinculante' => isset($marcados[$codigo]) ? self::REPORTE : null,
+                ], $cuando, $origen);
+
+                $columnas = array_merge($columnas, $escritas);
+                $bloqueadas = array_merge($bloqueadas, $sinEscribir);
+            }
+
+            return new ResultadoDeOrden(
+                0,
+                0,
+                false,
+                array_values(array_unique($columnas)),
+                array_values(array_unique($bloqueadas)),
+            );
+        });
+    }
+
+    /**
      * **Guardar el «Resumen clínico»** (O-29): lo único de esta pantalla que sigue siendo un formulario con su botón.
      *
      * No toca los exámenes: los agrega y los quita cada clic del catálogo.
@@ -194,6 +268,42 @@ final class GuardarOrdenDeLaboratorio
             array_map(fn ($codigo) => trim((string) $codigo), $codigos),
             fn (string $codigo) => $codigo !== '',
         )));
+    }
+
+    /**
+     * Los resultados que llegaron del formulario, recortados y con `''` → `null` (vaciar el campo borra el dato).
+     *
+     * La clave se conserva aunque el texto quede vacío: es lo que distingue «esta fila la mandó el formulario» de «esta
+     * fila no vino» (y por eso una fila ausente no se toca).
+     *
+     * @param  array<string,?string>  $resultados
+     * @return array<string,?string>
+     *
+     * @throws InvalidArgumentException
+     */
+    private function resultadosNormalizados(array $resultados): array
+    {
+        $limpios = [];
+
+        foreach ($resultados as $codigo => $texto) {
+            $codigo = trim((string) $codigo);
+
+            if ($codigo === '') {
+                continue;
+            }
+
+            $texto = trim((string) $texto);
+
+            if (mb_strlen($texto) > LaboratorioDeLaConsulta::LARGO_RESULTADO) {
+                throw new InvalidArgumentException(
+                    'El resultado de un examen no puede tener más de ' . LaboratorioDeLaConsulta::LARGO_RESULTADO . ' caracteres.',
+                );
+            }
+
+            $limpios[$codigo] = $texto === '' ? null : $texto;
+        }
+
+        return $limpios;
     }
 
     /** @return array<int,string> */

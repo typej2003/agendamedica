@@ -471,6 +471,15 @@ class AgendamientoDeCitas
             $fila['paciente_sinhistoria_id'] = $paciente->id;
         }
 
+        // **Quién reservó** (O-52): sólo lo manda el portal público cuando la cita la sacó un representante.
+        // Las tres columnas son nullable y el escritorio las ignora, así que la cita de la web clínica y la
+        // del bot no cambian.
+        if (($valores['reservado_por'] ?? null) === 'R') {
+            $fila['reservado_por'] = 'R';
+            $fila['reservado_por_nombre'] = $valores['reservado_por_nombre'] ?? null;
+            $fila['reservado_por_documento'] = $valores['reservado_por_documento'] ?? null;
+        }
+
         return $fila;
     }
 

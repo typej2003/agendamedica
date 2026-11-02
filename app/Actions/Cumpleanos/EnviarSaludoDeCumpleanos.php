@@ -93,18 +93,23 @@ final class EnviarSaludoDeCumpleanos
                 throw $e;
             }
 
-            // Otra corrida ganó la carrera: el saludo de hoy ya está registrado y no se manda de nuevo.
-            return $this->registro->envioDe($cumpleano->pacienteId(), $cumpleano->dia())
-                ?? NotificacionCumple::make([
-                    'paciente_id'  => $cumpleano->pacienteId(),
-                    'fecha_cumple' => $cumpleano->fecha(),
-                    'canal'        => $canal,
-                    'estado'       => NotificacionCumple::ESTADO_ENVIADA,
-                ]);
+            // Con `updateOrCreate` (O-51) este choque ya no debería ocurrir: la fila del día se reescribe,
+            // no se inserta. La red se queda por si dos procesos compiten por la misma fila, pero **no
+            // inventa** un estado: devuelve lo que quedó registrado o relanza, para no decir «enviado»
+            // cuando no se mandó nada.
+            return $this->registro->intentoDe($cumpleano->pacienteId(), $cumpleano->dia()) ?? throw $e;
         }
     }
 
-    /** El envío en sí, con su registro. */
+    /**
+     * El envío en sí, con su registro.
+     *
+     * **La fila es «el intento de hoy»** (O-51): la clave es `paciente_id` + `fecha_cumple`, así que un
+     * reintento del mismo cumpleaños **reescribe** la fila en vez de chocar con el índice único. Es lo que
+     * hace que el «forzar» manual sirva de verdad —el médico reintenta y la fila pasa a `enviada`— y que
+     * la pantalla no muestre un estado que no pasó. La primera escritura del día deja `created_at`; las
+     * siguientes sólo mueven `updated_at`, que es la hora del último intento que muestra la pantalla.
+     */
     private function mandar(
         Cumpleano $cumpleano,
         string $regMedico,
@@ -128,10 +133,21 @@ final class EnviarSaludoDeCumpleanos
             SaludoDeCumpleanos::class,
         );
 
-        return NotificacionCumple::create([
+        // **La fila del día se reescribe, no se inserta** (O-51). Se busca por `whereDate` y no con la fecha
+        // exacta: la columna puede traer la parte de hora (`2026-10-10 00:00:00`) y un `where` de igualdad
+        // no la encontraría, que es justo el choque contra el índice que hacía mentir al reintento.
+        $notificacion = NotificacionCumple::query()
+            ->where('paciente_id', $cumpleano->pacienteId())
+            ->whereDate('fecha_cumple', $cumpleano->fecha())
+            ->latest('id')
+            ->first()
+            ?? new NotificacionCumple([
+                'paciente_id'  => $cumpleano->pacienteId(),
+                'fecha_cumple' => $cumpleano->fecha(),
+            ]);
+
+        $notificacion->fill([
             'reg_medico'  => $regMedico,
-            'paciente_id' => $cumpleano->pacienteId(),
-            'fecha_cumple' => $cumpleano->fecha(),
             'canal'       => $canal,
             'destino'     => $destino,
             'plantilla'   => $canal === Canal::WHATSAPP
@@ -142,6 +158,14 @@ final class EnviarSaludoDeCumpleanos
             'respuesta'   => json_encode($envio['respuesta']),
             'enviada_por' => $usuario?->id,
         ]);
+
+        $notificacion->save();
+
+        // Una fila reescrita no es «recién creada» para Eloquent, pero para el comando esta corrida **sí**
+        // hizo el envío (no es «otro ya lo mandó»).
+        $notificacion->wasRecentlyCreated = true;
+
+        return $notificacion;
     }
 
     /**

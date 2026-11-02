@@ -39,25 +39,26 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         ));
     }
 
-    public function test_ginecologia_conserva_el_panel_de_trece_items(): void
+    public function test_ginecologia_conserva_el_panel_de_doce_items(): void
     {
         $vm = $this->shell(self::GINECO);
-        // O-22 retiró *Exámenes* (el ítem 7): la numeración del legado no se renumera.
-        $this->assertSame([1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm));
-        $this->assertSame(13, $vm->totalItems());
+        // O-22 retiró *Exámenes* (el ítem 7) y O-45 apaga la pre-factura (el 14) mientras falte facturación:
+        // la numeración del legado no se renumera, así que el 7 y el 14 quedan como huecos.
+        $this->assertSame([1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13], $this->numeros($vm));
+        $this->assertSame(12, $vm->totalItems());
     }
 
     /**
      * **Sin especialidad no se presume ginecología** (2026-10-30): el contexto nulo cae en el núcleo de medicina general
-     * —once ítems—, no en los trece del legado. Antes la ausencia del dato abría el estudio ecográfico y el control de
-     * embarazo, que es justo lo que el médico sin especialidad no debería ver.
+     * —diez ítems, con la pre-factura apagada por O-45—, no en los doce del legado. Antes la ausencia del dato abría el
+     * estudio ecográfico y el control de embarazo, que es justo lo que el médico sin especialidad no debería ver.
      */
     public function test_sin_especialidad_el_panel_es_el_del_nucleo_general(): void
     {
         $vm = $this->shell(null);
 
-        $this->assertSame([1, 2, 3, 4, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm));
-        $this->assertSame(11, $vm->totalItems());
+        $this->assertSame([1, 2, 3, 4, 8, 9, 10, 11, 12, 13], $this->numeros($vm));
+        $this->assertSame(10, $vm->totalItems());
     }
 
     /**
@@ -69,10 +70,11 @@ class AlcanceDeLaEspecialidadTest extends TestCase
     {
         $vm = $this->shell(self::GENERAL);
 
-        // 11 de 11: los trece del panel menos el 5 (estudio ecográfico) y el 6 (control de embarazo). La numeración no se renumera.
-        $this->assertSame([1, 2, 3, 4, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm));
-        $this->assertSame(11, $vm->totalItems());
-        $this->assertSame(11, $vm->totalListos());
+        // 10 de 10: los doce del panel menos el 5 (estudio ecográfico) y el 6 (control de embarazo); la
+        // pre-factura (14) está apagada por O-45. La numeración no se renumera.
+        $this->assertSame([1, 2, 3, 4, 8, 9, 10, 11, 12, 13], $this->numeros($vm));
+        $this->assertSame(10, $vm->totalItems());
+        $this->assertSame(10, $vm->totalListos());
     }
 
     /** En el modo general las dos secciones ginecológicas no existen en el catálogo: su URL directa cae en el estado vacío. */
@@ -95,10 +97,10 @@ class AlcanceDeLaEspecialidadTest extends TestCase
 
         // Pediatría tiene **su** catálogo (2026-10-19): sin el ítem 5 del estudio —que en su árbol es el de
         // nefrología, y sólo aparece con ese postgrado— ni el control de embarazo. Numeración del legado: 1-4 y 6-15.
-        $this->assertSame([1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], $this->numeros($vm));
-        $this->assertSame(14, $vm->totalItems());
-        // Los catorce tienen pantalla desde F9 (la pre-factura).
-        $this->assertSame(14, $vm->totalListos());
+        $this->assertSame([1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm));
+        $this->assertSame(13, $vm->totalItems());
+        // Los trece tienen pantalla: la pre-factura (15) está apagada por O-45.
+        $this->assertSame(13, $vm->totalListos());
     }
 
     public function test_una_seccion_oculta_no_se_abre_en_pediatria(): void

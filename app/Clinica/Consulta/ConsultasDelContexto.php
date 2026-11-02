@@ -4,7 +4,6 @@ namespace App\Clinica\Consulta;
 
 use App\Clinica\Pacientes\DuenoDeLaHistoria;
 use App\Models\Consulta;
-use App\Models\MedicoPaciente;
 use App\Models\MotivoConsultaPaciente;
 use App\Models\Paciente;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -70,15 +69,13 @@ final class ConsultasDelContexto
             $paciente = Paciente::find($duenio);
         }
 
-        // Tolerancia con las consultas viejas cuyo número sólo está en el vínculo de otro registro del
-        // médico: se sigue mirando el resto, pero **sólo** si el registro de la consulta no tiene a nadie.
+        // Tolerancia con las consultas viejas cuyo número **sólo** está en el vínculo de otro registro del médico
+        // (trampa 143). No se cae al vínculo cuando el número ya es la historia registrada de otro consultorio: ahí
+        // es otra historia y otro paciente, y mostrarlo nombraba a una persona que no es la de la consulta.
         if ($paciente === null) {
-            $pacienteId = MedicoPaciente::whereIn('reg_medico', $registrosMedicos)
-                ->where('numhistoria', (string) (int) $consulta->numhistoria)
-                ->orderBy('id')
-                ->value('paciente_id');
+            $pacienteId = (new DuenoDeLaHistoria())->huerfanoEn($registrosMedicos, $consulta->numhistoria);
 
-            $paciente = $pacienteId !== null ? Paciente::find((int) $pacienteId) : null;
+            $paciente = $pacienteId !== null ? Paciente::find($pacienteId) : null;
         }
 
         if ($paciente === null) {

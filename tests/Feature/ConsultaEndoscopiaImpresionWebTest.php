@@ -134,8 +134,8 @@ class ConsultaEndoscopiaImpresionWebTest extends TestCase
             ->assertOk()
             ->assertSee('EVALUACIÓN PRE-OPERATORIA')
             ->assertSee('Apto para cirugía.')
-            ->assertSee('2 puntos')
-            ->assertSee('Riesgo moderado.');
+            // El cierre del informe pre-operatorio (O-47): «Clase II - Riesgo moderado. - Puntos: 2».
+            ->assertSee('RIESGO: Clase II - Riesgo moderado. - Puntos: 2');
     }
 
     public function test_sin_texto_no_se_ofrece_la_hoja(): void

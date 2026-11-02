@@ -3,9 +3,13 @@
 namespace Tests\Feature;
 
 use App\Http\Livewire\Admin\Pagos;
+use App\Models\Cola;
 use App\Models\CuentaBancaria;
+use App\Models\Medico;
+use App\Models\MedicoRegistro;
 use App\Models\MetodoPago;
 use App\Models\Pago;
+use App\Models\PagoEvento;
 use App\Models\Plan;
 use App\Models\RegMedicoServicio;
 use App\Models\User;
@@ -177,5 +181,166 @@ class PagosAdminTest extends TestCase
         $this->assertSame(Pago::APROBADO, $pago->fresh()->estado);
         $this->assertSame(1, RegMedicoServicio::where('reg_medico', $pago->reg_medico)
             ->where('origen', RegMedicoServicio::ORIGEN_COMPRA)->count());
+    }
+
+    // ------------------------------------------------------------------ Administrar un pago (O-53)
+
+    /** Un médico con su registro y una cita suya, que es lo que administra el panel. */
+    private function citaDeUnMedico(array $extra = []): array
+    {
+        $reg = 'admin-cita-' . substr(uniqid(), -6);
+
+        $user = User::create([
+            'name' => 'Dr. de prueba', 'email' => "{$reg}@example.com",
+            'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false,
+        ]);
+
+        $medico = Medico::create([
+            'user_id' => $user->id, 'name' => 'Dr. de prueba', 'lastname' => 'Cobros',
+            'email' => $user->email, 'password' => $user->password, 'reg_medico' => $reg,
+        ]);
+        MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $reg]);
+
+        $cita = Cola::create(array_merge([
+            'reg_medico' => $reg,
+            'fecha' => '2026-11-10',
+            'hora_ini' => '08:00:00',
+            'numorden' => 1,
+            'atendido' => 0,
+            'estado' => Cola::ESTADO_CONFIRMADA,
+            'monto' => 50,
+            'monto_pagado' => 0,
+        ], $extra));
+
+        return [$medico, $cita];
+    }
+
+    private function pagoDeCita(Cola $cita, array $datos = []): Pago
+    {
+        return $this->pago($datos + [
+            'reg_medico' => $cita->reg_medico,
+            'beneficiario_tipo' => Pago::BENEFICIARIO_MEDICO,
+            'beneficiario_reg_medico' => $cita->reg_medico,
+            'canal' => Pago::CANAL_MOSTRADOR,
+            'pagable_tipo' => Pago::PAGABLE_CITA,
+            'pagable_id' => $cita->id,
+            'concepto' => 'Consulta',
+            'moneda' => 'USD',
+            'monto_e2' => 5000,
+            'monto_usd_e2' => 5000,
+            'estado' => Pago::PENDIENTE,
+        ]);
+    }
+
+    public function test_lo_pendiente_se_agrupa_por_medico_y_no_cuenta_lo_aprobado(): void
+    {
+        [$medico, $cita] = $this->citaDeUnMedico();
+        $this->pagoDeCita($cita, ['estado' => Pago::PENDIENTE]);
+        $this->pagoDeCita($cita, ['estado' => Pago::EN_PROCESO, 'monto_usd_e2' => 2500, 'monto_e2' => 2500]);
+        $this->pagoDeCita($cita, ['estado' => Pago::APROBADO]);
+
+        $this->actingAs($this->usuario('Root'));
+
+        Livewire::test(Pagos::class)
+            ->assertSee('Pendiente de cobro por médico')
+            ->assertSee($medico->reg_medico)
+            // Dos pagos abiertos por 75,00 USD: lo aprobado no entra.
+            ->assertSee('75,00');
+    }
+
+    public function test_marcar_pagado_aprueba_suma_a_la_cita_y_deja_su_evento(): void
+    {
+        [$medico, $cita] = $this->citaDeUnMedico();
+        $pago = $this->pagoDeCita($cita);
+
+        $this->actingAs($this->usuario('Root'));
+
+        Livewire::test(Pagos::class)
+            ->call('administrar', $pago->id, 'aprobar')
+            ->set('motivo', 'Transferencia verificada')
+            ->call('aplicarAccion')
+            ->assertHasNoErrors();
+
+        $pago->refresh();
+        $this->assertSame(Pago::APROBADO, $pago->estado);
+        $this->assertNotNull($pago->pagado_el);
+
+        $evento = $pago->eventos()->where('evento', 'aprobado_manualmente')->first();
+        $this->assertNotNull($evento);
+        $this->assertSame(Pago::PENDIENTE, $evento->estado_anterior);
+        $this->assertSame(PagoEvento::ORIGEN_MANUAL, $evento->origen);
+
+        // La cita queda pagada por el monto del pago, como cuando aprueba la pasarela.
+        $this->assertSame(50.0, (float) $cita->fresh()->monto_pagado);
+    }
+
+    public function test_rechazar_pide_motivo_y_deja_la_bitacora(): void
+    {
+        [, $cita] = $this->citaDeUnMedico();
+        $pago = $this->pagoDeCita($cita);
+
+        $this->actingAs($this->usuario('Root'));
+
+        Livewire::test(Pagos::class)
+            ->call('administrar', $pago->id, 'rechazar')
+            ->call('aplicarAccion')
+            ->assertHasErrors('motivo');
+
+        $this->assertSame(Pago::PENDIENTE, $pago->fresh()->estado);
+
+        Livewire::test(Pagos::class)
+            ->call('administrar', $pago->id, 'rechazar')
+            ->set('motivo', 'El paciente nunca transfirió')
+            ->call('aplicarAccion')
+            ->assertHasNoErrors();
+
+        $this->assertSame(Pago::RECHAZADO, $pago->fresh()->estado);
+        $this->assertSame(
+            'El paciente nunca transfirió',
+            $pago->eventos()->where('evento', 'rechazado_manualmente')->first()?->payload['motivo'] ?? null,
+        );
+    }
+
+    public function test_reembolsar_devuelve_la_plata_y_solo_desde_aprobado(): void
+    {
+        [, $cita] = $this->citaDeUnMedico();
+        $pago = $this->pagoDeCita($cita, ['estado' => Pago::PENDIENTE]);
+
+        $this->actingAs($this->usuario('Root'));
+
+        // Un pago pendiente no se reembolsa.
+        Livewire::test(Pagos::class)
+            ->call('administrar', $pago->id, 'reembolsar')
+            ->assertHasErrors('motivo');
+
+        // Aprobado, sí: baja el monto pagado de la cita y no se puede reembolsar dos veces.
+        $pago->forceFill(['estado' => Pago::APROBADO, 'pagado_el' => now()])->save();
+        $cita->forceFill(['monto_pagado' => 50])->save();
+
+        Livewire::test(Pagos::class)
+            ->call('administrar', $pago->id, 'reembolsar')
+            ->set('motivo', 'Se canceló la consulta')
+            ->call('aplicarAccion')
+            ->assertHasNoErrors();
+
+        $this->assertSame(Pago::REEMBOLSADO, $pago->fresh()->estado);
+        $this->assertSame(0.0, (float) $cita->fresh()->monto_pagado);
+
+        Livewire::test(Pagos::class)
+            ->call('administrar', $pago->id, 'reembolsar')
+            ->assertHasErrors('motivo');
+    }
+
+    public function test_un_pago_de_plan_no_se_administra_desde_el_panel(): void
+    {
+        $pago = $this->pago(['estado' => Pago::PENDIENTE]);
+
+        $this->actingAs($this->usuario('Root'));
+
+        Livewire::test(Pagos::class)
+            ->call('administrar', $pago->id, 'aprobar')
+            ->assertHasErrors('motivo');
+
+        $this->assertSame(Pago::PENDIENTE, $pago->fresh()->estado);
     }
 }

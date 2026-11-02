@@ -44,6 +44,32 @@
                         @include('clinica.consulta._orden-catalogo-fila', ['item' => $item])
                     @endforeach
                 </ul>
+
+                @if ($vm->pideResultados())
+                    {{-- **El resultado de cada examen y cuáles salen en el informe** (O-47): su botón, como el resumen.
+                         Los campos de cada fila vienen con `form="orden-resultados"`; no van dentro de este formulario
+                         porque la fila ya tiene el del «Quitar». --}}
+                    <form method="POST" action="{{ $vm->urlResultados() }}" id="orden-resultados" class="mt-2">
+                        @csrf
+
+                        <p class="texto-tenue small mb-2">
+                            Escribe el resultado de cada examen y marca «Reporte» en los que salen en el informe.
+                        </p>
+
+                        @error('resultados')
+                            <p class="alert alert-warning py-2 d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                                <span>{{ $message }}</span>
+                            </p>
+                        @enderror
+
+                        <div class="d-flex justify-content-end">
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-check2-circle" aria-hidden="true"></i> {{ $vm->textoDeGuardarResultados() }}
+                            </button>
+                        </div>
+                    </form>
+                @endif
             @endif
 
             {{-- El resumen clínico: un formulario, con su botón. Es lo único que queda por guardar acá. --}}

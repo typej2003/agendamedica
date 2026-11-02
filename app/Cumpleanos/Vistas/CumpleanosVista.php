@@ -33,6 +33,10 @@ final class CumpleanosVista
     /**
      * @param  Collection<int,Cumpleano>  $cumpleanos  los del médico del contexto que cumplen hoy
      * @param  array<int,string>  $enviadosEl  `paciente_id` => `created_at` del saludo ya mandado
+     * @param  array<int,array{momento:string, canal:string, motivo:?string}>  $fallidosEl  el último intento
+     *         fallido del día por paciente (O-51), o vacío
+     * @param  bool  $smsDisponible  si el servidor tiene proveedor de SMS (O-55): sin él, el canal no se
+     *         ofrece ni se puede elegir
      */
     public function __construct(
         private CarbonInterface $dia,
@@ -43,7 +47,9 @@ final class CumpleanosVista
         private string $doctor,
         private MensajeDeCumpleanos $mensajes,
         private array $enviadosEl = [],
+        private array $fallidosEl = [],
         private ?string $urlEditarElMensaje = null,
+        private bool $smsDisponible = true,
     ) {
     }
 
@@ -147,21 +153,52 @@ final class CumpleanosVista
         return $this->configuracion->evolucion() !== null;
     }
 
-    /** @return array<int,array{valor:string, texto:string, elegido:bool, porDefecto:bool}> */
+    /** @return array<int,array{valor:string, texto:string, elegido:bool, porDefecto:bool, disponible:bool, nota:?string}> */
     public function opcionesDeCanal(): array
     {
         $opciones = [];
+        $efectivo = $this->canalEfectivo();
 
         foreach (Canal::etiquetas() as $clave => $etiqueta) {
+            $disponible = $this->canalDisponible($clave);
+
             $opciones[] = [
                 'valor'      => $clave,
                 'texto'      => $etiqueta,
-                'elegido'    => $this->canalElegido === $clave,
+                // Un canal que el servidor no tiene no puede venir marcado: si era el configurado, la
+                // pantalla arranca en el recomendado y avisa (O-51).
+                'elegido'    => $disponible && $efectivo === $clave,
                 'porDefecto' => $clave === ConfiguracionDeCumpleanos::CANAL_POR_DEFECTO,
+                'disponible' => $disponible,
+                'nota'       => $disponible ? null : 'El servidor no tiene proveedor de SMS configurado.',
             ];
         }
 
         return $opciones;
+    }
+
+    /** ¿Este canal se puede elegir hoy? Sólo el SMS depende de la configuración del servidor (O-55). */
+    public function canalDisponible(string $canal): bool
+    {
+        return $canal !== Canal::SMS || $this->smsDisponible;
+    }
+
+    /**
+     * El canal con el que la pantalla trabaja: el configurado, salvo que sea el SMS y el servidor no tenga
+     * proveedor. **La regla no vive acá**: se la pide a la configuración (`ConfiguracionDeCumpleanos::
+     * canalEfectivo`), que es la misma que usa el comando, así que los dos dicen lo mismo.
+     *
+     * No cambia lo que está guardado: el médico lo corrige con el selector, y el aviso se lo dice.
+     */
+    public function canalEfectivo(): string
+    {
+        return $this->configuracion->canalEfectivo($this->smsDisponible);
+    }
+
+    /** ¿El canal guardado es uno que el servidor no puede usar? Es el aviso de la configuración. */
+    public function canalGuardadoNoDisponible(): bool
+    {
+        return ! $this->canalDisponible($this->configuracion->canal());
     }
 
     /** La ayuda de cada canal: el costo del SMS y la limitación de WhatsApp están a la vista al elegir. */
@@ -211,19 +248,24 @@ final class CumpleanosVista
     /**
      * Una fila por paciente que cumple años hoy, con lo que la tabla muestra ya resuelto.
      *
-     * `puedeEnviar` mira el **canal configurado**: al que le falta el dato de ese canal se lo saltea —el
-     * botón queda deshabilitado y la fila dice qué falta—, que es la decisión del 2026-10-10. La
-     * columna de estado dice si ya se le mandó (lo hizo el comando o alguien a mano) para que nadie
-     * mande el saludo dos veces sin darse cuenta.
+     * `puedeEnviar` mira el **canal efectivo** (el configurado, salvo que el servidor no pueda usarlo): al
+     * que le falta el dato de ese canal se lo saltea —el botón queda deshabilitado y la fila dice qué
+     * falta—, que es la decisión del 2026-10-10. La columna de estado dice si ya se le mandó (lo hizo el
+     * comando o alguien a mano) para que nadie mande el saludo dos veces sin darse cuenta.
      *
      * @return array<int,array<string,mixed>>
      */
     public function filas(): array
     {
-        return $this->cumpleanos->map(function (Cumpleano $cumpleano) {
+        // Una sola vez y no por fila: el canal efectivo puede dejar un aviso en el log y no tiene sentido
+        // repetirlo por paciente.
+        $canal = $this->canalEfectivo();
+
+        return $this->cumpleanos->map(function (Cumpleano $cumpleano) use ($canal) {
             $edad = $cumpleano->edad();
             $enviadoEl = $this->enviadosEl[$cumpleano->pacienteId()] ?? null;
-            $falta = $cumpleano->datoQueFalta($this->canalElegido);
+            $fallido = $this->fallidosEl[$cumpleano->pacienteId()] ?? null;
+            $falta = $cumpleano->datoQueFalta($canal);
 
             return [
                 'pacienteId'    => $cumpleano->pacienteId(),
@@ -235,15 +277,53 @@ final class CumpleanosVista
                 'correo'        => $cumpleano->correo(),
                 'tieneTelefono' => $cumpleano->tieneTelefono(),
                 'tieneCorreo'   => $cumpleano->tieneCorreo(),
-                'puedeEnviar'   => $cumpleano->puedeRecibirPor($this->canalElegido),
+                'puedeEnviar'   => $cumpleano->puedeRecibirPor($canal),
                 'falta'         => $falta,
                 'mensaje'       => $this->mensajeDe($cumpleano),
-                'estado'        => $enviadoEl === null
-                    ? ['tono' => 'neutro', 'icono' => 'bi-dash-circle', 'texto' => 'Sin enviar']
-                    : ['tono' => 'exito', 'icono' => 'bi-check2-circle', 'texto' => 'Enviado ' . $this->horaDe($enviadoEl)],
+                'estado'        => $this->estadoDeLaFila($enviadoEl, $fallido),
                 'enviado'       => $enviadoEl !== null,
+                // El motivo del último intento fallido (O-51), o `null` si no falló ninguno: la fila lo
+                // muestra debajo del estado para no confundir «no se mandó» con «se intentó y no salió».
+                'fallo'         => $this->textoDelFallo($fallido),
             ];
         })->all();
+    }
+
+    /**
+     * El estado de la columna «Saludo»: enviado manda, después el intento fallido, después «Sin enviar».
+     *
+     * El registro guarda **una fila por paciente y por cumpleaños** (índice único), así que hoy un envío
+     * exitoso y un fallo del mismo día no pueden convivir: si hay fallo, no hay envío.
+     *
+     * @param  array{momento:string, canal:string, motivo:?string}|null  $fallido
+     * @return array{tono:string, icono:string, texto:string}
+     */
+    private function estadoDeLaFila(?string $enviadoEl, ?array $fallido): array
+    {
+        if ($enviadoEl !== null) {
+            return ['tono' => 'exito', 'icono' => 'bi-check2-circle', 'texto' => 'Enviado ' . $this->horaDe($enviadoEl)];
+        }
+
+        if ($fallido !== null) {
+            return ['tono' => 'aviso', 'icono' => 'bi-exclamation-triangle', 'texto' => 'Falló ' . $this->horaDe($fallido['momento'])];
+        }
+
+        return ['tono' => 'neutro', 'icono' => 'bi-dash-circle', 'texto' => 'Sin enviar'];
+    }
+
+    /**
+     * La línea con el motivo del fallo, ya armada: «Por SMS: The To number is not valid (código 21211)».
+     *
+     * @param  array{momento:string, canal:string, motivo:?string}|null  $fallido
+     */
+    private function textoDelFallo(?array $fallido): ?string
+    {
+        if ($fallido === null) {
+            return null;
+        }
+
+        return 'Por ' . Canal::etiqueta($fallido['canal']) . ': '
+            . ($fallido['motivo'] ?? 'el proveedor no dio un motivo');
     }
 
     /**

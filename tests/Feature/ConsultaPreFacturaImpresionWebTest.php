@@ -24,6 +24,17 @@ class ConsultaPreFacturaImpresionWebTest extends TestCase
 {
     use DatabaseTransactions;
 
+    /**
+     * La pre-factura está **apagada por defecto** (O-45): acá se prueba su documento impreso, así que la bandera va
+     * encendida. Con la bandera apagada el documento no se ofrece (lo cubre el test del menú de secciones).
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['clinica.facturacion.prefactura' => true]);
+    }
+
     /** @return array{0:User, 1:Medico, 2:Specialty} */
     private function medicoConAcceso(): array
     {
@@ -126,5 +137,21 @@ class ConsultaPreFacturaImpresionWebTest extends TestCase
         $this->conContexto($user, $medico, $pediatria)
             ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'prefactura']))
             ->assertOk()->assertSee('1 × 45,00 = 45,00')->assertDontSee('999,00');
+    }
+
+    public function test_con_la_seccion_apagada_la_hoja_no_se_arma_ni_por_url_directa(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        [, $consulta] = $this->pacienteYConsulta($medico);
+        $this->concepto($medico, 1, '001', 'CONSULTA DE CONTROL', 1, 50);
+
+        // O-45: la bandera apagada esconde la sección y también su hoja, aunque la consulta tenga conceptos cargados.
+        config(['clinica.facturacion.prefactura' => false]);
+
+        $this->conContexto($user, $medico, $pediatria)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'prefactura']))
+            ->assertOk()
+            ->assertSee('No hay nada que imprimir')
+            ->assertDontSee('CONSULTA DE CONTROL');
     }
 }
