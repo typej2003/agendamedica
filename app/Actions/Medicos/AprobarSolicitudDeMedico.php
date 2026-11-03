@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Referidos\AcreditarReferido;
 use App\RegistroDeMedicos\CorreosDeLaSolicitud;
 use App\Services\CuentaService;
+use App\Verificacion\VerificacionesDelMedico;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -35,6 +36,11 @@ use Throwable;
  *
  * La especialidad se asigna después de crear la cuenta, con `asignarEspecialidades`, que le copia el catálogo
  * inicial (WEB-12.9). El correo no es parte de la transacción: si falla, la clave se le muestra al administrador.
+ *
+ * **Aprobación automática (2026-11-03)**: cuando la política no exige carnet, `automatica()` aprueba sin
+ * administrador con el `reg_medico` propuesto (`MPPS-<número>`) y deja las tres verificaciones del perfil: el
+ * correo verificado (por el código de 6 dígitos), el carnet `pendiente` o `sin_verificar` y el teléfono
+ * `sin_verificar`. Si el `reg_medico` choca con otra ficha, la solicitud queda pendiente para la bandeja.
  */
 final class AprobarSolicitudDeMedico
 {
@@ -42,6 +48,7 @@ final class AprobarSolicitudDeMedico
         private CuentaService $cuentas,
         private CorreosDeLaSolicitud $correos,
         private AcreditarReferido $referidos,
+        private VerificacionesDelMedico $verificaciones,
     ) {
     }
 
@@ -50,8 +57,14 @@ final class AprobarSolicitudDeMedico
      *
      * @throws ValidationException
      */
-    public function ejecutar(SolicitudMedico $solicitud, User $revisor, string $regMedico, ?int $especialidadId = null): array
-    {
+    public function ejecutar(
+        SolicitudMedico $solicitud,
+        ?User $revisor,
+        string $regMedico,
+        ?int $especialidadId = null,
+        bool $carnetVerificado = false,
+        bool $automatica = false,
+    ): array {
         $regMedico = trim($regMedico);
         if ($regMedico === '') {
             throw ValidationException::withMessages(['reg_medico' => 'Escribe el reg_medico con el que va a trabajar.']);
@@ -62,7 +75,7 @@ final class AprobarSolicitudDeMedico
         // que ya era cliente.
         $teniaServicioAntes = RegMedicoServicio::where('reg_medico', $regMedico)->exists();
 
-        $resultado = DB::transaction(function () use ($solicitud, $revisor, $regMedico, $teniaServicioAntes) {
+        $resultado = DB::transaction(function () use ($solicitud, $revisor, $regMedico, $teniaServicioAntes, $carnetVerificado, $automatica) {
             $solicitud = SolicitudMedico::whereKey($solicitud->id)->lockForUpdate()->firstOrFail();
 
             if (! $solicitud->estaPendiente()) {
@@ -108,10 +121,15 @@ final class AprobarSolicitudDeMedico
                 $clave = $r['clave'];
             }
 
+            // Las tres verificaciones del perfil nacen acá (2026-11-03): el correo ya está verificado por
+            // el código, y el carnet queda pendiente o sin verificar salvo que el administrador lo confirme.
+            $this->verificaciones->registrarAlta($solicitud, $ficha, $carnetVerificado, $revisor);
+
             $solicitud->update([
                 'estado' => SolicitudMedico::APROBADA,
-                'revisada_por' => $revisor->id,
+                'revisada_por' => $revisor?->id,
                 'revisada_el' => now(),
+                'aprobada_automaticamente' => $automatica,
                 'medico_id' => $ficha->id,
                 'reg_medico' => $regMedico,
             ]);
@@ -147,6 +165,39 @@ final class AprobarSolicitudDeMedico
             'enlazada' => $resultado['enlazada'],
             'correoEnviado' => $correoEnviado,
         ];
+    }
+
+    /**
+     * **Aprobar sola, sin administrador** (2026-11-03): el médico ya verificó su correo y la política no
+     * exige el carnet (`configuracion_verificacion_medicos.exigir_carnet` apagado). El `reg_medico` es el
+     * que propone la solicitud (`MPPS-<número>`).
+     *
+     * Si el `reg_medico` choca con una ficha que no es de este correo, con un centro o con un correo que
+     * ya tiene otra ficha médica, la Action lanza `ValidationException` y la solicitud **queda pendiente**
+     * para que la resuelva la bandeja: no se crea nada a medias.
+     *
+     * @return array{medico: Medico, clave: string, enlazada: bool, correoEnviado: bool}
+     *
+     * @throws ValidationException
+     */
+    public function automatica(SolicitudMedico $solicitud): array
+    {
+        $regMedico = $solicitud->regMedicoPropuesto();
+
+        if ($regMedico === '') {
+            throw ValidationException::withMessages([
+                'reg_medico' => 'La solicitud no tiene un MPPS con el que proponer el reg_medico.',
+            ]);
+        }
+
+        return $this->ejecutar(
+            $solicitud,
+            null,
+            $regMedico,
+            $solicitud->specialty_id ? (int) $solicitud->specialty_id : null,
+            false,
+            true,
+        );
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\RegistroDeMedicos;
 
 use App\Mail\RegistroDeMedico\CodigoDeRegistroDeMedico;
+use App\Mail\RegistroDeMedico\MedicoRegistradoSinVerificar;
 use App\Mail\RegistroDeMedico\NuevaSolicitudDeMedico;
 use App\Mail\RegistroDeMedico\SolicitudDeMedicoAprobada;
 use App\Mail\RegistroDeMedico\SolicitudDeMedicoRechazada;
@@ -39,6 +40,20 @@ final class CorreosDeLaSolicitud
             ->filter()
             ->unique()
             ->each(fn (string $email) => $this->mandar($email, new NuevaSolicitudDeMedico($solicitud)));
+    }
+
+    /**
+     * A cada administrador activo: un médico se registró y **ya tiene acceso** sin el carnet verificado
+     * (2026-11-03). No se manda al médico: su correo de bienvenida lo manda la aprobación.
+     */
+    public function avisoDeRegistroAutomatico(SolicitudMedico $solicitud): void
+    {
+        User::administradores()
+            ->where('is_active', true)
+            ->pluck('email')
+            ->filter()
+            ->unique()
+            ->each(fn (string $email) => $this->mandar($email, new MedicoRegistradoSinVerificar($solicitud)));
     }
 
     /**

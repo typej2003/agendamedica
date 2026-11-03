@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\RegistroDeMedicos;
 
 use App\Http\Controllers\Controller;
+use App\Models\ConfiguracionDeVerificacion;
 use App\Models\Medico;
+use App\Models\SolicitudMedico;
 use App\Referidos\CodigosDeReferido;
 use App\RegistroDeMedicos\CarnetDeLaSolicitud;
 use App\RegistroDeMedicos\ConfirmarSolicitudDeMedico;
@@ -57,6 +59,8 @@ class RegistroDeMedicoController extends Controller
             'previo' => $previo,
             'codigoReferido' => $codigo?->codigo ?? (string) ($previo['codigo_referido'] ?? ''),
             'referenteNombre' => $referenteNombre,
+            // La pantalla lo cuenta como es: con la exigencia apagada la cuenta nace al confirmar el correo.
+            'exigeCarnet' => ConfiguracionDeVerificacion::actual()->exigeCarnet(),
             // Sólo las especialidades que AppDDR ya atiende: el resto del catálogo todavía no se ofrece.
             'especialidades' => EspecialidadesDelRegistro::lista(),
             'carnetAceptado' => CarnetDeLaSolicitud::textosAceptados(),
@@ -134,9 +138,17 @@ class RegistroDeMedicoController extends Controller
 
         $solicitud = $accion->ejecutar((string) $request->input('codigo'));
 
-        return redirect()
+        $redireccion = redirect()
             ->route('medico.registro.recibida')
             ->with('solicitud_email', $solicitud->email);
+
+        // Con la exigencia de carnet apagada la solicitud se aprueba sola: la página lo dice en vez de
+        // prometer una revisión que ya no hace falta (2026-11-03).
+        if ($solicitud->estado === SolicitudMedico::APROBADA) {
+            $redireccion->with('solicitud_automatica', true);
+        }
+
+        return $redireccion;
     }
 
     public function reenviar(SolicitudEnCurso $enCurso, SolicitarCodigoDeRegistroDeMedico $accion)
@@ -164,7 +176,10 @@ class RegistroDeMedicoController extends Controller
             return redirect()->route('medico.registro');
         }
 
-        return view('registro-medico.recibida', ['email' => $email]);
+        return view('registro-medico.recibida', [
+            'email' => $email,
+            'automatica' => (bool) $request->session()->get('solicitud_automatica', false),
+        ]);
     }
 
     /**

@@ -8,16 +8,19 @@ use App\Models\MedicoRegistro;
 use App\Models\Pago;
 use App\Models\RegMedicoServicio;
 use App\Models\SolicitudMedico;
+use App\Models\VerificacionDeMedico;
 use App\Services\Admin\SedesDelMedico;
 use App\Services\CuentaService;
 use App\Services\ServicioService;
 use App\Services\SyncResumenService;
+use App\Verificacion\VerificacionesDelMedico;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 /**
  * **Detalle de un médico** (Usuarios › Médicos › Ver): todo lo que el panel sabe de él, en pestañas **de sólo
- * lectura**. Cada pestaña lee lo suyo recién cuando se abre (no se arma nada de las demás), y las que dependen de
+ * lectura** —salvo la verificación del carnet, que se marca desde acá (2026-11-03)—. Cada pestaña lee lo suyo
+ * recién cuando se abre (no se arma nada de las demás), y las que dependen de
  * que haya datos (Pagos, Solicitud de registro, Comentarios) solo aparecen si existen. Cada una enlaza a la
  * pantalla donde ese dato se administra; «Editar» abre el diálogo de edición que ya tiene Médicos.
  *
@@ -71,6 +74,38 @@ class DetalleDelMedico extends Component
     public function irA(string $pestana)
     {
         $this->pestana = $pestana;
+    }
+
+    /**
+     * Marca el carnet de este médico (2026-11-03). Es la validación que no depende de que exista una solicitud:
+     * sirve para los médicos del escritorio cuando el administrador enciende la exigencia, y para aprobar un
+     * registro y verificarlo después.
+     */
+    public function marcarCarnet(string $estado): void
+    {
+        $estados = [
+            VerificacionDeMedico::VERIFICADO,
+            VerificacionDeMedico::RECHAZADO,
+            VerificacionDeMedico::PENDIENTE,
+        ];
+
+        if (! in_array($estado, $estados, true)) {
+            return;
+        }
+
+        app(VerificacionesDelMedico::class)->marcar(
+            $this->medico,
+            VerificacionDeMedico::CARNET,
+            $estado,
+            auth()->user(),
+            $estado === VerificacionDeMedico::VERIFICADO ? null : 'Marca manual del administrador.',
+        );
+
+        session()->flash('message', match ($estado) {
+            VerificacionDeMedico::VERIFICADO => 'Carnet verificado: el médico ya puede entrar.',
+            VerificacionDeMedico::RECHAZADO => 'Carnet rechazado: se le corta el acceso al médico hasta que se revise.',
+            default => 'Carnet marcado como pendiente de revisión.',
+        });
     }
 
     public function render()
@@ -154,7 +189,12 @@ class DetalleDelMedico extends Component
             $doctores = Medico::whereIn('id', $ids)->orderBy('name')->orderBy('lastname')->get();
         }
 
-        return ['sync' => $sync, 'doctoresDelCentro' => $doctores];
+        return [
+            'sync' => $sync,
+            'doctoresDelCentro' => $doctores,
+            // Las tres verificaciones del perfil (2026-11-03); se administran desde la bandeja de solicitudes.
+            'verificaciones' => app(\App\Verificacion\VerificacionesDelMedico::class)->de($this->medico),
+        ];
     }
 
     /** El resumen de sincronización del médico (el mismo de «API Keys»), calculado una vez por petición. */

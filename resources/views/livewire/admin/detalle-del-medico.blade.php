@@ -9,7 +9,7 @@
         [$nombre, null],
     ]])
 
-    <x-ui.page-head :titulo="$nombre" subtitulo="Detalle del usuario. Todo es de sólo lectura; cada pestaña enlaza a donde se administra.">
+    <x-ui.page-head :titulo="$nombre" subtitulo="Detalle del usuario. Casi todo es de sólo lectura; la verificación del carnet se marca desde acá y cada pestaña enlaza a donde se administra.">
         <x-slot name="acciones">
             <a href="{{ route('admin.cuentas') }}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left" aria-hidden="true"></i> Volver
@@ -20,6 +20,8 @@
             </a>
         </x-slot>
     </x-ui.page-head>
+
+    <x-ui.avisos />
 
     <ul class="nav nav-tabs mb-3 flex-nowrap overflow-auto" role="tablist" aria-label="Secciones del médico">
         @foreach ($pestanas as $clave => [$rotulo, $icono])
@@ -69,6 +71,42 @@
                     <x-ui.dato etiqueta="Última actividad del app" :valor="$fecha($datos['sync']['ultima_app'] ?? null) ?? 'Sin registro'" />
                     <x-ui.dato etiqueta="Última sincronización del escritorio" :valor="$fecha($datos['sync']['ultima_escritorio'] ?? null) ?? 'Sin registro'" />
                 </dl>
+
+                <h2 class="h6 mt-4">Verificación</h2>
+                <div class="d-flex flex-wrap gap-4">
+                    @foreach ($datos['verificaciones'] as $tipo => $verificacion)
+                        <div wire:key="verificacion-{{ $tipo }}">
+                            <small class="text-muted d-block">{{ \App\Models\VerificacionDeMedico::nombre($tipo) }}</small>
+                            <x-ui.estado :tono="\App\Models\VerificacionDeMedico::tono($verificacion->estado)">
+                                {{ str_replace('_', ' ', $verificacion->estado) }}
+                            </x-ui.estado>
+                            @if ($verificacion->nota)
+                                <small class="text-muted d-block">{{ $verificacion->nota }}</small>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+                @unless ($medico->es_centro)
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-success"
+                                wire:click="marcarCarnet('verificado')" wire:loading.attr="disabled">
+                            Carnet verificado
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning"
+                                wire:click="marcarCarnet('pendiente')" wire:loading.attr="disabled">
+                            Pendiente
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                wire:click="marcarCarnet('rechazado')" wire:loading.attr="disabled">
+                            Rechazar carnet
+                        </button>
+                    </div>
+                @endunless
+                <p class="text-muted small mt-2 mb-0">
+                    El carnet se valida acá o desde
+                    <a href="{{ route('admin.solicitudes-medicos') }}">Solicitudes de médicos</a>.
+                    El teléfono se verificará por WhatsApp o SMS desde el perfil del médico.
+                </p>
 
                 <h2 class="h6 mt-4">Registros de datos</h2>
                 @if (count($registros))

@@ -4,9 +4,12 @@ namespace App\Http\Livewire\Admin;
 
 use App\Actions\Medicos\AprobarSolicitudDeMedico;
 use App\Actions\Medicos\RechazarSolicitudDeMedico;
+use App\Models\ConfiguracionDeVerificacion;
 use App\Models\Medico;
 use App\Models\SolicitudMedico;
 use App\Models\Specialty;
+use App\Models\VerificacionDeMedico;
+use App\Verificacion\VerificacionesDelMedico;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -18,6 +21,11 @@ use Livewire\WithPagination;
  * Abre en **pendientes**. Al aprobar se confirma el `reg_medico` (propone `MPPS-<número>`; si ya existe una
  * ficha sin cuenta con ese registro, se le da acceso a ella) y la especialidad. La clave temporal se muestra una
  * vez, como en `Cuentas`, además de ir por correo. El permiso se vuelve a comprobar en cada acción (`hydrate`).
+ *
+ * **Verificación de médicos (2026-11-03)**: arriba vive el interruptor de la política
+ * (`configuracion_verificacion_medicos.exigir_carnet`) y en el detalle de la solicitud, los tres estados del
+ * perfil —carnet, correo y teléfono— con las acciones para dar el carnet por verificado o rechazarlo. Al
+ * aprobar, una casilla confirma el carnet; si no se marca, queda pendiente o sin verificar.
  */
 class SolicitudesDeMedicos extends Component
 {
@@ -39,9 +47,16 @@ class SolicitudesDeMedicos extends Component
     /** La clave de la última aprobación, para mostrarla una sola vez. */
     public $claveGenerada = null;
 
+    /** La política: ¿el registro exige el carnet verificado? Nace apagada. */
+    public $exigir_carnet = false;
+
+    /** En el formulario de aprobación: ¿el administrador revisó y da el carnet por verificado? */
+    public $carnet_verificado = false;
+
     public function mount(): void
     {
         $this->autorizar();
+        $this->exigir_carnet = ConfiguracionDeVerificacion::actual()->exigeCarnet();
     }
 
     public function hydrate(): void
@@ -68,13 +83,66 @@ class SolicitudesDeMedicos extends Component
         $this->reg_medico = $solicitud->reg_medico ?: $solicitud->regMedicoPropuesto();
         $this->specialty_id = (string) ($solicitud->specialty_id ?? '');
         $this->motivo = (string) $solicitud->motivo_rechazo;
+        $this->carnet_verificado = false;
         $this->resetErrorBag();
     }
 
     public function cerrar(): void
     {
-        $this->reset(['solicitudId', 'reg_medico', 'specialty_id', 'motivo']);
+        $this->reset(['solicitudId', 'reg_medico', 'specialty_id', 'motivo', 'carnet_verificado']);
         $this->resetErrorBag();
+    }
+
+    /**
+     * Enciende o apaga la exigencia del carnet. Apagada (el valor de fábrica) el médico entra solo al
+     * confirmar su correo; encendida, el registro espera la aprobación y el carnet sin verificar corta el
+     * acceso.
+     */
+    public function guardarPolitica(): void
+    {
+        $this->validate(['exigir_carnet' => ['boolean']]);
+
+        ConfiguracionDeVerificacion::actual()->update(['exigir_carnet' => (bool) $this->exigir_carnet]);
+
+        session()->flash('message', $this->exigir_carnet
+            ? 'Listo: desde ahora el registro espera la aprobación y un médico sin el carnet verificado no puede usar la app.'
+            : 'Listo: el médico entra solo al confirmar su correo; su carnet queda guardado como sin verificar (o pendiente si adjuntó la foto).');
+    }
+
+    /**
+     * Marca el carnet de la ficha de la solicitud abierta. Es la validación posterior: sirve para aprobar sin
+     * carnet y verificarlo después, y para rechazarlo (que corta el acceso aunque la exigencia esté apagada).
+     */
+    public function marcarCarnet(string $estado): void
+    {
+        $estados = [
+            VerificacionDeMedico::VERIFICADO,
+            VerificacionDeMedico::RECHAZADO,
+            VerificacionDeMedico::PENDIENTE,
+        ];
+
+        if (! in_array($estado, $estados, true)) {
+            return;
+        }
+
+        $solicitud = SolicitudMedico::findOrFail($this->solicitudId);
+        $medico = $solicitud->medico;
+
+        abort_if($medico === null, 404, 'La solicitud todavía no tiene ficha de médico.');
+
+        app(VerificacionesDelMedico::class)->marcar(
+            $medico,
+            VerificacionDeMedico::CARNET,
+            $estado,
+            auth()->user(),
+            $estado === VerificacionDeMedico::VERIFICADO ? null : 'Marca manual del administrador.',
+        );
+
+        session()->flash('message', match ($estado) {
+            VerificacionDeMedico::VERIFICADO => 'Carnet verificado: el médico ya puede entrar.',
+            VerificacionDeMedico::RECHAZADO => 'Carnet rechazado: se le corta el acceso al médico hasta que se revise.',
+            default => 'Carnet marcado como pendiente de revisión.',
+        });
     }
 
     public function aprobar(AprobarSolicitudDeMedico $aprobar): void
@@ -90,6 +158,7 @@ class SolicitudesDeMedicos extends Component
                 auth()->user(),
                 $this->reg_medico,
                 $this->specialty_id !== '' ? (int) $this->specialty_id : null,
+                (bool) $this->carnet_verificado,
             );
         } catch (ValidationException $e) {
             foreach ($e->errors() as $campo => $mensajes) {
@@ -170,6 +239,12 @@ class SolicitudesDeMedicos extends Component
             ? Medico::where('reg_medico', trim((string) $this->reg_medico))->first()
             : null;
 
+        // Las tres verificaciones de la ficha de la solicitud abierta (carnet, correo y teléfono). Para una
+        // solicitud pendiente todavía no hay ficha: no se muestra el bloque.
+        $verificaciones = $seleccionada?->medico
+            ? app(VerificacionesDelMedico::class)->de($seleccionada->medico)
+            : null;
+
         return view('livewire.admin.solicitudes-de-medicos', [
             'solicitudes' => SolicitudMedico::query()
                 ->with(['especialidad', 'referente'])
@@ -179,6 +254,7 @@ class SolicitudesDeMedicos extends Component
             'conteos' => $this->conteos(),
             'seleccionada' => $seleccionada,
             'fichaExistente' => $fichaExistente,
+            'verificaciones' => $verificaciones,
             'especialidades' => Specialty::where('activo', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }

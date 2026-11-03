@@ -116,7 +116,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
+Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico'])
     ->prefix('clinica')
     ->name('clinica.')
     ->group(function () {
