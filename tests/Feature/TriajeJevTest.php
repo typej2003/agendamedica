@@ -348,4 +348,45 @@ class TriajeJevTest extends TestCase
 
         app(JevService::class)->decidir('Hola', []);
     }
+
+    /** Con OpenRouter, la clave y la base salen de `services.openrouter`: una sola credencial para todo. */
+    public function test_usa_openrouter_con_la_clave_de_openrouter_cuando_no_hay_jev_api_key(): void
+    {
+        config([
+            'services.jev.api_key' => null,
+            'services.jev.base_url' => 'https://openrouter.ai/api',
+            'services.jev.model' => 'typesafe/jev-1.14',
+            'services.jev.protocolo' => 'openrouter',
+            'services.jev.umbral' => 0.7,
+            'services.jev.timeout' => 5,
+            'services.openrouter.api_key' => 'sk-or-de-prueba',
+            'services.openrouter.base_url' => 'https://openrouter.ai/api',
+        ]);
+
+        Http::fake([
+            'https://openrouter.ai/api/alpha/decisions' => Http::response([
+                'model' => 'typesafe/jev-1.14-20261001',
+                'provider' => 'TypeSafe',
+                'answers' => [
+                    'es_urgencia' => ['type' => 'noul', 'noul' => 0.93],
+                ],
+                'usage' => ['input_tokens' => 412, 'output_tokens' => 0, 'cost' => 0.0000278],
+            ], 200),
+        ]);
+
+        $servicio = app(JevService::class);
+        $resultado = $servicio->decidir('Tengo contracciones cada 3 minutos', [
+            'es_urgencia' => ['type' => 'noul', 'instructions' => '¿Es una urgencia clínica?'],
+        ]);
+
+        $this->assertSame(0.93, $resultado['answers']['es_urgencia']['noul']);
+        $this->assertSame('openrouter', $servicio->protocoloUsado());
+        $this->assertEqualsWithDelta(0.0000278, $resultado['costo'], 1e-9);
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://openrouter.ai/api/alpha/decisions'
+            && $request->hasHeader('Authorization', 'Bearer sk-or-de-prueba')
+            && $request['model'] === 'typesafe/jev-1.14'
+            && $request['state'] === 'Tengo contracciones cada 3 minutos'
+            && $request['questions']['es_urgencia']['type'] === 'noul');
+    }
 }

@@ -38,7 +38,7 @@ class ProbarTriajeJevCommand extends Command
         {--limite=0 : Cuántos mensajes probar (0 = todos)}
         {--umbral= : Confianza mínima para automatizar (por defecto, la de config/services.php)}
         {--modelo= : Modelo a usar (por defecto JEV_MODEL)}
-        {--protocolo= : systemone, chat o auto (por defecto JEV_PROTOCOLO)}
+        {--protocolo= : systemone, decisions, openrouter, chat o auto (por defecto JEV_PROTOCOLO)}
         {--detalle : Muestra las probabilidades de cada mensaje}
         {--json= : Guarda el resultado crudo y el resumen en este archivo}';
 
@@ -91,14 +91,15 @@ class ProbarTriajeJevCommand extends Command
 
         if (! $servicio->tieneClave()) {
             $this->newLine();
-            $this->error('Falta JEV_API_KEY.');
-            $this->line('Agrégala al .env de MedicAPI (junto a GEMINI_API_KEY) y vuelve a correr el comando:');
+            $this->error('Falta JEV_API_KEY (o OPENROUTER_API_KEY con JEV_PROTOCOLO=openrouter).');
+            $this->line('Agrégala al .env de MedicAPI y vuelve a correr el comando:');
             $this->newLine();
             $this->line('  <comment># Jev AI — decisiones tipadas (prueba de concepto jev:triaje)</comment>');
             $this->line('  <comment>JEV_API_KEY=sk_...</comment>');
             $this->line('  <comment># JEV_BASE_URL=https://thejevai.com</comment>');
             $this->line('  <comment># JEV_MODEL=typesafe/jev-1.14</comment>');
             $this->newLine();
+            $this->line('Con OpenRouter, una sola clave para todo: <comment>IA_PROVEEDOR=openrouter</comment> y <comment>OPENROUTER_API_KEY=sk-or-...</comment>.');
             $this->line('Si la clave es de DigitalOcean Inference, además: <comment>JEV_BASE_URL=https://inference.do-ai.run</comment> y <comment>JEV_MODEL=typesafe-jev-1.13.0</comment>.');
 
             return self::FAILURE;
