@@ -373,155 +373,58 @@
         </div>
     @endif
 
-    {{-- Editar los datos --}}
+    {{-- Editar los datos. El formulario del médico es el mismo componente que usa el detalle del médico. --}}
     @if ($modal === 'editar')
         <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
             <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
-                    <form wire:submit.prevent="guardarEdicion">
-                        <div class="modal-header">
-                            <h5 class="modal-title">{{ $tipoEdicion === 'administrador' ? 'Editar administrador' : 'Editar médico' }}</h5>
-                            <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row">
-                                @if ($tipoEdicion === 'medico')
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Prefijo</label>
-                                        <input type="text" class="form-control" maxlength="20" placeholder="Dr" wire:model="prefix">
-                                        @error('prefix') <span class="text-danger small d-block">{{ $message }}</span> @enderror
-                                    </div>
-                                @endif
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ $tipoEdicion === 'administrador' ? 'Editar administrador' : 'Editar médico' }}</h5>
+                        <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
+                    </div>
 
-                                <div class="{{ $tipoEdicion === 'administrador' ? 'col-12' : 'col-md-4' }} mb-3">
-                                    <label class="form-label">{{ $tipoEdicion === 'administrador' ? 'Nombre' : 'Nombres' }} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" wire:model="name">
-                                    @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
-
-                                @if ($tipoEdicion === 'medico')
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Apellidos <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" wire:model="lastname">
-                                        @error('lastname') <span class="text-danger small">{{ $message }}</span> @enderror
-                                    </div>
-                                @endif
-
-                                <div class="col-12 mb-3">
-                                    <label class="form-label">Correo @if (! $es_centro) <span class="text-danger">*</span> @endif</label>
-                                    <input type="email" class="form-control" wire:model="email" autocomplete="off">
-                                    <div class="form-text">
-                                        {{ $es_centro ? 'Opcional: un centro médico no inicia sesión.' : 'Es el correo con el que inicia sesión.' }}
-                                    </div>
-                                    @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
-
-                                @if ($tipoEdicion === 'medico')
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Teléfono</label>
-                                        <input type="text" class="form-control" wire:model="phone">
-                                        @error('phone') <span class="text-danger small">{{ $message }}</span> @enderror
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Número de licencia</label>
-                                        <input type="text" class="form-control" wire:model="license_number">
-                                        @error('license_number') <span class="text-danger small">{{ $message }}</span> @enderror
-                                    </div>
+                    @if ($tipoEdicion === 'administrador')
+                        <form wire:submit.prevent="guardarEdicion">
+                            <div class="modal-body">
+                                <div class="row">
                                     <div class="col-12 mb-3">
-                                        <label class="form-label">Registro médico (reg_medico)</label>
-                                        <input type="text" class="form-control" value="{{ $reg_medico }}" disabled>
-                                        <div class="form-text">No se puede cambiar: con él están guardados todos los datos del médico en la nube.</div>
+                                        <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" wire:model="name">
+                                        @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
                                     </div>
 
-                                    {{-- **Centro médico** y el formato de sus reportes (Fase 2 del cambio de `reg_medico`).
-                                         El formato decide el membrete —el del centro o el del doctor— con el que se imprimen
-                                         los reportes de sus doctores; la firma es siempre la del doctor que atendió, y el
-                                         formato del centro se edita desde «Formato de impresión del centro» (el menú de la
-                                         fila; Fase 5 de la impresión). --}}
                                     <div class="col-12 mb-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="editar-es-centro" wire:model.live="es_centro">
-                                            <label class="form-check-label" for="editar-es-centro">
-                                                <strong>Es centro médico</strong>
-                                                <span class="d-block form-text mb-0">
-                                                    El centro no inicia sesión ni atiende: es el tenant donde trabajan sus doctores.
-                                                </span>
-                                            </label>
-                                        </div>
+                                        <label class="form-label">Correo <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" wire:model="email" autocomplete="off">
+                                        <div class="form-text">Es el correo con el que inicia sesión.</div>
+                                        @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
                                     </div>
-
-                                    @if ($es_centro)
-                                        <div class="col-12 mb-1">
-                                            <label class="form-label" for="editar-formato">Formato de los reportes</label>
-                                            <select class="form-select" id="editar-formato" wire:model="formato_reportes">
-                                                <option value="">— Sin elegir (se usa el del médico) —</option>
-                                                @foreach ($formatosDeReporte as $formato)
-                                                    <option value="{{ $formato }}">{{ $formato === 'centro' ? 'Del centro' : 'Del médico' }}</option>
-                                                @endforeach
-                                            </select>
-                                            <div class="form-text">
-                                                Con qué membrete, logo y pie se imprimen los reportes del centro. El del centro se edita en
-                                                «Formato de impresión del centro», en el menú de esta fila. La firma y el sello son siempre los del
-                                                doctor que atendió.
-                                            </div>
-                                            @error('formato_reportes') <span class="text-danger small">{{ $message }}</span> @enderror
-                                        </div>
-                                    @endif
-                                @endif
+                                </div>
                             </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Guardar cambios</button>
-                        </div>
-                    </form>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                            </div>
+                        </form>
+                    @else
+                        <x-admin.medico-datos-form :formatos="$formatosDeReporte" :es-centro="$es_centro" :reg-medico="$reg_medico"
+                                                   accion-guardar="guardarEdicion" accion-cancelar="cerrarModal" />
+                    @endif
                 </div>
             </div>
         </div>
     @endif
 
-    {{-- Roles --}}
+    {{-- Roles (el mismo formulario que usa el detalle del médico) --}}
     @if ($modal === 'roles')
-        @php
-            $descripciones = [
-                'Root'          => 'Control total. Solo otro Root puede darlo o quitarlo.',
-                'Administrador' => 'Ve y usa las secciones Usuarios y API Keys.',
-                'Medico'        => 'Usa la agenda y el app como médico.',
-                'Secretaria'    => 'Asistente de un consultorio.',
-                'Paciente'      => 'Acceso de paciente.',
-                'Representante' => 'Representante de un paciente.',
-            ];
-        @endphp
         <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
             <div class="modal-dialog modal-lateral">
                 <div class="modal-content">
-                    <form wire:submit.prevent="guardarRoles">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Roles</h5>
-                            <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
-                        </div>
-                        <div class="modal-body">
-                            @error('roles') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
-                            @error('cuenta') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
-                            <p class="text-muted small">Marca todos los que correspondan: una cuenta puede tener varios (por ejemplo, médico y administrador).</p>
-
-                            @foreach ($rolesDisponibles as $rol)
-                                <div class="form-check mb-2" wire:key="rol-{{ $rol }}">
-                                    <input class="form-check-input" type="checkbox" id="rol-{{ $rol }}" value="{{ $rol }}" wire:model="rolesSeleccionados">
-                                    <label class="form-check-label" for="rol-{{ $rol }}">
-                                        <span class="fw-semibold">{{ $rol }}</span>
-                                        @if (isset($descripciones[$rol]))
-                                            <br><small class="text-muted">{{ $descripciones[$rol] }}</small>
-                                        @endif
-                                    </label>
-                                </div>
-                            @endforeach
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Guardar roles</button>
-                        </div>
-                    </form>
+                    <div class="modal-header">
+                        <h5 class="modal-title">Roles</h5>
+                        <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
+                    </div>
+                    <x-admin.roles-form :roles="$rolesDisponibles" accion-guardar="guardarRoles" accion-cancelar="cerrarModal" />
                 </div>
             </div>
         </div>

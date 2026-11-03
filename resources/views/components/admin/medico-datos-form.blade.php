@@ -5,6 +5,9 @@
     'textoCancelar' => 'Cancelar',
     'textoGuardar' => 'Guardar cambios',
     'inline' => false,
+    // Valores de sólo lectura que necesita el formulario (los campos usan `wire:model` sobre el componente).
+    'esCentro' => false,
+    'regMedico' => '',
 ])
 
 {{-- Formulario de datos del médico (nombre, correo, teléfono, licencia, centro y formato de sus reportes).
@@ -33,10 +36,10 @@
             </div>
 
             <div class="col-12 mb-3">
-                <label class="form-label" for="datos-email">Correo @if (! $es_centro) <span class="text-danger">*</span> @endif</label>
+                <label class="form-label" for="datos-email">Correo @if (! $esCentro) <span class="text-danger">*</span> @endif</label>
                 <input type="email" class="form-control" id="datos-email" wire:model="email" autocomplete="off">
                 <div class="form-text">
-                    {{ $es_centro ? 'Opcional: un centro médico no inicia sesión.' : 'Es el correo con el que inicia sesión.' }}
+                    {{ $esCentro ? 'Opcional: un centro médico no inicia sesión.' : 'Es el correo con el que inicia sesión.' }}
                 </div>
                 @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
             </div>
@@ -53,7 +56,7 @@
             </div>
             <div class="col-12 mb-3">
                 <label class="form-label" for="datos-reg">Registro médico (reg_medico)</label>
-                <input type="text" class="form-control" id="datos-reg" value="{{ $reg_medico }}" disabled>
+                <input type="text" class="form-control" id="datos-reg" value="{{ $regMedico }}" disabled>
                 <div class="form-text">No se puede cambiar: con él están guardados todos los datos del médico en la nube.</div>
             </div>
 
@@ -69,7 +72,7 @@
                 </div>
             </div>
 
-            @if ($es_centro)
+            @if ($esCentro)
                 <div class="col-12 mb-1">
                     <label class="form-label" for="datos-formato">Formato de los reportes</label>
                     <select class="form-select" id="datos-formato" wire:model="formato_reportes">

@@ -83,7 +83,7 @@ class DetalleDelMedico extends Component
     public const PESTANAS_CONDICIONALES = [
         'pagos' => ['Pagos', 'bi-cash-stack'],
         'solicitud' => ['Solicitud de registro', 'bi-person-badge'],
-        'comentarios' => ['Ayúdanos a mejorar', 'bi-chat-heart'],
+        'comentarios' => ['Soporte y Sugerencias', 'bi-chat-heart'],
     ];
 
     public Medico $medico;
@@ -234,6 +234,8 @@ class DetalleDelMedico extends Component
             'cuenta' => $this->medico->user,
             'registros' => $registros,
             'datos' => $this->datosDe($this->pestana, $registros),
+            // Médico de la ventana «Generar API key» (concern EmiteApiKeys).
+            'seleccionado' => $this->medicoId ? Medico::find($this->medicoId) : null,
             // Formularios compartidos con Usuarios y Especialidades.
             'formatosDeReporte' => CuentaService::FORMATOS_DE_REPORTE,
             'rolesDisponibles' => $this->pestana === 'roles' ? app(CuentaService::class)->rolesDisponibles() : [],
@@ -376,6 +378,7 @@ class DetalleDelMedico extends Component
                 ->orderBy('medical_center_id')
                 ->orderBy('office_number')
                 ->get(),
+            'nombresDeDias' => \App\Models\OfficeSchedule::DIAS,
         ];
     }
 
@@ -401,7 +404,7 @@ class DetalleDelMedico extends Component
                 ->orderBy('codigo')
                 ->orderBy('office_id')
                 ->get(),
-            'sedesDeLosMotivos' => MotivosDeCitaDelCatalogo::sedes($reg, $this->medico->id),
+            'sedesDeLosMotivos' => app(MotivosDeCitaDelCatalogo::class)->sedes($reg, $this->medico->id),
         ];
     }
 

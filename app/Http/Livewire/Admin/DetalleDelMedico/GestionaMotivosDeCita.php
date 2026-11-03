@@ -20,6 +20,7 @@ trait GestionaMotivosDeCita
 {
     /** Formulario abierto (null = lista). */
     public $motivoEditandoId = null;
+    public $motivoForm = false;
 
     public $motivoRazon = '';
     public $motivoPrecio = '';
@@ -34,6 +35,7 @@ trait GestionaMotivosDeCita
         $this->motivoPrecio = '';
         $this->motivoOffice = '';
         $this->motivoVarias = false;
+        $this->motivoForm = true;
     }
 
     public function abrirMotivoEditar(int $id): void
@@ -46,11 +48,13 @@ trait GestionaMotivosDeCita
         $this->motivoPrecio = $motivo->precio === null ? '' : (string) $motivo->precio;
         $this->motivoOffice = $motivo->office_id === null ? '' : (string) $motivo->office_id;
         $this->motivoVarias = (bool) $motivo->admite_varias_citas_pendientes;
+        $this->motivoForm = true;
     }
 
     public function cerrarMotivo(): void
     {
         $this->motivoEditandoId = null;
+        $this->motivoForm = false;
         $this->reset(['motivoRazon', 'motivoPrecio', 'motivoOffice', 'motivoVarias']);
         $this->resetErrorBag();
     }
