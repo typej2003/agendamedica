@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\AutenticacionPorCorreo;
 use App\Services\BajasDeCuenta;
 use App\Services\CuentaService;
+use App\Verificacion\AccesoDelMedico;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -36,6 +37,14 @@ class CustomLoginController extends Controller
             throw ValidationException::withMessages([
                 'email' => ['El correo o la contraseña no son correctos.'],
             ]);
+        }
+
+        // Con la exigencia de carnet encendida, un médico sin verificar no inicia sesión (2026-11-03). Si la
+        // cuenta tiene otra área (paciente, administración), sí entra: el corte espera en `/clinica`, así no
+        // se le niega la otra área por el carnet.
+        $motivo = app(AccesoDelMedico::class)->bloqueado($user);
+        if ($motivo !== null && count($user->panelesDisponibles()) <= 1) {
+            throw ValidationException::withMessages(['email' => [$motivo]]);
         }
 
         Auth::login($user, $request->boolean('remember'));

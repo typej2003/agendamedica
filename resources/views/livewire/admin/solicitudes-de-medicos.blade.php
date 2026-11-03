@@ -4,6 +4,36 @@
 
     <x-ui.avisos />
 
+    {{-- La política de verificación (2026-11-03): apagada, el médico entra solo al confirmar su correo. --}}
+    <div class="card mb-3 {{ $exigir_carnet ? 'border-warning' : '' }}">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                <div>
+                    <h2 class="h6 mb-1">Verificación de médicos</h2>
+                    <p class="text-muted small mb-0">
+                        @if ($exigir_carnet)
+                            <strong>Encendida.</strong> El registro espera la aprobación y un médico sin el carnet
+                            verificado no puede usar la app. Antes de encenderla, verifica a los médicos que deban
+                            seguir entrando.
+                        @else
+                            <strong>Apagada.</strong> El médico entra solo al confirmar su correo; su carnet queda
+                            guardado como sin verificar (o pendiente si adjuntó la foto) y lo puedes validar después.
+                        @endif
+                    </p>
+                </div>
+                <div class="form-check form-switch text-start">
+                    <input class="form-check-input" type="checkbox" role="switch" id="exigir_carnet"
+                           wire:model="exigir_carnet">
+                    <label class="form-check-label" for="exigir_carnet">Exigir carnet verificado</label>
+                    <button type="button" class="btn btn-sm btn-primary d-block mt-2 w-100"
+                            wire:click="guardarPolitica" wire:loading.attr="disabled">
+                        Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card mb-3">
         <div class="card-body py-2">
             <div class="btn-group" role="group" aria-label="Filtrar por estado">
@@ -27,6 +57,9 @@
                 <div>
                     <div class="fw-semibold">{{ $seleccionada->nombreCompleto() }}</div>
                     <small class="text-muted">Recibida el {{ \App\Support\HoraLocal::fechaHora($seleccionada->created_at) }}</small>
+                    @if ($seleccionada->aprobada_automaticamente)
+                        <x-ui.estado tono="info">Aprobada automáticamente</x-ui.estado>
+                    @endif
                 </div>
                 <button type="button" class="btn btn-sm btn-outline-secondary" wire:click="cerrar">Cerrar</button>
             </div>
@@ -69,6 +102,42 @@
                     </div>
                 </div>
 
+                @if ($verificaciones)
+                    {{-- Las tres verificaciones del perfil (2026-11-03): carnet, correo y teléfono. --}}
+                    <div class="mt-3 rounded border bg-light p-3">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                            <div class="d-flex flex-wrap gap-4">
+                                @foreach ($verificaciones as $tipo => $verificacion)
+                                    <div wire:key="verificacion-{{ $tipo }}">
+                                        <small class="text-muted d-block">{{ \App\Models\VerificacionDeMedico::nombre($tipo) }}</small>
+                                        <x-ui.estado :tono="\App\Models\VerificacionDeMedico::tono($verificacion->estado)">
+                                            {{ str_replace('_', ' ', $verificacion->estado) }}
+                                        </x-ui.estado>
+                                        @if ($verificacion->nota)
+                                            <small class="text-muted d-block">{{ $verificacion->nota }}</small>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-success"
+                                        wire:click="marcarCarnet('verificado')" wire:loading.attr="disabled">
+                                    Carnet verificado
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-warning"
+                                        wire:click="marcarCarnet('pendiente')" wire:loading.attr="disabled">
+                                    Pendiente
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        wire:click="marcarCarnet('rechazado')" wire:loading.attr="disabled">
+                                    Rechazar carnet
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <hr>
 
                 @if ($seleccionada->estaPendiente())
@@ -101,6 +170,18 @@
                                     @endforeach
                                 </select>
                             </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="carnet_verificado"
+                                       wire:model="carnet_verificado">
+                                <label class="form-check-label" for="carnet_verificado">
+                                    Revisé el carnet y lo doy por verificado
+                                </label>
+                                @if (! $seleccionada->carnet_ruta)
+                                    <div class="form-text text-warning-emphasis">
+                                        No adjuntó foto: su carnet quedará sin verificar.
+                                    </div>
+                                @endif
+                            </div>
                             <button type="button" class="btn btn-success" wire:click="aprobar" wire:loading.attr="disabled">
                                 Aprobar y crear la cuenta
                             </button>
@@ -128,11 +209,18 @@
                         <div class="alert alert-warning mt-3 mb-0">{{ $message }}</div>
                     @enderror
                 @else
-                    <p class="mb-1">
-                        {{ $seleccionada->estado === 'aprobada' ? 'Aprobada' : 'Rechazada' }}
-                        por {{ $seleccionada->revisor?->name ?? '—' }}
-                        el {{ \App\Support\HoraLocal::fechaHora($seleccionada->revisada_el) }}.
-                    </p>
+                    @if ($seleccionada->aprobada_automaticamente)
+                        <p class="mb-1">
+                            Aprobada sola el {{ \App\Support\HoraLocal::fechaHora($seleccionada->revisada_el) }}:
+                            la verificación del carnet estaba apagada cuando se registró.
+                        </p>
+                    @else
+                        <p class="mb-1">
+                            {{ $seleccionada->estado === 'aprobada' ? 'Aprobada' : 'Rechazada' }}
+                            por {{ $seleccionada->revisor?->name ?? '—' }}
+                            el {{ \App\Support\HoraLocal::fechaHora($seleccionada->revisada_el) }}.
+                        </p>
+                    @endif
                     @if ($seleccionada->estado === 'aprobada')
                         <p class="mb-0 text-muted">reg_medico <code>{{ $seleccionada->reg_medico }}</code></p>
                     @elseif ($seleccionada->motivo_rechazo)
@@ -191,6 +279,9 @@
                                 <td>
                                     @if ($solicitud->estado === 'aprobada')
                                         <x-ui.estado tono="exito">Aprobada</x-ui.estado>
+                                        @if ($solicitud->aprobada_automaticamente)
+                                            <x-ui.estado tono="info">Automática</x-ui.estado>
+                                        @endif
                                     @elseif ($solicitud->estado === 'rechazada')
                                         <x-ui.estado tono="neutro">Rechazada</x-ui.estado>
                                     @else

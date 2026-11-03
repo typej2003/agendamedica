@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Registro de médicos · Doctorísimo')
-@section('description', 'Regístrate como médico en Doctorísimo: solicita tu acceso, un administrador verifica tus datos y empiezas con un mes de prueba para gestionar tu consultorio.')
+@section('description', 'Regístrate como médico en Doctorísimo: crea tu acceso con el correo verificado, empiezas con un mes de prueba y gestionas tu consultorio.')
 
 @push('estilos')
     <link rel="stylesheet" href="{{ asset('css/paciente.css') }}">
@@ -14,7 +14,13 @@
         <div class="paciente-registro">
             <div class="paciente-registro-encabezado">
                 <h1>Regístrate como médico</h1>
-                <p>Revisamos tus datos profesionales antes de activar tu cuenta. Te avisamos por correo cuando esté lista.</p>
+                <p>
+                    @if ($exigeCarnet)
+                        Revisamos tus datos profesionales antes de activar tu cuenta. Te avisamos por correo cuando esté lista.
+                    @else
+                        Confirmas tu correo y tu cuenta queda activa con el mes de prueba. El carnet lo verificamos por separado, sin frenarte.
+                    @endif
+                </p>
             </div>
 
             <div class="paciente-tarjeta">
@@ -130,7 +136,12 @@
                                     Ya adjuntaste una foto{{ ! empty($previo['carnet_nombre']) ? ' (' . $previo['carnet_nombre'] . ')' : '' }};
                                     elige otra solo si quieres reemplazarla.
                                 @else
-                                    Carnet del MPPS o del Colegio. {{ $carnetAceptado }}, hasta {{ $carnetMaximo }}. Acelera la revisión.
+                                    Carnet del MPPS o del Colegio. {{ $carnetAceptado }}, hasta {{ $carnetMaximo }}.
+                                    @if ($exigeCarnet)
+                                        Acelera la revisión.
+                                    @else
+                                        Queda guardado para que lo verifiquemos después.
+                                    @endif
                                 @endif
                             </div>
                             <div class="form-text" id="carnet-aviso" hidden></div>

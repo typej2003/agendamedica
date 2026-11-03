@@ -2,15 +2,23 @@
 
 namespace App\RegistroDeMedicos;
 
+use App\Actions\Medicos\AprobarSolicitudDeMedico;
+use App\Models\ConfiguracionDeVerificacion;
 use App\Models\SolicitudMedico;
 use App\Referidos\CodigosDeReferido;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Segundo paso del **registro de médicos**: comprobar el código del correo y **guardar la solicitud**, que
- * queda pendiente hasta que un administrador la revise. No crea cuenta: el médico no puede entrar todavía.
+ * Segundo paso del **registro de médicos**: comprobar el código del correo y **guardar la solicitud**.
+ *
+ * Desde el 2026-11-03 la solicitud **no siempre queda pendiente**: si la política no exige el carnet
+ * (`configuracion_verificacion_medicos.exigir_carnet` apagado, que es el valor con el que nace), se aprueba
+ * sola con `AprobarSolicitudDeMedico::automatica()` y el médico ya puede entrar, con su carnet `pendiente`
+ * o `sin_verificar` guardado en el perfil. Con la exigencia encendida, la solicitud queda pendiente como
+ * antes y el administrador la revisa.
  *
  * Revalida que la cédula no esté en otra solicitud (dos pestañas pueden llegar juntas) y, guardada, avisa al
  * médico y a los administradores. Si el correo ya tenía una solicitud **pendiente**, se **actualiza** (la misma
@@ -30,6 +38,7 @@ final class ConfirmarSolicitudDeMedico
         private SolicitudEnCurso $enCurso,
         private CorreosDeLaSolicitud $correos,
         private CodigosDeReferido $codigosDeReferido,
+        private AprobarSolicitudDeMedico $aprobar,
     ) {
     }
 
@@ -106,6 +115,35 @@ final class ConfirmarSolicitudDeMedico
         });
 
         $this->enCurso->olvidar();
+
+        // Con la exigencia apagada el médico entra solo: la solicitud se aprueba acá mismo. Si el
+        // `reg_medico` propuesto choca con otra ficha, la Action lanza `ValidationException` y la solicitud
+        // queda pendiente para la bandeja, sin crear nada a medias.
+        if (! ConfiguracionDeVerificacion::actual()->exigeCarnet()) {
+            try {
+                $this->aprobar->automatica($solicitud);
+
+                // El aviso a los administradores va aparte del correo de bienvenida: es donde revisan el
+                // carnet que quedó pendiente o sin verificar.
+                $this->correos->avisoDeRegistroAutomatico($solicitud);
+
+                return $solicitud->fresh();
+            } catch (ValidationException $e) {
+                $solicitud->refresh();
+
+                // La ficha pudo quedar creada y fallar sólo algo posterior (la copia del catálogo): en ese
+                // caso no se le dice al médico que está «en revisión».
+                if ($solicitud->estado === SolicitudMedico::APROBADA) {
+                    return $solicitud;
+                }
+
+                Log::info('Registro de médicos: no se pudo aprobar solo; la solicitud queda pendiente.', [
+                    'solicitud_id' => $solicitud->id,
+                    'motivo' => $e->getMessage(),
+                ]);
+            }
+        }
+
         $this->correos->recibida($solicitud);
 
         return $solicitud;
