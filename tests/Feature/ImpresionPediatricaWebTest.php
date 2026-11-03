@@ -13,8 +13,8 @@ use Tests\TestCase;
 
 /**
  * **Los impresos de pediatría llevan la cabecera del escritorio** (2026-10-20): el sexo, el representante, el número de
- * historia, la edad compacta («21A 9M 6D») y, en la mitad de *Indicaciones* del récipe, las medidas (peso, talla,
- * circunferencia cefálica y tensión).
+ * historia, la edad compacta («21A 9M 6D») y las medidas (peso, talla, circunferencia cefálica y tensión), que desde el
+ * 2026-11-03 salen en **todos los documentos**, no sólo en la mitad de *Indicaciones* del récipe.
  *
  * Lo que fijan estos casos:
  *
@@ -22,7 +22,8 @@ use Tests\TestCase;
  *    tiene **21 años** —como el de la captura del escritorio— y su récipe igual lleva el bloque;
  *  - vale para **los dos caminos** de la hoja: la consulta del médico y la secretaría desde la cita atendida (que reusa
  *    `HojasImpresasVista`);
- *  - vale para los **documentos** (constancia), no sólo para el récipe, y las medidas **sólo** en la mitad de indicaciones;
+ *  - vale para los **documentos** (constancia), no sólo para el récipe: llevan la cabecera **y las medidas**, éstas sólo
+ *    como las que existen (un cero del legado no se imprime);
  *  - el **representante** sale de `representante` (la web) y, si ahí no hay nombre, de la familia del escritorio con
  *    `familia_bebe.status`; sin ninguno de los dos, el rótulo `Rep.:` **no se imprime**;
  *  - **fuera de pediatría la hoja queda como estaba**: los mismos datos cargados en una consulta de ginecología no
@@ -250,8 +251,35 @@ class ImpresionPediatricaWebTest extends TestCase
         $respuesta->assertSee('00025');
         $respuesta->assertSee('21A 9M 6D');
         $respuesta->assertDontSee('21 años');
-        // Las medidas son del récipe: un documento no las lleva.
-        $respuesta->assertDontSee('PESO:');
+        // Las medidas también: desde el 2026-11-03 las lleva todo documento de pediatría, no sólo el récipe.
+        foreach (['PESO:', 'TALLA:', 'C. CEFÁLICA:', 'T.A.:'] as $rotulo) {
+            $this->assertSame(1, substr_count($respuesta->getContent(), $rotulo), $rotulo);
+        }
+        $respuesta->assertSee('20 Kg');
+        $respuesta->assertSee('100 Cm');
+        $respuesta->assertSee('48.5 Cm');
+        $respuesta->assertSee('120/80');
+    }
+
+    /** Un cero del legado no es una medida: `C. CEFÁLICA` en 0 y la tensión `0/0` no se imprimen. */
+    public function test_un_documento_de_pediatria_no_imprime_las_medidas_en_cero(): void
+    {
+        [$user, $medico, $pediatria, , $consulta] = $this->escenario();
+        $this->constancia($medico);
+
+        DB::table('consultas')->where('id', $consulta->id)->update([
+            'circcefalica' => 0,
+            'tasentado' => '0/0',
+        ]);
+
+        $respuesta = $this->como($user, $medico, $pediatria)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'constancia']));
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('PESO:');
+        $respuesta->assertSee('TALLA:');
+        $respuesta->assertDontSee('C. CEFÁLICA:');
+        $respuesta->assertDontSee('T.A.:');
     }
 
     public function test_la_constancia_de_ginecologia_no_lleva_la_cabecera_de_pediatria(): void
@@ -269,6 +297,10 @@ class ImpresionPediatricaWebTest extends TestCase
         $respuesta->assertDontSee('Rep.:');
         $respuesta->assertDontSee('Historia:');
         $respuesta->assertDontSee('21A 9M 6D');
+        // Las medidas son de la cabecera de pediatría: acá no salen aunque la consulta las tenga cargadas.
+        $respuesta->assertDontSee('PESO:');
+        $respuesta->assertDontSee('C. CEFÁLICA:');
+        $respuesta->assertDontSee('T.A.:');
     }
 
     public function test_la_secretaria_imprime_la_constancia_de_pediatria_desde_la_cita(): void

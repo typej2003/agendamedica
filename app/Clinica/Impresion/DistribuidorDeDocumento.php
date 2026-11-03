@@ -211,14 +211,18 @@ final class DistribuidorDeDocumento
     }
 
     /**
-     * Las líneas que la **cabecera de pediatría** agrega arriba de la primera mitad (2026-10-20): el sexo, el
-     * representante y la historia. Fuera de pediatría la `persona` no las trae y la lista queda vacía.
+     * Las líneas que la **cabecera de pediatría** agrega arriba de la primera mitad: el sexo, el representante y la
+     * historia (2026-10-20) y, debajo, las **medidas de la consulta** (2026-11-03: todo documento de pediatría las lleva,
+     * como el récipe). Fuera de pediatría la `persona` no las trae y la lista queda vacía.
      *
      * @return array<int,string>
      */
     private function datosExtra(DocumentoImpreso $documento): array
     {
-        return array_values(array_filter([PacienteImpreso::lineaPediatrica($documento->persona)]));
+        return array_values(array_filter([
+            PacienteImpreso::lineaPediatrica($documento->persona),
+            MedidasDeLaConsulta::linea($documento->persona['medidas'] ?? []),
+        ]));
     }
 
     /**

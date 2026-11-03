@@ -33,8 +33,8 @@ final class HojasDeDocumentoVista
      * @param  DistribuidorDeDocumento|null  $distribuidor  el reparto de la media hoja; `null` usa el de siempre (el que inyecta
      *                                                      el contenedor)
      * @param  bool  $pediatria  si el contexto de impresión es pediatría (lo decide el controlador con
-     *                           `AlcanceDeLaEspecialidad`, no la edad): la cabecera lleva además sexo, representante, historia y
-     *                           la edad compacta (2026-10-20)
+     *                           `AlcanceDeLaEspecialidad`, no la edad): la cabecera lleva además sexo, representante, historia,
+     *                           la edad compacta (2026-10-20) y las medidas de la consulta (2026-11-03)
      */
     public function __construct(
         private Membrete $membrete,
@@ -109,6 +109,9 @@ final class HojasDeDocumentoVista
             'sexo' => $this->pediatria ? ($persona['sexo'] ?? null) : null,
             'representante' => $this->pediatria ? ($persona['representante'] ?? null) : null,
             'historia' => $this->pediatria ? ($persona['historia'] ?? null) : null,
+            // Las medidas de la consulta (2026-11-03): en pediatría las lleva **todo documento**, debajo de la cabecera
+            // del escritorio; fuera de pediatría la lista va vacía y la línea no sale.
+            'medidas' => $this->pediatria ? ($persona['medidas'] ?? []) : [],
             'fecha' => FechaClinica::formato($documento->fecha),
             // El destinatario del resumen médico (WEB-5.3c, `informe.para`): sale en la cabecera, en una
             // caja con borde. En los demás documentos va en el cuerpo y esto es `null`.
