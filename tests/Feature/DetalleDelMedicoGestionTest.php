@@ -204,7 +204,7 @@ class DetalleDelMedicoGestionTest extends TestCase
 
     public function test_las_cuentas_de_cobro_se_cargan_desde_la_ficha(): void
     {
-        $this->detalle()
+        $panel = $this->detalle()
             ->call('irA', 'metodos-pago')
             ->call('abrirCuentaNueva')
             ->set('ctaBanco', '0102')
@@ -222,10 +222,17 @@ class DetalleDelMedicoGestionTest extends TestCase
         $this->assertSame('0102', $cuenta->banco_codigo);
         $this->assertSame('04141234567', $cuenta->telefono);
         $this->assertTrue($cuenta->predeterminada);
-        $this->assertTrue(
-            MetodoPago::where('cuenta_bancaria_id', $cuenta->id)->where('pasarela', 'pago_movil')->exists(),
-            'La cuenta tiene que dejar su método de pago.',
-        );
+        $metodo = MetodoPago::where('cuenta_bancaria_id', $cuenta->id)->where('pasarela', 'pago_movil')->firstOrFail();
+        $this->assertTrue((bool) $metodo->activo);
+
+        // Desactivar la cuenta la saca de la oferta (su método también queda apagado) y se puede reactivar.
+        $panel->call('alternarCuenta', $cuenta->id);
+        $this->assertFalse((bool) $cuenta->fresh()->activa);
+        $this->assertFalse((bool) $metodo->fresh()->activo);
+
+        $panel->call('alternarCuenta', $cuenta->id);
+        $this->assertTrue((bool) $cuenta->fresh()->activa);
+        $this->assertTrue((bool) $metodo->fresh()->activo);
     }
 
     public function test_los_horarios_del_consultorio_se_ven_en_la_ficha(): void

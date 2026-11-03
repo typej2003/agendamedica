@@ -92,6 +92,9 @@ final class CuentasDeCobroDelMedico
     public function alternarActiva(CuentaBancaria $cuenta): void
     {
         $cuenta->update(['activa' => ! $cuenta->activa]);
+
+        // El método de pago de esa cuenta sigue el estado de la cuenta: desactivarla la saca de la oferta.
+        MetodoPago::where('cuenta_bancaria_id', $cuenta->id)->update(['activo' => $cuenta->activa]);
     }
 
     /** Elige quién recauda las citas: la plataforma o el consultorio. */
