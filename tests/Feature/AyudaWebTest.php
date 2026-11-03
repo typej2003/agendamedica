@@ -72,7 +72,7 @@ class AyudaWebTest extends TestCase
         $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get(route('clinica.ayuda'))
             ->assertOk()
-            ->assertSee('Ayúdanos a mejorar')
+            ->assertSee('Soporte y Sugerencias')
             ->assertSee('Todavía no mandaste ningún comentario.');
     }
 

@@ -354,7 +354,7 @@ final class ArmazonVista
             // "Ayúdanos a mejorar" (ROADMAP §9): el comentario lo puede mandar cualquiera que trabaje en el
             // consultorio —el médico y su secretaría—, así que va al final del menú, después de "Configuración".
             $menu[] = [
-                'texto'  => 'Ayúdanos a mejorar',
+                'texto'  => 'Soporte y Sugerencias',
                 'icono'  => 'bi-chat-heart',
                 'url'    => Route::has('clinica.ayuda') ? route('clinica.ayuda') : null,
                 'activo' => $this->rutaActual === 'clinica.ayuda',

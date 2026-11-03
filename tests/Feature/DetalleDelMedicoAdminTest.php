@@ -122,7 +122,7 @@ class DetalleDelMedicoAdminTest extends TestCase
         $this->actingAs($this->usuario('Root'));
 
         Livewire::test(DetalleDelMedico::class, ['medico' => $this->medico])
-            ->assertDontSee('Ayúdanos a mejorar')
+            ->assertDontSee('Soporte y Sugerencias')
             ->assertDontSee('Solicitud de registro')
             ->call('irA', 'pagos')->assertSet('pestana', 'datos');
 
@@ -135,7 +135,7 @@ class DetalleDelMedicoAdminTest extends TestCase
         Comentario::create(['origen' => 'web', 'tipo' => Comentario::BUG, 'mensaje' => 'No me carga la agenda', 'estado' => Comentario::NUEVO, 'medico_id' => $this->medico->id]);
 
         Livewire::test(DetalleDelMedico::class, ['medico' => $this->medico])
-            ->assertSee('Ayúdanos a mejorar')
+            ->assertSee('Soporte y Sugerencias')
             ->call('irA', 'pagos')->assertSee('Plan del detalle')->assertSee(route('admin.pagos'))
             ->call('irA', 'comentarios')->assertSee('No me carga la agenda')->assertSee(route('admin.comentarios'));
     }

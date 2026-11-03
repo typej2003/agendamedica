@@ -83,7 +83,7 @@ class MenuDelArmazonWebTest extends TestCase
         $this->assertStringNotContainsString(route('clinica.vacunas'), $barra, 'El menú no debe enlazar la entrada de Vacunas.');
 
         // El resto del menú queda igual: el núcleo, los grupos y la ayuda.
-        foreach (['Inicio', 'Agenda', 'Pacientes', 'Listados', 'Catálogos', 'Configuración', 'Ayúdanos a mejorar'] as $item) {
+        foreach (['Inicio', 'Agenda', 'Pacientes', 'Listados', 'Catálogos', 'Configuración', 'Soporte y Sugerencias'] as $item) {
             $this->assertStringContainsString($item, $barra, "Falta «{$item}» en el menú de pediatría.");
         }
     }
@@ -128,7 +128,7 @@ class MenuDelArmazonWebTest extends TestCase
             $this->conContexto($user, $medico, $gineco)->get('/clinica')->assertOk()->getContent()
         );
 
-        foreach (['Inicio', 'Agenda', 'Pacientes', 'Listados', 'Catálogos', 'Configuración', 'Ayúdanos a mejorar'] as $item) {
+        foreach (['Inicio', 'Agenda', 'Pacientes', 'Listados', 'Catálogos', 'Configuración', 'Soporte y Sugerencias'] as $item) {
             $this->assertStringContainsString($item, $barra, "Falta «{$item}» en el menú de ginecología.");
         }
 

@@ -45,7 +45,7 @@ class DetalleDelMedico extends Component
     public const PESTANAS_CONDICIONALES = [
         'pagos' => ['Pagos', 'bi-cash-stack'],
         'solicitud' => ['Solicitud de registro', 'bi-person-badge'],
-        'comentarios' => ['Ayúdanos a mejorar', 'bi-chat-heart'],
+        'comentarios' => ['Soporte y Sugerencias', 'bi-chat-heart'],
     ];
 
     public Medico $medico;

@@ -7,10 +7,10 @@
      comportamiento está en `public/js/clinica/ayuda.js` y las clases, en `doctorisimo-ui.css`. --}}
 @extends('clinica.layout')
 
-@section('titulo', 'Ayúdanos a mejorar')
+@section('titulo', 'Soporte y Sugerencias')
 
 @section('contenido')
-    <x-ui.page-head titulo="Ayúdanos a mejorar"
+    <x-ui.page-head titulo="Soporte y Sugerencias"
                     subtitulo="Cuéntanos si algo no funciona, si te falta algo o si se te ocurre cómo mejorarlo. Te respondemos acá mismo." />
 
     {{-- El aviso de «¡Gracias!» y el de error los pinta el armazón (`session('estado')` y `session('error')`):

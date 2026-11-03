@@ -332,7 +332,7 @@
                 @if ($datos['total'] > count($datos['comentarios']))
                     <p class="text-muted small mt-2 mb-0">Se muestran los {{ count($datos['comentarios']) }} más recientes de {{ $datos['total'] }}.</p>
                 @endif
-                <div class="mt-3"><a href="{{ route('admin.comentarios') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-chat-heart me-1" aria-hidden="true"></i> Ir a Ayúdanos a mejorar</a></div>
+                <div class="mt-3"><a href="{{ route('admin.comentarios') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-chat-heart me-1" aria-hidden="true"></i> Ir a Soporte y Sugerencias</a></div>
             @endif
 
         </div>
