@@ -8,6 +8,7 @@ use App\Models\CuentaBancaria;
 use App\Models\Medico;
 use App\Models\Pago;
 use App\Pagos\Cobros;
+use App\Pagos\CobrosDePagoMovil;
 use App\Pagos\ClienteSyPago;
 use App\Pagos\Vistas\PagoPublicoVista;
 use Illuminate\Http\RedirectResponse;
@@ -37,8 +38,8 @@ class PagoPublicoController extends Controller
         $pago = $this->porToken($token);
         $vm = $this->vista($pago);
 
-        // La lista de bancos sólo se pide cuando se va a mostrar el formulario del pagador.
-        if ($vm->enDatos() && $vm->puedePagar()) {
+        // La lista de bancos sólo se pide cuando se va a mostrar el formulario del pagador de SyPago.
+        if ($vm->enDatos() && $vm->puedePagar() && ! $vm->esPagoMovil()) {
             $vm->bancos = $this->bancosDelMetodo($pago);
         }
 
@@ -105,8 +106,58 @@ class PagoPublicoController extends Controller
         return $this->volver($pago, $resultado->ok ? 'estado' : 'error', $resultado->mensaje);
     }
 
-    /** `POST /pagar/{token}/confirmar`: autoriza el débito con el código que llegó al teléfono. */
-    public function confirmar(Request $request, string $token, Cobros $cobros): RedirectResponse
+    /**
+     * `POST /pagar/{token}/declarar`: **el paciente avisa que pagó** por pago móvil o transferencia. No se
+     * debita nada: se guarda la referencia y se le pregunta al banco (o se avisa al consultorio).
+     */
+    public function declarar(Request $request, string $token, CobrosDePagoMovil $cobros): RedirectResponse
+    {
+        $pago = $this->porToken($token);
+        $vm = $this->vista($pago);
+
+        if (! $vm->puedePagar()) {
+            return $this->volver($pago, 'error', $this->motivoParaNoPagar($vm));
+        }
+
+        if (! $vm->esPagoMovil()) {
+            return $this->volver($pago, 'error', 'Este link no es de pago móvil.');
+        }
+
+        $datos = $request->validate([
+            'tipo_pago' => ['required', Rule::in(['PM', 'TRF'])],
+            'documento_tipo' => ['required', Rule::in(CuentaBancaria::DOCUMENTOS)],
+            'documento_numero' => ['required', 'string', 'max:20'],
+            'nombre' => ['required', 'string', 'max:120'],
+            'referencia' => ['required', 'string', 'max:40'],
+            'telefono' => ['nullable', 'string', 'max:15'],
+        ], [
+            'tipo_pago.required' => 'Dinos si pagaste por pago móvil o por transferencia.',
+            'documento_tipo.required' => 'Elige el tipo de tu documento.',
+            'documento_numero.required' => 'Falta tu documento.',
+            'nombre.required' => 'Falta tu nombre.',
+            'referencia.required' => 'Escribe el número de referencia del pago.',
+        ], [
+            'tipo_pago' => 'tipo de pago', 'documento_tipo' => 'tipo de documento',
+            'documento_numero' => 'documento', 'nombre' => 'nombre', 'referencia' => 'referencia',
+            'telefono' => 'teléfono',
+        ]);
+
+        $telefono = (string) preg_replace('/\D/', '', (string) ($datos['telefono'] ?? ''));
+
+        if ($datos['tipo_pago'] === 'PM' && ! preg_match('/^04\d{9}$/', $telefono)) {
+            throw ValidationException::withMessages([
+                'telefono' => 'El teléfono del pago móvil tiene 11 dígitos y empieza por 04.',
+            ]);
+        }
+
+        $datos['telefono'] = $telefono;
+
+        $resultado = $cobros->declarar($pago, $datos, (string) $datos['referencia'], $datos['tipo_pago']);
+
+        return $this->volver($pago, $resultado->ok ? 'estado' : 'error', $resultado->mensaje);
+    }
+
+    /** `POST /pagar/{token}/confirmar`: autoriza el débito con el código que llegó al teléfono. */    public function confirmar(Request $request, string $token, Cobros $cobros): RedirectResponse
     {
         $pago = $this->porToken($token);
         $vm = $this->vista($pago);
@@ -148,7 +199,10 @@ class PagoPublicoController extends Controller
             return $this->volver($pago, 'error', $this->motivoParaNoPagar($vm));
         }
 
-        $resultado = $cobros->conciliar($pago);
+        // Pago móvil: se le vuelve a preguntar al banco por la referencia declarada. SyPago: su consulta.
+        $resultado = $vm->esPagoMovil()
+            ? app(CobrosDePagoMovil::class)->consultar($pago)
+            : $cobros->conciliar($pago);
 
         return $this->volver($pago, $resultado->ok ? 'estado' : 'error', $resultado->mensaje);
     }
