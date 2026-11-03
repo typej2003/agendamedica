@@ -256,11 +256,37 @@ class DetalleDelMedicoGestionTest extends TestCase
             'cupo' => 8,
         ]);
 
-        $this->detalle()
+        $panel = $this->detalle()
             ->call('irA', 'horarios')
             ->assertSee('Sede del detalle')
-            ->assertSee('Administrar horarios')
+            ->assertSee('Agregar bloque')
             ->assertSee('08:00')
             ->assertSee('cupo 8');
+
+        // Agregar, editar y quitar un bloque, sin salir de la ficha.
+        $panel->call('abrirHorarioNuevo', $consultorio->id)
+            ->assertSet('horarioForm', true)
+            ->set('horarioDia', '2')
+            ->set('horarioInicio', '14:00')
+            ->set('horarioFin', '18:00')
+            ->set('horarioCupo', '12')
+            ->call('guardarHorario')
+            ->assertHasNoErrors()
+            ->assertSet('horarioForm', false);
+
+        $nuevo = OfficeSchedule::where('office_id', $consultorio->id)->where('dia_semana', 2)->firstOrFail();
+        $this->assertSame('14:00', substr((string) $nuevo->hora_inicio, 0, 5));
+        $this->assertSame(12, (int) $nuevo->cupo);
+
+        $panel->call('abrirHorarioEditar', $consultorio->id, $nuevo->id)
+            ->assertSet('horarioDia', '2')
+            ->set('horarioCupo', '20')
+            ->call('guardarHorario')
+            ->assertHasNoErrors();
+
+        $this->assertSame(20, (int) $nuevo->fresh()->cupo);
+
+        $panel->call('quitarHorario', $consultorio->id, $nuevo->id);
+        $this->assertNull(OfficeSchedule::find($nuevo->id));
     }
 }

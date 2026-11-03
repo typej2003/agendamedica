@@ -8,6 +8,7 @@ use App\Http\Livewire\Admin\DetalleDelMedico\GestionaCitaOnline;
 use App\Http\Livewire\Admin\DetalleDelMedico\GestionaCuentasDeCobro;
 use App\Http\Livewire\Admin\DetalleDelMedico\GestionaDatos;
 use App\Http\Livewire\Admin\DetalleDelMedico\GestionaEspecialidades;
+use App\Http\Livewire\Admin\DetalleDelMedico\GestionaHorarios;
 use App\Http\Livewire\Admin\DetalleDelMedico\GestionaMotivosDeCita;
 use App\Http\Livewire\Admin\DetalleDelMedico\GestionaPlanes;
 use App\Http\Livewire\Admin\DetalleDelMedico\GestionaRoles;
@@ -54,6 +55,7 @@ class DetalleDelMedico extends Component
 {
     use EmiteApiKeys;
     use GestionaDatos;
+    use GestionaHorarios;
     use GestionaRoles;
     use GestionaEspecialidades;
     use GestionaPlanes;
@@ -136,6 +138,7 @@ class DetalleDelMedico extends Component
     {
         $this->editando = false;
         $this->cerrarPlan();
+        $this->cerrarHorario();
         $this->cerrarSecretaria();
         $this->cerrarSolicitud();
         $this->cerrarMotivo();

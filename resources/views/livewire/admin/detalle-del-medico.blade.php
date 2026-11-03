@@ -199,19 +199,30 @@
                                         </td>
                                         <td>
                                             @forelse ($consultorio->schedules->sortBy(['dia_semana', 'hora_inicio']) as $bloque)
-                                                <div class="small">
-                                                    {{ $datos['nombresDeDias'][$bloque->dia_semana] ?? $bloque->dia_semana }}
-                                                    {{ substr((string) $bloque->hora_inicio, 0, 5) }}–{{ substr((string) $bloque->hora_fin, 0, 5) }}
-                                                    @if ($bloque->cupo) <span class="text-muted">· cupo {{ $bloque->cupo }}</span> @endif
+                                                <div class="small d-flex align-items-center gap-2">
+                                                    <span>
+                                                        {{ $datos['nombresDeDias'][$bloque->dia_semana] ?? $bloque->dia_semana }}
+                                                        {{ substr((string) $bloque->hora_inicio, 0, 5) }}–{{ substr((string) $bloque->hora_fin, 0, 5) }}
+                                                        @if ($bloque->cupo) <span class="text-muted">· cupo {{ $bloque->cupo }}</span> @endif
+                                                    </span>
+                                                    <button type="button" class="btn btn-link btn-sm p-0" wire:click="abrirHorarioEditar({{ $consultorio->id }}, {{ $bloque->id }})">Editar</button>
+                                                    <button type="button" class="btn btn-link btn-sm p-0 text-danger"
+                                                            wire:click="quitarHorario({{ $consultorio->id }}, {{ $bloque->id }})"
+                                                            wire:confirm="¿Quitar el bloque {{ $bloque->nombreDelDia() }} {{ $bloque->rango() }}? Esas horas dejan de contarse como jornada.">
+                                                        Quitar
+                                                    </button>
                                                 </div>
                                             @empty
                                                 <span class="text-muted small">Sin horarios cargados.</span>
                                             @endforelse
                                         </td>
                                         <td class="text-end text-nowrap">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" wire:click="abrirHorarioNuevo({{ $consultorio->id }})">
+                                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i> Agregar bloque
+                                            </button>
                                             <a href="{{ route('admin.medicos.sedes.consultorios.horarios', [$medico, $consultorio->medical_center_id, $consultorio->id]) }}"
-                                               class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-clock me-1" aria-hidden="true"></i> Administrar horarios
+                                               class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-clock me-1" aria-hidden="true"></i> Ver horarios
                                             </a>
                                         </td>
                                     </tr>
@@ -219,6 +230,52 @@
                             </tbody>
                         </table>
                     </div>
+
+                    @if ($horarioAvisos !== [])
+                        @foreach ($horarioAvisos as $avisoHorario)
+                            <div class="alert alert-warning py-2 mt-3" role="status">{{ $avisoHorario }}</div>
+                        @endforeach
+                    @endif
+
+                    @if ($horarioForm)
+                        <div class="border rounded p-3 mt-3">
+                            <h3 class="h6">{{ $horarioBloqueId ? 'Editar el bloque' : 'Agregar un bloque de horario' }}</h3>
+                            <form wire:submit.prevent="guardarHorario">
+                                <div class="row g-3">
+                                    <div class="col-md-2">
+                                        <label class="form-label" for="horario-dia">Día</label>
+                                        <select class="form-select" id="horario-dia" wire:model="horarioDia">
+                                            <option value="">Elige…</option>
+                                            @foreach ($datos['nombresDeDias'] as $numeroDia => $nombreDia)
+                                                <option value="{{ $numeroDia }}">{{ $nombreDia }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('horarioDia') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label" for="horario-inicio">Desde</label>
+                                        <input type="time" class="form-control" id="horario-inicio" wire:model="horarioInicio">
+                                        @error('horarioInicio') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label" for="horario-fin">Hasta</label>
+                                        <input type="time" class="form-control" id="horario-fin" wire:model="horarioFin">
+                                        @error('horarioFin') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label" for="horario-cupo">Cupo</label>
+                                        <input type="number" min="1" class="form-control" id="horario-cupo" wire:model="horarioCupo" placeholder="Sin tope">
+                                        @error('horarioCupo') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2 mt-3">
+                                    <button type="button" class="btn btn-secondary" wire:click="cerrarHorario">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary">Guardar bloque</button>
+                                </div>
+                            </form>
+                        </div>
+                    @endif
+
                     <div class="mt-3 d-flex flex-wrap gap-2">
                         <a href="{{ route('admin.medicos.sedes', $medico) }}" class="btn btn-outline-secondary btn-sm">
                             <i class="bi bi-geo-alt me-1" aria-hidden="true"></i> Sedes y consultorios
