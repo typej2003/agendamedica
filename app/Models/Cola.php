@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Clinica\Pacientes\DuenoDeLaHistoria;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -162,10 +163,35 @@ class Cola extends Model
     }
 
     /**
-     * Relación con la tabla pacientes mediante el número de historia.
+     * **El paciente de la cita**, resuelto con la misma regla que la agenda y la consulta: por
+     * `paciente_sinhistoria_id` o por el **dueño de la historia** en el consultorio
+     * (`DuenoDeLaHistoria`). No es una relación `belongsTo` por `numhistoria`: `pacientes` **no tiene**
+     * esa columna (el número vive en `historias` y `medico_pacientes`), y la relación vieja terminaba en
+     * `no such column: pacientes.numhistoria` al abrir el link de pago o el cobro (2026-11-03).
+     *
+     * Se memoiza por instancia: el enlace, el cobro y las filas leen la misma cita varias veces.
      */
-    public function paciente(): BelongsTo
+    public function getPacienteAttribute(): ?Paciente
     {
-        return $this->belongsTo(Paciente::class, 'numhistoria', 'numhistoria');
+        if ($this->pacienteResuelto !== null) {
+            return $this->pacienteResuelto === false ? null : $this->pacienteResuelto;
+        }
+
+        $paciente = null;
+
+        if ($this->paciente_sinhistoria_id !== null) {
+            $paciente = Paciente::find((int) $this->paciente_sinhistoria_id);
+        } elseif ($this->numhistoria !== null) {
+            $pacienteId = (new DuenoDeLaHistoria())->de($this->reg_medico, $this->numhistoria);
+
+            $paciente = $pacienteId !== null ? Paciente::find($pacienteId) : null;
+        }
+
+        $this->pacienteResuelto = $paciente ?? false;
+
+        return $paciente;
     }
+
+    /** Memo de `getPacienteAttribute()`: `null` = todavía no se buscó, `false` = se buscó y no hay. */
+    private Paciente|false|null $pacienteResuelto = null;
 }
