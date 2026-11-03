@@ -516,12 +516,21 @@ class PacienteController extends Controller
      */
     public function nuevo(Request $request)
     {
+        // En pediatría el nombre es uno solo (2026-11-03): el hermano se precarga en `nombres`, no en `apellidos`.
+        $pediatria = str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr');
+
         // «Agregar un hermano» (WEB-7.4.2d): `?hermano_de=` precarga los apellidos y deja el rastro para unir las familias al guardar.
         // Un valor que no sea un niño del consultorio se ignora: el alta sigue siendo la de siempre.
         $hermano = $this->hermanoDe($request, (int) $request->query('hermano_de', 0));
 
         if ($hermano !== null) {
-            $request->session()->now('_old_input', ['apellidos' => $hermano->apellidos, 'hermano_de' => $hermano->id]);
+            $precarga = ['hermano_de' => $hermano->id, 'apellidos' => $hermano->apellidos];
+
+            if ($pediatria) {
+                $precarga['nombres'] = $hermano->apellidos;
+            }
+
+            $request->session()->now('_old_input', $precarga);
         }
 
         // «Agregar «texto»» de la búsqueda del listado: lo escrito (si trae letras) llega a `?nombre=` y se precarga en el primer
@@ -529,7 +538,7 @@ class PacienteController extends Controller
         $buscado = mb_substr(preg_replace('/\s+/u', ' ', trim((string) $request->query('nombre', ''))), 0, 25);
 
         if ($hermano === null && $buscado !== '' && preg_match('/\p{L}/u', $buscado) === 1) {
-            $request->session()->now('_old_input', ['apellidos' => $buscado]);
+            $request->session()->now('_old_input', [$pediatria ? 'nombres' : 'apellidos' => $buscado]);
         }
 
         return $this->formulario($request, null, $hermano);
@@ -881,24 +890,27 @@ class PacienteController extends Controller
     private function validar(Request $request, ?Paciente $paciente = null): array
     {
         // La cédula es obligatoria **salvo** que el paciente vaya "sin cédula" (la opción "S.C." del
-        // legado, wiki `04-historia-clinica.md`): son los tres únicos obligatorios del alta —nombre,
-        // apellido y cédula—, y `S.C.` es la forma de decir que no hay cédula.
+        // legado, wiki `04-historia-clinica.md`): los obligatorios del alta son nombre, apellido y cédula,
+        // y `S.C.` es la forma de decir que no hay cédula.
         //
         // El caso que obliga a mirar también **cómo está el paciente hoy**: editar a alguien que ya está
         // sin cédula y guardar cualquier otro dato (sin tocar la cédula, que el navegador ni manda porque
         // el campo está vacío) no puede quedar rechazado por un dato que el paciente no tiene.
         // En pediatría no hay cédula del paciente (WEB-7.4.2d): el niño se identifica por nombre, nacimiento y sexo, y la cédula que
         // importa es la del representante. Un niño con cédula (los más grandes) la puede escribir igual.
+        $pediatria = str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr');
         $sinCedula = $request->boolean('sin_cedula')
-            || str_contains((string) ($request->attributes->get('contexto_clinico')['specialty']?->slug ?? ''), 'pediatr')
+            || $pediatria
             || ($paciente !== null && IdentidadDePaciente::esSinCedula($paciente->cedula));
 
         return $request->validate([
             'nac'          => ['nullable', 'in:' . implode(',', array_keys(FormularioDePacienteVista::NACIONALIDADES))],
             'sin_cedula'   => ['nullable', 'boolean'],
             'cedula'       => [$sinCedula ? 'nullable' : 'required', 'regex:/^[0-9]{1,10}$/'],
-            'apellidos'    => ['required', 'string', 'max:25'],
-            'nombres'      => ['required', 'string', 'max:25'],
+            // En pediatría el nombre es el **nombre completo** (PediaReport no tiene apellidos) y el
+            // apellido no se pide; fuera de pediatría los dos siguen siendo obligatorios.
+            'apellidos'    => $pediatria ? ['nullable', 'string', 'max:25'] : ['required', 'string', 'max:25'],
+            'nombres'      => ['required', 'string', 'max:200'],
             'sexo'         => ['nullable', 'in:' . implode(',', array_keys(FormularioDePacienteVista::SEXOS))],
             // Una fecha de nacimiento futura no es un dato posible: se guardaba y dejaba la ficha sin fecha ni edad.
             'fnacimiento'  => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
@@ -954,7 +966,7 @@ class PacienteController extends Controller
             'apellidos.required'      => 'El apellido es obligatorio.',
             'apellidos.max'           => 'El apellido no puede pasar de 25 caracteres.',
             'nombres.required'        => 'El nombre es obligatorio.',
-            'nombres.max'             => 'El nombre no puede pasar de 25 caracteres.',
+            'nombres.max'             => 'El nombre no puede pasar de 200 caracteres.',
             'sexo.in'                 => 'El sexo elegido no es válido.',
             'fnacimiento.date_format' => 'La fecha de nacimiento va como día/mes/año.',
             'fnacimiento.before_or_equal' => 'La fecha de nacimiento no puede ser posterior a hoy.',
@@ -988,6 +1000,11 @@ class PacienteController extends Controller
 
         if (trim((string) ($datos['cedula'] ?? '')) === '') {
             $datos['cedula'] = null;
+        }
+
+        // En pediatría el apellido no se pide: un campo vacío se guarda nulo, no como texto en blanco.
+        if (array_key_exists('apellidos', $datos) && trim((string) $datos['apellidos']) === '') {
+            $datos['apellidos'] = null;
         }
 
         return $datos;

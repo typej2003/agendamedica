@@ -80,14 +80,22 @@ class CitaController extends Controller
     public function crear(GuardarCitaRequest $request)
     {
         $contexto = $request->attributes->get('contexto_clinico');
+        $valores = $request->validated();
+
+        // La foto del niño (PediaReport): se guarda en el disco público y su ruta viaja al alta como
+        // `foto_pac`. Si no vino, el alta no la toca.
+        if ($request->hasFile('nuevo_foto')) {
+            $valores['nuevo_foto_pac'] = $request->file('nuevo_foto')->store('pacientes', 'public');
+        }
+
         // Los `reg_medico` del médico van al agendamiento porque el alta rápida del paso 2 **numera la
         // historia** (O-04) con la misma regla que la ficha: el correlativo se lee de todos sus registros.
         $resultado = $this->agendamiento->agendar(
             $contexto,
-            $request->validated(),
+            $valores,
             $this->registrosDelMedico($contexto['medico']),
         );
-        $volverA = $this->vueltaDe($request, $contexto, $request->validated()['volver_consulta'] ?? null);
+        $volverA = $this->vueltaDe($request, $contexto, $valores['volver_consulta'] ?? null);
 
         if ($resultado->esPregunta()) {
             return view('clinica.agenda.formulario', ['vm' => $this->formulario->armar($contexto, [

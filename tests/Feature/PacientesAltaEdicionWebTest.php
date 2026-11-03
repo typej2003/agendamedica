@@ -623,7 +623,7 @@ class PacientesAltaEdicionWebTest extends TestCase
                 'sin_cedula'  => 'quizas',
                 'cedula'      => 'abc',
                 'apellidos'   => str_repeat('A', 26),
-                'nombres'     => str_repeat('N', 26),
+                'nombres'     => str_repeat('N', 201),
                 'sexo'        => 'Z',
                 'fnacimiento' => 'ayer',
                 'lnacimiento' => str_repeat('L', 101),
@@ -656,6 +656,35 @@ class PacientesAltaEdicionWebTest extends TestCase
                 );
             }
         }
+    }
+
+    /**
+     * **En pediatría el nombre es uno solo** (2026-11-03): la ficha muestra «Nombre completo», no pide
+     * apellido y deja guardar a los pacientes que lo tienen vacío (los que vienen de PediaReport).
+     */
+    public function test_en_pediatria_la_ficha_tiene_un_solo_nombre_y_guarda_sin_apellido(): void
+    {
+        [$user, $medico] = $this->medicoConAcceso();
+        $pediatria = Specialty::where('slug', 'pediatria')->firstOrFail();
+        $medico->specialties()->syncWithoutDetaching([$pediatria->id]);
+
+        $paciente = $this->paciente($medico, ['nombres' => 'PEDRO ADRIAN', 'apellidos' => null], '01001');
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->get('/clinica/pacientes/' . $paciente . '/editar')
+            ->assertOk()
+            ->assertSee('Nombre completo')
+            ->assertDontSee('name="apellidos"', false);
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->put('/clinica/pacientes/' . $paciente, [
+                'nombres' => 'PEDRO ADRIAN PEREZ',
+                'sexo'    => 'M',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('PEDRO ADRIAN PEREZ', DB::table('pacientes')->where('id', $paciente)->value('nombres'));
+        $this->assertNull(DB::table('pacientes')->where('id', $paciente)->value('apellidos'));
     }
 
     public function test_editar_o_guardar_la_ficha_de_un_paciente_de_otro_medico_da_404(): void

@@ -71,9 +71,12 @@ class FormularioDeCita
             puedeAdministrarMotivos: (bool) ($datos['puedeAdministrarMotivos'] ?? false),
             // El alta mínima del paso 2 arranca con el sexo de la especialidad, como el alta de la ficha (O-01).
             sexoPorDefectoDelNuevoPaciente: FormularioDePacienteVista::sexoPorDefectoDe($contexto['specialty'] ?? null),
-            // En pediatría el alta mínima pide también el representante (nombre, teléfono, parentesco y cédula).
+            // En pediatría el alta mínima pide también el representante (nombre, teléfono, parentesco y cédula);
+            // fuera de pediatría el representante es opcional y también usa el catálogo.
             ofreceRepresentante: $ofreceRepresentante,
-            parentescos: $ofreceRepresentante ? app(\App\Clinica\Pacientes\CatalogoDeParentescos::class)->todos() : null,
+            parentescos: app(\App\Clinica\Pacientes\CatalogoDeParentescos::class)->todos(),
+            // «Empresa» del representante de PediaReport: el catálogo de seguros/empresas del consultorio.
+            empresas: $ofreceRepresentante ? app(\App\Clinica\Pacientes\CatalogoDeSeguros::class)->de($regMedico) : null,
         );
     }
 }

@@ -8,6 +8,7 @@ use App\Actions\Catalogos\FijarPrecioDelMotivoDeCita;
 use App\Actions\Pacientes\AsignarHistoria;
 use App\Actions\Pacientes\CrearPaciente;
 use App\Actions\Pacientes\GuardarRepresentante;
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Models\Cola;
 use App\Models\MotivoCita;
 use App\Models\Office;
@@ -106,7 +107,10 @@ class AgendamientoDeCitas
             'nombre' => $valores['representante_nombre'] ?? null,
             'codeparentesco' => $valores['representante_parentesco'] ?? null,
             'cedula' => $valores['representante_cedula'] ?? null,
-            'telefono' => $valores['representante_telefono'] ?? null,
+            // El teléfono del recordatorio: el fijo si lo escribió, y si no el celular de PediaReport.
+            'telefono' => $valores['representante_telefono'] ?? $valores['representante_celular'] ?? null,
+            'email' => $valores['representante_email'] ?? null,
+            'direccion' => $valores['representante_direccion'] ?? null,
         ];
 
         if (collect($datos)->every(fn ($valor) => trim((string) $valor) === '')) {
@@ -117,6 +121,79 @@ class AgendamientoDeCitas
             app(GuardarRepresentante::class)->ejecutar($regMedico, (string) $numhistoria, $datos);
         } catch (\Throwable $excepcion) {
             Log::warning('Alta rápida de la cita: no se pudo guardar el representante', ['reg_medico' => $regMedico, 'numhistoria' => $numhistoria, 'error' => $excepcion->getMessage()]);
+        }
+    }
+
+    /**
+     * **La ficha pediátrica y la familia del alta** (2026-11-03): después de numerar la historia, guarda lo
+     * que PediaReport pide y `pacientes` no tiene (el grupo sanguíneo, el grupo etario, el tipo de atención,
+     * el referido, la historia anterior y la foto) en `paciente_chamo`, y los padres/representante en
+     * `familia_bebe`. Las reglas de escritura son las de `GuardarFamilia`; acá sólo se arman los datos.
+     *
+     * Si falla, la cita y el paciente ya están hechos: se deja el rastro en el log y la ficha permite
+     * completarlo, igual que con el representante.
+     */
+    private function guardarFichaPediatrica(array $contexto, int $numhistoria, array $valores, ?Paciente $paciente): void
+    {
+        if (! AlcanceDeLaEspecialidad::de(($contexto['specialty'] ?? null)?->slug ?? null)->esPediatria()) {
+            return;
+        }
+
+        $tipo = strtoupper(trim((string) ($valores['nuevo_tipo'] ?? ''))) === 'V' ? 'V' : 'C';
+
+        // El representante de PediaReport es la madre o el padre: se guarda en la columna que le toca.
+        $esPadre = strtoupper(trim((string) ($valores['representante_tipo'] ?? ''))) === 'M';
+        $nombreRepresentante = $valores['representante_nombre'] ?? null;
+        $celularRepresentante = $valores['representante_celular'] ?? null;
+        $ocupacionRepresentante = $valores['representante_ocupacion'] ?? null;
+
+        $familia = [
+            'ced_representante' => $valores['representante_cedula'] ?? null,
+            'telefono' => $valores['representante_telefono'] ?? null,
+            'email' => $valores['representante_email'] ?? null,
+            'direccion' => $valores['representante_direccion'] ?? null,
+            'localidad' => $valores['representante_grupo_sanguineo'] ?? null,
+            'procedencia' => $valores['representante_empresa'] ?? null,
+            'situacion_pareja' => $valores['representante_situacion_pareja'] ?? null,
+            'status' => $esPadre ? 'M' : 'F',
+            $esPadre ? 'nom_padre' : 'nom_madre' => $nombreRepresentante,
+            $esPadre ? 'cel_padre' : 'celu_madre' => $celularRepresentante,
+            $esPadre ? 'ocupa_padre' : 'ocupa_madre' => $ocupacionRepresentante,
+        ];
+
+        $nino = (object) [
+            'nombres' => $paciente?->nombres,
+            'apellidos' => $paciente?->apellidos,
+            'sexo' => $valores['nuevo_sexo'] ?? null,
+            'fnacimiento' => $valores['nuevo_fnacimiento'] ?? null,
+        ];
+
+        $datosNino = [
+            // El nombre completo del niño: `nombres` y, si la ficha venía de otro consultorio, su apellido.
+            'nombre' => trim(trim((string) ($paciente?->nombres ?? $valores['nuevo_nombres'] ?? '')) . ' ' . trim((string) ($paciente?->apellidos ?? ''))),
+            'sexo' => $valores['nuevo_sexo'] ?? null,
+            'f_nacimiento' => $valores['nuevo_fnacimiento'] ?? null,
+            'l_nacimiento' => $valores['nuevo_lnacimiento'] ?? null,
+            'representante' => $valores['representante_cedula'] ?? null,
+            'f_ingreso' => $valores['nuevo_fingreso'] ?? null,
+            'escolaridad' => $valores['nuevo_grupo_etario'] ?? null,
+            'segu_empre' => $valores['representante_empresa'] ?? null,
+            'foto_paciente' => $paciente?->foto_pac ?? null,
+            'celular' => $valores['nuevo_grupo_sanguineo'] ?? null,
+            'email' => $valores['nuevo_email'] ?? null,
+            'nota_general' => $valores['nuevo_referido'] ?? null,
+            'historia_anterior' => $valores['nuevo_historia_anterior'] ?? null,
+            'pediatrico' => $tipo,
+            'vacunas' => $tipo,
+            'cedula' => $valores['nuevo_cedula'] ?? null,
+        ];
+
+        try {
+            app(\App\Actions\Pacientes\GuardarFamilia::class)->delAlta($contexto['reg_medico'], (string) $numhistoria, $familia, $datosNino, $nino);
+        } catch (\Throwable $excepcion) {
+            Log::warning('Alta rápida de la cita: no se pudo guardar la ficha pediátrica', [
+                'reg_medico' => $contexto['reg_medico'], 'numhistoria' => $numhistoria, 'error' => $excepcion->getMessage(),
+            ]);
         }
     }
 
@@ -139,6 +216,17 @@ class AgendamientoDeCitas
         $regMedico = $contexto['reg_medico'];
         $numerarHistoria = $opciones['numerar_historia'] ?? true;
         $estado = (int) ($opciones['estado'] ?? Cola::ESTADO_NO_CONFIRMADA);
+
+        // **Pediatría: un solo nombre** (2026-11-03). El formulario manda el nombre completo en
+        // `nuevo_nombres` y no pide apellido; si un cliente viejo (o un test) manda los dos, se unen acá
+        // con un espacio para que la ficha quede con el nombre completo.
+        if (AlcanceDeLaEspecialidad::de(($contexto['specialty'] ?? null)?->slug ?? null)->esPediatria()
+            && trim((string) ($valores['nuevo_apellidos'] ?? '')) !== '') {
+            $valores['nuevo_nombres'] = trim(
+                trim((string) ($valores['nuevo_nombres'] ?? '')) . ' ' . trim((string) $valores['nuevo_apellidos'])
+            );
+            $valores['nuevo_apellidos'] = null;
+        }
 
         $sedes = $this->armador->sedes($regMedico);
         $sede = $this->sedeElegida($sedes, $valores['sede'] ?? null);
@@ -196,6 +284,10 @@ class AgendamientoDeCitas
                 $historia = $this->asignarHistoria->ejecutar($contexto['medico'], $regMedico, (int) $paciente->getKey());
                 $objetivo = ['paciente' => $paciente, 'numhistoria' => (int) $historia->numhistoria];
                 $this->guardarRepresentante($regMedico, (int) $historia->numhistoria, $valores);
+
+                // La ficha de PediaReport y la familia (2026-11-03): después de numerar, porque se llavean
+                // por la historia. Sólo hace algo en pediatría.
+                $this->guardarFichaPediatrica($contexto, (int) $historia->numhistoria, $valores, $paciente);
             } else {
                 $objetivo = ['paciente' => $paciente, 'numhistoria' => null];
             }

@@ -120,10 +120,11 @@ class PacientesDeCita
     /** @return array<string,mixed> Las columnas del alta mínima de paciente (las mismas que el móvil). */
     public function columnasDelNuevo(array $valores): array
     {
-        return [
+        $columnas = [
             'cedula'    => $this->texto($valores['nuevo_cedula'] ?? null),
             'nombres'   => trim((string) ($valores['nuevo_nombres'] ?? '')),
-            'apellidos' => trim((string) ($valores['nuevo_apellidos'] ?? '')),
+            // En pediatría el nombre es el completo y el apellido viene vacío: se guarda nulo, no ''.
+            'apellidos' => $this->texto($valores['nuevo_apellidos'] ?? null),
             'telefono'  => $this->texto($valores['nuevo_telefono'] ?? null),
             'email'     => $this->texto($valores['nuevo_email'] ?? null),
             'sexo'      => $this->texto($valores['nuevo_sexo'] ?? null),
@@ -131,7 +132,21 @@ class PacientesDeCita
             'nac'         => $this->texto($valores['nuevo_nac'] ?? null),
             'lnacimiento' => $this->texto($valores['nuevo_lnacimiento'] ?? null),
             'direccion'   => $this->texto($valores['nuevo_direccion'] ?? null),
+            // Los campos de PediaReport que sí viven en `pacientes`: el grupo etario (que el escritorio
+            // guarda en `escolaridad`), el referido (`dependencia`) y la foto.
+            'escolaridad' => $this->texto($valores['nuevo_grupo_etario'] ?? null),
+            'dependencia' => $this->texto($valores['nuevo_referido'] ?? null),
+            'foto_pac'    => $this->texto($valores['nuevo_foto_pac'] ?? null),
         ];
+
+        // La fecha de ingreso se agrega **sólo si vino**: si la clave viajara en `null`, `CrearPaciente`
+        // no le pondría la de hoy (él sólo la completa cuando la clave no está).
+        $fingreso = $this->texto($valores['nuevo_fingreso'] ?? null);
+        if ($fingreso !== null) {
+            $columnas['fingreso'] = $fingreso;
+        }
+
+        return $columnas;
     }
 
     /**
