@@ -319,7 +319,8 @@ final class DocumentoImpreso
 
     /**
      * El mismo documento con **otra cabecera de paciente** (la de pediatría, que suma sexo, representante, historia y
-     * la edad compacta: `PacienteImpreso::datosPediatricos`). El cuerpo, la fecha y el título no cambian.
+     * la edad compacta: `PacienteImpreso::datosPediatricos`, más las medidas de la consulta bajo la clave `medidas`,
+     * `MedidasDeLaConsulta`). El cuerpo, la fecha y el título no cambian.
      *
      * @param  array<string,mixed>  $persona
      */

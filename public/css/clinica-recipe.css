@@ -69,8 +69,8 @@
 
 /* ------------------------------------------------------------------------------------ Datos del paciente
    Texto a 9 pt; la etiqueta, en negrita a 8. `C.I.` / `EDAD` / `FECHA` van en una línea; la dirección sólo en la mitad
-   "Rp.". 4 mm de aire debajo. En pediatría se suma una línea con `SEXO` / `Rep.` / `Historia` —en las dos mitades— y, en
-   la de indicaciones, la de las medidas (2026-10-20). */
+   "Rp.". 4 mm de aire debajo. En pediatría se suma una línea con `SEXO` / `Rep.` / `Historia` —en las dos mitades— y la
+   de las medidas: en la mitad de indicaciones del récipe (2026-10-20) y en **todo documento** de la consulta (2026-11-03). */
 
 .recipe-datos { flex: none; margin-bottom: 4mm; font-size: 9pt; line-height: 1.25; }
 .recipe-dato { margin: 0; }

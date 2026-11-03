@@ -6,23 +6,27 @@ use App\Clinica\Pacientes\CamposDePaciente;
 use App\Models\Consulta;
 
 /**
- * **Las medidas del paciente que la mitad de *Indicaciones* del récipe agrega en pediatría** (2026-10-20): el peso, la
- * talla, la circunferencia cefálica y la tensión arterial, tal como los imprime el escritorio:
+ * **Las medidas de la consulta que los impresos de pediatría llevan en su cabecera** (2026-10-20): el peso, la talla, la
+ * circunferencia cefálica y la tensión arterial, tal como los imprime el escritorio:
  *
  * ```
  * PESO: 20 Kg   TALLA: 100 Cm   C. CEFÁLICA: 48.5 Cm   T.A.: 120/80
  * ```
  *
+ * Las lleva el **récipe** (en su mitad de *Indicaciones*) y, desde el 2026-11-03, **todos los documentos de la consulta**
+ * (constancia, reposo, referencia, informe, hospitalización, dieta, órdenes, resumen médico…): es la misma cabecera del
+ * escritorio en todo el papel de pediatría.
+ *
  * **Sólo salen las medidas que existen y son mayores que cero**: el legado guarda `0` en las columnas que nadie cargó
- * (una talla de `0` no es una talla), así que un `0` se trata como vacío. La línea entera aparece si hay al menos una
- * medida; si no hay ninguna, no se imprime nada.
+ * (una talla de `0` no es una talla), así que un `0` se trata como vacío. Lo mismo con una tensión de puros ceros
+ * (`0/0`). La línea entera aparece si hay al menos una medida; si no hay ninguna, no se imprime nada.
  *
  * Las medidas son de la **consulta** (`consultas.peso`, `talla`, `circcefalica` y las tres tensiones), no del
  * paciente: son las que se tomaron ese día. La tensión es texto y se imprime **tal cual** (`120/80`), tomando la
  * primera que tenga valor —`tasentado`, `taacostado`, `tapie`, en ese orden—.
  *
- * Es una clase **sin estado** (recibe la consulta ya leída) y no decide si se imprimen: eso lo hace el récipe, que
- * sólo se las pide a la hoja de pediatría.
+ * Es una clase **sin estado** (recibe la consulta ya leída) y no decide si se imprimen: eso lo hacen el récipe y
+ * `SolicitudesParaImprimir`, que sólo se las piden a la hoja de pediatría.
  */
 final class MedidasDeLaConsulta
 {
@@ -94,17 +98,32 @@ final class MedidasDeLaConsulta
         return rtrim(rtrim(number_format((float) $valor, 2, '.', ''), '0'), '.');
     }
 
-    /** La primera tensión arterial que tenga valor, tal cual está escrita (`120/80`), o `null` si no hay ninguna. */
+    /**
+     * La primera tensión arterial que tenga valor real, tal cual está escrita (`120/80`), o `null` si no hay ninguna.
+     *
+     * Una tensión **de puros ceros** (`0/0`, la que guarda el escritorio cuando nadie la tomó) tampoco es una medida
+     * (2026-11-03, pedido del usuario: «T.A. si tiene y no es cero»): el rótulo no se imprime.
+     */
     private static function tension(Consulta $consulta): ?string
     {
         foreach (self::TENSIONES as $columna) {
             $texto = CamposDePaciente::texto($consulta->{$columna});
 
-            if ($texto !== null) {
-                return (string) preg_replace('/\s+/u', ' ', $texto);
+            if ($texto === null || self::esCero($texto)) {
+                continue;
             }
+
+            return (string) preg_replace('/\s+/u', ' ', $texto);
         }
 
         return null;
+    }
+
+    /** ¿El texto son puros ceros? (`0/0`, `0 / 0`, `000/000`: lo que el legado escribe cuando no hay medida). */
+    private static function esCero(string $texto): bool
+    {
+        $partes = preg_split('/\D+/u', $texto, -1, PREG_SPLIT_NO_EMPTY);
+
+        return $partes !== [] && array_reduce($partes, fn (bool $cero, $parte) => $cero && (int) $parte === 0, true);
     }
 }

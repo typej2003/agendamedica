@@ -469,7 +469,9 @@ final class SolicitudesParaImprimir
      *
      * `$pediatria` (2026-10-20) es la especialidad del contexto —la pasa el controlador desde
      * `AlcanceDeLaEspecialidad`, **no** se adivina por la edad del paciente—: con ella, la cabecera del documento es la del
-     * escritorio de pediatría (sexo, representante, historia y edad compacta), que arma `PacienteImpreso::datosPediatricos`.
+     * escritorio de pediatría (sexo, representante, historia y edad compacta), que arma `PacienteImpreso::datosPediatricos`,
+     * más las **medidas de la consulta** —peso, talla, circunferencia cefálica y tensión— bajo la clave `medidas` de la
+     * persona (`MedidasDeLaConsulta`, 2026-11-03: los reportes de pediatría las llevan igual que el récipe, no sólo él).
      * El cuerpo, el título y el reparto no cambian. La orden de laboratorio **de la pareja** no la lleva: su cabecera es de
      * la pareja, no del paciente.
      *
@@ -494,7 +496,7 @@ final class SolicitudesParaImprimir
             $documento->fecha,
             (string) $consulta->numhistoria,
             $this->representantes->nombre((string) $consulta->reg_medico, (string) $consulta->numhistoria),
-        ));
+        ) + ['medidas' => MedidasDeLaConsulta::de($consulta)]);
     }
 
     /**

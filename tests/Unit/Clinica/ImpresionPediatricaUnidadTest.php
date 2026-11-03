@@ -205,14 +205,17 @@ class ImpresionPediatricaUnidadTest extends TestCase
         return $hojas[0]['mitades'];
     }
 
-    public function test_el_documento_pediatrico_lleva_la_misma_cabecera(): void
+    public function test_el_documento_pediatrico_lleva_la_misma_cabecera_y_las_medidas(): void
     {
-        $mitad = $this->mitadesDelDocumento(true)[0];
+        $medidas = [['etiqueta' => 'PESO:', 'valor' => '20 Kg'], ['etiqueta' => 'T.A.:', 'valor' => '120/80']];
+        $mitad = $this->mitadesDelDocumento(true, $this->personaPediatrica(['medidas' => $medidas]))[0];
 
         $this->assertSame('F', $mitad['sexo']);
         $this->assertSame('ELDRIS MENDOZA', $mitad['representante']);
         $this->assertSame('00025', $mitad['historia']);
         $this->assertSame('21A 10M 16D', $mitad['edad']);
+        // Las medidas de la consulta (2026-11-03): todo documento de pediatría las lleva, no sólo el récipe.
+        $this->assertSame($medidas, $mitad['medidas']);
     }
 
     public function test_el_documento_de_ginecologia_no_cambia(): void
@@ -223,6 +226,26 @@ class ImpresionPediatricaUnidadTest extends TestCase
         $this->assertNull($mitad['representante']);
         $this->assertNull($mitad['historia']);
         $this->assertSame('21 años', $mitad['edad']);
+        // Las medidas no salen aunque la persona las traiga: son de la cabecera de pediatría.
+        $this->assertSame([], $mitad['medidas']);
+    }
+
+    /** La línea de las medidas del documento descuenta su alto al cuerpo, como la de la cabecera. */
+    public function test_las_medidas_del_documento_descuentan_alto_del_cuerpo(): void
+    {
+        $medidas = new MedidasDeLaMitad();
+        $membrete = $this->membrete();
+        $cabecera = PacienteImpreso::lineaPediatrica($this->personaPediatrica());
+        $lineaDeLasMedidas = MedidasDeLaConsulta::linea([['etiqueta' => 'PESO:', 'valor' => '20 Kg']]);
+
+        $sinMedidas = $medidas->altoDelCuerpoDeDocumento($membrete, 'Alexandra Tocuyo', true, true, null, [$cabecera]);
+        $conMedidas = $medidas->altoDelCuerpoDeDocumento($membrete, 'Alexandra Tocuyo', true, true, null, [$cabecera, $lineaDeLasMedidas]);
+
+        // Una línea de 9 pt por su renglón más el milímetro de aire de `.recipe-dato-linea`.
+        $lineaExtra = 9.0 * MedidasDeLaMitad::INTERLINEA * MedidorDeTexto::MM_POR_PUNTO + 1.0;
+
+        $this->assertLessThan($sinMedidas, $conMedidas);
+        $this->assertEqualsWithDelta($lineaExtra, $sinMedidas - $conMedidas, 0.01);
     }
 
     // ------------------------------------------------------------------ Las medidas del escritorio
@@ -263,6 +286,25 @@ class ImpresionPediatricaUnidadTest extends TestCase
         // Sólo el peso: la línea sale con lo que hay.
         $soloPeso = (new Consulta())->forceFill(['peso' => 8.5]);
         $this->assertSame('PESO: 8.5 Kg', MedidasDeLaConsulta::linea(MedidasDeLaConsulta::de($soloPeso)));
+    }
+
+    /** La tensión de puros ceros (`0/0`, la que el legado guarda cuando nadie la tomó) tampoco es una medida. */
+    public function test_la_tension_en_cero_no_se_imprime(): void
+    {
+        foreach (['0/0', '0 / 0', '000/000'] as $cero) {
+            $consulta = (new Consulta())->forceFill(['tasentado' => $cero, 'taacostado' => '110/70']);
+
+            // No se imprime la de ceros, pero tampoco tapa a la siguiente que sí tiene valor.
+            $this->assertSame([['etiqueta' => 'T.A.:', 'valor' => '110/70']], MedidasDeLaConsulta::de($consulta), $cero);
+        }
+
+        // Con las tres en cero, no hay T.A. que imprimir.
+        $this->assertSame([], MedidasDeLaConsulta::de((new Consulta())->forceFill([
+            'tasentado' => '0/0', 'taacostado' => '0/0', 'tapie' => '0/0',
+        ])));
+
+        // Una tensión con un solo valor en cero no se descarta: es un dato escrito (`0/80` no es «nadie la tomó»).
+        $this->assertSame([['etiqueta' => 'T.A.:', 'valor' => '0/80']], MedidasDeLaConsulta::de((new Consulta())->forceFill(['tasentado' => '0/80'])));
     }
 
     // ------------------------------------------------------------------ El alto de la cabecera

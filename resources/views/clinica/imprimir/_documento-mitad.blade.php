@@ -39,6 +39,16 @@
                         @endif
                     </p>
                 @endif
+                {{-- Las medidas de la consulta (2026-11-03): en pediatría las lleva **todo documento**, no sólo el récipe, y
+                     sólo las que existen y no son cero (`MedidasDeLaConsulta`); sin ninguna, la línea no sale. También en la
+                     primera mitad: la mide `DistribuidorDeDocumento::datosExtra`. --}}
+                @if (($mitad['medidas'] ?? []) !== [])
+                    <p class="recipe-dato-linea recipe-dato-medidas">
+                        @foreach ($mitad['medidas'] as $medida)
+                            <span class="recipe-dato"><span class="recipe-dato-etiqueta">{{ $medida['etiqueta'] }}</span> {{ $medida['valor'] }}</span>
+                        @endforeach
+                    </p>
+                @endif
             </div>
         @endif
 
