@@ -30,8 +30,10 @@ final class DatosObligatoriosDelPaciente
         $pediatria = $specialtySlug !== null && str_contains($specialtySlug, 'pediatr');
         $faltan = [];
 
-        if (self::vacio($paciente->nombres ?? null) || self::vacio($paciente->apellidos ?? null)) {
-            $faltan[] = 'nombre y apellido';
+        if (self::vacio($paciente->nombres ?? null) || (! $pediatria && self::vacio($paciente->apellidos ?? null))) {
+            // En pediatría el nombre es el completo (PediaReport no tiene apellidos): pedir «nombre y
+            // apellido» obligaría al médico a cortar el nombre a mano, que es justo el bug del 2026-11-03.
+            $faltan[] = $pediatria ? 'nombre' : 'nombre y apellido';
         }
 
         if (self::vacio($paciente->fnacimiento ?? null)) {

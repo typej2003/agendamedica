@@ -95,7 +95,7 @@
         </x-ui.tarjeta>
     </form>
 
-    <form method="POST" action="{{ $vm->accion() }}">
+    <form method="POST" action="{{ $vm->accion() }}" enctype="multipart/form-data">
         @csrf
         <x-ui.tarjeta sin-relleno>
 
@@ -154,9 +154,18 @@
                 @else
                     <div class="position-relative" id="paciente-busqueda-caja">
                         <label class="form-label" for="paciente-busqueda">Buscar por apellido, cédula o n.º de historia</label>
+                        {{-- El «+» al final del buscador abre el diálogo lateral del alta (2026-11-03): antes el alta
+                             era un `<details>` y, al desplegarlo, «Agendar la cita» quedaba fuera de la pantalla. --}}
                         <x-ui.buscador-vivo id="paciente-busqueda" resultados="paciente-resultados"
                                             :valor="$vm->paciente()['nombre'] ?? ''" placeholder="Escribe al menos dos letras"
-                                            etiqueta="Buscar paciente" :data-url="$vm->urlBuscarPacientes()" />
+                                            etiqueta="Buscar paciente" :data-url="$vm->urlBuscarPacientes()">
+                            <x-slot:accion>
+                                <button type="button" class="btn btn-outline-secondary" data-abrir-dialogo="dialogo-paciente-nuevo"
+                                        aria-label="Cargar un paciente nuevo" title="Cargar un paciente nuevo">
+                                    <span class="signo-mas" aria-hidden="true">+</span>
+                                </button>
+                            </x-slot:accion>
+                        </x-ui.buscador-vivo>
                         <input type="hidden" name="paciente_id" id="paciente-id" value="{{ $vm->valor('paciente_id') }}">
                     </div>
 
@@ -173,100 +182,7 @@
                         @endif
                     </p>
 
-                    <details class="mt-3" {{ $vm->altaAbierta() ? 'open' : '' }}>
-                        <summary class="small">No está en la lista: cargar un paciente nuevo</summary>
-
-                        <div class="row g-3 mt-0">
-                            <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_cedula">Cédula</label>
-                                <input type="text" name="nuevo_cedula" id="nuevo_cedula" class="form-control" value="{{ $vm->valor('nuevo_cedula') }}">
-                                @error('nuevo_cedula') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_nombres">Nombres *</label>
-                                <input type="text" name="nuevo_nombres" id="nuevo_nombres" class="form-control" value="{{ $vm->valor('nuevo_nombres') }}">
-                                @error('nuevo_nombres') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_apellidos">Apellidos *</label>
-                                <input type="text" name="nuevo_apellidos" id="nuevo_apellidos" class="form-control" value="{{ $vm->valor('nuevo_apellidos') }}">
-                                @error('nuevo_apellidos') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_telefono">Teléfono{{ $vm->ofreceRepresentante() ? "" : " *" }}</label>
-                                <input type="text" name="nuevo_telefono" id="nuevo_telefono" class="form-control" value="{{ $vm->valor('nuevo_telefono') }}">
-                                @error('nuevo_telefono') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_email">Correo</label>
-                                <input type="email" name="nuevo_email" id="nuevo_email" class="form-control" value="{{ $vm->valor('nuevo_email') }}">
-                                @error('nuevo_email') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_sexo">Sexo</label>
-                                <select name="nuevo_sexo" id="nuevo_sexo" class="form-select">
-                                    <option value="">Sin dato</option>
-                                    <option value="F" {{ $vm->valor('nuevo_sexo', $vm->sexoPorDefectoDelNuevoPaciente()) === 'F' ? 'selected' : '' }}>Femenino</option>
-                                    <option value="M" {{ $vm->valor('nuevo_sexo', $vm->sexoPorDefectoDelNuevoPaciente()) === 'M' ? 'selected' : '' }}>Masculino</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_fnacimiento">Fecha de nacimiento</label>
-                                <input type="date" name="nuevo_fnacimiento" id="nuevo_fnacimiento" class="form-control" max="{{ \App\Clinica\FechaDelConsultorio::hoyComoTexto() }}" value="{{ $vm->valor('nuevo_fnacimiento') }}">
-                                @error('nuevo_fnacimiento') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_nac">Nacionalidad</label>
-                                <select name="nuevo_nac" id="nuevo_nac" class="form-select">
-                                    <option value="V" {{ $vm->valor('nuevo_nac', 'V') === 'V' ? 'selected' : '' }}>Venezolano</option>
-                                    <option value="E" {{ $vm->valor('nuevo_nac', 'V') === 'E' ? 'selected' : '' }}>Extranjero</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_lnacimiento">Lugar de nacimiento</label>
-                                <input type="text" name="nuevo_lnacimiento" id="nuevo_lnacimiento" class="form-control" maxlength="100" value="{{ $vm->valor('nuevo_lnacimiento') }}">
-                            </div>
-                            <div class="col-sm-6">
-                                <label class="form-label" for="nuevo_direccion">Dirección</label>
-                                <input type="text" name="nuevo_direccion" id="nuevo_direccion" class="form-control" maxlength="200" value="{{ $vm->valor('nuevo_direccion') }}">
-                            </div>
-                        </div>
-
-                        @if ($vm->ofreceRepresentante())
-                            {{-- Pediatría (Alexander, 2026-10-26): el niño llega con su adulto; el teléfono que importa es el del representante. --}}
-                            <h3 class="h6 mt-3 mb-2"><i class="bi bi-person-hearts" aria-hidden="true"></i> Representante</h3>
-                            <div class="row g-3 mt-0">
-                                <div class="col-sm-6">
-                                    <label class="form-label" for="representante_nombre">Nombre y apellido *</label>
-                                    <input type="text" name="representante_nombre" id="representante_nombre" class="form-control" maxlength="40" autocomplete="off" value="{{ $vm->valor('representante_nombre') }}">
-                                    @error('representante_nombre') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
-                                <div class="col-sm-6">
-                                    <label class="form-label" for="representante_telefono">Teléfono del representante *</label>
-                                    <input type="text" name="representante_telefono" id="representante_telefono" class="form-control" maxlength="20" autocomplete="off" value="{{ $vm->valor('representante_telefono') }}">
-                                    @error('representante_telefono') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
-                                <div class="col-sm-6">
-                                    <label class="form-label" for="representante_parentesco">Parentesco</label>
-                                    <select name="representante_parentesco" id="representante_parentesco" class="form-select">
-                                        @foreach ($vm->parentescos() as $opcion)
-                                            <option value="{{ $opcion['valor'] }}" {{ $opcion['elegido'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-sm-6">
-                                    <label class="form-label" for="representante_cedula">Cédula del representante</label>
-                                    <input type="text" name="representante_cedula" id="representante_cedula" class="form-control" inputmode="numeric" maxlength="10" autocomplete="off" value="{{ $vm->valor('representante_cedula') }}">
-                                    @error('representante_cedula') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                        @endif
-
-                        <p class="form-text mb-0 mt-2">
-                            Queda <strong>sin número de historia</strong>: lo asigna el sistema cuando se complete la historia.
-                            Si la cédula ya existe, se enlaza a esa ficha en vez de duplicarla.
-                        </p>
-                    </details>
+                    @include('clinica.agenda._paciente-nuevo')
                 @endif
             </div>
 
@@ -349,5 +265,5 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ asset('js/clinica/cita-formulario.js') }}"></script>
+    <script src="{{ asset('js/clinica/cita-formulario.js') }}?v={{ @filemtime(public_path('js/clinica/cita-formulario.js')) }}"></script>
 @endsection

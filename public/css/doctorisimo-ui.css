@@ -1359,6 +1359,31 @@ a.identidad-nombre:hover { color: var(--ds-violeta-700); text-decoration: underl
 
 .buscador-campo .form-control { padding-left: 2.3rem; }
 
+/* El botón que va al final del buscador («+» del alta de paciente en la cita): el campo le deja el lugar. */
+.buscador-campo .form-control.buscador-con-accion { padding-right: 2.6rem; }
+.buscador-accion {
+    position: absolute;
+    top: 50%;
+    right: .35rem;
+    transform: translateY(-50%);
+}
+.buscador-accion .btn {
+    --bs-btn-padding-y: 0;
+    --bs-btn-padding-x: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    padding: 0;
+    line-height: 1;
+    font-weight: 700;
+}
+.buscador-accion .signo-mas {
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
 /* --- Barra de herramientas: el buscador y los filtros de una pantalla, debajo del encabezado ---
    El encabezado (`.page-head`) lleva sólo título, subtítulo y botones. Todo lo que filtra la lista va acá:
    el buscador ocupa el ancho útil y los filtros (segmentados, selects) quedan a su derecha; en el celular

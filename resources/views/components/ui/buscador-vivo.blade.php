@@ -1,4 +1,4 @@
-@props(['id', 'resultados', 'placeholder' => 'Buscar', 'etiqueta' => 'Buscar', 'valor' => '', 'modo' => 'seleccion'])
+@props(['id', 'resultados', 'placeholder' => 'Buscar', 'etiqueta' => 'Buscar', 'valor' => '', 'modo' => 'seleccion', 'accion' => null])
 
 {{-- Campo de búsqueda con resultados en vivo: el script de la pantalla escucha el `input`, pide al servidor
      y pinta los resultados dentro de `#{{ $resultados }}` (que flota debajo del campo). Va dentro de un
@@ -8,12 +8,16 @@
      acción en cada fila (el buscador del día, con "Hacer cita"): no son opciones de un combobox, son filas
      con un botón, así que solo se anuncia como lista. En los dos, `aria-controls` apunta a la lista; el script
      de cada pantalla mantiene `aria-expanded` (modo `seleccion`) y lo que se anuncia. --}}
+{{-- `accion` (slot nombrado): un botón al final del campo, como el «+» del alta de paciente de la cita. --}}
 <div class="buscador-campo buscador-vivo">
     <i class="bi bi-search" aria-hidden="true"></i>
-    <input type="search" id="{{ $id }}" value="{{ $valor }}" class="form-control form-control-sm" autocomplete="off"
+    <input type="search" id="{{ $id }}" value="{{ $valor }}" class="form-control form-control-sm {{ $accion ? 'buscador-con-accion' : '' }}" autocomplete="off"
            placeholder="{{ $placeholder }}" aria-label="{{ $etiqueta }}" aria-controls="{{ $resultados }}"
            @if ($modo === 'seleccion') role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" @endif
            {{ $attributes }}>
+    @if ($accion)
+        <div class="buscador-accion">{{ $accion }}</div>
+    @endif
 </div>
 <div class="list-group resultados-flotantes" id="{{ $resultados }}" role="{{ $modo === 'seleccion' ? 'listbox' : 'list' }}"
      aria-label="Resultados: {{ $etiqueta }}" hidden></div>

@@ -3,7 +3,7 @@
 <div class="campos-paciente"><div class="campos-paciente-rejilla">
 <x-ui.tarjeta titulo="Quién es" icono="bi-person-vcard" class="campos-paciente-ancha">
     <div class="row g-3">
-        <x-ui.campo etiqueta="Cédula" for="cedula" :requerido="! $vm->sinCedula()" class="col-md-6">
+        <x-ui.campo etiqueta="Cédula" for="cedula" :requerido="! $vm->sinCedula() && ! $vm->esPediatria()" class="col-md-6">
             <div class="input-group">
                 <select name="nac" id="nac" class="form-select campo-nacionalidad" aria-label="Nacionalidad">
                     @foreach ($vm->nacionalidades() as $opcion)
@@ -23,15 +23,24 @@
             @enderror
         </x-ui.campo>
 
-        <x-ui.campo etiqueta="Apellidos" for="apellidos" requerido class="col-md-3">
-            <input type="text" name="apellidos" id="apellidos" class="form-control" maxlength="25"
-                   autocomplete="off" value="{{ $vm->valor('apellidos') }}">
-        </x-ui.campo>
+        @if ($vm->esPediatria())
+            {{-- En pediatría el nombre es uno solo, el completo (PediaReport no tiene apellidos). El
+                 servidor guarda este texto en `nombres` y deja `apellidos` nulo. --}}
+            <x-ui.campo etiqueta="Nombre completo" for="nombres" requerido class="col-md-6">
+                <input type="text" name="nombres" id="nombres" class="form-control" maxlength="200"
+                       autocomplete="off" value="{{ $vm->valor('nombres') }}">
+            </x-ui.campo>
+        @else
+            <x-ui.campo etiqueta="Apellidos" for="apellidos" requerido class="col-md-3">
+                <input type="text" name="apellidos" id="apellidos" class="form-control" maxlength="25"
+                       autocomplete="off" value="{{ $vm->valor('apellidos') }}">
+            </x-ui.campo>
 
-        <x-ui.campo etiqueta="Nombres" for="nombres" requerido class="col-md-3">
-            <input type="text" name="nombres" id="nombres" class="form-control" maxlength="25"
-                   autocomplete="off" value="{{ $vm->valor('nombres') }}">
-        </x-ui.campo>
+            <x-ui.campo etiqueta="Nombres" for="nombres" requerido class="col-md-3">
+                <input type="text" name="nombres" id="nombres" class="form-control" maxlength="25"
+                       autocomplete="off" value="{{ $vm->valor('nombres') }}">
+            </x-ui.campo>
+        @endif
 
         <x-ui.campo etiqueta="Sexo" for="sexo" class="col-md-2">
             <select name="sexo" id="sexo" class="form-select">

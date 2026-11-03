@@ -21,7 +21,8 @@ use InvalidArgumentException;
  *    número de familia del consultorio + 1) y los datos que ya tiene la ficha. Si ya lo es, su número de familia **no se cambia**.
  *  - **Sólo columnas que existen.** Las tablas son del legado y no se reestructuran. Un campo vacío se guarda `null` y borra lo que había
  *    **si el formulario lo mandó**; un campo que no viaja no se toca.
- *  - **`situacion_pareja`** (código de un carácter sin significado confirmado) **no se escribe** hasta que Alexander lo defina.
+ *  - **`situacion_pareja`** se escribe con los códigos del DataWindow del escritorio (`d_a_familiares_chamo.srd`:
+ *    `E` estable, `S` separados, `V` viudo/a, `D` soltero/a). El alta de la cita lo pide desde 2026-11-03.
  *
  * El escritorio no verá nunca estos cambios (no tiene bajada): se anota en `PENDIENTES-POWERBUILDER.md`.
  */
@@ -33,6 +34,19 @@ final class GuardarFamilia
         'nom_padre', 'fecn_padre', 'ocupa_padre', 'cel_padre',
         'telefono', 'ced_representante', 'email', 'direccion', 'localidad',
         'dinamica_familiar', 'familia_texto',
+        // Los tres que PediaReport pide en su alta (2026-11-03): el tipo de representante (`status`),
+        // la empresa/procedencia y la situación de pareja. El `values` del DataWindow los define.
+        'status', 'procedencia', 'situacion_pareja',
+    ];
+
+    /**
+     * Las columnas de `paciente_chamo` que el alta de la cita escribe, además de las que arma
+     * `insertarChamo`. Son las de PediaReport que no viven en `pacientes`.
+     */
+    public const CAMPOS_DEL_NINO = [
+        'nombre', 'sexo', 'f_nacimiento', 'l_nacimiento', 'representante', 'f_ingreso',
+        'escolaridad', 'segu_empre', 'foto_paciente', 'celular', 'email', 'nota_general',
+        'historia_anterior', 'pediatrico', 'vacunas', 'cedula',
     ];
 
     /**
@@ -94,6 +108,43 @@ final class GuardarFamilia
 
             return (object) ['familia' => $numeroDeFamilia, 'historia' => $historia];
         });
+    }
+
+    /**
+     * **El alta pediátrica desde la cita** (2026-11-03): guarda la familia (los padres y el representante) y
+     * completa la fila de `paciente_chamo` con los campos de PediaReport que no tienen columna en
+     * `pacientes` (grupo sanguíneo, grupo etario, tipo de atención, referido, historia anterior y foto).
+     *
+     * La clave sigue siendo la historia, así que el niño tiene que estar numerado: en la cita se llama
+     * **después** de `AsignarHistoria`. Los campos que no viajaron no se tocan.
+     *
+     * @param  array<string,mixed>  $datosFamilia  las claves de `CAMPOS` (representante y familia)
+     * @param  array<string,mixed>  $datosNino  las claves de `CAMPOS_DEL_NINO`
+     * @return object  `familia` y `historia`
+     *
+     * @throws InvalidArgumentException si el niño no tiene número de historia
+     */
+    public function delAlta(string $regMedico, ?string $numhistoria, array $datosFamilia, array $datosNino, ?object $nino = null): object
+    {
+        $resultado = $this->ejecutar($regMedico, $numhistoria, $datosFamilia, $nino);
+
+        $columnas = [];
+        foreach (self::CAMPOS_DEL_NINO as $campo) {
+            if (array_key_exists($campo, $datosNino)) {
+                $columnas[$campo] = CamposDePaciente::texto($datosNino[$campo]);
+            }
+        }
+
+        if ($columnas !== []) {
+            $columnas['updated_at'] = now();
+
+            DB::table('paciente_chamo')
+                ->where('reg_medico', $regMedico)
+                ->where('historia', $resultado->historia)
+                ->update($columnas);
+        }
+
+        return $resultado;
     }
 
     /**

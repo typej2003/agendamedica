@@ -150,3 +150,121 @@
         document.querySelectorAll('form[method="POST"] button:disabled').forEach(function (boton) { boton.disabled = false; });
     });
 })();
+
+/*
+ * El alta del paciente nuevo en el diálogo lateral (`#dialogo-paciente-nuevo`, 2026-11-03).
+ *
+ *  - La abre el «+» del buscador con `data-abrir-dialogo` (shell.js) y, si la validación falló, la abre
+ *    sola `data-abrir-al-cargar="1"`.
+ *  - En pediatría hay dos pestañas (Paciente / Representante): acá se cambian y, si el servidor dejó un
+ *    error, se abre la pestaña donde está.
+ *  - «Usar estos datos» sólo cierra el diálogo y resume el paciente nuevo debajo del buscador; el alta se
+ *    guarda con «Agendar la cita», que es el POST del formulario.
+ */
+(function () {
+    'use strict';
+
+    const dialogo = document.getElementById('dialogo-paciente-nuevo');
+    if (!dialogo) return;
+
+    const paneles = Array.prototype.slice.call(dialogo.querySelectorAll('[data-paciente-panel]'));
+    const pestañas = Array.prototype.slice.call(dialogo.querySelectorAll('[data-paciente-tab]'));
+
+    function activar(nombre) {
+        pestañas.forEach(function (pestaña) {
+            const activa = pestaña.dataset.pacienteTab === nombre;
+            pestaña.classList.toggle('active', activa);
+            pestaña.setAttribute('aria-selected', activa ? 'true' : 'false');
+        });
+
+        paneles.forEach(function (panel) {
+            const visible = panel.dataset.pacientePanel === nombre;
+            panel.hidden = !visible;
+            panel.classList.toggle('show', visible);
+            panel.classList.toggle('active', visible);
+        });
+    }
+
+    pestañas.forEach(function (pestaña) {
+        pestaña.addEventListener('click', function () { activar(pestaña.dataset.pacienteTab); });
+    });
+
+    function primerError() {
+        return dialogo.querySelector('.text-danger, .is-invalid');
+    }
+
+    function abrir() {
+        if (typeof dialogo.showModal !== 'function' || dialogo.open) return;
+        dialogo.showModal();
+
+        const error = primerError();
+        const panel = error ? error.closest('[data-paciente-panel]') : null;
+        if (panel) activar(panel.dataset.pacientePanel);
+
+        const primero = (panel || dialogo).querySelector('input:not([type="hidden"]):not([type="checkbox"]), select, textarea');
+        if (primero) primero.focus();
+    }
+
+    if (dialogo.dataset.abrirAlCargar === '1') {
+        abrir();
+    }
+
+    // «Usar estos datos» cierra (lo hace shell.js con `data-cerrar-dialogo`) y **deja al paciente a la
+    // vista en el paso 2**: el buscador muestra su nombre y el resumen dice que es nuevo. El `paciente_id`
+    // sigue vacío a propósito: la ficha se crea recién al guardar la cita (cancelar no deja pacientes
+    // sueltos), y el alta viaja en los campos `nuevo_*`.
+    const listo = dialogo.querySelector('[data-paciente-nuevo-listo]');
+    if (listo) {
+        listo.addEventListener('click', function () {
+            const nombres = document.getElementById('nuevo_nombres');
+            const apellidos = document.getElementById('nuevo_apellidos');
+            const elegido = document.getElementById('paciente-elegido');
+            const buscador = document.getElementById('paciente-busqueda');
+            if (!nombres || !elegido) return;
+
+            const completo = [nombres.value, apellidos ? apellidos.value : '']
+                .map(function (parte) { return (parte || '').trim(); })
+                .filter(Boolean)
+                .join(' ');
+
+            if (completo !== '' && !document.getElementById('paciente-id').value) {
+                if (buscador) buscador.value = completo;
+                elegido.textContent = 'Paciente nuevo: ' + completo + ' (sin historia)';
+            }
+        });
+    }
+
+    // Enter dentro del diálogo **no** manda la cita (el diálogo vive en el POST de la cita): cierra el
+    // diálogo como «Usar estos datos» y deja lo escrito. Un textarea sí conserva el salto de línea.
+    dialogo.addEventListener('keydown', function (evento) {
+        if (evento.key !== 'Enter' || evento.target.tagName === 'TEXTAREA') return;
+        evento.preventDefault();
+        if (listo) listo.click();
+    });
+
+    // El «S.C.» del representante: al marcarlo se vacía la cédula y se deshabilita; al desmarcarlo vuelve.
+    const sinCedula = document.getElementById('representante_sin_cedula');
+    const cedula = document.getElementById('representante_cedula');
+    if (sinCedula && cedula) {
+        const aplicar = function () {
+            cedula.disabled = sinCedula.checked;
+            if (sinCedula.checked) cedula.value = '';
+        };
+        sinCedula.addEventListener('change', aplicar);
+        aplicar();
+    }
+
+    // «Madre/Padre» propone el parentesco del catálogo (M/P) sin pisar otra elección (abuelo, tío…).
+    const tipo = dialogo.querySelectorAll('input[name="representante_tipo"]');
+    const parentesco = document.getElementById('representante_parentesco');
+    if (parentesco) {
+        tipo.forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                if (!radio.checked) return;
+                const actual = parentesco.value;
+                if (actual !== '' && actual !== 'M' && actual !== 'P') return;
+                parentesco.value = radio.value === 'M' ? 'P' : 'M';
+            });
+        });
+    }
+})();

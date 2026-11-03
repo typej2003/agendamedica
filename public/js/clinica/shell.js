@@ -171,6 +171,12 @@
 
             $('dialogo-atender').showModal();
         });
+
+        // El médico acaba de agendar una cita de hoy (`ofrecer_atender_cita`): el diálogo ya viene con la
+        // acción y el paciente, así que se abre solo. «Ahora no» lo cierra y queda en la agenda.
+        if ($('dialogo-atender').dataset.abrirAlCargar === '1') {
+            $('dialogo-atender').showModal();
+        }
     }
 
     // ---- Diálogos nativos: el botón con data-cerrar-dialogo los cierra y el de data-abrir-dialogo abre el indicado.

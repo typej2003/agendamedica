@@ -100,11 +100,15 @@ final class GuardarPaciente
         return $paciente;
     }
 
-    /** El nombre y el apellido son lo único obligatorio del alta (wiki `04-historia-clinica.md`). */
+    /**
+     * El nombre es lo único obligatorio del alta (wiki `04-historia-clinica.md`). El apellido dejó de
+     * exigirse el 2026-11-03: los pacientes de pediatría traen el **nombre completo** en `nombres`
+     * (PediaReport no tiene una columna de apellidos). Fuera de pediatría el formulario lo sigue pidiendo.
+     */
     private function exigirNombre(array $columnas): void
     {
-        if (trim((string) ($columnas['nombres'] ?? '')) === '' || trim((string) ($columnas['apellidos'] ?? '')) === '') {
-            throw new InvalidArgumentException('El nombre y el apellido son obligatorios para guardar la ficha.');
+        if (trim((string) ($columnas['nombres'] ?? '')) === '') {
+            throw new InvalidArgumentException('El nombre es obligatorio para guardar la ficha.');
         }
     }
 
