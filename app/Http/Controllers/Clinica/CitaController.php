@@ -11,6 +11,8 @@ use App\Clinica\Agenda\PacientesDeCita;
 use App\Clinica\Agenda\ParametrosDeAgenda;
 use App\Clinica\Agenda\ResultadoDeAgendamiento;
 use App\Clinica\Agenda\VueltaDeLaCita;
+use App\Clinica\FechaDelConsultorio;
+use App\Clinica\Pacientes\CamposDePaciente;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLaCitaDelContexto;
 use App\Http\Controllers\Clinica\Concerns\ResuelveLosRegistrosDelMedico;
 use App\Http\Controllers\Controller;
@@ -116,7 +118,39 @@ class CitaController extends Controller
             return redirect($volverA['url'])->with('estado', $resultado->mensaje());
         }
 
+        // El médico que agenda para hoy suele tener al paciente delante: la agenda le ofrece abrir la
+        // consulta de una vez (2026-11-03).
+        $this->ofrecerAtenderSiEsDeHoy($request, $resultado);
+
         return $this->volverALaAgenda($contexto, $resultado);
+    }
+
+    /**
+     * **«¿Atender ahora?» después de agendar** (2026-11-03).
+     *
+     * Si quien agenda es médico y la cita recién creada es **de hoy**, la agenda abre el mismo diálogo de
+     * `MostradorController@atender` con la cita nueva: el médico que registra a un paciente suele tenerlo
+     * enfrente. La secretaría no atiende (`trabajaLaConsulta`) y una cita futura no se consulta hoy.
+     *
+     * El flash viaja a la agenda; el diálogo lo lee `_dialogo-atender.blade.php` y `shell.js` lo abre.
+     */
+    private function ofrecerAtenderSiEsDeHoy(Request $request, ResultadoDeAgendamiento $resultado): void
+    {
+        if ($resultado->tipo !== ResultadoDeAgendamiento::CREADA
+            || $resultado->cita === null
+            || ! $request->user()?->trabajaLaConsulta()
+            || $resultado->fecha->toDateString() !== FechaDelConsultorio::hoyComoTexto()) {
+            return;
+        }
+
+        $paciente = $resultado->objetivo['paciente'] ?? null;
+
+        session()->flash('ofrecer_atender_cita', [
+            'url' => route('clinica.agenda.atender', $resultado->cita->id),
+            'paciente' => $paciente !== null
+                ? CamposDePaciente::nombre($paciente->apellidos ?? null, $paciente->nombres ?? null)
+                : 'el paciente',
+        ]);
     }
 
     /** El formulario de edición, con la cita puesta (misma vista que "Nueva cita"). */

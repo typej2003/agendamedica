@@ -1188,6 +1188,71 @@ class AgendaWebTest extends TestCase
         $this->assertSame(1, (int) Cola::where('reg_medico', $medico->reg_medico)->firstOrFail()->numhistoria);
     }
 
+    /** 2026-11-03: el médico que agenda para hoy suele tener al paciente delante; la agenda le ofrece atenderlo. */
+    public function test_al_agendar_una_cita_de_hoy_el_medico_recibe_la_pregunta_de_atender(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $hoy = \App\Clinica\FechaDelConsultorio::hoy();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00', null, $hoy->dayOfWeekIso);
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'fecha'       => $hoy->toDateString(),
+                'hora'        => '09:00',
+                'paciente_id' => $pacienteId,
+            ]));
+
+        $respuesta->assertSessionHas('ofrecer_atender_cita');
+        $respuesta->assertRedirect(route('clinica.agenda', [
+            'vista' => 'dia', 'fecha' => $hoy->toDateString(), 'sede' => $sede->id,
+        ]));
+
+        // La agenda que sigue abre el diálogo con la cita recién creada.
+        $cola = Cola::where('reg_medico', $medico->reg_medico)->firstOrFail();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.agenda', ['vista' => 'dia', 'fecha' => $hoy->toDateString(), 'sede' => $sede->id]))
+            ->assertOk()
+            ->assertSee('¿Atender ahora?')
+            ->assertSee(route('clinica.agenda.atender', $cola->id), false);
+    }
+
+    public function test_la_secretaria_no_recibe_la_pregunta_de_atender(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso('Secretaria');
+        $hoy = \App\Clinica\FechaDelConsultorio::hoy();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00', null, $hoy->dayOfWeekIso);
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'fecha'       => $hoy->toDateString(),
+                'hora'        => '09:00',
+                'paciente_id' => $pacienteId,
+            ]))
+            ->assertSessionMissing('ofrecer_atender_cita');
+    }
+
+    public function test_una_cita_para_otro_dia_no_ofrece_atender(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $manana = \App\Clinica\FechaDelConsultorio::hoy()->addDay();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00', null, $manana->dayOfWeekIso);
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'fecha'       => $manana->toDateString(),
+                'hora'        => '09:00',
+                'paciente_id' => $pacienteId,
+            ]))
+            ->assertSessionMissing('ofrecer_atender_cita');
+    }
+
     public function test_una_cita_pendiente_se_pregunta_antes_de_agendar(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
