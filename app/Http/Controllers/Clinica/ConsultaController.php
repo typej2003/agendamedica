@@ -687,6 +687,9 @@ class ConsultaController extends Controller
                     $ficha['paciente'],
                     $ficha['numhistoria'],
                     app(\App\Clinica\Pacientes\CatalogoDeSeguros::class)->de($regMedico),
+                    // La especialidad del contexto: en pediatría la ficha es un solo nombre y sin cédula
+                    // obligatoria, igual que el alta y la edición (2026-11-03).
+                    request()->attributes->get('contexto_clinico')['specialty'] ?? null,
                 ),
                 $ficha['paciente'],
                 $ficha['numhistoria'],
