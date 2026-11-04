@@ -858,6 +858,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
             Route::post('/formato/logo', [FormatoDeImpresionGuardarController::class, 'logo'])->name('formato.logo');
             Route::post('/formato/estilo', [FormatoDeImpresionGuardarController::class, 'estilo'])->name('formato.estilo');
             Route::post('/formato/firma', [FormatoDeImpresionGuardarController::class, 'firma'])->name('formato.firma');
+            // **La hoja de los imprimibles** (2026-11-04): vertical, media vertical, horizontal o estilo récipe. Es del
+            // médico que firma; la hoja de los récipes no se toca y un centro no la configura.
+            Route::post('/formato/hoja', [FormatoDeImpresionGuardarController::class, 'hoja'])->name('formato.hoja');
             Route::post('/formato/restablecer', [FormatoDeImpresionGuardarController::class, 'restablecer'])->name('formato.restablecer');
         });
     });

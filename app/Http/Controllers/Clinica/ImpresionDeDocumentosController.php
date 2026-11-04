@@ -218,6 +218,10 @@ class ImpresionDeDocumentosController extends Controller
      * paciente: sus documentos llevan la cabecera del escritorio (sexo, representante, historia y edad compacta). Del resto
      * de las especialidades, la hoja no cambia.
      *
+     * **La hoja** de cada documento de texto es la que el médico eligió (`MembreteDelMedico::hojaDeLosImprimibles`), salvo
+     * que esta impresión pida otra con `?hoja=` (vista previa) o con el `?pagina=grande|pequena` histórico. Los récipes y
+     * los documentos con hoja fija no la leen.
+     *
      * @param  array<int,string>  $registros  los `reg_medico` del médico
      * @param  array<int,string>  $claves  `recipe-2`, `reposo`, `referencia-3`… lo que se imprime, en orden
      * @param  Medico|null  $firmante  el doctor que atendió la cita; `null` = el de la consulta o el del contexto
@@ -242,9 +246,25 @@ class ImpresionDeDocumentosController extends Controller
 
         abort_if($documentos === [], 404);
 
-        // La página de las solicitudes (`?pagina=grande|pequena`, el «Página» del escritorio): los demás la ignoran.
-        $pagina = ModoDeLaHoja::pagina($request->query('pagina'));
-        $documentos = array_map(fn ($documento) => $documento instanceof DocumentoImpreso ? $documento->conPagina($pagina) : $documento, $documentos);
+        // **La hoja de los documentos de texto** (2026-11-04): la que el médico guardó en su formato, o `?hoja=` para
+        // previsualizar otra sin guardarla. El `?pagina=grande|pequena` histórico del escritorio sigue mandando sobre las
+        // dos (es una elección de esa impresión concreta).
+        $preferido = $this->membretes->hojaDeLosImprimibles($firmante);
+
+        if (is_string($hoja = $request->query('hoja'))) {
+            $preferido = ModoDeLaHoja::deLaPreferencia($hoja) ?? $preferido;
+        }
+
+        $pagina = $request->query('pagina');
+        $documentos = array_map(function ($documento) use ($preferido, $pagina) {
+            if (! $documento instanceof DocumentoImpreso) {
+                return $documento;
+            }
+
+            return $pagina === null
+                ? $documento->conPreferencia($preferido)
+                : $documento->conPreferencia($preferido)->conPagina((string) $pagina);
+        }, $documentos);
 
         // El QR de verificación de cada récipe (WEB-5.6): el mismo que imprime el médico, sea quien sea quien imprima, y
         // avalado por el doctor que firma.
@@ -263,12 +283,29 @@ class ImpresionDeDocumentosController extends Controller
                 ['volver' => $volver, 'volverTexto' => $textoVolver],
                 new OpcionesDeImpresionVista($opciones, route('clinica.recipes.opciones'), $request->getRequestUri()),
                 $pediatria,
-                [
-                    ModoDeLaHoja::PAGINA_GRANDE => $request->fullUrlWithQuery(['pagina' => ModoDeLaHoja::PAGINA_GRANDE]),
-                    ModoDeLaHoja::PAGINA_PEQUENA => $request->fullUrlWithQuery(['pagina' => ModoDeLaHoja::PAGINA_PEQUENA]),
-                ],
+                $this->urlsDeLaHoja($request),
             ),
         ]);
+    }
+
+    /**
+     * Las cuatro hojas de los documentos de texto, como enlaces GET a esta misma impresión con `?hoja=`. Son una **vista
+     * previa**: no guardan nada (lo que se recuerda se elige en «Formato de impresión»). Se arma desde la URL sin query y
+     * se le vuelve a poner la actual, sacando `hoja` y `pagina` para que la elección nueva no quede pisada por la vieja.
+     *
+     * @return array<string,string>
+     */
+    private function urlsDeLaHoja(Request $request): array
+    {
+        $urls = [];
+
+        foreach (ModoDeLaHoja::HOJAS_DE_LOS_IMPRIMIBLES as $hoja) {
+            $urls[$hoja] = $request->url() . '?' . http_build_query(
+                array_merge($request->query(), ['hoja' => $hoja, 'pagina' => null]),
+            );
+        }
+
+        return $urls;
     }
 
     /**

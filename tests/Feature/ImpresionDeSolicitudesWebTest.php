@@ -229,11 +229,11 @@ class ImpresionDeSolicitudesWebTest extends TestCase
             $grande = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $documento))->assertOk()->getContent();
             $this->assertStringContainsString('recipe-hoja recipe-hoja-completa tamano-', $grande, $documento);
             $this->assertStringNotContainsString('recipe-mitad-vacia', $grande, $documento);
-            $this->assertMatchesRegularExpression('/pagina=grande"\s+aria-current="true"\s*>Grande</', $grande);
+            $this->assertMatchesRegularExpression('/hoja=vertical"\s+aria-current="true"\s*>Vertical</', $grande);
 
             $pequena = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $documento) . '&pagina=pequena')->assertOk()->getContent();
             $this->assertStringContainsString('recipe-hoja recipe-hoja-completa recipe-hoja-mitad-superior', $pequena, $documento);
-            $this->assertMatchesRegularExpression('/pagina=pequena"\s+aria-current="true"\s*>Pequeña</', $pequena);
+            $this->assertMatchesRegularExpression('/hoja=media-vertical"\s+aria-current="true"\s*>Media vertical</', $pequena);
         }
 
         // Con un récipe en el lote la elección no le cambia la hoja: sigue en media hoja horizontal.

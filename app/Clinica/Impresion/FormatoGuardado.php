@@ -35,4 +35,15 @@ final class FormatoGuardado
     {
         return $this->formato !== null;
     }
+
+    /**
+     * La hoja que eligió para sus documentos de texto, tal como se guardó (`vertical`, `media-vertical`, `horizontal` o
+     * `recipe`), o `null` si todavía no eligió.
+     */
+    public function hojaDeLosImprimibles(): ?string
+    {
+        $hoja = $this->formato?->formato_imprimibles;
+
+        return is_string($hoja) && $hoja !== '' ? $hoja : null;
+    }
 }

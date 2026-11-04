@@ -14,7 +14,11 @@ class RecipeFormato extends Model
 {
     protected $table = 'recipe_formatos';
 
-    protected $fillable = ['reg_medico', 'elementos', 'color_linea', 'firma', 'sello', 'sello_posicion'];
+    protected $fillable = [
+        'reg_medico', 'elementos', 'color_linea', 'firma', 'sello', 'sello_posicion',
+        // La hoja que el médico eligió para sus documentos de texto (2026-11-04); `NULL` = como hasta hoy.
+        'formato_imprimibles',
+    ];
 
     protected $casts = ['elementos' => 'array'];
 

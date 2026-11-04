@@ -48,37 +48,75 @@ final class HojasDeDocumentoVista
     /**
      * Las hojas, en el orden en que salen de la impresora.
      *
-     * Cada hoja trae su `modo` (`mitad` o `completa`, que decide el tamaño y la orientación de la página), el `tamano` de la
-     * letra del cuerpo en puntos y sus `mitades`: una o dos, cada una con su título, los datos del paciente (en la primera) o
-     * el encabezado corto (en la continuación), los datos fijos, los párrafos y si lleva la firma o el «Continúa →». La
-     * última mitad lleva además sus `imagenes` (la colposcopía y la histeroscopía), que salen **en la misma página**.
+     * Cada hoja trae su `modo` (`mitad`, `horizontal`, `completa` o `mitad-superior`, que decide el tamaño y la orientación
+     * de la página), el `tamano` de la letra del cuerpo en puntos y sus `mitades`: una o dos, cada una con su título, los
+     * datos del paciente (en la primera) o el encabezado corto (en la continuación), los datos fijos, los párrafos y si
+     * lleva la firma o el «Continúa →». La última mitad lleva además sus `imagenes` (la colposcopía y la histeroscopía), que
+     * salen **en la misma página**.
+     *
+     * **La media hoja horizontal reparte dos documentos por página** (2026-11-04): las mitades se acumulan entre documentos
+     * consecutivos, así «estilo récipe» pone uno al lado del otro. Cada mitad lleva su propio `tamano` porque dos documentos
+     * de la misma hoja pueden haber elegido letras distintas. Los modos de una sola mitad por página no se mezclan: cada
+     * documento (o cada trozo suyo) sale en su propia hoja.
      *
      * @return array<int,array{modo:string, tipo:string, etiqueta:?string, tamano:int, mitades:array<int,array<string,mixed>>}>
      */
     public function hojas(): array
     {
         $hojas = [];
+        /** @var array<int,array{modo:string, tamano:int, mitad:array<string,mixed>}> $pendientes */
+        $pendientes = [];
+
+        $cerrar = function () use (&$hojas, &$pendientes): void {
+            if ($pendientes === []) {
+                return;
+            }
+
+            $hojas[] = [
+                'modo' => $pendientes[0]['modo'],
+                'tipo' => 'documento',
+                'etiqueta' => null,
+                'tamano' => $pendientes[0]['tamano'],
+                'mitades' => array_map(fn (array $pendiente) => $pendiente['mitad'], $pendientes),
+            ];
+            $pendientes = [];
+        };
 
         foreach ($this->documentos as $documento) {
             $modo = $documento->modo();
-            // La media hoja horizontal usa el distribuidor de siempre; las dos hojas verticales (la completa y su mitad
-            // superior) miden con las medidas de su modo.
+            // La media hoja horizontal usa el distribuidor de siempre; las demás hojas miden con las medidas de su modo.
             $distribuidor = $modo === ModoDeLaHoja::MITAD
                 ? $this->distribuidor
                 : new DistribuidorDeDocumento(ModoDeLaHoja::medidas($modo));
 
             $reparto = $distribuidor->distribuir($this->membrete, $documento, $this->pediatria);
 
-            foreach (array_chunk($reparto['mitades'], ModoDeLaHoja::porPagina($modo)) as $par) {
-                $hojas[] = [
-                    'modo' => $modo,
-                    'tipo' => 'documento',
-                    'etiqueta' => null,
-                    'tamano' => $reparto['puntos'],
-                    'mitades' => array_map(fn (array $mitad) => $this->mitad($documento, $mitad), $par),
-                ];
+            foreach ($reparto['mitades'] as $mitad) {
+                $armada = $this->mitad($documento, $mitad, $reparto['puntos']);
+
+                // Las hojas de una sola mitad por página no comparten la página con otro documento.
+                if ($modo !== ModoDeLaHoja::MITAD) {
+                    $cerrar();
+                    $hojas[] = [
+                        'modo' => $modo,
+                        'tipo' => 'documento',
+                        'etiqueta' => null,
+                        'tamano' => $reparto['puntos'],
+                        'mitades' => [$armada],
+                    ];
+
+                    continue;
+                }
+
+                $pendientes[] = ['modo' => $modo, 'tamano' => $reparto['puntos'], 'mitad' => $armada];
+
+                if (count($pendientes) === 2) {
+                    $cerrar();
+                }
             }
         }
+
+        $cerrar();
 
         return $hojas;
     }
@@ -93,11 +131,13 @@ final class HojasDeDocumentoVista
      * @param  array{primera:bool, sigue:bool, firma:bool, fijos:array, parrafos:array, imagenes:array}  $mitad
      * @return array<string,mixed>
      */
-    private function mitad(DocumentoImpreso $documento, array $mitad): array
+    private function mitad(DocumentoImpreso $documento, array $mitad, int $tamano): array
     {
         $persona = $documento->persona;
 
         return [
+            // La letra va en la mitad y no sólo en la hoja: dos documentos de la misma página pueden tener tamaños distintos.
+            'tamano' => $tamano,
             'clase' => 'documento',
             'primera' => $mitad['primera'],
             'titulo' => $mitad['primera'] ? $documento->titulo : $documento->titulo . ' (continuación)',

@@ -31,7 +31,8 @@ final class HojasImpresasVista
      * @param  array{volver:string, volverTexto:string}  $urls
      * @param  bool  $pediatria  si el contexto de impresión es pediatría (lo decide el controlador): cada hoja lleva la
      *                           cabecera del escritorio (sexo, representante, historia y edad compacta) y el récipe sus medidas
-     * @param  array<string,string>  $paginas  la URL de esta hoja con cada página (`grande`/`pequena`), para `paginas()`
+     * @param  array<string,string>  $paginas  la URL de esta hoja con cada una de las cuatro hojas (`vertical`,
+     *                                        `media-vertical`, `horizontal`, `recipe`), para `paginas()`
      */
     public function __construct(
         private Membrete $membrete,
@@ -46,31 +47,45 @@ final class HojasImpresasVista
     }
 
     /**
-     * «Página: Grande / Pequeña» (las solicitudes, como el escritorio): enlaces GET a esta misma hoja con
-     * `?pagina=`. Vacío si no hay ninguno de esos documentos en lo que se imprime.
+     * Las **cuatro hojas** que puede elegir el médico para sus documentos de texto (2026-11-04): vertical, media vertical,
+     * horizontal y estilo récipe. Son enlaces GET a esta misma hoja con `?hoja=`: **previsualizan sin guardar**; lo que se
+     * recuerda se elige en «Formato de impresión». Vacío si lo que se imprime no tiene ningún documento de texto (un récipe
+     * solo, por ejemplo).
      *
      * @return array<int,array{texto:string, url:string, activa:bool}>
      */
     public function paginas(): array
     {
-        $conPaginaAElegir = false;
-        $actual = ModoDeLaHoja::PAGINA_GRANDE;
+        $actual = null;
 
         foreach ($this->documentos as $documento) {
-            if ($documento instanceof DocumentoImpreso && $documento->informe === null && $documento->preoperatorio === null && ModoDeLaHoja::seEligeLaPagina($documento->tipo)) {
-                $conPaginaAElegir = true;
-                $actual = ModoDeLaHoja::pagina($documento->pagina);
+            if ($documento instanceof DocumentoImpreso
+                && $documento->informe === null
+                && $documento->preoperatorio === null
+                && ModoDeLaHoja::aceptaLaPreferencia($documento->tipo)) {
+                $actual = ModoDeLaHoja::preferenciaDe($documento->modo());
+                break;
             }
         }
 
-        if (! $conPaginaAElegir || $this->paginas === []) {
+        if ($actual === null || $this->paginas === []) {
             return [];
         }
 
-        return [
-            ['texto' => 'Grande', 'url' => $this->paginas[ModoDeLaHoja::PAGINA_GRANDE], 'activa' => $actual === ModoDeLaHoja::PAGINA_GRANDE],
-            ['texto' => 'Pequeña', 'url' => $this->paginas[ModoDeLaHoja::PAGINA_PEQUENA], 'activa' => $actual === ModoDeLaHoja::PAGINA_PEQUENA],
+        $textos = [
+            ModoDeLaHoja::HOJA_VERTICAL => 'Vertical',
+            ModoDeLaHoja::HOJA_MEDIA_VERTICAL => 'Media vertical',
+            ModoDeLaHoja::HOJA_HORIZONTAL => 'Horizontal',
+            ModoDeLaHoja::HOJA_RECIPE => 'Estilo récipe',
         ];
+
+        $opciones = [];
+
+        foreach ($textos as $hoja => $texto) {
+            $opciones[] = ['texto' => $texto, 'url' => $this->paginas[$hoja], 'activa' => $actual === $hoja];
+        }
+
+        return $opciones;
     }
 
     public function titulo(): string
@@ -182,9 +197,27 @@ final class HojasImpresasVista
     public function hojas(): array
     {
         $hojas = [];
+        /** @var array<int,DocumentoImpreso> $documentos */
+        $documentos = [];
+
+        // Los documentos de texto se agrupan: `HojasDeDocumentoVista` reparte dos por página en la media hoja (el «estilo
+        // récipe») y separa los que tienen hoja propia. Un récipe o un informe corta el grupo para no mezclarse.
+        $volcar = function () use (&$hojas, &$documentos): void {
+            if ($documentos === []) {
+                return;
+            }
+
+            foreach ((new HojasDeDocumentoVista($this->membrete, $documentos, null, $this->pediatria))->hojas() as $hoja) {
+                $hojas[] = $hoja;
+            }
+
+            $documentos = [];
+        };
 
         foreach ($this->documentos as $documento) {
             if ($documento instanceof DocumentoDeRecipe) {
+                $volcar();
+
                 $delRecipe = (new HojasDeRecipeVista(
                     $this->membrete,
                     $this->opciones,
@@ -205,6 +238,7 @@ final class HojasImpresasVista
             // El **informe pre-operatorio** (O-47) es una hoja fija de dos páginas: no se reparte en mitades ni elige
             // página. Una sola entrada, y el parcial `_informe-preoperatorio` pinta las dos páginas.
             if ($documento->preoperatorio !== null) {
+                $volcar();
                 $hojas[] = ['tipo' => 'preoperatorio', 'etiqueta' => null, 'tamano' => 10, 'mitades' => [], 'documento' => $documento];
 
                 continue;
@@ -212,6 +246,7 @@ final class HojasImpresasVista
 
             // Una eco se imprime a hoja completa (WEB-11.13): su informe y, si tiene imágenes, una segunda hoja.
             if ($documento->informe !== null) {
+                $volcar();
                 $hojas[] = ['tipo' => 'informe', 'etiqueta' => null, 'tamano' => 10, 'mitades' => [], 'documento' => $documento, 'imagenes' => false];
 
                 if ($documento->informe->conImagenes()) {
@@ -221,10 +256,10 @@ final class HojasImpresasVista
                 continue;
             }
 
-            foreach ((new HojasDeDocumentoVista($this->membrete, [$documento], null, $this->pediatria))->hojas() as $hoja) {
-                $hojas[] = $hoja;
-            }
+            $documentos[] = $documento;
         }
+
+        $volcar();
 
         return $hojas;
     }
