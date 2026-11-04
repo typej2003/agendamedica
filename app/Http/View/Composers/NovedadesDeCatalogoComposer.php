@@ -35,6 +35,12 @@ class NovedadesDeCatalogoComposer
 
         $vista->with('novedadesIniciales', $novedades->isEmpty() ? null : new NovedadesDeCatalogoVista(
             $def['titulo'], $def['singular'], $def['etiqueta'], $novedades, route('clinica.catalogos.cargar-inicial', $slug), $def['femenino'] ?? false,
+            // Las demás columnas de la identidad (la presentación de un medicamento) distinguen dos filas con el mismo
+            // nombre en el diálogo; las `ref:` apuntan a otro catálogo y no se muestran.
+            array_values(array_filter(
+                $def['identidad'],
+                fn (string $parte) => ! str_starts_with($parte, 'ref:') && $parte !== $def['etiqueta'],
+            )),
         ));
     }
 

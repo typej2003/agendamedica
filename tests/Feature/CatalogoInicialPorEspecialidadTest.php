@@ -415,6 +415,29 @@ class CatalogoInicialPorEspecialidadTest extends TestCase
         $this->assertStringStartsWith('Hay 2 dietas nuevas', $tarjeta->texto());
     }
 
+    /**
+     * El diálogo del catálogo inicial (2026-11-03): cada novedad va con su `id` y un texto que la distingue, así dos
+     * presentaciones de la misma marca no se confunden al marcar.
+     */
+    public function test_el_dialogo_del_catalogo_inicial_nombra_cada_fila_con_su_presentacion(): void
+    {
+        $novedades = collect([
+            (object) ['id' => 7, 'nombrecomercial' => 'KEFORAL', 'presentacion' => 'Cap. 500 mg'],
+            (object) ['id' => 8, 'nombrecomercial' => 'KEFORAL', 'presentacion' => 'Jarabe 250 mg/5 ml'],
+        ]);
+
+        $tarjeta = new \App\Clinica\Catalogos\Vistas\NovedadesDeCatalogoVista(
+            'Medicamentos', 'medicamento', 'nombrecomercial', $novedades, '/x', false, ['presentacion'],
+        );
+
+        $this->assertSame('Catálogo inicial de medicamentos', $tarjeta->tituloDelDialogo());
+        $this->assertSame(2, $tarjeta->cuantos());
+        $this->assertSame([
+            ['id' => 7, 'texto' => 'KEFORAL — Cap. 500 mg'],
+            ['id' => 8, 'texto' => 'KEFORAL — Jarabe 250 mg/5 ml'],
+        ], $tarjeta->items());
+    }
+
     public function test_reemplazar_una_especialidad_le_quita_lo_que_su_archivo_ya_no_trae(): void
     {
         $ped = $this->esp('pediatria');
