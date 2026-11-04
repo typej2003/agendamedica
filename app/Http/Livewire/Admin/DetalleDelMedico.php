@@ -2,41 +2,81 @@
 
 namespace App\Http\Livewire\Admin;
 
+use App\Clinica\Catalogos\MotivosDeCitaDelCatalogo;
+use App\Http\Livewire\Admin\Concerns\EmiteApiKeys;
+use App\Http\Livewire\Admin\DetalleDelMedico\GestionaCitaOnline;
+use App\Http\Livewire\Admin\DetalleDelMedico\GestionaCuentasDeCobro;
+use App\Http\Livewire\Admin\DetalleDelMedico\GestionaDatos;
+use App\Http\Livewire\Admin\DetalleDelMedico\GestionaEspecialidades;
+use App\Http\Livewire\Admin\DetalleDelMedico\GestionaHorarios;
+use App\Http\Livewire\Admin\DetalleDelMedico\GestionaMotivosDeCita;
+use App\Http\Livewire\Admin\DetalleDelMedico\GestionaPlanes;
+use App\Http\Livewire\Admin\DetalleDelMedico\GestionaRoles;
+use App\Http\Livewire\Admin\DetalleDelMedico\GestionaSecretarias;
+use App\Http\Livewire\Admin\DetalleDelMedico\GestionaSolicitudes;
 use App\Models\Comentario;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
+use App\Models\MotivoCita;
+use App\Models\Office;
 use App\Models\Pago;
+use App\Models\Plan;
+use App\Models\PreferenciaDeCobro;
 use App\Models\RegMedicoServicio;
 use App\Models\SolicitudMedico;
+use App\Models\Specialty;
+use App\Models\SyncCredential;
 use App\Models\VerificacionDeMedico;
-use App\Services\Admin\SedesDelMedico;
+use App\Pagos\CuentasDeCobroDelMedico;
 use App\Services\CuentaService;
+use App\Services\CupoDelPlan;
 use App\Services\ServicioService;
+use App\Services\SyncCredencialService;
 use App\Services\SyncResumenService;
 use App\Verificacion\VerificacionesDelMedico;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 /**
- * **Detalle de un médico** (Usuarios › Médicos › Ver): todo lo que el panel sabe de él, en pestañas **de sólo
- * lectura** —salvo la verificación del carnet, que se marca desde acá (2026-11-03)—. Cada pestaña lee lo suyo
- * recién cuando se abre (no se arma nada de las demás), y las que dependen de
- * que haya datos (Pagos, Solicitud de registro, Comentarios) solo aparecen si existen. Cada una enlaza a la
- * pantalla donde ese dato se administra; «Editar» abre el diálogo de edición que ya tiene Médicos.
+ * **Detalle de un médico** (Usuarios › Médicos › Ver): todo lo que el panel sabe de él, en pestañas que ahora
+ * **administran** sin salir de la ficha —roles, API keys, especialidades, plan, secretarías, solicitud de
+ * registro, motivos de cita, cita online, métodos de pago y horarios—. Cada pestaña lee lo suyo recién cuando
+ * se abre (no se arma nada de las demás), y las que dependen de que haya datos (Pagos, Comentarios) solo
+ * aparecen si existen.
+ *
+ * El formulario de datos, el de roles y el de especialidades son los **mismos componentes Blade** que usan
+ * Usuarios y Especialidades, para no duplicar campos ni reglas. «Editar» abre ese formulario acá mismo, en la
+ * pestaña «Datos».
  *
  * Es administrativo: no hay datos clínicos (de los pacientes sólo se cuenta cuántos son). La pestaña activa viaja en
  * la URL (`?pestana=`). Como el resto del panel, `hydrate()` vuelve a comprobar el permiso en cada acción.
  */
 class DetalleDelMedico extends Component
 {
+    use EmiteApiKeys;
+    use GestionaDatos;
+    use GestionaHorarios;
+    use GestionaRoles;
+    use GestionaEspecialidades;
+    use GestionaPlanes;
+    use GestionaSecretarias;
+    use GestionaSolicitudes;
+    use GestionaMotivosDeCita;
+    use GestionaCitaOnline;
+    use GestionaCuentasDeCobro;
+
     /** Las pestañas que siempre están: clave => [rótulo, icono]. */
     public const PESTANAS = [
         'datos' => ['Datos', 'bi-person-vcard'],
         'sedes' => ['Sedes', 'bi-geo-alt'],
+        'horarios' => ['Horarios', 'bi-clock'],
         'roles' => ['Roles', 'bi-shield-lock'],
         'api-keys' => ['API Keys', 'bi-key'],
         'especialidades' => ['Especialidades', 'bi-heart-pulse'],
         'planes' => ['Planes', 'bi-card-checklist'],
+        'metodos-pago' => ['Métodos de pago', 'bi-credit-card'],
+        'motivos' => ['Motivos de cita', 'bi-calendar-check'],
+        'cita-online' => ['Cita online', 'bi-globe2'],
         'secretarias' => ['Secretarias', 'bi-people'],
         'pacientes' => ['Pacientes', 'bi-person-lines-fill'],
     ];
@@ -53,6 +93,13 @@ class DetalleDelMedico extends Component
     public $pestana = 'datos';
 
     protected $queryString = ['pestana' => ['except' => 'datos']];
+
+    /** Ventana del emisor de API keys (`emitir` | `credenciales` | null). */
+    public $modal = null;
+    public $medicoId = null;
+
+    /** ¿Se ve el listado de credenciales de la pestaña API Keys? */
+    public $verCredenciales = false;
 
     public function hydrate()
     {
@@ -74,6 +121,51 @@ class DetalleDelMedico extends Component
     public function irA(string $pestana)
     {
         $this->pestana = $pestana;
+        $this->cerrarFormulariosDelDetalle();
+
+        match ($pestana) {
+            'datos' => $this->cargarDatosDelMedico(),
+            'roles' => $this->cargarRoles(),
+            'especialidades' => $this->cargarEspecialidades(),
+            'cita-online' => $this->cargarCitaOnline(),
+            'metodos-pago' => $this->cargarCuentasDeCobro(),
+            default => null,
+        };
+    }
+
+    /** Cierra lo que estuviera abierto al cambiar de pestaña (no se guarda nada a medias). */
+    private function cerrarFormulariosDelDetalle(): void
+    {
+        $this->editando = false;
+        $this->cerrarPlan();
+        $this->cerrarHorario();
+        $this->cerrarSecretaria();
+        $this->cerrarSolicitud();
+        $this->cerrarMotivo();
+        $this->cerrarCuentaForm();
+        $this->verCredenciales = false;
+        $this->avisoEspecialidad = null;
+        $this->resetErrorBag();
+    }
+
+    public function verCredencialesDeEsteMedico(): void
+    {
+        $this->verCredenciales = true;
+    }
+
+    public function revocarCredencial(int $credencialId, SyncCredencialService $credenciales): void
+    {
+        $credencial = SyncCredential::findOrFail($credencialId);
+
+        abort_unless(in_array((string) $credencial->reg_medico, $this->registrosDelMedico(), true), 404);
+
+        $credenciales->revocar($credencial);
+        session()->flash('message', 'Credencial revocada: ese equipo ya no puede sincronizar.');
+    }
+
+    private function registrosDelMedico(): array
+    {
+        return $this->medico->registrosDeTrabajo();
     }
 
     /**
@@ -108,11 +200,25 @@ class DetalleDelMedico extends Component
         });
     }
 
+    public function cerrarModal(): void
+    {
+        $this->modal = null;
+        $this->medicoId = null;
+        $this->reemplazar = false;
+        $this->mostrarReemplazo = false;
+        $this->resetErrorBag();
+    }
+
+    public function cerrarToken(): void
+    {
+        $this->tokenGenerado = null;
+    }
+
     public function render()
     {
-        $this->medico->loadMissing(['user.roles', 'registros']);
+        $this->medico->loadMissing(['user.roles', 'registros', 'specialties', 'subespecialidades']);
 
-        $registros = $this->medico->registrosDeTrabajo();
+        $registros = $this->registrosDelMedico();
         $hay = $this->conDatos($registros);
 
         $pestanas = self::PESTANAS;
@@ -131,6 +237,21 @@ class DetalleDelMedico extends Component
             'cuenta' => $this->medico->user,
             'registros' => $registros,
             'datos' => $this->datosDe($this->pestana, $registros),
+            // Médico de la ventana «Generar API key» (concern EmiteApiKeys).
+            'seleccionado' => $this->medicoId ? Medico::find($this->medicoId) : null,
+            // Formularios compartidos con Usuarios y Especialidades.
+            'formatosDeReporte' => CuentaService::FORMATOS_DE_REPORTE,
+            'rolesDisponibles' => $this->pestana === 'roles' ? app(CuentaService::class)->rolesDisponibles() : [],
+            'catalogoEspecialidades' => $this->pestana === 'especialidades'
+                ? Specialty::with(['subespecialidades' => fn ($q) => $q->where('activo', true)])
+                    ->orderByDesc('activo')->orderBy('name')->get()
+                : collect(),
+            'bancosDeCobro' => $this->pestana === 'metodos-pago'
+                ? (array) config('pagos.pago_movil.catalogo', [])
+                : [],
+            'especialidadesSolicitud' => $this->pestana === 'solicitud'
+                ? Specialty::where('activo', true)->orderBy('name')->get(['id', 'name'])
+                : collect(),
         ]);
     }
 
@@ -159,7 +280,8 @@ class DetalleDelMedico extends Component
     {
         return match ($pestana) {
             'datos' => $this->datos($registros),
-            'sedes' => ['sedes' => app(SedesDelMedico::class)->sedes($this->medico, true)],
+            'sedes' => ['sedes' => app(\App\Services\Admin\SedesDelMedico::class)->sedes($this->medico, true)],
+            'horarios' => $this->horarios(),
             'roles' => ['roles' => $this->medico->user?->roles->pluck('name')->sort()->values() ?? collect()],
             'api-keys' => ['sync' => $this->sync()],
             'especialidades' => [
@@ -167,6 +289,9 @@ class DetalleDelMedico extends Component
                 'subespecialidades' => $this->medico->subespecialidades()->orderBy('nombre')->get(),
             ],
             'planes' => $this->planes($registros),
+            'metodos-pago' => $this->metodosDePago(),
+            'motivos' => $this->motivos(),
+            'cita-online' => [],
             'secretarias' => ['secretarias' => app(CuentaService::class)->secretariasDe($registros)],
             'pacientes' => $this->pacientes($registros),
             'pagos' => ['pagos' => Pago::whereIn('reg_medico', $registros)->orderByDesc('id')->limit(15)->get(),
@@ -193,7 +318,7 @@ class DetalleDelMedico extends Component
             'sync' => $sync,
             'doctoresDelCentro' => $doctores,
             // Las tres verificaciones del perfil (2026-11-03); se administran desde la bandeja de solicitudes.
-            'verificaciones' => app(\App\Verificacion\VerificacionesDelMedico::class)->de($this->medico),
+            'verificaciones' => app(VerificacionesDelMedico::class)->de($this->medico),
         ];
     }
 
@@ -207,10 +332,82 @@ class DetalleDelMedico extends Component
     private function planes(array $registros): array
     {
         $servicios = app(ServicioService::class);
+        $actual = $registros === [] ? null : $servicios->actual((string) $this->medico->reg_medico);
+
+        $planesActivos = in_array($this->planAccion, ['renovar', 'reemplazar'], true)
+            ? Plan::where('activo', true)->orderBy('orden')->orderBy('id')->get()
+            : collect();
+
+        // Los planes que no cubren al equipo actual se marcan en el desplegable (salvo el que ya tiene).
+        $planesNoCubren = [];
+        if ($planesActivos->isNotEmpty() && $registros !== []) {
+            $cupos = app(CupoDelPlan::class);
+
+            foreach ($planesActivos as $plan) {
+                if ($actual && (int) $actual->plan_id === (int) $plan->id) {
+                    continue;
+                }
+                $motivo = $cupos->motivoNoCabe($plan, (string) $this->medico->reg_medico);
+                if ($motivo !== null) {
+                    $planesNoCubren[$plan->id] = $motivo;
+                }
+            }
+        }
+
+        $inicioRenovacion = $this->planAccion === 'renovar' && $registros !== []
+            ? $servicios->inicioDeRenovacion((string) $this->medico->reg_medico)
+            : null;
 
         return [
             'estados' => collect($registros)->map(fn ($reg) => $servicios->estado($reg))->all(),
             'historial' => $registros === [] ? collect() : RegMedicoServicio::whereIn('reg_medico', $registros)->orderByDesc('vence_el')->orderByDesc('id')->limit(10)->get(),
+            'actual' => $actual,
+            'planesActivos' => $planesActivos,
+            'planesNoCubren' => $planesNoCubren,
+            'inicioRenovacion' => $inicioRenovacion,
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    private function horarios(): array
+    {
+        if ((string) $this->medico->reg_medico === '') {
+            return ['consultorios' => collect()];
+        }
+
+        return [
+            'consultorios' => Office::delMedico((string) $this->medico->reg_medico, $this->medico->id)
+                ->with(['medicalCenter', 'schedules'])
+                ->orderBy('medical_center_id')
+                ->orderBy('office_number')
+                ->get(),
+            'nombresDeDias' => \App\Models\OfficeSchedule::DIAS,
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    private function metodosDePago(): array
+    {
+        $reg = (string) $this->medico->reg_medico;
+
+        return [
+            'cuentasDeCobro' => app(CuentasDeCobroDelMedico::class)->de($reg),
+            'recaudador' => PreferenciaDeCobro::de($reg),
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    private function motivos(): array
+    {
+        $reg = (string) $this->medico->reg_medico;
+
+        return [
+            'motivos' => MotivoCita::with('office.medicalCenter')
+                ->where('reg_medico', $reg)
+                ->orderBy('codigo')
+                ->orderBy('office_id')
+                ->get(),
+            'sedesDeLosMotivos' => app(MotivosDeCitaDelCatalogo::class)->sedes($reg, $this->medico->id),
         ];
     }
 
