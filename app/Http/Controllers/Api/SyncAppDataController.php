@@ -9,6 +9,7 @@ use App\Actions\Agenda\ConfirmarCita;
 use App\Actions\Agenda\CrearCita;
 use App\Actions\Agenda\ReordenarCola;
 use App\Actions\Pacientes\CrearPaciente;
+use App\Actions\Pacientes\GuardarRepresentante;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SyncAppDataRequest;
 use App\Sync\Escritorio\TablasDelSync;
@@ -35,6 +36,7 @@ use App\Models\UltraMama;
 use App\Models\Especialidad;
 use App\Models\Evolucion;
 use App\Models\ExamenFisico;
+use App\Models\FamiliaBebe;
 use App\Models\FormatoPrint;
 use App\Models\Historia;
 use App\Models\DietaPaciente;
@@ -50,10 +52,12 @@ use App\Models\MotivoConsultaPaciente;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
 use App\Models\Paciente;
+use App\Models\PacienteChamo;
 use App\Models\Recipe;
 use App\Models\RecipeFormato;
 use App\Models\RecipePareja;
 use App\Models\Referencia;
+use App\Models\Representante;
 use App\Models\ReposoPaciente;
 use App\Models\SyncChange;
 use App\Models\SyncCarga;
@@ -69,6 +73,7 @@ use App\Sync\CreacionesClinicas;
 use App\Sync\RegistroDeCambios;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 /**
  * Sync delta de AppDDR (ver ROADMAP.md "Decisión de arquitectura: sync offline delta"). No
@@ -344,6 +349,14 @@ class SyncAppDataController extends Controller
             ->when($conVentana, fn ($q) => $q->whereIn(TablasLegado::columnaHistoria($tablaHistoria), $historiasDeLaVentana()))
             ->when($completo && $conContenido !== null, $conContenido);
 
+        // Los niños de pediatría de estas historias (2026-11-04). `paciente_chamo` es el ABM de pacientes de
+        // PediaReport y el que dice a qué `familia` pertenece cada historia; de ahí salen los teléfonos del
+        // adulto que el app necesita para sus datos obligatorios. La columna `historia` es **entera**, así
+        // que el número del pivote (texto) se compara como entero.
+        $chamos = fn () => PacienteChamo::whereIn('reg_medico', $registrosMedicos)
+            ->whereIn('historia', array_map('intval', $numHistorias))
+            ->when($conVentana, fn ($q) => $q->whereIn('historia', $historiasDeLaVentana()));
+
         return [
             'pacientes' => ['consulta' => Paciente::whereIn('id', $pacienteIds), 'columna' => 'id'],
             // Solo las historias **de este médico**: por su `medico_id` o por sus registros. Antes también
@@ -462,6 +475,20 @@ class SyncAppDataController extends Controller
                 ->whereRaw("TRIM(COALESCE(descripcion, '')) NOT IN ('', '.')")), 'columna' => 'id'],
             'hospitalizacion' => ['consulta' => $porConsulta(Hospitalizacion::class, 'hospitalizacion'), 'columna' => 'id'],
             'dieta_paciente' => ['consulta' => $porConsulta(DietaPaciente::class, 'dieta_paciente'), 'columna' => 'id'],
+            // **El representante del niño** (2026-11-04). Es de la historia —`representante` se llavea por
+            // `reg_medico` + `numhistoria`, con el número **entero**— y es lo que el app necesita para sus
+            // datos obligatorios de pediatría (nombre, nacimiento y el teléfono del adulto) y para mostrarlo
+            // en «Datos personales». Baja con el mismo filtro doble que lo clínico más la ventana; la ficha
+            // puntual de un paciente lo trae entero.
+            'representante' => ['consulta' => Representante::whereIn('numhistoria', array_map('intval', $numHistorias))
+                ->whereIn('reg_medico', $registrosMedicos)
+                ->when($conVentana, fn ($q) => $q->whereIn('numhistoria', $historiasDeLaVentana())), 'columna' => 'id'],
+            // **La familia del niño** (2026-11-04): es el respaldo del teléfono cuando la fila de
+            // `representante` no lo tiene (`TelefonoDeContacto`, WEB-7.4.2c). Baja con el mismo filtro y la
+            // misma ventana, y sólo las familias de los niños que ya bajan.
+            'familia_bebe' => ['consulta' => FamiliaBebe::whereIn('reg_medico', $registrosMedicos)
+                ->whereIn('familia', $chamos()->select('familia')), 'columna' => 'id'],
+            'paciente_chamo' => ['consulta' => $chamos(), 'columna' => 'id'],
             'diagnostico_paciente' => ['consulta' => $porConsulta(DiagnosticoPaciente::class, 'diagnostico_paciente'), 'columna' => 'id'],
             // **Los antecedentes del paciente** (A4b de PLAN-MOVIL.md). Son del paciente y no de la
             // consulta: se llavean por `numhistoria` + `codeantecedente` y no tienen columna de consulta,
@@ -679,6 +706,17 @@ class SyncAppDataController extends Controller
                 ->whereRaw("TRIM(COALESCE(descripcion, '')) NOT IN ('', '.')")->get(),
             'hospitalizacion' => Hospitalizacion::whereIn('reg_medico', $registrosMedicos)->where($de('hospitalizacion'), $numHistoria)->get(),
             'dieta_paciente' => DietaPaciente::whereIn('reg_medico', $registrosMedicos)->where($de('dieta_paciente'), $numHistoria)->get(),
+            // El representante del niño (2026-11-04): este pedido arma su payload a mano y sin esta línea la
+            // ficha de un paciente fuera de la ventana llegaba sin el adulto que responde por él, que es
+            // justo el dato que la consulta pediátrica necesita para cerrarse.
+            'representante' => Representante::whereIn('reg_medico', $registrosMedicos)->where('numhistoria', $numHistoria)->get(),
+            // El niño de pediatría y su familia (2026-11-04): sin ellos, la ficha de un paciente fuera de la
+            // ventana llegaba con el representante a medias y sin el respaldo del teléfono de la familia.
+            'paciente_chamo' => PacienteChamo::whereIn('reg_medico', $registrosMedicos)->where('historia', $numHistoria)->get(),
+            'familia_bebe' => FamiliaBebe::whereIn('reg_medico', $registrosMedicos)
+                ->whereIn('familia', PacienteChamo::whereIn('reg_medico', $registrosMedicos)
+                    ->where('historia', $numHistoria)->select('familia'))
+                ->get(),
             'diagnostico_paciente' => DiagnosticoPaciente::whereIn('reg_medico', $registrosMedicos)
                 ->where($de('diagnostico_paciente'), $numHistoria)->get(),
             // La evaluación física de la consulta (A4a de PLAN-MOVIL.md). Se sumó acá porque este pedido
@@ -817,6 +855,15 @@ class SyncAppDataController extends Controller
             'referencia' => $datos['referencia'] ?? $vacio,
             'informe' => $datos['informe'] ?? $vacio,
             'diagnostico_paciente' => $datos['diagnostico_paciente'] ?? $vacio,
+            // El representante del niño (2026-11-04): el teléfono que vale para los datos obligatorios de
+            // pediatría. El delta y el volcado lo arman desde `$plan`; el pedido puntual de una ficha lo
+            // trae en su payload armado a mano. La clave tiene que existir siempre: el app recorre una
+            // lista fija de tablas.
+            'representante' => $datos['representante'] ?? $vacio,
+            // El niño de pediatría y su familia (2026-11-04), espejo de solo lectura: con ellos el app resuelve
+            // el teléfono del adulto igual que `TelefonoDeContacto`, sin conexión.
+            'paciente_chamo' => $datos['paciente_chamo'] ?? $vacio,
+            'familia_bebe' => $datos['familia_bebe'] ?? $vacio,
             // La evaluación física de la consulta (A2 de PLAN-MOVIL.md). El delta la arma solo desde
             // `$plan`, pero la clave tiene que estar siempre: el app recorre una lista fija de tablas.
             'examen_fisico_nuevo' => $datos['examen_fisico_nuevo'] ?? $vacio,
@@ -1198,6 +1245,10 @@ class SyncAppDataController extends Controller
             // `consultas`, así una consulta creada en este mismo lote ya tiene sus números cuando la Action
             // busca la pareja por `nrohistoria` + `nroconsulta`.
             'recipes_pareja' => 4,
+            // El representante del niño (2026-11-04) cuelga de la historia, no de la consulta: con 2 va
+            // después de `historias`, así una historia creada en este mismo lote ya tiene número cuando se
+            // busca su representante.
+            'representante' => 2,
         ];
         $resto = 5; // el grupo de todo lo que no es una creación clínica
         $grupos = array_fill(0, $resto + 1, []);
@@ -1296,6 +1347,19 @@ class SyncAppDataController extends Controller
             return;
         }
 
+        if ($table === 'representante') {
+            $this->crearRepresentante(
+                $columnas,
+                $registrosMedicos,
+                $tempId,
+                $occurredAt,
+                $creados,
+                $rechazar,
+            );
+
+            return;
+        }
+
         $this->crearCola(
             $columnas,
             $change,
@@ -1357,6 +1421,60 @@ class SyncAppDataController extends Controller
 
         $pacientesCreados[$tempId] = $paciente->id;
         $creados[] = ['table' => 'pacientes', 'temp_id' => $tempId, 'id' => $paciente->id];
+    }
+
+    /**
+     * **El representante del niño, creado desde el app** (2026-11-04).
+     *
+     * La clave es el **número de historia** —`representante` tiene una fila por historia en el esquema del
+     * legado—, así que la creación es un *upsert*: si el escritorio (o la web) ya dejó la fila, se completa
+     * en el lugar y no se duplica. La regla vive en `GuardarRepresentante`, la misma Action de la ficha.
+     *
+     * El número viaja en `numhistoria` y se valida contra las historias del médico: el teléfono no puede
+     * escribir el representante de un paciente de otro consultorio. Sin número no hay dónde guardarlo —el
+     * app lo manda cuando la consulta ya asignó la historia, no antes—.
+     */
+    private function crearRepresentante(
+        array $columnas,
+        array $registrosMedicos,
+        int $tempId,
+        Carbon $occurredAt,
+        array &$creados,
+        callable $rechazar
+    ): void {
+        $numhistoria = $columnas['numhistoria'] ?? null;
+
+        $historia = $numhistoria === null ? null : Historia::where('numhistoria', (string) $numhistoria)
+            ->whereIn('reg_medico', $registrosMedicos)
+            ->first();
+
+        if ($historia === null) {
+            $rechazar('El número de historia no pertenece a este médico.');
+            return;
+        }
+
+        try {
+            $representante = app(GuardarRepresentante::class)->ejecutar(
+                (string) $historia->reg_medico,
+                (string) $numhistoria,
+                $columnas,
+            );
+        } catch (InvalidArgumentException $excepcion) {
+            $rechazar($excepcion->getMessage());
+            return;
+        }
+
+        SyncChange::create([
+            'reg_medico' => $historia->reg_medico,
+            'table_name' => 'representante',
+            'record_id' => $representante->id,
+            'client_temp_id' => $tempId,
+            'operation' => 'created',
+            'occurred_at' => $occurredAt,
+            'source' => 'mobile',
+        ]);
+
+        $creados[] = ['table' => 'representante', 'temp_id' => $tempId, 'id' => $representante->id];
     }
 
     /**
@@ -1621,6 +1739,9 @@ class SyncAppDataController extends Controller
             'informe' => Informe::class,
             'hospitalizacion' => Hospitalizacion::class,
             'dieta_paciente' => DietaPaciente::class,
+            // El representante del niño (2026-11-04): el app corrige su teléfono por columna, con el mismo
+            // last-write-wins y el mismo rastro que el resto.
+            'representante' => Representante::class,
         ][$table];
     }
 
