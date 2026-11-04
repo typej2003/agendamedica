@@ -262,7 +262,7 @@ class RegistroDeMedicoWebTest extends TestCase
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
             ->set('reg_medico', $reg)
-            ->call('aprobar')
+            ->set('decision', 'aprobar')->call('aprobar')
             ->assertHasNoErrors()
             ->assertSet('claveGenerada.clave', null)
             ->assertSet('claveGenerada.correoEnviado', true)
@@ -388,7 +388,7 @@ class RegistroDeMedicoWebTest extends TestCase
             ->call('abrir', $solicitud->id)
             ->assertSet('reg_medico', $reg)
             ->assertSet('specialty_id', (string) $especialidad->id)
-            ->call('aprobar')
+            ->set('decision', 'aprobar')->call('aprobar')
             ->assertHasNoErrors()
             ->assertSet('claveGenerada.correoEnviado', true);
 
@@ -434,7 +434,7 @@ class RegistroDeMedicoWebTest extends TestCase
         $this->actingAs($this->administrador());
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
-            ->call('aprobar')
+            ->set('decision', 'aprobar')->call('aprobar')
             ->assertHasErrors('reg_medico');
 
         $this->assertSame(SolicitudMedico::PENDIENTE, $solicitud->fresh()->estado);
@@ -450,7 +450,7 @@ class RegistroDeMedicoWebTest extends TestCase
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
             ->set('reg_medico', $reg)
-            ->call('aprobar')
+            ->set('decision', 'aprobar')->call('aprobar')
             ->assertHasNoErrors();
 
         $ficha->refresh();
@@ -487,7 +487,7 @@ class RegistroDeMedicoWebTest extends TestCase
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
             ->set('reg_medico', $reg)
-            ->call('aprobar')
+            ->set('decision', 'aprobar')->call('aprobar')
             ->assertHasNoErrors()
             ->assertSet('claveGenerada.clave', null)
             ->assertSee('ya tenía');
@@ -528,7 +528,7 @@ class RegistroDeMedicoWebTest extends TestCase
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
             ->set('reg_medico', $reg)
-            ->call('aprobar')
+            ->set('decision', 'aprobar')->call('aprobar')
             ->assertHasNoErrors()
             ->assertSet('claveGenerada.clave', null);
 
@@ -560,7 +560,7 @@ class RegistroDeMedicoWebTest extends TestCase
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
             ->set('reg_medico', $reg)
-            ->call('aprobar')
+            ->set('decision', 'aprobar')->call('aprobar')
             ->assertHasErrors('reg_medico')
             ->assertSee($cuenta->email);
 
@@ -580,14 +580,45 @@ class RegistroDeMedicoWebTest extends TestCase
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
             ->set('reg_medico', $reg)
-            ->call('aprobar')
+            ->set('decision', 'aprobar')->call('aprobar')
             ->assertHasErrors('reg_medico');
 
         $this->assertTrue($solicitud->fresh()->estaPendiente());
         $this->assertDatabaseMissing('users', ['email' => $solicitud->email]);
 
-        $componente = Livewire::test(SolicitudesDeMedicos::class)->call('abrir', $solicitud->id)->call('aprobar')->assertHasNoErrors();
-        $componente->call('abrir', $solicitud->id)->call('aprobar')->assertHasErrors('solicitud');
+        $componente = Livewire::test(SolicitudesDeMedicos::class)->call('abrir', $solicitud->id)->set('decision', 'aprobar')->call('aprobar')->assertHasNoErrors();
+        $componente->call('abrir', $solicitud->id)->set('decision', 'aprobar')->call('aprobar')->assertHasErrors('solicitud');
+    }
+
+    /**
+     * La decisión se pregunta **antes** (2026-11-04): sin opción marcada, el detalle no muestra ni los
+     * campos de aprobar ni los de rechazar, y el botón cambia con la rama elegida.
+     */
+    public function test_los_campos_de_aprobar_y_rechazar_aparecen_al_elegir_la_decision(): void
+    {
+        $solicitud = $this->solicitar();
+
+        $this->actingAs($this->administrador());
+
+        $componente = Livewire::test(SolicitudesDeMedicos::class)
+            ->call('abrir', $solicitud->id)
+            ->assertSet('decision', '')
+            ->assertDontSee('Aprobar y crear la cuenta')
+            ->assertDontSee('Rechazar solicitud')
+            ->assertDontSee('Motivo (le llega al médico por correo)')
+            ->assertDontSee('Revisé el carnet y lo doy por verificado');
+
+        $componente->set('decision', 'aprobar')
+            ->assertSee('Aprobar y crear la cuenta')
+            ->assertSee('Revisé el carnet y lo doy por verificado')
+            ->assertDontSee('Motivo (le llega al médico por correo)')
+            ->assertDontSee('Rechazar solicitud');
+
+        $componente->set('decision', 'rechazar')
+            ->assertSee('Rechazar solicitud')
+            ->assertSee('Motivo (le llega al médico por correo)')
+            ->assertDontSee('Aprobar y crear la cuenta')
+            ->assertDontSee('Revisé el carnet y lo doy por verificado');
     }
 
     public function test_rechazar_guarda_el_motivo_y_avisa(): void
@@ -597,10 +628,10 @@ class RegistroDeMedicoWebTest extends TestCase
         $this->actingAs($this->administrador());
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
-            ->call('rechazar')
+            ->set('decision', 'rechazar')->call('rechazar')
             ->assertHasErrors('motivo')
             ->set('motivo', 'El número del MPPS no coincide con la cédula.')
-            ->call('rechazar')
+            ->set('decision', 'rechazar')->call('rechazar')
             ->assertHasNoErrors();
 
         $solicitud->refresh();

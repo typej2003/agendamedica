@@ -105,6 +105,9 @@ class ReservasPublicasWebTest extends TestCase
             'apellidos' => 'Prueba',
             'telefono' => $telefono,
             'email' => 'ana.prueba@example.com',
+            // ¿Quién reserva? Ahora es obligatorio (se pregunta sin opción marcada): el camino común es el
+            // propio paciente. Los tests del representante lo pisan con 'R' y sus datos.
+            'reservado_por' => 'P',
         ];
     }
 
@@ -549,6 +552,28 @@ class ReservasPublicasWebTest extends TestCase
         $this->assertSame(0, Cola::where('reg_medico', $this->medico->reg_medico)->count());
     }
 
+    /** **Quién reserva** se pregunta sin opción marcada: los campos del representante no se ven de entrada. */
+    public function test_el_formulario_pregunta_quien_reserva_sin_elegir_a_nadie(): void
+    {
+        $html = $this->get(route('reservas.medico', $this->medico))->assertOk()->getContent();
+
+        $this->assertStringContainsString('¿Quién reserva?', $html);
+        // Ninguna de las dos opciones viene marcada.
+        $this->assertDoesNotMatchRegularExpression('/id="reservado_por_[pr]"[^>]*checked/', $html);
+        // Los campos del representante existen pero arrancan ocultos (los muestra `reservas.js`).
+        $this->assertStringContainsString('data-representante-campos hidden', $html);
+    }
+
+    /** Sin decir quién reserva, el servidor no acepta la reserva: ya no hay un «paciente» por defecto. */
+    public function test_hay_que_decir_quien_reserva(): void
+    {
+        $this->from(route('reservas.medico', $this->medico))
+            ->post(route('reservas.codigo.enviar', $this->medico), array_merge($this->datos(), ['reservado_por' => '']))
+            ->assertSessionHasErrors('reservado_por');
+
+        $this->assertNull(session('reservas.pendiente'));
+    }
+
     /**
      * **El calendario del portal** (O-52): marca los días que tienen lugar y, al elegir uno, muestra sus
      * horarios. Los días sin lugar no son enlaces, así que la rejilla se usa sin JavaScript.
@@ -591,11 +616,11 @@ class ReservasPublicasWebTest extends TestCase
     /** **Quién reserva** (O-52): un representante deja su nombre y documento en la cita y en el comprobante. */
     public function test_una_reserva_de_un_representante_guarda_quien_la_hizo(): void
     {
-        $this->post(route('reservas.codigo.enviar', $this->medico), $this->datos() + [
+        $this->post(route('reservas.codigo.enviar', $this->medico), array_merge($this->datos(), [
             'reservado_por' => 'R',
             'representante_nombre' => 'Marta Tutora',
             'representante_documento' => '12345678',
-        ])->assertRedirect();
+        ]))->assertRedirect();
 
         $this->post(route('reservas.confirmar', $this->medico), ['codigo' => $this->codigo()])
             ->assertRedirect(route('reservas.confirmada'));
@@ -617,7 +642,7 @@ class ReservasPublicasWebTest extends TestCase
     public function test_la_reserva_del_representante_exige_sus_datos(): void
     {
         $this->from(route('reservas.medico', $this->medico))
-            ->post(route('reservas.codigo.enviar', $this->medico), $this->datos() + ['reservado_por' => 'R'])
+            ->post(route('reservas.codigo.enviar', $this->medico), array_merge($this->datos(), ['reservado_por' => 'R']))
             ->assertSessionHasErrors(['representante_nombre', 'representante_documento']);
 
         $this->assertNull(session('reservas.pendiente'));

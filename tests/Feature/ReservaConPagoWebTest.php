@@ -114,6 +114,7 @@ class ReservaConPagoWebTest extends TestCase
             'apellidos' => 'Prueba',
             'telefono' => '0414-5556677',
             'email' => 'ana.prueba@example.com',
+            'reservado_por' => 'P',
         ], $extra);
     }
 

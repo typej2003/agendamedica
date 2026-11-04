@@ -44,6 +44,14 @@ class SolicitudesDeMedicos extends Component
 
     public $motivo = '';
 
+    /**
+     * La decisión se pregunta **antes** de mostrar los campos: aprobar y rechazar piden cosas distintas
+     * (el reg_medico o el motivo) y no se pueden llenar las dos. Nace vacía, sin opción marcada.
+     *
+     * @var 'aprobar'|'rechazar'|''
+     */
+    public $decision = '';
+
     /** La clave de la última aprobación, para mostrarla una sola vez. */
     public $claveGenerada = null;
 
@@ -84,12 +92,19 @@ class SolicitudesDeMedicos extends Component
         $this->specialty_id = (string) ($solicitud->specialty_id ?? '');
         $this->motivo = (string) $solicitud->motivo_rechazo;
         $this->carnet_verificado = false;
+        $this->decision = '';
         $this->resetErrorBag();
     }
 
     public function cerrar(): void
     {
-        $this->reset(['solicitudId', 'reg_medico', 'specialty_id', 'motivo', 'carnet_verificado']);
+        $this->reset(['solicitudId', 'reg_medico', 'specialty_id', 'motivo', 'carnet_verificado', 'decision']);
+        $this->resetErrorBag();
+    }
+
+    /** Al cambiar de decisión, los errores de la otra rama ya no vienen al caso. */
+    public function updatedDecision(): void
+    {
         $this->resetErrorBag();
     }
 

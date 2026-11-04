@@ -150,6 +150,7 @@ class LimitesDeReservaTest extends TestCase
             'apellidos' => 'Limite',
             'telefono' => $telefono,
             'email' => 'lia.limite@example.com',
+            'reservado_por' => 'P',
         ];
     }
 
