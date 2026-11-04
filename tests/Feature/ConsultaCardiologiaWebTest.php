@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Clinica\Consulta\Cardiologia\MapaDelCardiologo;
+use App\Clinica\Impresion\DocumentoImpreso;
 use App\Models\Consulta;
 use App\Models\Historia;
 use App\Models\Medico;
@@ -336,6 +337,27 @@ class ConsultaCardiologiaWebTest extends TestCase
             'indicacion' => 'Claudicación', 'iliaca_ext' => 'Placa', 'conclusion' => 'Sin estenosis significativa.',
         ]);
         $this->assertSame(85.4, (float) DB::table('dd_arterial_mi')->where('num_consulta', 1)->value('iliaca_ext_der'));
+    }
+
+    public function test_la_hoja_del_ecocardiograma_se_imprime_con_sus_campos(): void
+    {
+        [$user, $medico, $especialidad] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->conContexto($user, $medico, $especialidad)->post(route('clinica.consulta.cardiologia.guardar', $consulta->id), [
+            'pestana' => MapaDelCardiologo::PESTANA_ECO,
+            'ha_ai' => '3,4',
+            'ha_fe' => '60',
+            'conclusiones' => 'Función sistólica conservada.',
+        ])->assertSessionHas('estado', 'Estudio guardado.');
+
+        $this->conContexto($user, $medico, $especialidad)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ECO_CARDIO]))
+            ->assertOk()
+            ->assertSee('INFORME DE ECOCARDIOGRAMA')
+            ->assertSee('Aurícula izquierda')
+            ->assertSee('3,4')
+            ->assertSee('Función sistólica conservada.');
     }
 
     public function test_una_pestana_que_no_existe_no_guarda(): void

@@ -323,6 +323,17 @@ final class SolicitudesParaImprimir
             ];
         }
 
+        // **Cardiología** (CAR-5, 2026-11-04): las hojas de sus estudios, si tienen algo cargado.
+        foreach ($this->documentosDelCardiologo($consulta) as $clave => $resumenDelDocumento) {
+            $disponibles[] = [
+                'clave' => $clave,
+                'tipo' => $clave,
+                'titulo' => DocumentoImpreso::TITULOS[$clave][1],
+                'resumen' => $resumenDelDocumento,
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
         $examenes = $this->laboratorios->filas($consulta);
         if ($this->laboratorios->esReal($examenes, $this->laboratorios->observacion($consulta))) {
             $disponibles[] = [
@@ -587,6 +598,11 @@ final class SolicitudesParaImprimir
 
         if ($clave === DocumentoImpreso::EKG) {
             return $this->ekg($consulta, $paciente, $fechaDeLaConsulta);
+        }
+
+        // **Cardiología** (CAR-5): la hoja del estudio que se pidió.
+        if (($pestanaCardiologica = self::pestanaCardiologica($clave)) !== null) {
+            return $this->estudioCardiologico($consulta, $paciente, $clave, $pestanaCardiologica, $fechaDeLaConsulta);
         }
 
         if ($clave === DocumentoImpreso::ANALISIS_EVOLUTIVO) {
@@ -1527,6 +1543,101 @@ final class SolicitudesParaImprimir
             DocumentoImpreso::EKG,
             DocumentoImpreso::TITULOS[DocumentoImpreso::EKG][0],
             DocumentoImpreso::TITULOS[DocumentoImpreso::EKG][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            $fijos,
+            $parrafos,
+        );
+    }
+
+    /**
+     * **Las hojas de los estudios del cardiólogo** (CAR-5, 2026-11-04): se ofrecen las que la consulta tiene con datos.
+     *
+     * @return array<string,string>  clave del documento => descripción para la lista
+     */
+    private function documentosDelCardiologo(Consulta $consulta): array
+    {
+        $datos = new \App\Clinica\Consulta\Cardiologia\DatosDelCardiologo();
+        $documentos = [];
+
+        foreach (self::PESTANAS_CARDIOLOGICAS as $clave => $pestana) {
+            if ($datos->tieneDatos($consulta, $pestana)) {
+                $documentos[$clave] = 'Informe de ' . mb_strtolower(DocumentoImpreso::TITULOS[$clave][1]);
+            }
+        }
+
+        return $documentos;
+    }
+
+    /**
+     * La pestaña de los estudios cardiológicos que corresponde a una hoja, o `null` si la clave no es de cardiología.
+     *
+     * @var array<string,string>
+     */
+    private const PESTANAS_CARDIOLOGICAS = [
+        DocumentoImpreso::ECO_CARDIO => \App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::PESTANA_ECO,
+        DocumentoImpreso::ECO_ESTRES => \App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::PESTANA_ESTRES,
+        DocumentoImpreso::ECO_ETE => \App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::PESTANA_ETE,
+        DocumentoImpreso::DOPPLER_MIEMBROS_SUPERIORES => \App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::PESTANA_DOPPLER_MS,
+        DocumentoImpreso::DOPPLER_CAROTIDEO => \App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::PESTANA_CAROTIDAS,
+        DocumentoImpreso::DOPPLER_VENOSO => \App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::PESTANA_VENOSO,
+        DocumentoImpreso::PRUEBA_DE_ESFUERZO => \App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::PESTANA_ESFUERZO,
+        DocumentoImpreso::OSCILOMETRIA => \App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::PESTANA_OSCILOMETRIA,
+        DocumentoImpreso::MARCAPASOS => \App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::PESTANA_MARCAPASOS,
+        DocumentoImpreso::DOPPLER_ARTERIAL_MIEMBROS_INFERIORES => \App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::PESTANA_ARTERIAL_MI,
+    ];
+
+    /** La pestaña del estudio cardiológico que corresponde a una hoja, o `null`. */
+    private static function pestanaCardiologica(string $clave): ?string
+    {
+        return self::PESTANAS_CARDIOLOGICAS[$clave] ?? null;
+    }
+
+    /**
+     * **La hoja de un estudio cardiológico** (CAR-5): sus campos con dato, con el rótulo y la unidad de la pantalla, y los
+     * textos largos como párrafos. No hay una hoja por estudio: es la misma para los diez y sale del mapa del dato.
+     */
+    private function estudioCardiologico(Consulta $consulta, Paciente $paciente, string $clave, string $pestana, string $fecha): ?DocumentoImpreso
+    {
+        $datos = new \App\Clinica\Consulta\Cardiologia\DatosDelCardiologo();
+
+        if (! $datos->tieneDatos($consulta, $pestana)) {
+            return null;
+        }
+
+        $valores = $datos->valores($consulta, $pestana);
+        $fijos = [];
+        $parrafos = [];
+
+        foreach (\App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::deLaPestana($pestana) as $campo) {
+            $valor = $valores[$campo['clave']] ?? null;
+
+            if ($valor === null) {
+                continue;
+            }
+
+            $tipo = $campo['tipo'] ?? 'texto';
+
+            if ($tipo === 'parrafo') {
+                $parrafos = array_merge($parrafos, DocumentoImpreso::parrafosDe($campo['etiqueta'] . ': ' . $valor));
+                continue;
+            }
+
+            if ($tipo === 'si_no') {
+                $valor = $valor === 'S' ? 'Sí' : 'No';
+            } elseif ($tipo === 'opcion') {
+                $valor = $campo['opciones'][$valor] ?? $valor;
+            }
+
+            $etiqueta = $campo['etiqueta'] . (($campo['unidad'] ?? null) ? ' (' . $campo['unidad'] . ')' : '');
+            $fijos[] = ['etiqueta' => $etiqueta . ':', 'valor' => $valor];
+        }
+
+        return new DocumentoImpreso(
+            $clave,
+            $clave,
+            DocumentoImpreso::TITULOS[$clave][0],
+            DocumentoImpreso::TITULOS[$clave][1],
             $fecha,
             PacienteImpreso::datos($paciente, $fecha),
             $fijos,
