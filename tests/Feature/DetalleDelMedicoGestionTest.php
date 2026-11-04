@@ -13,6 +13,7 @@ use App\Models\OfficeSchedule;
 use App\Models\Plan;
 use App\Models\RegMedicoServicio;
 use App\Models\Specialty;
+use App\Models\SolicitudMedico;
 use App\Models\User;
 use App\Services\CuentaService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -233,6 +234,45 @@ class DetalleDelMedicoGestionTest extends TestCase
         $panel->call('alternarCuenta', $cuenta->id);
         $this->assertTrue((bool) $cuenta->fresh()->activa);
         $this->assertTrue((bool) $metodo->fresh()->activo);
+    }
+
+    public function test_la_solicitud_del_medico_se_resuelve_eligiendo_la_decision(): void
+    {
+        $solicitud = SolicitudMedico::create([
+            'nombres' => 'Lucía',
+            'apellidos' => 'Gestión',
+            'cedula' => (string) random_int(10000000, 30000000),
+            'mpps' => 'MPPS-9876',
+            'telefono' => '04141234567',
+            'email' => $this->medico->email,
+            'estado' => SolicitudMedico::PENDIENTE,
+            'medico_id' => $this->medico->id,
+        ]);
+
+        $panel = $this->detalle()
+            ->call('irA', 'solicitud')
+            ->call('abrirSolicitud', $solicitud->id)
+            ->assertSet('solDecision', '')
+            // Sin decisión no se ve ninguna de las dos ramas ni su botón.
+            ->assertDontSee('Registro con el que trabajará')
+            ->assertDontSee('Motivo del rechazo')
+            ->assertDontSee('Rechazar solicitud');
+
+        $panel->set('solDecision', 'aprobar')
+            ->assertSee('Registro con el que trabajará')
+            ->assertSee('Revisé el carnet')
+            ->assertDontSee('Motivo del rechazo');
+
+        $panel->set('solDecision', 'rechazar')
+            ->assertSee('Motivo del rechazo')
+            ->assertSee('Rechazar solicitud')
+            ->assertDontSee('Registro con el que trabajará');
+
+        $panel->set('solMotivo', 'El número del MPPS no coincide con la cédula.')
+            ->call('rechazarSolicitud')
+            ->assertHasNoErrors();
+
+        $this->assertSame(SolicitudMedico::RECHAZADA, $solicitud->fresh()->estado);
     }
 
     public function test_los_horarios_del_consultorio_se_ven_en_la_ficha(): void

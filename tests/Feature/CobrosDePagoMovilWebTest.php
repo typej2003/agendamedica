@@ -268,6 +268,26 @@ class CobrosDePagoMovilWebTest extends TestCase
         $this->assertEqualsWithDelta(50.0, (float) $cita->monto_pagado, 0.01);
     }
 
+    /**
+     * **La decisión primero** (guía de UI, §11): el pago se resuelve eligiendo «¿Qué haces?» y recién
+     * entonces aparece el dato de esa acción (monto o motivo) con su botón.
+     */
+    public function test_el_pago_pendiente_se_resuelve_eligiendo_la_accion(): void
+    {
+        $pago = $this->pagoPendiente();
+
+        $html = $this->conContexto()->get(route('clinica.cobros'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-cobro-resolver', $html);
+        $this->assertStringContainsString('¿Qué haces?', $html);
+        // Las dos ramas existen pero arrancan ocultas: las muestra `cobros.js` al elegir.
+        $this->assertStringContainsString('data-cobro-campos="confirmar" hidden', $html);
+        $this->assertStringContainsString('data-cobro-campos="rechazar" hidden', $html);
+        // Cada rama lleva la acción de su botón.
+        $this->assertStringContainsString(route('clinica.cobros.confirmar', $pago), $html);
+        $this->assertStringContainsString(route('clinica.cobros.rechazar', $pago), $html);
+    }
+
     public function test_rechazar_a_mano_deja_el_pago_rechazado(): void
     {
         $pago = $this->pagoPendiente();

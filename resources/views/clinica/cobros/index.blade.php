@@ -2,6 +2,18 @@
 
 @section('titulo', 'Cobros')
 
+@section('estilos')
+    {{-- Sin JavaScript no se puede reaccionar al «¿Qué haces?»: las dos ramas quedan a la vista, como
+         estaban antes, para que la pantalla siga funcionando. --}}
+    <noscript>
+        <style>[data-cobro-campos][hidden] { display: flex !important; }</style>
+    </noscript>
+@endsection
+
+@section('scripts')
+    <script src="{{ asset('js/clinica/cobros.js') }}?v={{ @filemtime(public_path('js/clinica/cobros.js')) }}"></script>
+@endsection
+
 @section('contenido')
     <x-ui.page-head titulo="Cobros"
                     subtitulo="Tus cuentas de pago móvil y los pagos que esperan confirmación."></x-ui.page-head>
@@ -48,7 +60,7 @@
                             <th scope="col">Monto</th>
                             <th scope="col">Pagador</th>
                             <th scope="col">Referencia</th>
-                            <th scope="col">Confirmar</th>
+                            <th scope="col">Resolver</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -73,30 +85,48 @@
                                     @endif
                                 </td>
                                 <td>
+                                    {{-- La decisión primero (guía de UI, §11): se elige confirmar o rechazar y
+                                         recién ahí aparece el dato de esa acción y su botón. Sin JavaScript
+                                         quedan las dos ramas a la vista, como antes. --}}
                                     <form method="POST" action="{{ route('clinica.cobros.confirmar', $pago) }}"
-                                          class="d-flex flex-wrap gap-1 align-items-end mb-2">
+                                          data-cobro-resolver>
                                         @csrf
-                                        <div>
-                                            <label class="visually-hidden" for="monto-{{ $pago->id }}">Monto</label>
-                                            <input type="text" name="monto" id="monto-{{ $pago->id }}"
-                                                   class="form-control form-control-sm" style="max-width: 8rem"
-                                                   value="{{ \App\Pagos\Centavos::aTexto((int) $pago->monto_e2) }}">
-                                        </div>
-                                        <button class="btn btn-sm btn-primary">
-                                            <i class="bi bi-check2-circle me-1" aria-hidden="true"></i> Confirmar
-                                        </button>
-                                    </form>
 
-                                    <form method="POST" action="{{ route('clinica.cobros.rechazar', $pago) }}"
-                                          class="d-flex flex-wrap gap-1 align-items-end">
-                                        @csrf
-                                        <div>
-                                            <label class="visually-hidden" for="motivo-{{ $pago->id }}">Motivo</label>
-                                            <input type="text" name="motivo" id="motivo-{{ $pago->id }}"
-                                                   class="form-control form-control-sm" style="max-width: 12rem"
-                                                   placeholder="Motivo (opcional)">
+                                        <label class="visually-hidden" for="accion-{{ $pago->id }}">Qué haces con el pago</label>
+                                        <select name="accion" id="accion-{{ $pago->id }}"
+                                                class="form-select form-select-sm mb-1" data-cobro-accion required>
+                                            <option value="">¿Qué haces?</option>
+                                            <option value="confirmar">Confirmar el pago</option>
+                                            <option value="rechazar">Rechazar el pago</option>
+                                        </select>
+
+                                        <div class="d-flex flex-wrap gap-1 align-items-end"
+                                             data-cobro-campos="confirmar" hidden>
+                                            <div>
+                                                <label class="visually-hidden" for="monto-{{ $pago->id }}">Monto</label>
+                                                <input type="text" name="monto" id="monto-{{ $pago->id }}"
+                                                       class="form-control form-control-sm" style="max-width: 8rem"
+                                                       value="{{ \App\Pagos\Centavos::aTexto((int) $pago->monto_e2) }}">
+                                            </div>
+                                            <button class="btn btn-sm btn-primary"
+                                                    formaction="{{ route('clinica.cobros.confirmar', $pago) }}">
+                                                <i class="bi bi-check2-circle me-1" aria-hidden="true"></i> Confirmar
+                                            </button>
                                         </div>
-                                        <button class="btn btn-sm btn-outline-danger">Rechazar</button>
+
+                                        <div class="d-flex flex-wrap gap-1 align-items-end"
+                                             data-cobro-campos="rechazar" hidden>
+                                            <div>
+                                                <label class="visually-hidden" for="motivo-{{ $pago->id }}">Motivo</label>
+                                                <input type="text" name="motivo" id="motivo-{{ $pago->id }}"
+                                                       class="form-control form-control-sm" style="max-width: 12rem"
+                                                       placeholder="Motivo (opcional)">
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                    formaction="{{ route('clinica.cobros.rechazar', $pago) }}">
+                                                Rechazar
+                                            </button>
+                                        </div>
                                     </form>
                                 </td>
                             </tr>
