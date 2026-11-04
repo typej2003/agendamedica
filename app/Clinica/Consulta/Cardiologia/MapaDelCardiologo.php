@@ -3,6 +3,8 @@
 namespace App\Clinica\Consulta\Cardiologia;
 
 use App\Models\Ecocardiografia;
+use App\Models\EcocardiogramaEte;
+use App\Models\EcocardiograficoInforme;
 
 /**
  * **El mapa del dato de los estudios cardiológicos** (CAR-2, 2026-11-04): qué columna guarda cada campo, medido en
@@ -16,18 +18,21 @@ use App\Models\Ecocardiografia;
  *  - `prueba_esfuerzo`, `oscilometria`, `dd_arterial_venoso_ms`, `dd_arterias_carotidas_dos`, `ddflujo_venoso`,
  *    `implantacion_marcapasos`, `implante` (CAR-3 a CAR-5).
  *
- * CAR-2 entra con el **ecocardiograma transtorácico**; las demás pestañas se suman con su ola, sin tocar esta.
+ * CAR-2 entra con el **ecocardiograma transtorácico**; CAR-3 suma el **informe del eco de estrés** y el **ETE**; las demás
+ * pestañas se agregan con su ola, sin tocar esta.
  *
- * Cada campo: `clave` (el nombre en el formulario), `etiqueta`, `tabla`, `columna`, `tipo` (`texto`, `parrafo`) y
- * `max` cuando la columna del legado tiene largo.
+ * Cada campo: `clave` (el nombre en el formulario), `etiqueta`, `tabla`, `columna`, `tipo` (`texto`, `parrafo`, `si_no` u
+ * `opcion`), `max` cuando la columna del legado tiene largo y `opciones` en las de tipo `opcion`.
  */
 final class MapaDelCardiologo
 {
     /** La sección de los estudios cardiológicos dentro de la consulta (`?seccion=cardiologia`). */
     public const SECCION = 'cardiologia';
 
-    /** Las pestañas de la sección (CAR-2: una sola; las demás olas suman las suyas). */
+    /** Las pestañas de la sección: el eco transtorácico (CAR-2), el de estrés y el ETE (CAR-3). */
     public const PESTANA_ECO = 'eco';
+    public const PESTANA_ESTRES = 'estres';
+    public const PESTANA_ETE = 'ete';
 
     /**
      * Las tablas de una fila por consulta: tabla => [modelo, columna de la historia, columna de la consulta].
@@ -36,6 +41,8 @@ final class MapaDelCardiologo
      */
     public const TABLAS = [
         'ecocardiografia' => [Ecocardiografia::class, 'numhistoria', 'numconsulta'],
+        'ecocardiografico_in' => [EcocardiograficoInforme::class, 'numhistoria', 'numconsulta'],
+        'ecocardiograma_ete' => [EcocardiogramaEte::class, 'numhistoria', 'numconsulta'],
     ];
 
     /**
@@ -46,6 +53,8 @@ final class MapaDelCardiologo
     public const PESTANAS = [
         self::SECCION => [
             self::PESTANA_ECO => 'Ecocardiograma',
+            self::PESTANA_ESTRES => 'Eco de estrés',
+            self::PESTANA_ETE => 'Eco transesofágico',
         ],
     ];
 
@@ -84,6 +93,50 @@ final class MapaDelCardiologo
                 $medida('ha_fa', 'Fracción de acortamiento (FA)', 'ha_fa', '%'),
                 $medida('ha_fe', 'Fracción de eyección (FE)', 'ha_fe', '%'),
                 ['clave' => 'conclusiones', 'etiqueta' => 'Conclusiones', 'tabla' => 'ecocardiografia',
+                    'columna' => 'conclusiones', 'tipo' => 'parrafo'],
+            ],
+            // CAR-3: el informe del **eco de estrés** (`d_ecocardiografico_inf_fuerte.srd`). `super_texto` y `tipo` no se
+            // editan: el primero es el texto compuesto que arma el escritorio y el segundo un código interno.
+            self::PESTANA_ESTRES => [
+                ['clave' => 'diag_estres', 'etiqueta' => 'Diagnóstico', 'tabla' => 'ecocardiografico_in',
+                    'columna' => 'diagnostico', 'tipo' => 'texto', 'max' => 60],
+                ['clave' => 'motivo_estudio', 'etiqueta' => 'Motivo de estudio', 'tabla' => 'ecocardiografico_in',
+                    'columna' => 'motivo_estudio', 'tipo' => 'texto', 'max' => 60],
+                ['clave' => 'tratamiento', 'etiqueta' => 'Tratamiento', 'tabla' => 'ecocardiografico_in',
+                    'columna' => 'tratamiento', 'tipo' => 'texto', 'max' => 60],
+                ['clave' => 'fc_maxima', 'etiqueta' => 'FC máxima', 'tabla' => 'ecocardiografico_in',
+                    'columna' => 'fc_maxima', 'tipo' => 'texto', 'max' => 10, 'unidad' => 'lpm'],
+                ['clave' => 'fc_submaxima', 'etiqueta' => 'FC submáxima', 'tabla' => 'ecocardiografico_in',
+                    'columna' => 'fc_submaxima', 'tipo' => 'texto', 'max' => 10, 'unidad' => 'lpm'],
+                ['clave' => 'farmacologico', 'etiqueta' => 'Farmacológico', 'tabla' => 'ecocardiografico_in',
+                    'columna' => 'farmacologico', 'tipo' => 'si_no'],
+                ['clave' => 'medicamento', 'etiqueta' => 'Medicamento', 'tabla' => 'ecocardiografico_in',
+                    'columna' => 'medicamento', 'tipo' => 'opcion', 'opciones' => [
+                        'Persantin' => 'Persantin',
+                        'Persantin/Dubutamina' => 'Persantin / Dubutamina',
+                        'Dubutamina' => 'Dubutamina',
+                    ]],
+                ['clave' => 'hallasgos', 'etiqueta' => 'Hallazgos', 'tabla' => 'ecocardiografico_in',
+                    'columna' => 'hallasgos', 'tipo' => 'parrafo'],
+                ['clave' => 'conclusion_estres', 'etiqueta' => 'Conclusión', 'tabla' => 'ecocardiografico_in',
+                    'columna' => 'conclusion', 'tipo' => 'parrafo'],
+            ],
+            // CAR-3: el **eco transesofágico** (`d_ecocardiograma_ete.srd`). `medico` es la cédula del médico que lo hace y
+            // no se edita desde acá: la web ya sabe quién atiende la consulta.
+            self::PESTANA_ETE => [
+                ['clave' => 'diag_ete', 'etiqueta' => 'Diagnóstico', 'tabla' => 'ecocardiograma_ete',
+                    'columna' => 'diagnostico', 'tipo' => 'texto', 'max' => 60],
+                ['clave' => 'indicacion', 'etiqueta' => 'Indicación', 'tabla' => 'ecocardiograma_ete',
+                    'columna' => 'indicacion', 'tipo' => 'texto', 'max' => 60],
+                ['clave' => 'sedacion', 'etiqueta' => 'Sedación', 'tabla' => 'ecocardiograma_ete',
+                    'columna' => 'sedacion', 'tipo' => 'texto', 'max' => 60],
+                ['clave' => 'video_num', 'etiqueta' => 'Video N.º', 'tabla' => 'ecocardiograma_ete',
+                    'columna' => 'video_num', 'tipo' => 'texto', 'max' => 60],
+                ['clave' => 'transductor_ete', 'etiqueta' => 'Transductor', 'tabla' => 'ecocardiograma_ete',
+                    'columna' => 'transductor', 'tipo' => 'texto', 'max' => 60],
+                ['clave' => 'equipo_ete', 'etiqueta' => 'Equipo', 'tabla' => 'ecocardiograma_ete',
+                    'columna' => 'equipo', 'tipo' => 'texto', 'max' => 60],
+                ['clave' => 'conclusiones_ete', 'etiqueta' => 'Conclusión', 'tabla' => 'ecocardiograma_ete',
                     'columna' => 'conclusiones', 'tipo' => 'parrafo'],
             ],
         ];

@@ -98,7 +98,59 @@ class ConsultaCardiologiaWebTest extends TestCase
             ->assertSee('Aurícula izquierda')
             ->assertSee('Fracción de eyección')
             ->assertSee('Conclusiones')
+            ->assertSee('Eco de estrés')
+            ->assertSee('Eco transesofágico')
             ->assertSee('Guardar el estudio');
+    }
+
+    public function test_guarda_el_eco_de_estres_y_el_ete_en_sus_tablas(): void
+    {
+        [$user, $medico, $especialidad] = $this->medico();
+        $consulta = $this->consulta($medico);
+        $url = route('clinica.consulta.cardiologia.guardar', $consulta->id);
+
+        $this->conContexto($user, $medico, $especialidad)->post($url, [
+            'pestana' => MapaDelCardiologo::PESTANA_ESTRES,
+            'diag_estres' => 'Cardiopatía isquémica',
+            'fc_maxima' => '142',
+            'fc_submaxima' => '120',
+            'farmacologico' => 'S',
+            'medicamento' => 'Persantin',
+            'hallasgos' => 'Cambios isquémicos en la cara inferior.',
+            'conclusion_estres' => 'Prueba positiva.',
+        ])->assertSessionHas('estado', 'Estudio guardado.');
+
+        $this->assertDatabaseHas('ecocardiografico_in', [
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 3001, 'numconsulta' => 1,
+            'diagnostico' => 'Cardiopatía isquémica', 'farmacologico' => 'S', 'medicamento' => 'Persantin',
+            'conclusion' => 'Prueba positiva.',
+        ]);
+
+        $this->conContexto($user, $medico, $especialidad)->post($url, [
+            'pestana' => MapaDelCardiologo::PESTANA_ETE,
+            'diag_ete' => 'Válvula mitral',
+            'indicacion' => 'Descartar trombo',
+            'sedacion' => 'Midazolam',
+            'conclusiones_ete' => 'Sin trombos.',
+        ])->assertSessionHas('estado', 'Estudio guardado.');
+
+        $this->assertDatabaseHas('ecocardiograma_ete', [
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 3001, 'numconsulta' => 1,
+            'indicacion' => 'Descartar trombo', 'conclusiones' => 'Sin trombos.',
+        ]);
+    }
+
+    public function test_una_opcion_que_no_es_del_catalogo_no_se_guarda(): void
+    {
+        [$user, $medico, $especialidad] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->conContexto($user, $medico, $especialidad)
+            ->post(route('clinica.consulta.cardiologia.guardar', $consulta->id), [
+                'pestana' => MapaDelCardiologo::PESTANA_ESTRES,
+                'farmacologico' => 'S',
+                'medicamento' => 'Aspirina',
+            ])->assertSessionHasErrors('medicamento');
     }
 
     public function test_guarda_el_eco_solo_lo_que_cambio_y_con_su_rastro(): void

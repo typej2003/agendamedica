@@ -19,10 +19,25 @@
                             @if ($campo['unidad'])<span class="texto-tenue small">({{ $campo['unidad'] }})</span>@endif
                         </label>
 
-                        @if ($campo['tipo'] === 'parrafo')
+                        @if ($campo['tipo'] === 'si_no')
+                            <input type="hidden" name="{{ $campo['clave'] }}" value="N">
+                            <div class="form-check mt-md-4">
+                                <input class="form-check-input" type="checkbox" value="S"
+                                       id="{{ $campo['id'] }}" name="{{ $campo['clave'] }}" @checked($campo['marcado'])>
+                                <label class="form-check-label" for="{{ $campo['id'] }}">{{ $campo['etiqueta'] }}</label>
+                            </div>
+                        @elseif ($campo['tipo'] === 'parrafo')
                             <textarea class="form-control @error($campo['clave']) is-invalid @enderror" rows="4"
                                       id="{{ $campo['id'] }}" name="{{ $campo['clave'] }}"
                                       @if ($campo['max']) maxlength="{{ $campo['max'] }}" @endif>{{ $campo['valor'] }}</textarea>
+                        @elseif ($campo['tipo'] === 'opcion')
+                            <select class="form-select @error($campo['clave']) is-invalid @enderror"
+                                    id="{{ $campo['id'] }}" name="{{ $campo['clave'] }}">
+                                <option value="">— Sin dato —</option>
+                                @foreach ($campo['opciones'] as $valor => $texto)
+                                    <option value="{{ $valor }}" @selected($campo['valor'] === (string) $valor)>{{ $texto }}</option>
+                                @endforeach
+                            </select>
                         @else
                             <input type="text" class="form-control @error($campo['clave']) is-invalid @enderror"
                                    id="{{ $campo['id'] }}" name="{{ $campo['clave'] }}" value="{{ $campo['valor'] }}"

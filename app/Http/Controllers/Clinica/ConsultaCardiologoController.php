@@ -48,9 +48,13 @@ class ConsultaCardiologoController extends Controller
         $nombres = [];
         foreach (MapaDelCardiologo::deLaPestana($pestana) as $campo) {
             $nombres[$campo['clave']] = mb_strtolower($campo['etiqueta']);
-            $reglas[$campo['clave']] = array_values(array_filter([
-                'nullable', 'string', isset($campo['max']) ? 'max:' . $campo['max'] : null,
-            ]));
+            $reglas[$campo['clave']] = match ($campo['tipo'] ?? 'texto') {
+                'si_no' => ['nullable', Rule::in(['S', 'N'])],
+                'opcion' => ['nullable', Rule::in(array_keys($campo['opciones']))],
+                default => array_values(array_filter([
+                    'nullable', 'string', isset($campo['max']) ? 'max:' . $campo['max'] : null,
+                ])),
+            };
         }
 
         $datos = $request->validate($reglas, [], $nombres);

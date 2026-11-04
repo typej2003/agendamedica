@@ -79,22 +79,26 @@ final class CardiologoVista
      * Los campos de la pestaña, listos para pintar: el valor guardado (o el `old()` si la validación falló), su id y el
      * ancho de la columna.
      *
-     * @return array<int,array{clave:string, etiqueta:string, id:string, tipo:string, valor:string, unidad:?string, max:?int, columna:string}>
+     * @return array<int,array{clave:string, etiqueta:string, id:string, tipo:string, valor:string, unidad:?string, max:?int, columna:string, opciones:array<string,string>, marcado:bool}>
      */
     public function campos(): array
     {
         $salida = [];
 
         foreach (MapaDelCardiologo::deLaPestana($this->pestana) as $campo) {
+            $valor = (string) old($campo['clave'], $this->valores[$campo['clave']] ?? '');
+
             $salida[] = [
                 'clave' => $campo['clave'],
                 'etiqueta' => $campo['etiqueta'],
                 'id' => 'cardio-' . $campo['clave'],
                 'tipo' => $campo['tipo'] ?? 'texto',
-                'valor' => (string) old($campo['clave'], $this->valores[$campo['clave']] ?? ''),
+                'valor' => $valor,
                 'unidad' => $campo['unidad'] ?? null,
                 'max' => $campo['max'] ?? null,
                 'columna' => ($campo['tipo'] ?? 'texto') === 'parrafo' ? 'col-12' : 'col-md-4',
+                'opciones' => $campo['opciones'] ?? [],
+                'marcado' => $valor === 'S',
             ];
         }
 

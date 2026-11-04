@@ -77,6 +77,11 @@ final class GuardarDatosDelCardiologo
     {
         $texto = TextoDeLaConsulta::limpio(is_array($valor) ? end($valor) : $valor);
 
-        return $texto === null ? null : mb_substr($texto, 0, $campo['max'] ?? 65535);
+        return match ($campo['tipo'] ?? 'texto') {
+            // Las casillas S/N del escritorio (`farmacologico`): una desmarcada viaja como `N`.
+            'si_no' => $texto === 'S' ? 'S' : 'N',
+            'opcion' => $texto !== null && isset($campo['opciones'][$texto]) ? $texto : null,
+            default => $texto === null ? null : mb_substr($texto, 0, $campo['max'] ?? 65535),
+        };
     }
 }
