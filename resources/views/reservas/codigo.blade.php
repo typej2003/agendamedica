@@ -87,6 +87,15 @@
                     @if (! empty($pendiente['motivo']))
                         <input type="hidden" name="motivo" value="{{ $pendiente['motivo'] }}">
                     @endif
+                    {{-- Quién reserva viaja en el reenvío: si no, un representante perdería su nombre y su
+                         documento al pedir otro código (el servidor lo exige). --}}
+                    <input type="hidden" name="reservado_por" value="{{ $pendiente['reservado_por'] ?? 'P' }}">
+                    @if (! empty($pendiente['representante_nombre']))
+                        <input type="hidden" name="representante_nombre" value="{{ $pendiente['representante_nombre'] }}">
+                    @endif
+                    @if (! empty($pendiente['representante_documento']))
+                        <input type="hidden" name="representante_documento" value="{{ $pendiente['representante_documento'] }}">
+                    @endif
 
                     <button type="submit" class="btn btn-link p-0">No me llegó: reenviar código</button>
                 </form>

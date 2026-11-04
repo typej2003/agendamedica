@@ -180,6 +180,7 @@ class VerificacionDeMedicosTest extends TestCase
         $this->actingAs($this->administrador());
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
+            ->set('decision', 'aprobar')
             ->set('carnet_verificado', true)
             ->call('aprobar')
             ->assertHasNoErrors();
@@ -418,6 +419,7 @@ class VerificacionDeMedicosTest extends TestCase
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
             ->assertSet('carnet_verificado', false)
+            ->set('decision', 'aprobar')
             ->call('aprobar')
             ->assertHasNoErrors();
 

@@ -38,9 +38,10 @@ class ReservaPublicaController extends Controller
             'telefono' => ['required', 'string', 'max:30'],
             'email'    => ['nullable', 'email', 'max:120'],
             'motivo'   => ['nullable', 'string', 'max:50'],
-            // ¿Quién reserva? (O-52). Si es el representante, sus datos son obligatorios: es a esa persona a
-            // la que se le manda el código y con la que se habla si hay que mover la cita.
-            'reservado_por' => ['nullable', 'in:P,R'],
+            // ¿Quién reserva? (O-52). Se pregunta siempre, sin opción marcada: si es el representante, sus
+            // datos son obligatorios, porque es a esa persona a la que se le manda el código y con la que se
+            // habla si hay que mover la cita.
+            'reservado_por' => ['required', 'in:P,R'],
             'representante_nombre' => ['nullable', 'string', 'max:120', 'required_if:reservado_por,R'],
             'representante_documento' => ['nullable', 'string', 'max:20', 'required_if:reservado_por,R'],
             'reenviar' => ['nullable', 'boolean'],
@@ -58,7 +59,7 @@ class ReservaPublicaController extends Controller
             'telefono' => $datos['telefono'],
             'email' => $datos['email'] ?? null,
             'motivo' => $datos['motivo'] ?? null,
-            'reservado_por' => $datos['reservado_por'] ?? 'P',
+            'reservado_por' => $datos['reservado_por'],
             'representante_nombre' => $datos['representante_nombre'] ?? null,
             'representante_documento' => $datos['representante_documento'] ?? null,
         ], $request->boolean('reenviar'));
@@ -177,6 +178,7 @@ class ReservaPublicaController extends Controller
             'apellidos.required' => 'Escribe tu apellido.',
             'telefono.required' => 'Escribe tu teléfono: te enviaremos el código ahí.',
             'email.email' => 'Revisa el correo: no tiene forma de correo.',
+            'reservado_por.required' => 'Indica si reservas para ti o para otra persona.',
             'reservado_por.in' => 'Indica si reservas para ti o para otra persona.',
             'representante_nombre.required_if' => 'Escribe tu nombre: reservas por otra persona.',
             'representante_documento.required_if' => 'Escribe tu documento: reservas por otra persona.',

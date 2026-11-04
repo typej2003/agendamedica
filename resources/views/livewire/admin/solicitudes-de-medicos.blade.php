@@ -150,10 +150,28 @@
                 <hr>
 
                 @if ($seleccionada->estaPendiente())
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <h3 class="h6">Aprobar</h3>
-                            <div class="mb-2">
+                    {{-- La decisión se pregunta **antes** y sin opción marcada (guía de UI, §11): aprobar y
+                         rechazar piden datos distintos, así que sólo se muestra la rama elegida y el botón
+                         de abajo cambia con ella. --}}
+                    <div class="mb-3">
+                        <span class="form-label d-block" id="decision-titulo">¿Qué haces con la solicitud?</span>
+                        <div class="d-flex flex-wrap gap-4" role="radiogroup" aria-labelledby="decision-titulo">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" id="decision-aprobar"
+                                       value="aprobar" wire:model.live="decision">
+                                <label class="form-check-label" for="decision-aprobar">Aprobar</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" id="decision-rechazar"
+                                       value="rechazar" wire:model.live="decision">
+                                <label class="form-check-label" for="decision-rechazar">Rechazar</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if ($decision === 'aprobar')
+                        <div class="row g-3">
+                            <div class="col-md-6">
                                 <label for="reg_medico" class="form-label">reg_medico</label>
                                 <input type="text" id="reg_medico" maxlength="100"
                                        class="form-control @error('reg_medico') is-invalid @enderror"
@@ -175,7 +193,7 @@
                                     <div class="form-text">Se crea una ficha nueva con este reg_medico.</div>
                                 @endif
                             </div>
-                            <div class="mb-3">
+                            <div class="col-md-6">
                                 <label for="specialty_id" class="form-label">Especialidad</label>
                                 <select id="specialty_id" class="form-select" wire:model="specialty_id">
                                     <option value="">Sin especialidad</option>
@@ -184,40 +202,40 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="carnet_verificado"
-                                       wire:model="carnet_verificado">
-                                <label class="form-check-label" for="carnet_verificado">
-                                    Revisé el carnet y lo doy por verificado
-                                </label>
-                                @if (! $seleccionada->carnet_ruta)
-                                    <div class="form-text text-warning-emphasis">
-                                        No adjuntó foto: su carnet quedará sin verificar.
-                                    </div>
-                                @endif
-                            </div>
-                            <button type="button" class="btn btn-success" wire:click="aprobar" wire:loading.attr="disabled">
-                                Aprobar y crear la cuenta
-                            </button>
                         </div>
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" id="carnet_verificado"
+                                   wire:model="carnet_verificado">
+                            <label class="form-check-label" for="carnet_verificado">
+                                Revisé el carnet y lo doy por verificado
+                            </label>
+                            @if (! $seleccionada->carnet_ruta)
+                                <div class="form-text text-warning-emphasis">
+                                    No adjuntó foto: su carnet quedará sin verificar.
+                                </div>
+                            @endif
+                        </div>
+                    @elseif ($decision === 'rechazar')
+                        <div class="mb-3">
+                            <label for="motivo" class="form-label">Motivo (le llega al médico por correo)</label>
+                            <textarea id="motivo" rows="4" maxlength="2000"
+                                      class="form-control @error('motivo') is-invalid @enderror"
+                                      wire:model="motivo"
+                                      placeholder="Por ejemplo: el número del MPPS no coincide con la cédula."></textarea>
+                            @error('motivo')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    @endif
 
-                        <div class="col-md-6">
-                            <h3 class="h6">Rechazar</h3>
-                            <div class="mb-3">
-                                <label for="motivo" class="form-label">Motivo (le llega al médico por correo)</label>
-                                <textarea id="motivo" rows="4" maxlength="2000"
-                                          class="form-control @error('motivo') is-invalid @enderror"
-                                          wire:model="motivo"
-                                          placeholder="Por ejemplo: el número del MPPS no coincide con la cédula."></textarea>
-                                @error('motivo')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <button type="button" class="btn btn-outline-danger" wire:click="rechazar" wire:loading.attr="disabled">
-                                Rechazar
-                            </button>
-                        </div>
-                    </div>
+                    @if ($decision === 'aprobar' || $decision === 'rechazar')
+                        <button type="button"
+                                class="btn {{ $decision === 'aprobar' ? 'btn-success' : 'btn-outline-danger' }}"
+                                wire:click="{{ $decision === 'aprobar' ? 'aprobar' : 'rechazar' }}"
+                                wire:loading.attr="disabled">
+                            {{ $decision === 'aprobar' ? 'Aprobar y crear la cuenta' : 'Rechazar solicitud' }}
+                        </button>
+                    @endif
 
                     @error('solicitud')
                         <div class="alert alert-warning mt-3 mb-0">{{ $message }}</div>

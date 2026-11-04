@@ -24,6 +24,14 @@ trait GestionaSolicitudes
     public $solMotivo = '';
     public $solCarnet = false;
 
+    /**
+     * La decisión se pregunta **antes** de mostrar los campos (guía de UI, §11): aprobar pide el
+     * reg_medico y rechazar pide el motivo, y no se pueden llenar los dos. Nace vacía.
+     *
+     * @var 'aprobar'|'rechazar'|''
+     */
+    public $solDecision = '';
+
     /** Clave temporal de la última aprobación: ['correo','clave','titulo']. */
     public $claveSolicitud = null;
 
@@ -37,6 +45,7 @@ trait GestionaSolicitudes
         $this->solSpecialty = (string) ($solicitud->specialty_id ?? '');
         $this->solMotivo = (string) $solicitud->motivo_rechazo;
         $this->solCarnet = false;
+        $this->solDecision = '';
     }
 
     public function cerrarSolicitud(): void
@@ -46,6 +55,13 @@ trait GestionaSolicitudes
         $this->solSpecialty = '';
         $this->solMotivo = '';
         $this->solCarnet = false;
+        $this->solDecision = '';
+        $this->resetErrorBag();
+    }
+
+    /** Al cambiar de decisión, los errores de la otra rama ya no vienen al caso. */
+    public function updatedSolDecision(): void
+    {
         $this->resetErrorBag();
     }
 
