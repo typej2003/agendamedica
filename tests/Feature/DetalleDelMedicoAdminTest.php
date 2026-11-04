@@ -122,7 +122,7 @@ class DetalleDelMedicoAdminTest extends TestCase
         $this->actingAs($this->usuario('Root'));
 
         Livewire::test(DetalleDelMedico::class, ['medico' => $this->medico])
-            ->assertDontSee('Ayúdanos a mejorar')
+            ->assertDontSee('Soporte y Sugerencias')
             ->assertDontSee('Solicitud de registro')
             ->call('irA', 'pagos')->assertSet('pestana', 'datos');
 
@@ -135,18 +135,40 @@ class DetalleDelMedicoAdminTest extends TestCase
         Comentario::create(['origen' => 'web', 'tipo' => Comentario::BUG, 'mensaje' => 'No me carga la agenda', 'estado' => Comentario::NUEVO, 'medico_id' => $this->medico->id]);
 
         Livewire::test(DetalleDelMedico::class, ['medico' => $this->medico])
-            ->assertSee('Ayúdanos a mejorar')
+            ->assertSee('Soporte y Sugerencias')
             ->call('irA', 'pagos')->assertSee('Plan del detalle')->assertSee(route('admin.pagos'))
             ->call('irA', 'comentarios')->assertSee('No me carga la agenda')->assertSee(route('admin.comentarios'));
     }
 
-    public function test_editar_abre_el_dialogo_de_edicion_de_medicos_con_este_medico(): void
+    public function test_editar_abre_el_formulario_dentro_del_detalle_sin_volver_a_la_lista(): void
     {
         $this->actingAs($this->usuario('Root'));
 
+        // El botón «Editar» ya no navega a Usuarios con `?editar=`: el formulario se abre en la ficha.
         $this->get(route('admin.cuentas.medico', $this->medico))
-            ->assertSee(route('admin.cuentas', ['editar' => $this->medico->id]), false);
+            ->assertOk()
+            ->assertDontSee(route('admin.cuentas', ['editar' => $this->medico->id]), false);
 
+        Livewire::test(DetalleDelMedico::class, ['medico' => $this->medico])
+            ->call('abrirEdicion')
+            ->assertSet('pestana', 'datos')
+            ->assertSet('editando', true)
+            ->assertSet('name', 'Lucía')
+            ->assertSet('lastname', 'Detalle')
+            ->assertSet('license_number', 'MPPS-1234')
+            ->assertSee('Editar los datos del médico');
+
+        // Y se puede guardar ahí mismo.
+        Livewire::test(DetalleDelMedico::class, ['medico' => $this->medico])
+            ->call('abrirEdicion')
+            ->set('phone', '04149876543')
+            ->call('guardarEdicion')
+            ->assertSet('editando', false)
+            ->assertHasNoErrors();
+
+        $this->assertSame('04149876543', $this->medico->fresh()->phone);
+
+        // El diálogo de Usuarios sigue existiendo para quien entre por esa ruta.
         $this->get(route('admin.cuentas', ['editar' => $this->medico->id]))
             ->assertOk()
             ->assertSee('MPPS-1234');

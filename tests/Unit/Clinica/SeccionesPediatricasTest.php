@@ -35,25 +35,26 @@ class SeccionesPediatricasTest extends TestCase
         return SeccionesDeLaConsulta::todas('pediatria', $seccionesPostgrados);
     }
 
-    public function test_un_pediatra_general_tiene_los_catorce_items_de_su_arbol(): void
+    public function test_un_pediatra_general_tiene_los_trece_items_de_su_arbol(): void
     {
         $items = $this->items();
 
         $this->assertSame([
             'Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física',
             'Exámenes/Estudios', 'Inmunizaciones', 'Diagnóstico', 'Alimentación', 'Evolución',
-            'Récipes', 'Solicitudes', 'Datos del paciente', 'Representante', 'Pre-factura',
+            'Récipes', 'Solicitudes', 'Datos del paciente', 'Pre-factura',
         ], array_column($items, 'titulo'));
 
-        // La numeración es la del legado: el 5 queda libre para el panel de nefrología y el 15 es la pre-factura.
-        $this->assertSame([1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], array_column($items, 'numero'));
+        // La numeración es la del legado: el 5 queda libre para el panel de nefrología y el 14 es la pre-factura
+        // (2026-11-03: sin «Representante», cuyos datos viven en «Datos del paciente»).
+        $this->assertSame([1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14], array_column($items, 'numero'));
 
         // Sin el estudio ecográfico ni el control de embarazo.
         $this->assertNotContains('Estudio ecográfico', array_column($items, 'titulo'));
         $this->assertNotContains('Control de embarazo', array_column($items, 'titulo'));
 
-        // Los catorce con pantalla desde F9 (la pre-factura).
-        $this->assertSame(14, SeccionesDeLaConsulta::disponibles('pediatria'));
+        // Los trece con pantalla desde F9 (la pre-factura).
+        $this->assertSame(13, SeccionesDeLaConsulta::disponibles('pediatria'));
     }
 
     public function test_el_panel_de_nefrologia_es_el_item_cinco_y_solo_con_ese_postgrado(): void
@@ -66,7 +67,7 @@ class SeccionesPediatricasTest extends TestCase
         $items = $this->items(['indicadores']);
         $titulos = array_column($items, 'titulo');
 
-        $this->assertCount(15, $items);
+        $this->assertCount(14, $items);
         $this->assertSame('Indicadores incidentes', $titulos[4]);
         $this->assertSame(5, $items[4]['numero']);
         // Va después de la evaluación física y antes de exámenes/estudios, como en el escritorio.
@@ -84,7 +85,7 @@ class SeccionesPediatricasTest extends TestCase
         // las ignora en vez de inventar un ítem.
         $items = $this->items(['neumologia', 'no-existe']);
 
-        $this->assertCount(14, $items);
+        $this->assertCount(13, $items);
         $this->assertNotContains('Neumología', array_column($items, 'titulo'));
     }
 
@@ -92,7 +93,7 @@ class SeccionesPediatricasTest extends TestCase
     {
         $items = SeccionesDeLaConsulta::submenu(42, 'inmunizaciones', 'pediatria');
 
-        $this->assertCount(14, $items);
+        $this->assertCount(13, $items);
         $this->assertSame(route('clinica.consulta', ['consulta' => 42, 'seccion' => 'inmunizaciones']), $items[5]['url']);
 
         $activos = array_values(array_filter($items, fn (array $item) => $item['activo']));
@@ -100,7 +101,7 @@ class SeccionesPediatricasTest extends TestCase
         $this->assertSame('Inmunizaciones', $activos[0]['texto']);
 
         // La pre-factura (F9) enlaza a su sección.
-        $this->assertSame(route('clinica.consulta', ['consulta' => 42, 'seccion' => 'prefactura']), $items[13]['url']);
-        $this->assertFalse($items[13]['deshabilitado']);
+        $this->assertSame(route('clinica.consulta', ['consulta' => 42, 'seccion' => 'prefactura']), $items[12]['url']);
+        $this->assertFalse($items[12]['deshabilitado']);
     }
 }

@@ -25,12 +25,38 @@ final class SeccionDeDatosPersonalesVista
         private ?string $numhistoria,
         private array $faltantes,
         private int $consultaId,
+        private bool $pediatria = false,
+        private ?\App\Clinica\Pacientes\Vistas\RepresentanteDePacienteVista $representante = null,
+        private ?\App\Clinica\Pacientes\Vistas\FamiliaDePacienteVista $familia = null,
     ) {
     }
 
     public function formulario(): FormularioDePacienteVista
     {
         return $this->formulario;
+    }
+
+    /** ¿La consulta es de pediatría? Decide si se muestran el representante y la familia. */
+    public function esPediatria(): bool
+    {
+        return $this->pediatria;
+    }
+
+    /**
+     * El bloque del representante (WEB-3.4) para mostrarlo dentro de la consulta, con su diálogo de
+     * edición. `null` fuera de pediatría.
+     */
+    public function representante(): ?\App\Clinica\Pacientes\Vistas\RepresentanteDePacienteVista
+    {
+        return $this->representante;
+    }
+
+    /**
+     * La familia del niño (WEB-7.4.2a), en la misma sección y con su diálogo. `null` fuera de pediatría.
+     */
+    public function familia(): ?\App\Clinica\Pacientes\Vistas\FamiliaDePacienteVista
+    {
+        return $this->familia;
     }
 
     /** La historia, sólo lectura (se asigna al atender, no se edita). */

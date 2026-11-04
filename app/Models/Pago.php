@@ -54,6 +54,9 @@ class Pago extends Model
     public const LIQUIDACION_PENDIENTE = 'pendiente';
     public const LIQUIDACION_LIQUIDADO = 'liquidado';
 
+    /** La pasarela de un cobro por pago móvil o transferencia (la cuenta la elige el médico). */
+    public const PASARELA_PAGO_MOVIL = 'pago_movil';
+
     protected $table = 'pagos';
 
     protected $fillable = [
@@ -64,6 +67,7 @@ class Pago extends Model
         'comision_total_ves_e2', 'neto_ves_e2',
         'estado', 'referencia_externa', 'operation_secret', 'datos_pagador', 'respuesta', 'otp_enviado_el', 'otp_intentos',
         'pagado_el', 'expira_el', 'disponible_el', 'estado_liquidacion', 'liquidacion_id', 'creado_por',
+        'monto_confirmado_e2', 'confirmado_por',
     ];
 
     protected $casts = [
@@ -84,6 +88,8 @@ class Pago extends Model
         'respuesta' => 'array',
         'otp_intentos' => 'integer',
         'otp_enviado_el' => 'datetime',
+        'monto_confirmado_e2' => 'integer',
+        'confirmado_por' => 'integer',
         'pagado_el' => 'datetime',
         'expira_el' => 'datetime',
         'disponible_el' => 'date',
@@ -130,6 +136,12 @@ class Pago extends Model
         return $this->hasMany(PagoEvento::class, 'pago_id')->orderBy('id');
     }
 
+    /** Las transacciones bancarias declaradas para un pago móvil o una transferencia. */
+    public function transacciones(): HasMany
+    {
+        return $this->hasMany(PagoTransaccion::class, 'pago_id')->orderBy('id');
+    }
+
     public function liquidacion(): BelongsTo
     {
         return $this->belongsTo(Liquidacion::class, 'liquidacion_id');
@@ -163,6 +175,30 @@ class Pago extends Model
     public function esDeCita(): bool
     {
         return $this->pagable_tipo === self::PAGABLE_CITA;
+    }
+
+    /** ¿Se cobra por pago móvil o transferencia (no por el débito con OTP de SyPago)? */
+    public function esDePagoMovil(): bool
+    {
+        return $this->metodoPago?->pasarela === self::PASARELA_PAGO_MOVIL;
+    }
+
+    /** Lo que el banco (o el consultorio) reconoce como cobrado, en centavos de `moneda`. */
+    public function montoConfirmado(): int
+    {
+        if ($this->monto_confirmado_e2 !== null) {
+            return (int) $this->monto_confirmado_e2;
+        }
+
+        return (int) $this->transacciones()
+            ->where('estado', PagoTransaccion::APROBADA)
+            ->sum('monto_e2');
+    }
+
+    /** Cuánto falta para cubrir el monto esperado, en centavos de `moneda`. */
+    public function saldoE2(): int
+    {
+        return max(0, (int) $this->monto_e2 - $this->montoConfirmado());
     }
 
     /** El plan que se está pagando, si es un pago de plan. */

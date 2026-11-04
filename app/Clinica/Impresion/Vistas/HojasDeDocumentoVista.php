@@ -33,8 +33,8 @@ final class HojasDeDocumentoVista
      * @param  DistribuidorDeDocumento|null  $distribuidor  el reparto de la media hoja; `null` usa el de siempre (el que inyecta
      *                                                      el contenedor)
      * @param  bool  $pediatria  si el contexto de impresión es pediatría (lo decide el controlador con
-     *                           `AlcanceDeLaEspecialidad`, no la edad): la cabecera lleva además sexo, representante, historia y
-     *                           la edad compacta (2026-10-20)
+     *                           `AlcanceDeLaEspecialidad`, no la edad): la cabecera lleva además sexo, representante, historia,
+     *                           la edad compacta (2026-10-20) y las medidas de la consulta (2026-11-03)
      */
     public function __construct(
         private Membrete $membrete,
@@ -67,7 +67,7 @@ final class HojasDeDocumentoVista
                 ? $this->distribuidor
                 : new DistribuidorDeDocumento(ModoDeLaHoja::medidas($modo));
 
-            $reparto = $distribuidor->distribuir($this->membrete, $documento);
+            $reparto = $distribuidor->distribuir($this->membrete, $documento, $this->pediatria);
 
             foreach (array_chunk($reparto['mitades'], ModoDeLaHoja::porPagina($modo)) as $par) {
                 $hojas[] = [
@@ -101,6 +101,9 @@ final class HojasDeDocumentoVista
             'clase' => 'documento',
             'primera' => $mitad['primera'],
             'titulo' => $mitad['primera'] ? $documento->titulo : $documento->titulo . ' (continuación)',
+            // La cabecera de pediatría (2026-11-03): el paciente con la fecha, la edad con el sexo y el representante,
+            // las medidas y la historia, sin la cédula. Fuera de pediatría la vista pinta la de siempre.
+            'pediatria' => $this->pediatria,
             'paciente' => $persona['nombre'],
             'cedula' => $persona['cedula'] ?? '',
             'edad' => $this->edad($persona['edad'] ?? null, $this->pediatria ? ($persona['edadCompacta'] ?? null) : null),
@@ -109,6 +112,9 @@ final class HojasDeDocumentoVista
             'sexo' => $this->pediatria ? ($persona['sexo'] ?? null) : null,
             'representante' => $this->pediatria ? ($persona['representante'] ?? null) : null,
             'historia' => $this->pediatria ? ($persona['historia'] ?? null) : null,
+            // Las medidas de la consulta (2026-11-03): en pediatría las lleva **todo documento**, debajo de la cabecera
+            // del escritorio; fuera de pediatría la lista va vacía y la línea no sale.
+            'medidas' => $this->pediatria ? ($persona['medidas'] ?? []) : [],
             'fecha' => FechaClinica::formato($documento->fecha),
             // El destinatario del resumen médico (WEB-5.3c, `informe.para`): sale en la cabecera, en una
             // caja con borde. En los demás documentos va en el cuerpo y esto es `null`.

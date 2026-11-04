@@ -87,6 +87,11 @@ class Kernel extends HttpKernel
         // Portal del paciente: no reserva ni reprograma si está bloqueado o si la validación de su teléfono venció.
         'paciente.habilitado' => \App\Http\Middleware\ExigirPacienteHabilitado::class,
 
+        // Verificación del médico (2026-11-03): con la exigencia encendida, el carnet sin verificar corta el
+        // acceso a la clínica y al app. En el web va en el grupo de `/clinica` (no en `web`: un médico que
+        // además es paciente o administrador tiene que poder entrar a su otra área) y en el API autenticado.
+        'verificacion.medico' => \App\Http\Middleware\ExigirVerificacionDelMedico::class,
+
         // Middlewares de Spatie/laravel-permission
         'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,

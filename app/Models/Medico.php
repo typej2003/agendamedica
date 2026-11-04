@@ -231,4 +231,32 @@ class Medico extends Model
                     ->withPivot('numhistoria') // 'medico_id' y 'paciente_id' se incluyen automáticamente
                     ->withTimestamps();
     }
+
+    /**
+     * Las **verificaciones del perfil** (2026-11-03): carnet, correo y teléfono, una fila por tipo. Se
+     * escriben con `App\Verificacion\VerificacionesDelMedico`; acá sólo se leen.
+     */
+    public function verificaciones(): HasMany
+    {
+        return $this->hasMany(VerificacionDeMedico::class, 'medico_id');
+    }
+
+    /**
+     * El estado de una verificación; `sin_verificar` si la ficha todavía no tiene fila para ese tipo (los
+     * médicos del escritorio, por ejemplo). No escribe nada.
+     */
+    public function estadoDeVerificacion(string $tipo): string
+    {
+        $fila = $this->relationLoaded('verificaciones')
+            ? $this->verificaciones->firstWhere('tipo', $tipo)
+            : $this->verificaciones()->where('tipo', $tipo)->first();
+
+        return $fila->estado ?? VerificacionDeMedico::SIN_VERIFICAR;
+    }
+
+    /** ¿El carnet del médico está verificado? Es lo único que mira el corte de acceso. */
+    public function carnetVerificado(): bool
+    {
+        return $this->estadoDeVerificacion(VerificacionDeMedico::CARNET) === VerificacionDeMedico::VERIFICADO;
+    }
 }

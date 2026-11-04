@@ -10,12 +10,22 @@
      ahí el médico ya no tiene nada que marcar y lo único que puede querer es la consulta siguiente. Por eso
      el botón existe siempre en el HTML pero **oculto**, y `shell.js` lo muestra únicamente con
      `data-editar="1"` (revisión de Alexander, 2026-10-17). Sin JavaScript quedan los dos botones del caso
-     normal, que es lo correcto. Los dos POST van a la misma ruta: lo único que cambia es qué consulta se abre. --}}
-<x-ui.dialogo id="dialogo-atender" titulo="Abrir la consulta">
-    <form method="POST" id="atender-form">
+     normal, que es lo correcto. Los dos POST van a la misma ruta: lo único que cambia es qué consulta se abre.
+
+     **«¿Atender ahora?» al agendar** (2026-11-03): cuando el médico acaba de crear una cita de hoy, el
+     controlador deja `ofrecer_atender_cita` en el flash con la URL de la cita y el paciente. El diálogo
+     arranca con esos datos y `data-abrir-al-cargar="1"`, y `shell.js` lo abre solo: el médico que registra
+     a un paciente suele tenerlo delante. «Ahora no» lo cierra y lo deja en la agenda. --}}
+@php
+    $ofrecerAtender = session('ofrecer_atender_cita');
+@endphp
+
+<x-ui.dialogo id="dialogo-atender" titulo="{{ $ofrecerAtender ? '¿Atender ahora?' : 'Abrir la consulta' }}"
+              data-abrir-al-cargar="{{ $ofrecerAtender ? '1' : '0' }}">
+    <form method="POST" id="atender-form" action="{{ $ofrecerAtender['url'] ?? '' }}">
         @csrf
         <div class="dialogo-cuerpo">
-            <p class="mb-2">Paciente: <strong id="atender-paciente"></strong></p>
+            <p class="mb-2">Paciente: <strong id="atender-paciente">{{ $ofrecerAtender['paciente'] ?? '' }}</strong></p>
 
             <p class="mb-2" id="atender-aviso" hidden></p>
 
@@ -26,13 +36,13 @@
         </div>
 
         <div class="dialogo-pie">
-            <button type="button" class="btn btn-outline-secondary" data-cerrar-dialogo>Cancelar</button>
+            <button type="button" class="btn btn-outline-secondary" data-cerrar-dialogo>{{ $ofrecerAtender ? 'Ahora no' : 'Cancelar' }}</button>
             {{-- Oculto por defecto: sin JS el formulario no lo manda (hidden). `shell.js` lo muestra con la
                  cita ya atendida. --}}
             <button class="btn btn-outline-primary" name="nueva" value="1" id="atender-nueva" hidden>
                 Consulta nueva
             </button>
-            <button class="btn btn-primary" id="atender-abrir">Atender y abrir la consulta</button>
+            <button class="btn btn-primary" id="atender-abrir">{{ $ofrecerAtender ? 'Atender ahora' : 'Atender y abrir la consulta' }}</button>
         </div>
     </form>
 </x-ui.dialogo>

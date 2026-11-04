@@ -69,8 +69,8 @@
 
 /* ------------------------------------------------------------------------------------ Datos del paciente
    Texto a 9 pt; la etiqueta, en negrita a 8. `C.I.` / `EDAD` / `FECHA` van en una línea; la dirección sólo en la mitad
-   "Rp.". 4 mm de aire debajo. En pediatría se suma una línea con `SEXO` / `Rep.` / `Historia` —en las dos mitades— y, en
-   la de indicaciones, la de las medidas (2026-10-20). */
+   "Rp.". 4 mm de aire debajo. En pediatría se suma una línea con `SEXO` / `Rep.` / `Historia` —en las dos mitades— y la
+   de las medidas: en la mitad de indicaciones del récipe (2026-10-20) y en **todo documento** de la consulta (2026-11-03). */
 
 .recipe-datos { flex: none; margin-bottom: 4mm; font-size: 9pt; line-height: 1.25; }
 .recipe-dato { margin: 0; }
@@ -86,6 +86,13 @@
 .recipe-dato-linea { margin: 1mm 0 0; }
 .recipe-dato-linea .recipe-dato { margin-right: 4mm; }
 .recipe-dato-linea .recipe-dato:last-child { margin-right: 0; }
+
+/* La cabecera de pediatría (2026-11-03): el paciente y la fecha en la misma línea, sin `C.I.`, y la historia sola y
+   alineada a la derecha. Las medidas que no son parte de un `.recipe-dato-linea` no tienen flex tampoco, por la misma
+   razón que la línea extra. */
+.recipe-datos-pediatricos .recipe-datos-fila-paciente { margin-top: 0; }
+.recipe-dato-fecha { white-space: nowrap; }
+.recipe-dato-historia { text-align: right; }
 
 /* ------------------------------------------------------------------------------------------------ Título
    "Rp." / "Indicaciones:" a 14 pt en negrita itálica; a la derecha, "Hoja 1 de 2" si el récipe sigue. */

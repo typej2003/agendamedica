@@ -50,6 +50,8 @@ final class FormularioDeCitaVista
         private bool $ofreceRepresentante = false,
         /** @var Collection<int,object>|null  el catálogo de parentescos (`codigo`, `nombre`) para el selector del representante */
         private ?Collection $parentescos = null,
+        /** @var Collection<int,object>|null  el catálogo de seguros/empresas del consultorio (`codesegemp`, `nombre`) */
+        private ?Collection $empresas = null,
     ) {
     }
 
@@ -78,6 +80,98 @@ final class FormularioDeCitaVista
     public function ofreceRepresentante(): bool
     {
         return $this->ofreceRepresentante;
+    }
+
+    /**
+     * **¿Es pediatría?** En pediatría el alta es la de PediaReport: un solo nombre (el completo), fecha de
+     * nacimiento obligatoria y los datos de la familia/representante. Fuera de pediatría el representante es
+     * un desplegable **opcional** y el nombre y el apellido siguen siendo dos campos.
+     */
+    public function esPediatria(): bool
+    {
+        return $this->ofreceRepresentante;
+    }
+
+    /** ¿El apellido del paciente nuevo es obligatorio? Fuera de pediatría sí; en pediatría el nombre es el completo. */
+    public function apellidoObligatorio(): bool
+    {
+        return ! $this->esPediatria();
+    }
+
+    /** ¿La fecha de nacimiento del paciente nuevo es obligatoria? En pediatría sí (es el dato que ubica al niño). */
+    public function nacimientoObligatorio(): bool
+    {
+        return $this->esPediatria();
+    }
+
+    /** La fecha de ingreso con la que abre el alta: hoy, el del consultorio (no el del servidor). */
+    public function fechaDeIngreso(): string
+    {
+        return (string) $this->valor('nuevo_fingreso', \App\Clinica\FechaDelConsultorio::hoyComoTexto());
+    }
+
+    /**
+     * Los grupos sanguíneos del legado (`values` del DataWindow de PediaReport).
+     *
+     * @return array<int,string>
+     */
+    public function gruposSanguineos(): array
+    {
+        return ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'];
+    }
+
+    /**
+     * Los grupos etarios del escritorio (`paciente_chamo.escolaridad`).
+     *
+     * @return array<int,string>
+     */
+    public function gruposEtarios(): array
+    {
+        return ['Recién Nacido', 'Lactante Menor', 'Lactante Mayor', 'Pre-Escolar', 'Escolar', 'Adolescente'];
+    }
+
+    /**
+     * Las situaciones de pareja del escritorio (`familia_bebe.situacion_pareja`): el código es el que se
+     * guarda y el texto el que se lee.
+     *
+     * @return array<string,string>
+     */
+    public function situacionesDePareja(): array
+    {
+        return ['E' => 'Estable', 'S' => 'Separados', 'V' => 'Viuda(o)', 'D' => 'Soltera(o)'];
+    }
+
+    /**
+     * El tipo de atención del escritorio: la vacuna o la consulta (`paciente_chamo.pediatrico`/`vacunas`).
+     *
+     * @return array<string,string>
+     */
+    public function tiposDeAsistencia(): array
+    {
+        return ['C' => 'Consulta', 'V' => 'Vacuna'];
+    }
+
+    /**
+     * Las empresas/seguros del consultorio para el campo «Empresa» del representante (el `procedencia` de
+     * `familia_bebe` en PediaReport es el catálogo `seg_emp`).
+     *
+     * @return array<int,array{valor:string, texto:string, elegido:bool}>
+     */
+    public function empresas(): array
+    {
+        $elegido = (string) $this->valor('representante_empresa', '');
+
+        $opciones = [['valor' => '', 'texto' => '— Sin dato —', 'elegido' => $elegido === '']];
+
+        foreach ($this->empresas ?? [] as $empresa) {
+            $opciones[] = [
+                'valor' => (string) $empresa->codesegemp,
+                'texto' => trim((string) $empresa->nombre),
+                'elegido' => (string) $empresa->codesegemp === $elegido,
+            ];
+        }
+
+        return $opciones;
     }
 
     /**
@@ -311,10 +405,16 @@ final class FormularioDeCitaVista
         return $this->paciente['id'] ?? $this->valor('paciente_id');
     }
 
-    /** El alta de un paciente nuevo se muestra abierta si ya se empezó a escribir. */
+    /** El alta de un paciente nuevo se muestra abierta si ya se empezó a escribir (o si falló la validación). */
     public function altaAbierta(): bool
     {
-        return (bool) ($this->valor('nuevo_nombres') ?: $this->valor('nuevo_cedula'));
+        foreach (['nuevo_nombres', 'nuevo_cedula', 'nuevo_fnacimiento', 'nuevo_telefono', 'representante_nombre', 'representante_cedula', 'representante_telefono'] as $campo) {
+            if ((bool) $this->valor($campo)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // --------------------------------------------------------------------------------------- Paso 3

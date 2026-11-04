@@ -65,17 +65,25 @@ final class PacienteImpreso
     }
 
     /**
-     * La línea que agrega la cabecera de pediatría, como texto y con sus rótulos: «SEXO: F   Rep.: ELDRIS MENDOZA
-     *   Historia: 00025», sin los datos que no hay. La usan la hoja (para saber cuánto alto ocupa: `MedidasDeLaMitad`)
-     * y la vista, que la pinta con los rótulos en negrita.
+     * Las **líneas** que agrega la cabecera de pediatría, en el orden del escritorio (2026-11-03, captura del récipe
+     * de la unidad de pediatría):
      *
-     * `null` si no hay ninguno de los tres (una cabecera sin nada que agregar).
+     *  1. «EDAD: 21A 6M 5D   SEXO: M   Rep.: ANGELA PARRA» — la edad va acá porque en la hoja de pediatría la fecha
+     *     sube a la línea del paciente y la edad ya no tiene la suya.
+     *  2. «Historia: 00023» — sola y alineada a la derecha, debajo de las medidas.
+     *
+     * Cada dato con su rótulo y el que no está no se imprime (no queda un «Rep.:» colgando). `[]` si no hay ninguno.
+     * La usan la hoja, para saber cuánto alto ocupa (`MedidasDeLaMitad`), y la vista, que la pinta con los rótulos en
+     * negrita.
+     *
+     * @return array<int,string>
      */
-    public static function lineaPediatrica(array $persona): ?string
+    public static function lineasPediatricas(array $persona): array
     {
+        $lineas = [];
         $partes = [];
 
-        foreach (['SEXO' => $persona['sexo'] ?? null, 'Rep.' => $persona['representante'] ?? null, 'Historia' => $persona['historia'] ?? null] as $rotulo => $valor) {
+        foreach (['EDAD' => $persona['edadCompacta'] ?? null, 'SEXO' => $persona['sexo'] ?? null, 'Rep.' => $persona['representante'] ?? null] as $rotulo => $valor) {
             $texto = CamposDePaciente::texto($valor);
 
             if ($texto !== null) {
@@ -85,7 +93,17 @@ final class PacienteImpreso
 
         // Tres espacios entre dato y dato, para que el texto se lea: la separación fina la pone el CSS
         // (`.recipe-dato-linea`) y la descuenta `MedidasDeLaMitad` al medir el alto.
-        return $partes === [] ? null : implode('   ', $partes);
+        if ($partes !== []) {
+            $lineas[] = implode('   ', $partes);
+        }
+
+        $historia = CamposDePaciente::texto($persona['historia'] ?? null);
+
+        if ($historia !== null) {
+            $lineas[] = 'Historia: ' . $historia;
+        }
+
+        return $lineas;
     }
 
     /** `Nombres Apellidos`, como lo arman los documentos del legado (`nombres + ' ' + apellidos`). */

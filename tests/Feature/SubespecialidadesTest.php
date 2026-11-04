@@ -230,7 +230,7 @@ class SubespecialidadesTest extends TestCase
 
         foreach (['Motivos de consulta', 'Enfermedad actual', 'Antecedentes', 'Evaluación física',
             'Exámenes/Estudios', 'Inmunizaciones', 'Diagnóstico', 'Alimentación', 'Evolución', 'Récipes',
-            'Solicitudes', 'Datos del paciente', 'Representante'] as $item) {
+            'Solicitudes', 'Datos del paciente'] as $item) {
             $this->assertStringContainsString($item, $html, "Falta «{$item}» en el menú de pediatría.");
         }
 
@@ -274,9 +274,11 @@ class SubespecialidadesTest extends TestCase
             ->assertOk()
             ->assertSee('id="consulta-alimentacion"', false);
 
-        // Representante → la ficha del paciente, donde se edita.
+        // «Representante» dejó de ser una sección (2026-11-03): sus datos se ven en «Datos del paciente», y pedir
+        // la sección vieja cae en el estado vacío del shell, como cualquier sección que el catálogo no conoce.
         $pediatra->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'representante']))
-            ->assertRedirect(route('clinica.pacientes.ver', $pacienteId));
+            ->assertOk()
+            ->assertSee('Elige una sección en el menú');
     }
 
     public function test_ginecologia_no_redirige_esas_secciones_porque_no_las_tiene(): void

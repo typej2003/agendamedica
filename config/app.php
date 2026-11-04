@@ -17,24 +17,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | VersiÃƒÂ³n de la aplicaciÃƒÂ³n
+    | Versión de la aplicación
     |--------------------------------------------------------------------------
     |
-    | Se muestra en el pie del menÃƒÂº lateral. En `main` (producciÃƒÂ³n) es X.Y.Z; en
-    | `desarrollo` (QA) es la de producciÃƒÂ³n mÃƒÂ¡s +N. Reglas en AGENTS.md.
+    | Se muestra en el pie del menú lateral. En `main` (producción) es X.Y.Z; en
+    | `desarrollo` (QA) es la de producción más +N. Reglas en AGENTS.md.
     |
     */
 
-    'version' => '0.18.1',
+    'version' => '0.18.1+4',
 
     /*
     |--------------------------------------------------------------------------
     | Correo de contacto
     |--------------------------------------------------------------------------
     |
-    | Es la direcciÃƒÂ³n que se publica en la portada (pie, bloque Ã‚Â«ContactoÃ‚Â»). NO es el
-    | remitente de los correos automÃƒÂ¡ticos: ese sale de `mail.from.address` y es
-    | `no-reply@doctorisimo.app`. Este tiene que ser un buzÃƒÂ³n real o un alias del
+    | Es la dirección que se publica en la portada (pie, bloque «Contacto»). NO es el
+    | remitente de los correos automáticos: ese sale de `mail.from.address` y es
+    | `no-reply@doctorisimo.app`. Este tiene que ser un buzón real o un alias del
     | dominio, porque es el que usa quien escribe desde el landing; si no existe,
     | el enlace rebota.
     |
@@ -44,22 +44,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Clave estÃƒÂ¡tica de sincronizaciÃƒÂ³n del escritorio (PowerBuilder)
+    | Clave estática de sincronización del escritorio (PowerBuilder)
     |--------------------------------------------------------------------------
     |
     | La usan SOLO los endpoints de subida del legado (`/api/sync/upload-batch`,
     | `/api/pacientes/sincronizar`, `/api/consultas/sincronizar`, `/api/cola/sincronizar`)
-    | vÃƒÂ­a el header `X-API-KEY`, a travÃƒÂ©s de App\Services\SyncAuthService.
+    | vía el header `X-API-KEY`, a través de App\Services\SyncAuthService.
     |
     | El valor por defecto `MiClaveSecreta123!` estaba HARDCODEADO en el `.pbl` del
-    | escritorio: cualquiera con los `.pbl` podÃƒÂ­a escribir en el API. EstÃƒÂ¡ acÃƒÂ¡ para no
+    | escritorio: cualquiera con los `.pbl` podía escribir en el API. Está acá para no
     | romper las instalaciones existentes mientras se migra a credenciales por equipo
     | (`php artisan sync:credencial`), pero hay que rotarla:
     |
     |     php artisan sync:clave-estatica --rotar
     |
     | IMPORTANTE: dejar esto en `env(...)` sin default obliga a definirlo en el `.env`.
-    | Se mantiene el default a propÃƒÂ³sito, para que un despliegue sin la variable no
+    | Se mantiene el default a propósito, para que un despliegue sin la variable no
     | deje el escritorio sin sincronizar de golpe.
     |
     */
@@ -131,9 +131,9 @@ return [
     |
     */
 
-    // **En espaÃƒÂ±ol** (O-15): la app es de un consultorio venezolano y los mensajes de validaciÃƒÂ³n son para el
-    // mÃƒÂ©dico. Los textos viven en `lang/es/validation.php`; el fallback es el mismo idioma para que un mensaje
-    // que falte no se escape en inglÃƒÂ©s.
+    // **En español** (O-15): la app es de un consultorio venezolano y los mensajes de validación son para el
+    // médico. Los textos viven en `lang/es/validation.php`; el fallback es el mismo idioma para que un mensaje
+    // que falte no se escape en inglés.
     'locale' => 'es',
 
     /*

@@ -130,58 +130,7 @@
          guarda con el número de historia y no es una lista. Por eso, sin historia, el bloque no ofrece
          el formulario: dice el motivo y manda a asignarla (WEB-3.3), que es la acción de arriba. --}}
     @if ($vm->esMenorDeEdad())
-    <x-ui.tarjeta id="ficha-representante" titulo="Representante" icono="bi-person-hearts" class="mb-3">
-        <x-slot name="acciones">
-            @if ($rep->puedeEditar())
-                <button type="button" class="btn btn-outline-primary" data-dialogo="dialogo-representante">
-                    <i class="bi bi-pencil" aria-hidden="true"></i> {{ $rep->botonEditar() }}
-                </button>
-            @endif
-        </x-slot>
-
-        @if ($rep->cargado())
-            <div class="representante-datos">
-                <div class="representante-cabeza">
-                    <span class="representante-nombre">{{ $rep->nombre() ?? 'Representante sin nombre' }}</span>
-                    @if ($rep->parentesco())
-                        <x-ui.estado tono="neutro" icono="bi-people">{{ $rep->parentesco() }}</x-ui.estado>
-                    @endif
-                </div>
-                <dl class="datos-rejilla">
-                    <x-ui.dato etiqueta="Cédula" :valor="$rep->cedula()" />
-                    <x-ui.dato etiqueta="Teléfono" :valor="$rep->telefono()" />
-                    <x-ui.dato etiqueta="Correo" :valor="$rep->correo()" />
-                    <x-ui.dato etiqueta="Dirección" :valor="$rep->direccion()" />
-                </dl>
-
-                {{-- Un representante puede tener varios hijos (2026-10-19): los otros pacientes del consultorio que
-                     comparten su cédula. La lista la resuelve el controlador con `RepresentantePorCedula`; si no hay
-                     ninguno, no se pinta nada. --}}
-                @if ($rep->hayOtrosHijos())
-                    <h3 class="h6 mt-3">También es representante de:</h3>
-                    <ul class="list-unstyled mb-0">
-                        @foreach ($rep->otrosHijos() as $otroHijo)
-                            <li>
-                                @if ($otroHijo['url'])
-                                    <a href="{{ $otroHijo['url'] }}">{{ $otroHijo['nombre'] }}</a>
-                                @else
-                                    {{ $otroHijo['nombre'] }}
-                                @endif
-                                @if ($otroHijo['historia'])
-                                    <span class="texto-tenue small">· H. {{ $otroHijo['historia'] }}</span>
-                                @endif
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
-            </div>
-        @else
-            @php $sinRepresentante = $rep->vacio(); @endphp
-            <x-ui.vacio icono="bi-person-hearts" :titulo="$sinRepresentante['titulo']">
-                {{ $sinRepresentante['texto'] }}
-            </x-ui.vacio>
-        @endif
-    </x-ui.tarjeta>
+        @include('clinica.pacientes._representante', ['rep' => $rep])
     @endif
 
     @include('clinica.pacientes._familia', ['familia' => $familia])

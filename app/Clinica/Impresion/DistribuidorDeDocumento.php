@@ -69,14 +69,15 @@ final class DistribuidorDeDocumento
     }
 
     /**
+     * @param  bool  $pediatria  si el contexto de impresión es pediatría: la cabecera del escritorio y las medidas
      * @return array{puntos:int, mitades:array<int,array{primera:bool, sigue:bool, firma:bool, fijos:array<int,array{etiqueta:string, valor:string}>, parrafos:array<int,array{texto:string, etiqueta:?string, aparte:bool}>, imagenes:array<int,array{src:string, base?:?string, descripcion:?string}>}>}
      */
-    public function distribuir(Membrete $membrete, DocumentoImpreso $documento): array
+    public function distribuir(Membrete $membrete, DocumentoImpreso $documento, bool $pediatria = false): array
     {
         $mejor = null;
 
         foreach (self::ESCALONES as $puntos) {
-            $mitades = $this->acomodar($membrete, $documento, $puntos);
+            $mitades = $this->acomodar($membrete, $documento, $puntos, $pediatria);
 
             // Menos hojas gana (una hoja = dos mitades); a igualdad se queda el primero que se vio, que es la letra más grande.
             if ($mejor === null || (int) ceil(count($mitades) / 2) < (int) ceil(count($mejor['mitades']) / 2)) {
@@ -92,7 +93,7 @@ final class DistribuidorDeDocumento
      *
      * @return array<int,array{primera:bool, sigue:bool, firma:bool, fijos:array, parrafos:array, imagenes:array}>
      */
-    private function acomodar(Membrete $membrete, DocumentoImpreso $documento, int $puntos): array
+    private function acomodar(Membrete $membrete, DocumentoImpreso $documento, int $puntos, bool $pediatria = false): array
     {
         $nombre = $documento->persona['nombre'];
         $restantes = $documento->parrafos;
@@ -110,17 +111,17 @@ final class DistribuidorDeDocumento
             $para = $primera ? $documento->para : null;
             // Las líneas de la cabecera de pediatría (2026-10-20) ocupan su lugar sólo en la primera mitad; fuera de
             // pediatría la lista viene vacía y la cuenta no cambia.
-            $datosExtra = $primera ? $this->datosExtra($documento) : [];
+            $datosExtra = $primera ? $this->datosExtra($documento, $pediatria) : [];
 
             // ¿Lo que queda entra en esta mitad **con la firma** (y con el bloque de imágenes)? Entonces es la última.
-            if ($this->alto($fijos, $restantes, $puntos) + $reserva <= $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, true, $para, $datosExtra)) {
+            if ($this->alto($fijos, $restantes, $puntos) + $reserva <= $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, true, $para, $datosExtra, $pediatria)) {
                 $mitades[] = ['primera' => $primera, 'sigue' => false, 'firma' => true, 'fijos' => $fijos, 'parrafos' => $restantes, 'imagenes' => $imagenes];
 
                 return $mitades;
             }
 
             // Si no, se llena esta mitad (sin firma, con el «Continúa →») con todo lo que entra.
-            $capacidad = $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, false, $para, $datosExtra);
+            $capacidad = $this->medidas->altoDelCuerpoDeDocumento($membrete, $nombre, $primera, false, $para, $datosExtra, $pediatria);
             $total = $this->palabras($restantes);
             $cuantas = $this->mayorCorteQueEntra($fijos, $restantes, $total, $puntos, $capacidad);
 
@@ -211,14 +212,22 @@ final class DistribuidorDeDocumento
     }
 
     /**
-     * Las líneas que la **cabecera de pediatría** agrega arriba de la primera mitad (2026-10-20): el sexo, el
-     * representante y la historia. Fuera de pediatría la `persona` no las trae y la lista queda vacía.
+     * Las líneas que la **cabecera de pediatría** agrega arriba de la primera mitad: la de la edad, el sexo y el
+     * representante, la de las medidas de la consulta (2026-11-03: todo documento de pediatría las lleva, como el
+     * récipe) y la de la historia, en el orden del escritorio. Fuera de pediatría la lista queda vacía.
      *
      * @return array<int,string>
      */
-    private function datosExtra(DocumentoImpreso $documento): array
+    private function datosExtra(DocumentoImpreso $documento, bool $pediatria): array
     {
-        return array_values(array_filter([PacienteImpreso::lineaPediatrica($documento->persona)]));
+        if (! $pediatria) {
+            return [];
+        }
+
+        return array_merge(
+            PacienteImpreso::lineasPediatricas($documento->persona),
+            array_values(array_filter([MedidasDeLaConsulta::linea($documento->persona['medidas'] ?? [])])),
+        );
     }
 
     /**

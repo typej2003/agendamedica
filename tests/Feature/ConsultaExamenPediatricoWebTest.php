@@ -239,6 +239,66 @@ class ConsultaExamenPediatricoWebTest extends TestCase
         $this->assertSame('', ArmarResumenDelExamen::pediatrico([]));
     }
 
+    // ------------------------------------------------------------------------------------------ Datos personales
+
+    /**
+     * **Los datos personales dentro de la consulta también son de pediatría** (2026-11-03): la sección
+     * «Datos personales» reusa la ficha, así que con la especialidad del contexto debe mostrar el nombre
+     * completo en un solo campo y no marcar la cédula como obligatoria. Antes la sección construía el
+     * ViewModel sin la especialidad y caía en el formulario de adultos.
+     */
+    public function test_los_datos_personales_en_pediatria_tienen_un_solo_nombre_y_la_cedula_no_es_obligatoria(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $consulta = $this->consulta($medico);
+
+        // La cédula se prueba con un paciente que la tiene: en pediatría no se marca con asterisco.
+        $pacienteId = DB::table('medico_pacientes')
+            ->where('reg_medico', $medico->reg_medico)
+            ->where('numhistoria', '9701')
+            ->value('paciente_id');
+        DB::table('pacientes')->where('id', $pacienteId)->update(['cedula' => '12345678']);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'datos']))
+            ->assertOk()
+            ->assertSee('Nombre completo')
+            ->assertDontSee('name="apellidos"', false)
+            ->assertDontSee('Cédula <span aria-hidden="true">*</span>', false);
+    }
+
+    public function test_los_datos_personales_en_pediatria_muestran_el_grupo_sanguineo_y_el_representante(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $consulta = $this->consulta($medico);
+
+        DB::table('paciente_chamo')->insert([
+            'reg_medico' => $medico->reg_medico, 'historia' => 9701, 'familia' => 1,
+            'nombre' => 'Mateo Examen', 'celular' => 'O+', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('familia_bebe')->insert([
+            'reg_medico' => $medico->reg_medico, 'familia' => 1,
+            'nom_madre' => 'Ana Perez', 'localidad' => 'A+', 'procedencia' => '00',
+            'situacion_pareja' => 'E', 'email' => 'ana@example.com', 'direccion' => 'Calle 1',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('representante')->insert([
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 9701,
+            'nombre' => 'Ana Perez', 'codeparentesco' => 'M', 'cedula' => '12345678',
+            'telefono' => '04141234567', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'datos']))
+            ->assertOk()
+            ->assertSee('Grupo sanguíneo')
+            ->assertSee('O+')
+            ->assertSee('Representante')
+            ->assertSee('Ana Perez')
+            ->assertSee('G.S. del representante')
+            ->assertSee('A+');
+    }
+
     // ------------------------------------------------------------------------------------------ Acceso
 
     public function test_la_secretaria_y_el_consultorio_ajeno_no_escriben(): void

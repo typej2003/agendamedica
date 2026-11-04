@@ -6,10 +6,12 @@ use App\Models\Cola;
 use App\Models\CuentaBancaria;
 use App\Models\MedicalCenter;
 use App\Models\Medico;
+use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\MetodoPago;
 use App\Models\Office;
 use App\Models\OfficeSchedule;
+use App\Models\Paciente;
 use App\Models\Pago;
 use App\Models\Specialty;
 use App\Models\TasaDeCambio;
@@ -213,13 +215,40 @@ class LinkDePagoAgendaWebTest extends TestCase
 
     // ---------------------------------------------------------------------------------------- Casos
 
+    /**
+     * **Una cita con número de historia** (el caso normal de la agenda) resolvía el paciente con
+     * `pacientes.numhistoria`, una columna que no existe: la pantalla reventaba con
+     * `no such column: pacientes.numhistoria` (2026-11-03). El paciente se resuelve por el dueño de la
+     * historia en `medico_pacientes`/`historias`, no por una columna de `pacientes`.
+     */
+    public function test_el_link_de_pago_de_una_cita_con_historia_resuelve_al_paciente(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $sede = $this->sede($medico);
+        $this->metodoDeLaPlataforma();
+
+        $paciente = Paciente::create(['nombres' => 'Ana', 'apellidos' => 'Alvarez', 'cedula' => '12345678']);
+        MedicoPaciente::create([
+            'medico_id'   => $medico->id,
+            'paciente_id' => $paciente->id,
+            'numhistoria' => '454',
+            'reg_medico'  => $medico->reg_medico,
+        ]);
+
+        $cita = $this->citaDePrueba($medico, $sede, ['numhistoria' => 454]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get($this->urlDelLink($cita))
+            ->assertOk()
+            ->assertSee('Ana Alvarez');
+    }
+
     public function test_la_agenda_ofrece_el_link_y_la_pantalla_lo_genera(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $sede = $this->sede($medico);
         $this->metodoDeLaPlataforma();
         $cita = $this->citaDePrueba($medico, $sede);
-
         $agenda = $this->conContexto($user, $medico, $gineco)->actingAs($user)
             ->get($this->agendaDelDia($cita));
 

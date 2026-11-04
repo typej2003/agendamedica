@@ -68,6 +68,15 @@ final class FormularioDePacienteVista
 
     // ----------------------------------------------------------------------------------- Encabezado
 
+    /**
+     * **¿El formulario es de pediatría?** Ahí el nombre es uno solo (el completo, como PediaReport) y el
+     * apellido no se pide. La regla sale del `slug` de la especialidad, igual que en `DatosObligatoriosDelPaciente`.
+     */
+    public function esPediatria(): bool
+    {
+        return str_contains((string) ($this->especialidad?->slug ?? ''), 'pediatr');
+    }
+
     public function editando(): bool
     {
         return $this->editando !== null;
@@ -81,8 +90,11 @@ final class FormularioDePacienteVista
     public function subtitulo(): string
     {
         if (! $this->editando()) {
-            return 'Nombre, apellido y cédula son lo único obligatorio. Si la cédula ya está cargada, el '
-                . 'paciente se enlaza a su ficha y no se pisa ningún dato que ya tenga.';
+            return $this->esPediatria()
+                ? 'El nombre completo y la fecha de nacimiento son lo que no puede faltar; la cédula es opcional. '
+                    . 'Si la cédula ya está cargada, el paciente se enlaza a su ficha y no se pisa ningún dato que ya tenga.'
+                : 'Nombre, apellido y cédula son lo único obligatorio. Si la cédula ya está cargada, el '
+                    . 'paciente se enlaza a su ficha y no se pisa ningún dato que ya tenga.';
         }
 
         $nombre = trim(($this->editando->apellidos ?? '') . ', ' . ($this->editando->nombres ?? ''), ', ');

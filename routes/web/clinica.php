@@ -80,6 +80,7 @@ use App\Http\Controllers\Clinica\ImpresionDeRecipeController;
 use App\Http\Controllers\Clinica\LatidoDeSesionController;
 use App\Http\Controllers\Clinica\LinkDeCitaController;
 use App\Http\Controllers\Clinica\CobroEnElMostradorController;
+use App\Http\Controllers\Clinica\CobrosController;
 use App\Http\Controllers\Clinica\IngresosController;
 use App\Http\Controllers\Clinica\LinkDePagoController;
 use App\Http\Controllers\Clinica\ListadosController;
@@ -115,7 +116,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
+Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico'])
     ->prefix('clinica')
     ->name('clinica.')
     ->group(function () {
@@ -197,6 +198,24 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria'])
                 Route::post('/plan/pago/{pago}/confirmar', [PlanController::class, 'confirmar'])->name('plan.confirmar');
                 Route::post('/plan/pago/{pago}/consultar', [PlanController::class, 'consultar'])->name('plan.consultar');
                 Route::post('/plan/pago/{pago}/refrescar', [PlanController::class, 'refrescar'])->name('plan.refrescar');
+            });
+
+            // **Cobros** (pago móvil y transferencia, 2026-11-02): la lista de pagos por confirmar la ve
+            // también la secretaría —es quien mira el banco en el día a día—; las cuentas y la preferencia de
+            // quién recauda son del médico.
+            Route::get('/cobros', [CobrosController::class, 'index'])->name('cobros');
+            Route::post('/cobros/{pago}/confirmar', [CobrosController::class, 'confirmar'])
+                ->whereNumber('pago')->name('cobros.confirmar');
+            Route::post('/cobros/{pago}/rechazar', [CobrosController::class, 'rechazar'])
+                ->whereNumber('pago')->name('cobros.rechazar');
+
+            Route::middleware('role:Root|Medico')->group(function () {
+                Route::post('/cobros/cuentas', [CobrosController::class, 'guardarCuenta'])->name('cobros.cuentas.guardar');
+                Route::post('/cobros/cuentas/{cuenta}/probar', [CobrosController::class, 'probarCuenta'])
+                    ->whereNumber('cuenta')->name('cobros.cuentas.probar');
+                Route::post('/cobros/cuentas/{cuenta}/predeterminada', [CobrosController::class, 'predeterminada'])
+                    ->whereNumber('cuenta')->name('cobros.cuentas.predeterminada');
+                Route::post('/cobros/preferencia', [CobrosController::class, 'preferencia'])->name('cobros.preferencia');
             });
 
             // **Cita Online** (2026-10-30): la mitad de configuración del cobro de citas. El porcentaje que

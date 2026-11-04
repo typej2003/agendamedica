@@ -96,11 +96,12 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         $vm = $this->shell('pediatria');
 
         // Pediatría tiene **su** catálogo (2026-10-19): sin el ítem 5 del estudio —que en su árbol es el de
-        // nefrología, y sólo aparece con ese postgrado— ni el control de embarazo. Numeración del legado: 1-4 y 6-15.
-        $this->assertSame([1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14], $this->numeros($vm));
-        $this->assertSame(13, $vm->totalItems());
-        // Los trece tienen pantalla: la pre-factura (15) está apagada por O-45.
-        $this->assertSame(13, $vm->totalListos());
+        // nefrología, y sólo aparece con ese postgrado— ni el control de embarazo. Numeración del legado: 1-4 y 6-13
+        // (2026-11-03: sin «Representante», sus datos viven en «Datos del paciente»).
+        $this->assertSame([1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13], $this->numeros($vm));
+        $this->assertSame(12, $vm->totalItems());
+        // Los doce tienen pantalla: la pre-factura (14) está apagada por O-45.
+        $this->assertSame(12, $vm->totalListos());
     }
 
     public function test_una_seccion_oculta_no_se_abre_en_pediatria(): void

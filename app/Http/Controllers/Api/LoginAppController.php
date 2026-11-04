@@ -87,6 +87,15 @@ class LoginAppController extends Controller
 
         // 5. Respuesta JSON liviana
         if ($user) {
+            // El carnet sin verificar corta el acceso a la app cuando la política lo exige (2026-11-03).
+            // Es el mismo corte que `ExigirVerificacionDelMedico`, pero acá se contesta antes de dar el token.
+            if (($motivo = \app(\App\Verificacion\AccesoDelMedico::class)->bloqueado($user)) !== null) {
+                return \response()->json([
+                    'code' => 'verificacion_pendiente',
+                    'message' => $motivo,
+                ], 403);
+            }
+
             // **Iniciar sesión cancela la baja programada** (decisión del usuario, 2026-10-30): vale igual
             // desde la app, no sólo desde la web. Ver `BajasDeCuenta`.
             \app(\App\Services\BajasDeCuenta::class)->cancelarPorInicioDeSesion($user);

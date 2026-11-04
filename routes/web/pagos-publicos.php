@@ -31,6 +31,12 @@ Route::middleware(PagoPublico::class)->prefix('pagar/{token}')->name('pagar.')->
         ->middleware('throttle:10,1,pagar-confirmar')
         ->name('confirmar');
 
+    // Pago móvil y transferencia: el paciente avisa que pagó y deja la referencia. El banco (o el
+    // consultorio) confirma después; no se debita nada.
+    Route::post('/declarar', [PagoPublicoController::class, 'declarar'])
+        ->middleware('throttle:10,1,pagar-declarar')
+        ->name('declarar');
+
     Route::post('/consultar', [PagoPublicoController::class, 'consultar'])
         ->middleware('throttle:20,1,pagar-consultar')
         ->name('consultar');

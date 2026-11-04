@@ -93,6 +93,12 @@ class MetodoPago extends Model
         return $this->propietario === self::PLATAFORMA;
     }
 
+    /** ¿Cobra por pago móvil o transferencia (no por el débito con OTP de SyPago)? */
+    public function esDePagoMovil(): bool
+    {
+        return $this->pasarela === CatalogoDePasarelas::PAGO_MOVIL;
+    }
+
     public function etiqueta(): string
     {
         return $this->nombre !== '' ? $this->nombre : CatalogoDePasarelas::etiqueta($this->pasarela, $this->variante);
@@ -103,6 +109,22 @@ class MetodoPago extends Model
     {
         if ($this->pasarela === CatalogoDePasarelas::MANUAL) {
             return true;
+        }
+
+        // Pago móvil: lo que hace falta es la cuenta que recibe; si eligió confirmación automática, además
+        // las credenciales del banco. Sin ellas el método no se puede ofrecer (no se cobra a ciegas).
+        if ($this->pasarela === CatalogoDePasarelas::PAGO_MOVIL) {
+            $cuenta = $this->cuentaBancaria;
+
+            if (! $cuenta) {
+                return false;
+            }
+
+            if (! $cuenta->aceptaPagoMovil() && ! $cuenta->aceptaTransferencia()) {
+                return false;
+            }
+
+            return $cuenta->conciliacionAutomatica() ? $cuenta->conciliaSola() : true;
         }
 
         $credenciales = $this->credenciales ?? [];

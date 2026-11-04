@@ -682,16 +682,37 @@ class ConsultaController extends Controller
             $ficha = app(\App\Clinica\Pacientes\PacientesDelConsultorio::class)->editable($regMedico, $pacienteId);
             abort_if($ficha === null, 404);
 
+            // En pediatría la sección muestra también el representante y la familia (2026-11-03): los
+            // mismos bloques de la ficha, con sus diálogos, para no salir de la consulta.
+            $pediatria = $this->alcance()->esPediatria();
+            $representante = $pediatria
+                ? app(\App\Http\Controllers\Clinica\RepresentanteController::class)->bloque(request(), $pacienteId)
+                : null;
+            $familia = $pediatria
+                ? new \App\Clinica\Pacientes\Vistas\FamiliaDePacienteVista(
+                    app(\App\Clinica\Pacientes\FamiliaDelPaciente::class)->de($regMedico, $ficha['numhistoria']),
+                    fn (int $id) => route('clinica.pacientes.ver', $id),
+                    $ficha['numhistoria'] === null ? null : route('clinica.pacientes.familia', $pacienteId),
+                    true,
+                )
+                : null;
+
             return new \App\Clinica\Consulta\Vistas\SeccionDeDatosPersonalesVista(
                 new \App\Clinica\Pacientes\Vistas\FormularioDePacienteVista(
                     $ficha['paciente'],
                     $ficha['numhistoria'],
                     app(\App\Clinica\Pacientes\CatalogoDeSeguros::class)->de($regMedico),
+                    // La especialidad del contexto: en pediatría la ficha es un solo nombre y sin cédula
+                    // obligatoria, igual que el alta y la edición (2026-11-03).
+                    request()->attributes->get('contexto_clinico')['specialty'] ?? null,
                 ),
                 $ficha['paciente'],
                 $ficha['numhistoria'],
                 $this->datosQueFaltan($ficha['paciente'], $regMedico, $ficha['numhistoria']),
                 (int) $consulta->id,
+                $pediatria,
+                $representante,
+                $familia,
             );
         }
 

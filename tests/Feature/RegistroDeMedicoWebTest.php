@@ -8,6 +8,7 @@ use App\Mail\RegistroDeMedico\NuevaSolicitudDeMedico;
 use App\Mail\RegistroDeMedico\SolicitudDeMedicoAprobada;
 use App\Mail\RegistroDeMedico\SolicitudDeMedicoRechazada;
 use App\Mail\RegistroDeMedico\SolicitudDeMedicoRecibida;
+use App\Models\ConfiguracionDeVerificacion;
 use App\Models\Medico;
 use App\Models\RegMedicoServicio;
 use App\Models\SolicitudMedico;
@@ -30,6 +31,9 @@ use Tests\TestCase;
  * Lo que se fija acá: la solicitud nace sólo con el correo verificado y no crea cuenta; los duplicados se
  * rechazan antes de escribir; al aprobar nace la cuenta (o se le da acceso a la ficha del escritorio) con la
  * especialidad y el mes de prueba; al rechazar queda el motivo; y la bandeja y el carnet son sólo del admin.
+ *
+ * Este archivo fija el **flujo manual**, así que enciende la exigencia del carnet. El flujo automático —la
+ * política apagada, que es el valor de fábrica desde el 2026-11-03— vive en `VerificacionDeMedicosTest`.
  */
 class RegistroDeMedicoWebTest extends TestCase
 {
@@ -41,6 +45,8 @@ class RegistroDeMedicoWebTest extends TestCase
         app(PermissionRegistrar::class)->forgetCachedPermissions();
         Mail::fake();
         Storage::fake(CarnetDeLaSolicitud::DISCO);
+
+        ConfiguracionDeVerificacion::actual()->update(['exigir_carnet' => true]);
     }
 
     /** @return array<string,string> */

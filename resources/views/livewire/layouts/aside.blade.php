@@ -125,9 +125,9 @@
             <li class="nav-item">
                 <a href="{{ route('admin.comentarios') }}" class="nav-link {{ request()->routeIs('admin.comentarios') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.comentarios')) aria-current="page" @endif
-                   title="Ayúdanos a mejorar{{ $avisos['comentarios'] ? ' (' . $avisos['comentarios'] . ' sin responder)' : '' }}">
+                   title="Soporte y Sugerencias{{ $avisos['comentarios'] ? ' (' . $avisos['comentarios'] . ' sin responder)' : '' }}">
                     <i class="bi bi-chat-heart" aria-hidden="true"></i>
-                    <span class="link-text">Ayúdanos a mejorar</span>
+                    <span class="link-text">Soporte y Sugerencias</span>
                     @include('livewire.layouts.aviso', ['total' => $avisos['comentarios'], 'que' => 'sin responder'])
                 </a>
             </li>

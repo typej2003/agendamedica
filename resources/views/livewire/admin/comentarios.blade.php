@@ -1,5 +1,5 @@
 <div>
-    <x-ui.page-head titulo="Ayúdanos a mejorar"
+    <x-ui.page-head titulo="Soporte y Sugerencias"
                     subtitulo="Lo que nos mandan desde el consultorio: errores, sugerencias y cosas que faltan. Respondé o descartá." />
 
     <x-ui.avisos />

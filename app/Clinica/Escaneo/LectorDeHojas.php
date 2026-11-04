@@ -4,8 +4,8 @@ namespace App\Clinica\Escaneo;
 
 /**
  * **Quien lee una hoja escaneada** (WEB-13.15): recibe la foto o el PDF de una hoja de resultados y devuelve su
- * texto transcrito. La implementación de producción es `LectorDeHojasConClaude`; los tests la reemplazan en el
- * contenedor.
+ * texto transcrito. El proveedor lo elige `OCR_PROVEEDOR` (`gemini` por defecto, `openrouter` o `anthropic`); los
+ * tests lo reemplazan en el contenedor.
  *
  * La lectura **propone**: el texto vuelve al campo de la solapa, el médico lo revisa y lo guarda con el guardado
  * de siempre. Nadie escribe en la base desde acá.

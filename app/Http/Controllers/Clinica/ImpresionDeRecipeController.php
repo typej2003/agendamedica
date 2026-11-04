@@ -229,8 +229,8 @@ class ImpresionDeRecipeController extends Controller
 
     /**
      * Una URL de **este mismo sitio** como ruta (`/clinica/…?recipe=1`). Lo demás —otro sitio, un `//otro.com`, algo que
-     * no es texto— se devuelve tal cual para que la validación lo rechace: acá no se decide qué es válido, sólo se quita el
-     * origen propio.
+     * no es texto— se devuelve tal cual para que la validación lo rechace: acá no se decide qué es válido, sólo se quitan
+     * el origen propio y la carpeta donde está instalada la web.
      *
      * @param  mixed  $url
      * @return mixed
@@ -243,15 +243,36 @@ class ImpresionDeRecipeController extends Controller
 
         $partes = parse_url($url);
 
-        if ($partes === false || ! isset($partes['host']) || ! in_array($partes['scheme'] ?? '', ['http', 'https'], true)) {
+        if ($partes === false) {
             return $url;
         }
 
-        if (strcasecmp($partes['host'], $request->getHost()) !== 0 || isset($partes['user']) || isset($partes['pass'])) {
+        // Una URL absoluta de **otro** sitio (o con credenciales) se devuelve tal cual: la validación la rechaza.
+        if (isset($partes['host']) && (! in_array($partes['scheme'] ?? '', ['http', 'https'], true)
+            || strcasecmp($partes['host'], $request->getHost()) !== 0
+            || isset($partes['user']) || isset($partes['pass']))) {
             return $url;
         }
 
-        return ($partes['path'] ?? '/') . (isset($partes['query']) ? '?' . $partes['query'] : '');
+        return $this->rutaSinLaCarpetaDeLaWeb($partes['path'] ?? '/', $request)
+            . (isset($partes['query']) ? '?' . $partes['query'] : '');
+    }
+
+    /**
+     * La ruta **como la ve el enrutador**, sin la carpeta donde está instalada la web (2026-11-03): en QA la aplicación
+     * vive en `https://ddrsistemas.com/medic-report`, así que `route()` arma `/medic-report/clinica/…` y
+     * `getRequestUri()` lo repite. La validación y el firmante trabajan con el camino de siempre (`/clinica/…`) y la
+     * redirección vuelve a anteponer la carpeta sola.
+     */
+    private function rutaSinLaCarpetaDeLaWeb(string $ruta, Request $request): string
+    {
+        $carpeta = rtrim($request->getBasePath(), '/');
+
+        if ($carpeta !== '' && ($ruta === $carpeta || str_starts_with($ruta, $carpeta . '/'))) {
+            $ruta = substr($ruta, strlen($carpeta));
+        }
+
+        return $ruta === '' ? '/' : $ruta;
     }
 
     /**

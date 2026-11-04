@@ -127,7 +127,7 @@ Route::post('/app/login', [LoginAppController::class, 'login']);
 // Cambio de clave: vive FUERA del grupo con `password.changed`, que bloquea todo lo demás mientras la clave sea temporal.
 Route::middleware(['auth:api', 'account.active'])->post('/app/cambiar-password', [CambiarPasswordController::class, 'cambiar']);
 
-Route::middleware(['auth:api', 'account.active', 'password.changed'])->group(function () {
+Route::middleware(['auth:api', 'account.active', 'password.changed', 'verificacion.medico'])->group(function () {
     Route::post('/app/refresh-data', [RefreshAppController::class, 'refreshData']);
     Route::post('/app/sync-app-data', [SyncAppDataController::class, 'sync']);
 

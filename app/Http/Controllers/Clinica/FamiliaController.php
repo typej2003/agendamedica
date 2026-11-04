@@ -36,9 +36,7 @@ class FamiliaController extends Controller
         // Sin número de historia no hay clave con la que guardar: la ficha no ofrece el formulario, así que llegar acá es un POST armado
         // a mano. Se explica y se vuelve, sin escribir nada.
         if ($ficha->numhistoria === null) {
-            return redirect()
-                ->route('clinica.pacientes.ver', $paciente)
-                ->with('error', 'La familia se guarda con el número de historia del niño. Asígnale el número y después se carga.');
+            return $this->volver($request, $paciente, 'error', 'La familia se guarda con el número de historia del niño. Asígnale el número y después se carga.');
         }
 
         $datos = $request->validate([
@@ -57,6 +55,7 @@ class FamiliaController extends Controller
             'localidad'         => ['nullable', 'string', 'max:200'],
             'dinamica_familiar' => ['nullable', 'string', 'max:5000'],
             'familia_texto'     => ['nullable', 'string', 'max:5000'],
+            'grupo_sanguineo'   => ['nullable', 'in:O-,O+,A-,A+,B-,B+,AB-,AB+'],
         ], [
             'celu_madre.max'          => 'El celular de la madre no puede pasar de 12 caracteres.',
             'cel_padre.max'           => 'El celular del padre no puede pasar de 12 caracteres.',
@@ -67,17 +66,23 @@ class FamiliaController extends Controller
             'fecn_padre.before_or_equal' => 'La fecha de nacimiento del padre no puede ser futura.',
         ]);
 
+        // El G.S. del niño no vive en `familia_bebe`: PediaReport lo guarda en `paciente_chamo.celular`.
+        // Se separa del resto y se escribe con `delAlta`, que completa esa fila.
+        $grupoSanguineo = $datos['grupo_sanguineo'] ?? null;
+        unset($datos['grupo_sanguineo']);
+
         // Un formulario sin nada escrito no es una familia: no crea una fila en blanco (mismo criterio que el representante).
-        if (collect($datos)->every(fn ($valor) => trim((string) $valor) === '')) {
+        // El G.S. solo sí es un dato del niño y se puede guardar sin la familia.
+        if ($grupoSanguineo === null && collect($datos)->every(fn ($valor) => trim((string) $valor) === '')) {
             throw ValidationException::withMessages([
                 'nom_madre' => 'Escribe al menos un dato de la familia: los padres o un teléfono para contactarlos.',
             ]);
         }
 
         try {
-            $accion->ejecutar($contexto['reg_medico'], $ficha->numhistoria, $datos, $ficha);
+            $accion->delAlta($contexto['reg_medico'], $ficha->numhistoria, $datos, ['celular' => $grupoSanguineo], $ficha);
         } catch (InvalidArgumentException $excepcion) {
-            return redirect()->route('clinica.pacientes.ver', $paciente)->with('error', $excepcion->getMessage());
+            return $this->volver($request, $paciente, 'error', $excepcion->getMessage());
         } catch (Throwable $excepcion) {
             // El escritorio también escribe estas tablas: si justo subió la fila mientras se guardaba, el insert choca. No se pierde
             // nada —volver a guardar la actualiza— y el aviso dice qué pasó.
@@ -85,9 +90,26 @@ class FamiliaController extends Controller
                 'reg_medico' => $contexto['reg_medico'], 'paciente' => $paciente, 'error' => $excepcion->getMessage(),
             ]);
 
-            return redirect()->route('clinica.pacientes.ver', $paciente)->with('error', 'No se pudo guardar la familia. Prueba otra vez.');
+            return $this->volver($request, $paciente, 'error', 'No se pudo guardar la familia. Prueba otra vez.');
         }
 
-        return redirect()->route('clinica.pacientes.ver', $paciente)->with('estado', 'Se guardó la familia del paciente.');
+        return $this->volver($request, $paciente, 'estado', 'Se guardó la familia del paciente.');
+    }
+
+    /**
+     * Vuelve a la ficha o, cuando el diálogo se abrió desde la consulta, a su sección «Datos del paciente»
+     * (`volver_a_consulta`): el médico no sale de la atención para cargar la familia.
+     */
+    private function volver(Request $request, int $paciente, string $clave, string $mensaje)
+    {
+        $consulta = (int) $request->input('volver_a_consulta', 0);
+
+        if ($consulta > 0) {
+            return redirect()
+                ->route('clinica.consulta', [$consulta, 'seccion' => 'datos'])
+                ->with($clave, $mensaje);
+        }
+
+        return redirect()->route('clinica.pacientes.ver', $paciente)->with($clave, $mensaje);
     }
 }

@@ -57,23 +57,25 @@ final class DistribuidorDeRecipe
     }
 
     /**
+     * @param  bool  $pediatria  si el contexto de impresión es pediatría: la cabecera del escritorio y las medidas
      * @return array{puntos:int, hojas:array<int,array<int,int>>}  el tamaño de letra y, por hoja, los índices de
      *                                                              `$documento->items` que lleva
      */
-    public function distribuir(Membrete $membrete, DocumentoDeRecipe $documento, OpcionesDeRecipe $opciones): array
+    public function distribuir(Membrete $membrete, DocumentoDeRecipe $documento, OpcionesDeRecipe $opciones, bool $pediatria = false): array
     {
         $nombre = $documento->persona['nombre'];
         $generico = $opciones->esGenerico();
 
-        // Las líneas que agrega la cabecera de pediatría (2026-10-20): la del sexo, el representante y la historia
-        // —en las dos mitades— y, en la de indicaciones, la de las medidas. Fuera de pediatría no hay ninguna y la
-        // cuenta es la de siempre.
-        $cabecera = array_values(array_filter([PacienteImpreso::lineaPediatrica($documento->persona)]));
+        // La cabecera de pediatría (2026-11-03): la línea de la edad, el sexo y el representante —en las dos mitades—,
+        // la de la historia y, en la de indicaciones, la de las medidas. Fuera de pediatría no hay ninguna y la
+        // cuenta es la de siempre. El bloque es del paciente: el récipe de la pareja no lo lleva.
+        $pediatria = $pediatria && ! $documento->esDeLaPareja();
+        $cabecera = $pediatria ? PacienteImpreso::lineasPediatricas($documento->persona) : [];
         $medidas = array_values(array_filter([MedidasDeLaConsulta::linea($documento->medidas)]));
 
-        $capacidadDeIndicaciones = $this->medidas->altoDelCuerpo($membrete, $nombre, null, array_merge($cabecera, $medidas));
+        $capacidadDeIndicaciones = $this->medidas->altoDelCuerpo($membrete, $nombre, null, array_merge($cabecera, $medidas), $pediatria);
         $capacidadDeRp = $opciones->conRpEIndicaciones()
-            ? $this->medidas->altoDelCuerpo($membrete, $nombre, $documento->persona['direccion'], $cabecera)
+            ? $this->medidas->altoDelCuerpo($membrete, $nombre, $documento->persona['direccion'], $cabecera, $pediatria)
             : null;
 
         $mejor = null;

@@ -45,21 +45,27 @@ use InvalidArgumentException;
 final class CrearPaciente
 {
     /**
-     * @param  array<string,mixed>  $columnas  Columnas ya validadas de `pacientes`. El nombre y el apellido
-     *                                         son obligatorios; la cédula puede venir nula, que es la
-     *                                         opción "sin cédula" (`S.C.`) del alta.
+     * @param  array<string,mixed>  $columnas  Columnas ya validadas de `pacientes`. El nombre es
+     *                                         obligatorio; el apellido **no** desde 2026-11-03, porque los
+     *                                         pacientes de pediatría traen el nombre completo en `nombres`
+     *                                         (PediaReport no tiene apellidos). La cédula puede venir nula,
+     *                                         que es la opción "sin cédula" (`S.C.`) del alta.
      * @param  string  $regMedico  El consultorio (tenant) con el que queda vinculado (el del contexto en
      *                             la web, el del médico autenticado en el sync).
      *
-     * @throws InvalidArgumentException si falta el nombre o el apellido.
+     * @throws InvalidArgumentException si falta el nombre.
      */
     public function ejecutar(array $columnas, Medico $medico, string $regMedico): Paciente
     {
-        // El nombre y el apellido son lo único obligatorio del alta (wiki `04-historia-clinica.md`): la
-        // cédula **no**, porque "sin cédula" es una opción explícita. Antes esto exigía la cédula y
-        // rechazaba a los pacientes sin documento que la web ya deja dar de alta.
-        if (trim((string) ($columnas['nombres'] ?? '')) === '' || trim((string) ($columnas['apellidos'] ?? '')) === '') {
-            throw new InvalidArgumentException('El nombre y el apellido son obligatorios para dar de alta un paciente.');
+        // El nombre es lo único obligatorio del alta (wiki `04-historia-clinica.md`): la cédula **no**,
+        // porque "sin cédula" es una opción explícita, y el apellido tampoco desde la unificación del
+        // nombre de pediatría (2026-11-03). Antes esto exigía la cédula y rechazaba a los pacientes sin
+        // documento que la web ya deja dar de alta.
+        $columnas['nombres'] = trim((string) ($columnas['nombres'] ?? ''));
+        $columnas['apellidos'] = trim((string) ($columnas['apellidos'] ?? '')) ?: null;
+
+        if ($columnas['nombres'] === '') {
+            throw new InvalidArgumentException('El nombre es obligatorio para dar de alta un paciente.');
         }
 
         return DB::transaction(function () use ($columnas, $medico, $regMedico) {

@@ -131,7 +131,7 @@ final class HojasDeRecipeVista
         $hojas = [];
 
         foreach ($this->documentos as $documento) {
-            $reparto = $this->distribuidor->distribuir($this->membrete, $documento, $this->opciones);
+            $reparto = $this->distribuidor->distribuir($this->membrete, $documento, $this->opciones, $this->pediatria);
             $total = count($reparto['hojas']);
 
             foreach ($reparto['hojas'] as $posicion => $indices) {
@@ -198,6 +198,10 @@ final class HojasDeRecipeVista
             'clase' => $clase,
             'titulo' => $titulo,
             'etiqueta' => $etiqueta,
+            // La cabecera de pediatría (2026-11-03): el paciente con la fecha, la edad con el sexo y el representante,
+            // las medidas (sólo en la mitad de indicaciones) y la historia, sin la cédula. El bloque es del paciente: el
+            // récipe de la pareja sigue con la cabecera de siempre.
+            'pediatria' => $pediatria,
             'paciente' => $persona['nombre'],
             'cedula' => $persona['cedula'] ?? '',
             // La pareja no tiene edad (no se conoce): el dato no se imprime en vez de quedar en blanco.

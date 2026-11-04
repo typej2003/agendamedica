@@ -82,7 +82,7 @@ class Comentarios extends Component
 
         $responder->ejecutar(Comentario::findOrFail($this->comentarioId), auth()->user(), $this->respuesta);
 
-        session()->flash('message', 'Respuesta enviada: el usuario la ve en «Ayúdanos a mejorar».');
+        session()->flash('message', 'Respuesta enviada: el usuario la ve en «Soporte y Sugerencias».');
         $this->cerrar();
     }
 

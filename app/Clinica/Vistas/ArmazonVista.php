@@ -169,6 +169,11 @@ final class ArmazonVista
             $accesos[] = ['texto' => 'Mis Latidos', 'icono' => 'bi-stars', 'url' => route('clinica.latidos'), 'primario' => false];
             $accesos[] = ['texto' => 'Invita y gana', 'icono' => 'bi-gift', 'url' => route('clinica.referidos'), 'primario' => false];
             $accesos[] = ['texto' => 'Mis ingresos', 'icono' => 'bi-graph-up-arrow', 'url' => route('clinica.ingresos'), 'primario' => false];
+            // **Cobros** (2026-11-02): las cuentas de pago móvil del consultorio y los pagos que esperan
+            // confirmación. Es una pantalla de dinero del médico, al lado de sus ingresos.
+            if (Route::has('clinica.cobros')) {
+                $accesos[] = ['texto' => 'Cobros', 'icono' => 'bi-cash-coin', 'url' => route('clinica.cobros'), 'primario' => false];
+            }
             $accesos[] = ['texto' => 'Mi plan', 'icono' => 'bi-credit-card', 'url' => route('clinica.plan'), 'primario' => false];
         }
 
@@ -349,7 +354,7 @@ final class ArmazonVista
             // "Ayúdanos a mejorar" (ROADMAP §9): el comentario lo puede mandar cualquiera que trabaje en el
             // consultorio —el médico y su secretaría—, así que va al final del menú, después de "Configuración".
             $menu[] = [
-                'texto'  => 'Ayúdanos a mejorar',
+                'texto'  => 'Soporte y Sugerencias',
                 'icono'  => 'bi-chat-heart',
                 'url'    => Route::has('clinica.ayuda') ? route('clinica.ayuda') : null,
                 'activo' => $this->rutaActual === 'clinica.ayuda',

@@ -5,6 +5,7 @@ namespace App\Pagos\Admin;
 use App\Actions\Agenda\CobrarCita;
 use App\Models\Pago;
 use App\Models\PagoEvento;
+use App\Models\PagoTransaccion;
 use App\Models\User;
 use App\Pagos\Centavos;
 use Illuminate\Support\Facades\DB;
@@ -54,6 +55,21 @@ final class AccionesDelPago
 
             $pago->estado = Pago::APROBADO;
             $pago->pagado_el = $pago->pagado_el ?: now();
+
+            // Un pago móvil confirmado a mano deja también su transacción y el monto confirmado: es lo
+            // que la pantalla del consultorio y el recibo muestran.
+            if ($pago->esDePagoMovil()) {
+                $pago->monto_confirmado_e2 = (int) $pago->monto_e2;
+                $pago->confirmado_por = $usuario->id;
+                $pago->transacciones()
+                    ->where('estado', PagoTransaccion::PENDIENTE)
+                    ->update([
+                        'estado' => PagoTransaccion::APROBADA,
+                        'confirmada_el' => now(),
+                        'mensaje' => null,
+                    ]);
+            }
+
             $pago->save();
 
             $pago->registrarEvento(PagoEvento::ORIGEN_MANUAL, 'aprobado_manualmente', [
@@ -90,6 +106,14 @@ final class AccionesDelPago
             $antes = $pago->estado;
 
             $pago->estado = Pago::RECHAZADO;
+
+            if ($pago->esDePagoMovil()) {
+                $pago->confirmado_por = $usuario->id;
+                $pago->transacciones()
+                    ->where('estado', PagoTransaccion::PENDIENTE)
+                    ->update(['estado' => PagoTransaccion::RECHAZADA, 'mensaje' => $motivo]);
+            }
+
             $pago->save();
 
             $pago->registrarEvento(PagoEvento::ORIGEN_MANUAL, 'rechazado_manualmente', [

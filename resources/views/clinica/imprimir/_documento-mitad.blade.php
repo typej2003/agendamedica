@@ -13,6 +13,10 @@
 
         @if ($mitad['enBlanco'] ?? false)
             @include('clinica.imprimir._datos-en-blanco')
+        @elseif ($mitad['pediatria'] ?? false)
+            {{-- La cabecera de pediatría (2026-11-03): el paciente con la fecha, edad / sexo / representante, las medidas
+                 y la historia. Sin la cédula del paciente. Los documentos no imprimen la dirección. --}}
+            @include('clinica.imprimir._datos-pediatricos')
         @else
             <div class="recipe-datos">
                 <p class="recipe-dato recipe-dato-paciente"><span class="recipe-dato-etiqueta">PACIENTE:</span> {{ $mitad['paciente'] }}</p>
@@ -37,6 +41,16 @@
                         @if ($mitad['historia'] ?? null)
                             <span class="recipe-dato"><span class="recipe-dato-etiqueta">Historia:</span> {{ $mitad['historia'] }}</span>
                         @endif
+                    </p>
+                @endif
+                {{-- Las medidas de la consulta (2026-11-03): en pediatría las lleva **todo documento**, no sólo el récipe, y
+                     sólo las que existen y no son cero (`MedidasDeLaConsulta`); sin ninguna, la línea no sale. También en la
+                     primera mitad: la mide `DistribuidorDeDocumento::datosExtra`. --}}
+                @if (($mitad['medidas'] ?? []) !== [])
+                    <p class="recipe-dato-linea recipe-dato-medidas">
+                        @foreach ($mitad['medidas'] as $medida)
+                            <span class="recipe-dato"><span class="recipe-dato-etiqueta">{{ $medida['etiqueta'] }}</span> {{ $medida['valor'] }}</span>
+                        @endforeach
                     </p>
                 @endif
             </div>

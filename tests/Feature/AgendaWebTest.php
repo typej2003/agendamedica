@@ -22,9 +22,11 @@ use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -973,7 +975,7 @@ class AgendaWebTest extends TestCase
     }
 
     /** Alexander, 2026-10-26: «falta datos de representante» en el alta rápida del niño. */
-    public function test_en_pediatria_el_alta_rapida_ofrece_el_representante_y_en_ginecologia_no(): void
+    public function test_en_pediatria_el_alta_rapida_pide_el_representante_y_en_ginecologia_es_opcional(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         [$pediatria] = $this->pediatria($medico);
@@ -981,8 +983,9 @@ class AgendaWebTest extends TestCase
         $this->conContexto($user, $medico, $pediatria)->actingAs($user)->get('/clinica/agenda/nueva')
             ->assertOk()->assertSee('Teléfono del representante')->assertSee('name="representante_nombre"', false);
 
+        // Fuera de pediatría el representante sigue disponible, pero **opcional**: es un desplegable.
         $this->conContexto($user, $medico, $gineco)->actingAs($user)->get('/clinica/agenda/nueva')
-            ->assertOk()->assertDontSee('Teléfono del representante')->assertDontSee('name="representante_nombre"', false);
+            ->assertOk()->assertSee('Representante (opcional)')->assertSee('name="representante_nombre"', false);
     }
 
     public function test_en_pediatria_el_alta_rapida_guarda_el_representante_en_la_historia_del_nino(): void
@@ -1005,7 +1008,7 @@ class AgendaWebTest extends TestCase
             ->assertSessionHasNoErrors()
             ->assertRedirect($this->urlDeLaAgenda($sede));
 
-        $nino = Paciente::where('apellidos', 'Duran')->firstOrFail();
+        $nino = Paciente::where('nombres', 'Alejo Duran')->firstOrFail();
         $numhistoria = MedicoPaciente::where('medico_id', $medico->id)->where('paciente_id', $nino->id)->value('numhistoria');
         $representante = DB::table('representante')->where('reg_medico', $medico->reg_medico)->where('numhistoria', $numhistoria)->first();
 
@@ -1028,6 +1031,125 @@ class AgendaWebTest extends TestCase
             ->assertSessionDoesntHaveErrors(['nuevo_telefono']);
 
         $this->assertNull(Paciente::where('apellidos', 'Adulto')->first());
+    }
+
+    /** 2026-11-03: en pediatría el "alta" es la de PediaReport, con un solo nombre y todos sus campos. */
+    public function test_en_pediatria_el_alta_rapida_pide_y_guarda_los_campos_de_pediareport(): void
+    {
+        [$user, $medico] = $this->medicoConAcceso();
+        [$pediatria] = $this->pediatria($medico);
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)->get('/clinica/agenda/nueva')
+            ->assertOk()
+            ->assertSee('Nombre completo')
+            ->assertSee('Fecha de ingreso')
+            ->assertSee('Grupo etario')
+            ->assertSee('Historia anterior')
+            ->assertSee('Situación de pareja')
+            ->assertSee('Empresa')
+            ->assertSee('Madre')
+            ->assertSee('Padre')
+            ->assertDontSee('name="nuevo_apellidos"', false);
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'                          => '09:00',
+                'nuevo_nombres'                 => 'PEDRO ADRIAN PEREZ',
+                'nuevo_fnacimiento'             => '2024-05-10',
+                'nuevo_sexo'                    => 'M',
+                'nuevo_fingreso'                => '2026-11-03',
+                'nuevo_grupo_sanguineo'         => 'O+',
+                'nuevo_grupo_etario'            => 'Lactante Mayor',
+                'nuevo_historia_anterior'       => 'A-123',
+                'nuevo_tipo'                    => 'C',
+                'nuevo_referido'                => 'Vecina',
+                'representante_nombre'          => 'ANA PEREZ',
+                'representante_cedula'          => '12345678',
+                'representante_telefono'        => '0414-5550030',
+                'representante_celular'         => '0414-5550031',
+                'representante_tipo'            => 'F',
+                'representante_parentesco'      => 'M',
+                'representante_grupo_sanguineo' => 'A+',
+                'representante_ocupacion'       => 'Docente',
+                'representante_situacion_pareja' => 'E',
+                'representante_email'           => 'ana@example.com',
+                'representante_direccion'       => 'Calle 1',
+            ]))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect($this->urlDeLaAgenda($sede));
+
+        $nino = Paciente::where('nombres', 'PEDRO ADRIAN PEREZ')->firstOrFail();
+        $this->assertNull($nino->apellidos);
+        $this->assertSame('Lactante Mayor', $nino->escolaridad);
+        $this->assertSame('Vecina', $nino->dependencia);
+
+        $numhistoria = MedicoPaciente::where('medico_id', $medico->id)->where('paciente_id', $nino->id)->value('numhistoria');
+        $chamo = DB::table('paciente_chamo')->where('reg_medico', $medico->reg_medico)->where('historia', (int) $numhistoria)->first();
+
+        $this->assertNotNull($chamo, 'el alta deja la ficha de `paciente_chamo`');
+        $this->assertSame('PEDRO ADRIAN PEREZ', $chamo->nombre);
+        $this->assertSame('O+', $chamo->celular, 'G.S. del niño');
+        $this->assertSame('Lactante Mayor', $chamo->escolaridad);
+        $this->assertSame('A-123', $chamo->historia_anterior);
+        $this->assertSame('Vecina', $chamo->nota_general);
+
+        $familia = DB::table('familia_bebe')->where('reg_medico', $medico->reg_medico)->where('familia', $chamo->familia)->first();
+
+        $this->assertNotNull($familia, 'el alta deja la familia y el representante');
+        $this->assertSame('ANA PEREZ', $familia->nom_madre);
+        $this->assertSame('0414-5550031', $familia->celu_madre);
+        $this->assertSame('Docente', $familia->ocupa_madre);
+        $this->assertSame('12345678', $familia->ced_representante);
+        $this->assertSame('A+', $familia->localidad, 'G.S. de la familia');
+        $this->assertSame('E', $familia->situacion_pareja);
+        $this->assertSame('F', $familia->status);
+    }
+
+    public function test_en_pediatria_la_fecha_de_nacimiento_es_obligatoria(): void
+    {
+        [$user, $medico] = $this->medicoConAcceso();
+        [$pediatria] = $this->pediatria($medico);
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'                     => '09:00',
+                'nuevo_nombres'            => 'Sin Fecha',
+                'representante_nombre'     => 'Ana',
+                'representante_telefono'   => '0414-5550030',
+            ]))
+            ->assertSessionHasErrors(['nuevo_fnacimiento' => 'En pediatría la fecha de nacimiento es obligatoria.']);
+
+        $this->assertNull(Paciente::where('nombres', 'Sin Fecha')->first());
+    }
+
+    /** La foto del niño: el formulario viaja como `multipart/form-data` y la ruta queda en `foto_pac`. */
+    public function test_en_pediatria_el_alta_guarda_la_foto_del_nino(): void
+    {
+        Storage::fake('public');
+
+        [$user, $medico] = $this->medicoConAcceso();
+        [$pediatria] = $this->pediatria($medico);
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'hora'                     => '09:00',
+                'nuevo_nombres'            => 'CON FOTO',
+                'nuevo_fnacimiento'        => '2024-05-10',
+                'nuevo_foto'               => UploadedFile::fake()->image('nino.jpg'),
+                'representante_nombre'     => 'ANA PEREZ',
+                'representante_telefono'   => '0414-5550030',
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $nino = Paciente::where('nombres', 'CON FOTO')->firstOrFail();
+        $this->assertNotNull($nino->foto_pac);
+        Storage::disk('public')->assertExists($nino->foto_pac);
     }
 
     public function test_la_cedula_repetida_enlaza_la_ficha_y_no_pisa_sus_datos(): void
@@ -1064,6 +1186,71 @@ class AgendaWebTest extends TestCase
         $relacion = MedicoPaciente::where('medico_id', $medico->id)->where('paciente_id', $ajena->id)->firstOrFail();
         $this->assertSame('1', $relacion->numhistoria);
         $this->assertSame(1, (int) Cola::where('reg_medico', $medico->reg_medico)->firstOrFail()->numhistoria);
+    }
+
+    /** 2026-11-03: el médico que agenda para hoy suele tener al paciente delante; la agenda le ofrece atenderlo. */
+    public function test_al_agendar_una_cita_de_hoy_el_medico_recibe_la_pregunta_de_atender(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $hoy = \App\Clinica\FechaDelConsultorio::hoy();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00', null, $hoy->dayOfWeekIso);
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'fecha'       => $hoy->toDateString(),
+                'hora'        => '09:00',
+                'paciente_id' => $pacienteId,
+            ]));
+
+        $respuesta->assertSessionHas('ofrecer_atender_cita');
+        $respuesta->assertRedirect(route('clinica.agenda', [
+            'vista' => 'dia', 'fecha' => $hoy->toDateString(), 'sede' => $sede->id,
+        ]));
+
+        // La agenda que sigue abre el diálogo con la cita recién creada.
+        $cola = Cola::where('reg_medico', $medico->reg_medico)->firstOrFail();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.agenda', ['vista' => 'dia', 'fecha' => $hoy->toDateString(), 'sede' => $sede->id]))
+            ->assertOk()
+            ->assertSee('¿Atender ahora?')
+            ->assertSee(route('clinica.agenda.atender', $cola->id), false);
+    }
+
+    public function test_la_secretaria_no_recibe_la_pregunta_de_atender(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso('Secretaria');
+        $hoy = \App\Clinica\FechaDelConsultorio::hoy();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00', null, $hoy->dayOfWeekIso);
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'fecha'       => $hoy->toDateString(),
+                'hora'        => '09:00',
+                'paciente_id' => $pacienteId,
+            ]))
+            ->assertSessionMissing('ofrecer_atender_cita');
+    }
+
+    public function test_una_cita_para_otro_dia_no_ofrece_atender(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $manana = \App\Clinica\FechaDelConsultorio::hoy()->addDay();
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00', null, $manana->dayOfWeekIso);
+        $pacienteId = $this->pacienteConHistoria($medico, 2001, 'Ana', 'Alvarez');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post('/clinica/agenda', $this->datosDeCita($sede, [
+                'fecha'       => $manana->toDateString(),
+                'hora'        => '09:00',
+                'paciente_id' => $pacienteId,
+            ]))
+            ->assertSessionMissing('ofrecer_atender_cita');
     }
 
     public function test_una_cita_pendiente_se_pregunta_antes_de_agendar(): void
@@ -1280,7 +1467,7 @@ class AgendaWebTest extends TestCase
                 'monto'           => 'abc',
                 'paciente_id'     => 'no-es-un-numero',
                 'nuevo_cedula'    => str_repeat('1', 21),
-                'nuevo_nombres'   => str_repeat('N', 101),
+                'nuevo_nombres'   => str_repeat('N', 201),
                 'nuevo_apellidos' => str_repeat('A', 101),
                 'nuevo_telefono'  => str_repeat('9', 31),
                 'nuevo_email'     => 'no-es-un-correo',

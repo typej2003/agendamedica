@@ -19,6 +19,12 @@
             <x-ui.estado tono="peligro" icono="bi-exclamation-triangle" class="mb-3">Alergias: {{ $familia->alergia() }}</x-ui.estado>
         @endif
 
+        @if ($familia->grupoSanguineoDelNino())
+            <dl class="datos-rejilla">
+                <x-ui.dato etiqueta="Grupo sanguíneo" :valor="$familia->grupoSanguineoDelNino()" />
+            </dl>
+        @endif
+
         @if ($familia->conFamilia())
             @php
                 $padre = $familia->padre();
@@ -35,7 +41,11 @@
                 @endforeach
                 <x-ui.dato etiqueta="Correo" :valor="$familia->correo()" />
                 <x-ui.dato etiqueta="Dirección" :valor="$familia->direccion()" />
-                <x-ui.dato etiqueta="Localidad" :valor="$familia->localidad()" />
+                <x-ui.dato :etiqueta="$familia->esPediatria() ? 'G.S. del representante' : 'Localidad'" :valor="$familia->localidad()" />
+                @if ($familia->esPediatria())
+                    <x-ui.dato etiqueta="Empresa del representante" :valor="$familia->empresa()" />
+                    <x-ui.dato etiqueta="Situación de pareja" :valor="$familia->situacionPareja()" />
+                @endif
             </dl>
             @if ($familia->dinamica())
                 <p class="mb-1"><strong>Dinámica familiar</strong></p>

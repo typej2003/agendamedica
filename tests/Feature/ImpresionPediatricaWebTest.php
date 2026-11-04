@@ -13,8 +13,8 @@ use Tests\TestCase;
 
 /**
  * **Los impresos de pediatría llevan la cabecera del escritorio** (2026-10-20): el sexo, el representante, el número de
- * historia, la edad compacta («21A 9M 6D») y, en la mitad de *Indicaciones* del récipe, las medidas (peso, talla,
- * circunferencia cefálica y tensión).
+ * historia, la edad compacta («21A 9M 6D») y las medidas (peso, talla, circunferencia cefálica y tensión), que desde el
+ * 2026-11-03 salen en **todos los documentos**, no sólo en la mitad de *Indicaciones* del récipe.
  *
  * Lo que fijan estos casos:
  *
@@ -22,7 +22,8 @@ use Tests\TestCase;
  *    tiene **21 años** —como el de la captura del escritorio— y su récipe igual lleva el bloque;
  *  - vale para **los dos caminos** de la hoja: la consulta del médico y la secretaría desde la cita atendida (que reusa
  *    `HojasImpresasVista`);
- *  - vale para los **documentos** (constancia), no sólo para el récipe, y las medidas **sólo** en la mitad de indicaciones;
+ *  - vale para los **documentos** (constancia), no sólo para el récipe: llevan la cabecera **y las medidas**, éstas sólo
+ *    como las que existen (un cero del legado no se imprime);
  *  - el **representante** sale de `representante` (la web) y, si ahí no hay nombre, de la familia del escritorio con
  *    `familia_bebe.status`; sin ninguno de los dos, el rótulo `Rep.:` **no se imprime**;
  *  - **fuera de pediatría la hoja queda como estaba**: los mismos datos cargados en una consulta de ginecología no
@@ -157,11 +158,61 @@ class ImpresionPediatricaWebTest extends TestCase
         $respuesta->assertSee('100 Cm');
         $respuesta->assertSee('48.5 Cm');
         $respuesta->assertSee('120/80');
-        // Los datos de siempre no se perdieron.
+        // Los datos de siempre no se perdieron, menos la cédula: un paciente de pediatría no la lleva (2026-11-03).
         $respuesta->assertSee('Ana Alvarez');
-        $respuesta->assertSee('V-14555666');
+        $respuesta->assertDontSee('V-14555666');
+        $respuesta->assertDontSee('C.I.:');
         $respuesta->assertSee('07/10/2026');
         $respuesta->assertSee('Av. Bolívar, edificio Sol, Barquisimeto');
+    }
+
+    /**
+     * El orden de los campos es el del récipe del escritorio (captura de la unidad de pediatría, 2026-11-03): el paciente
+     * con la fecha en la misma línea, la edad con el sexo y el representante, las medidas —sólo en la mitad de
+     * indicaciones— y la historia sola, al final y a la derecha. **Sin cédula**: la cabecera no la imprime.
+     */
+    public function test_el_recipe_de_pediatria_sigue_el_orden_del_escritorio_y_no_imprime_la_cedula(): void
+    {
+        [$user, $medico, $pediatria, , $consulta] = $this->escenario();
+
+        $respuesta = $this->como($user, $medico, $pediatria)->get($this->urlRecipe($consulta))->assertOk();
+        $html = $respuesta->getContent();
+
+        // La cabecera pediátrica no es la de siempre: no hay `C.I.` ni bloque de datos con la línea de cédula.
+        $this->assertStringNotContainsString('C.I.:', $html);
+        $this->assertSame(2, substr_count($html, 'recipe-datos-pediatricos'));
+
+        $documento = new \DOMDocument();
+        @$documento->loadHTML('<?xml encoding="UTF-8">' . $html);
+        $xpath = new \DOMXPath($documento);
+
+        // PACIENTE y FECHA comparten la primera línea de las dos mitades.
+        $filas = $xpath->query("//p[contains(@class,'recipe-datos-fila-paciente')]");
+        $this->assertSame(2, $filas->length);
+        foreach ($filas as $fila) {
+            $this->assertStringContainsString('PACIENTE:', $fila->textContent);
+            $this->assertStringContainsString('FECHA:', $fila->textContent);
+        }
+
+        // La línea de la edad, el sexo y el representante, en ese orden.
+        $lineas = $xpath->query("//p[contains(@class,'recipe-dato-linea') and not(contains(@class,'recipe-dato-medidas')) and not(contains(@class,'recipe-dato-historia'))]");
+        $this->assertSame(2, $lineas->length);
+        foreach ($lineas as $linea) {
+            $texto = $linea->textContent;
+            $this->assertStringContainsString('EDAD:', $texto);
+            $this->assertLessThan(strpos($texto, 'SEXO:'), strpos($texto, 'EDAD:'));
+            $this->assertLessThan(strpos($texto, 'Rep.:'), strpos($texto, 'SEXO:'));
+        }
+
+        // La historia, sola y al final: en la mitad "Rp." después del representante y en la de indicaciones después de las medidas.
+        $historias = $xpath->query("//p[contains(@class,'recipe-dato-historia')]");
+        $this->assertSame(2, $historias->length);
+        foreach ($historias as $historia) {
+            $this->assertStringContainsString('Historia:', $historia->textContent);
+            $this->assertStringNotContainsString('SEXO:', $historia->textContent);
+        }
+        // En la mitad de indicaciones, la historia va después de las medidas.
+        $this->assertNotFalse(strpos($html, 'Historia:', strpos($html, 'PESO:')), 'La historia de la mitad de indicaciones va después de las medidas.');
     }
 
     public function test_el_representante_sale_de_la_familia_del_escritorio_si_la_tabla_de_la_web_no_lo_tiene(): void
@@ -226,7 +277,9 @@ class ImpresionPediatricaWebTest extends TestCase
         $respuesta->assertDontSee('C. CEFÁLICA:');
         $respuesta->assertDontSee('T.A.:');
         $respuesta->assertDontSee('21A 9M 6D');
-        // La hoja de siempre: la edad en años.
+        // La hoja de siempre: la cédula y la edad en años, con la cabecera de las demás especialidades.
+        $respuesta->assertSee('C.I.:');
+        $respuesta->assertSee('V-14555666');
         $respuesta->assertSee('EDAD:');
         $respuesta->assertSee('21 años');
     }
@@ -250,8 +303,38 @@ class ImpresionPediatricaWebTest extends TestCase
         $respuesta->assertSee('00025');
         $respuesta->assertSee('21A 9M 6D');
         $respuesta->assertDontSee('21 años');
-        // Las medidas son del récipe: un documento no las lleva.
-        $respuesta->assertDontSee('PESO:');
+        // La constancia de pediatría tampoco imprime la cédula del paciente (2026-11-03).
+        $respuesta->assertDontSee('C.I.:');
+        $respuesta->assertDontSee('V-14555666');
+        // Las medidas también: desde el 2026-11-03 las lleva todo documento de pediatría, no sólo el récipe.
+        foreach (['PESO:', 'TALLA:', 'C. CEFÁLICA:', 'T.A.:'] as $rotulo) {
+            $this->assertSame(1, substr_count($respuesta->getContent(), $rotulo), $rotulo);
+        }
+        $respuesta->assertSee('20 Kg');
+        $respuesta->assertSee('100 Cm');
+        $respuesta->assertSee('48.5 Cm');
+        $respuesta->assertSee('120/80');
+    }
+
+    /** Un cero del legado no es una medida: `C. CEFÁLICA` en 0 y la tensión `0/0` no se imprimen. */
+    public function test_un_documento_de_pediatria_no_imprime_las_medidas_en_cero(): void
+    {
+        [$user, $medico, $pediatria, , $consulta] = $this->escenario();
+        $this->constancia($medico);
+
+        DB::table('consultas')->where('id', $consulta->id)->update([
+            'circcefalica' => 0,
+            'tasentado' => '0/0',
+        ]);
+
+        $respuesta = $this->como($user, $medico, $pediatria)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'constancia']));
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('PESO:');
+        $respuesta->assertSee('TALLA:');
+        $respuesta->assertDontSee('C. CEFÁLICA:');
+        $respuesta->assertDontSee('T.A.:');
     }
 
     public function test_la_constancia_de_ginecologia_no_lleva_la_cabecera_de_pediatria(): void
@@ -264,11 +347,17 @@ class ImpresionPediatricaWebTest extends TestCase
 
         $respuesta->assertOk();
         $respuesta->assertSee('CONSTANCIA');
+        $respuesta->assertSee('C.I.:');
+        $respuesta->assertSee('V-14555666');
         $respuesta->assertSee('21 años');
         $respuesta->assertDontSee('SEXO:');
         $respuesta->assertDontSee('Rep.:');
         $respuesta->assertDontSee('Historia:');
         $respuesta->assertDontSee('21A 9M 6D');
+        // Las medidas son de la cabecera de pediatría: acá no salen aunque la consulta las tenga cargadas.
+        $respuesta->assertDontSee('PESO:');
+        $respuesta->assertDontSee('C. CEFÁLICA:');
+        $respuesta->assertDontSee('T.A.:');
     }
 
     public function test_la_secretaria_imprime_la_constancia_de_pediatria_desde_la_cita(): void
