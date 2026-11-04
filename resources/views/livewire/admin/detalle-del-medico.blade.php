@@ -950,6 +950,7 @@
                         <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
                             <div>
                                 <strong class="text-capitalize">{{ $solicitud->estado }}</strong>
+                                <span class="text-muted small">· Solicitud #{{ $solicitud->id }}</span>
                                 <span class="text-muted small">· recibida {{ $fecha($solicitud->created_at) }}</span>
                                 @if ($solicitud->cedula) <span class="text-muted small">· cédula {{ $solicitud->cedula }}</span> @endif
                                 @if ($solicitud->mpps) <span class="text-muted small">· MPPS {{ $solicitud->mpps }}</span> @endif
@@ -971,7 +972,7 @@
 
                 @if ($solicitudAbiertaId)
                     <div class="border rounded p-3 mt-3">
-                        <h3 class="h6">Resolver la solicitud</h3>
+                        <h3 class="h6">Resolver la solicitud #{{ $solicitudAbiertaId }}</h3>
                         <form wire:submit.prevent="aprobarSolicitud">
                             <div class="row g-3">
                                 <div class="col-md-5">

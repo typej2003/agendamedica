@@ -610,6 +610,29 @@ class RegistroDeMedicoWebTest extends TestCase
         Mail::assertSent(SolicitudDeMedicoRechazada::class, fn ($m) => $m->hasTo($solicitud->email));
     }
 
+    /**
+     * El número de la solicitud a la vista (2026-11-04): en la tabla y en el diálogo lateral, para distinguir dos
+     * solicitudes parecidas del mismo médico. El detalle se abre en un `offcanvas`, no en una tarjeta arriba.
+     */
+    public function test_la_bandeja_numera_las_solicitudes_y_abre_el_detalle_en_un_dialogo_lateral(): void
+    {
+        $solicitud = $this->solicitar();
+
+        $this->actingAs($this->administrador());
+
+        $componente = Livewire::test(SolicitudesDeMedicos::class)
+            ->assertSee('#'.$solicitud->id)
+            ->assertSeeHtml('title="Número de solicitud"');
+
+        $componente->call('abrir', $solicitud->id)
+            ->assertSee('Solicitud #'.$solicitud->id)
+            ->assertSeeHtml('id="solicitud-detalle"')
+            ->assertSeeHtml('offcanvas-backdrop');
+
+        $componente->call('cerrar')
+            ->assertDontSeeHtml('id="solicitud-detalle"');
+    }
+
     public function test_la_bandeja_es_solo_de_administradores(): void
     {
         $solicitud = $this->solicitar();
