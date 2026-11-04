@@ -161,20 +161,23 @@
                 @endif
 
                 <div class="row g-3">
-                    <x-ui.campo etiqueta="Nombre del motivo" for="motivo-razon" error="razon" class="col-12"
-                                :requerido="true" :ayuda="'Se guarda en mayúsculas. Hasta ' . $vm->largoRazon() . ' caracteres.'">
+                    <x-ui.campo etiqueta="Nombre del motivo" for="motivo-razon" error="razon" class="col-12" :requerido="true">
                         <input type="text" name="razon" id="motivo-razon" class="form-control" data-foco-inicial
                                maxlength="{{ $vm->largoRazon() }}" autocomplete="off" value="{{ $vm->razon() }}">
                     </x-ui.campo>
 
-                    <x-ui.campo etiqueta="Precio" for="motivo-precio" error="precio" class="col-12"
-                                ayuda="El monto de la cita cuando no escribes otro al agendar. Déjalo vacío si el motivo no tiene precio fijo. Cambiarlo no altera las citas que ya agendaste.">
-                        <input type="number" step="0.01" min="0" name="precio" id="motivo-precio" class="form-control"
-                               inputmode="decimal" value="{{ $vm->precio() }}">
+                    {{-- El monto va en dólares: el «USD» del campo es el que le dice al médico en qué moneda está cargando,
+                         sin una ayuda que lo explique (2026-11-03). --}}
+                    <x-ui.campo etiqueta="Precio" for="motivo-precio" error="precio" class="col-12">
+                        <div class="input-group">
+                            <input type="number" step="0.01" min="0" name="precio" id="motivo-precio" class="form-control"
+                                   inputmode="decimal" value="{{ $vm->precio() }}">
+                            <span class="input-group-text">USD</span>
+                        </div>
                     </x-ui.campo>
 
                     <x-ui.campo etiqueta="Sede" for="motivo-sede" error="office_id" class="col-12"
-                                :ayuda="$vm->haySedes() ? 'Con «Todas las sedes» el motivo se ofrece en cualquier sede; con una sede, sólo en ella (y con el precio de ella).' : 'Todavía no tienes sedes: el motivo se ofrece en todas. Créalas en Sedes y consultorios.'">
+                                :ayuda="$vm->haySedes() ? null : 'Todavía no tienes sedes: el motivo se ofrece en todas.'">
                         <select name="office_id" id="motivo-sede" class="form-select">
                             @foreach ($vm->opcionesDeSede() as $opcion)
                                 <option value="{{ $opcion['valor'] }}" {{ $vm->sedeSeleccionada() === $opcion['valor'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
@@ -189,7 +192,6 @@
                                    {{ $vm->admiteVarias() ? 'checked' : '' }}>
                             <label class="form-check-label" for="motivo-varias">Admite varias citas pendientes del mismo paciente</label>
                         </div>
-                        <span class="form-text d-block">Para servicios que se agendan seguido —masajes, terapias—: con este motivo no se pregunta qué hacer con la cita anterior.</span>
                     </div>
                 </div>
             </div>

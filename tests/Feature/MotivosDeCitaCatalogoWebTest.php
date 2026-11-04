@@ -185,10 +185,10 @@ class MotivosDeCitaCatalogoWebTest extends TestCase
             ->assertOk()->assertSee('Mostrando 26–33 de 33');
 
         $busqueda = $this->conContexto($user, $medico, $gineco)->get($this->url('?buscar=ecografia+pelvica'));
-        $busqueda->assertOk()->assertSee('ECOGRAFÍA PÉLVICA')->assertSee('120,50')->assertSee('Todas las sedes');
+        $busqueda->assertOk()->assertSee('ECOGRAFÍA PÉLVICA')->assertSee('120,50 USD')->assertSee('Todas las sedes');
 
         $porSede = $this->conContexto($user, $medico, $gineco)->get($this->url('?buscar=san+jose'));
-        $porSede->assertOk()->assertSee('Primera consulta')->assertSee('80,00')->assertSee('San José — C1')
+        $porSede->assertOk()->assertSee('Primera consulta')->assertSee('80,00 USD')->assertSee('San José — C1')
             ->assertSee('Código en 2 sedes');
 
         $this->conContexto($user, $medico, $gineco)->get($this->url('?buscar=control'))
@@ -196,6 +196,31 @@ class MotivosDeCitaCatalogoWebTest extends TestCase
 
         $this->conContexto($user, $medico, $gineco)->get($this->url('?buscar=zzzz'))
             ->assertOk()->assertSee('Ningún motivo coincide');
+    }
+
+    /**
+     * El monto se lee **en dólares** (2026-11-03): la tabla lo dice al lado del número y el formulario lo indica en el
+     * propio campo. Y el diálogo ya no explica lo que la pantalla dice sola: ni el nombre, ni el precio, ni la sede, ni
+     * la marca de varias citas.
+     */
+    public function test_el_precio_se_muestra_en_dolares_y_el_formulario_ya_no_explica_los_campos(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->sede($medico, 'San José');
+        $this->motivo($medico, '01', 'CONSULTA', ['precio' => 60.0]);
+
+        $pagina = $this->conContexto($user, $medico, $gineco)->get($this->url())->assertOk();
+
+        // La tabla: el número con su unidad.
+        $pagina->assertSee('60,00 USD');
+        // El formulario: el «USD» del campo Precio, como indicativo.
+        $pagina->assertSee('<span class="input-group-text">USD</span>', false);
+
+        // Sin los textos de ayuda que explicaban lo que ya se ve.
+        $pagina->assertDontSee('Se guarda en mayúsculas');
+        $pagina->assertDontSee('Déjalo vacío si el motivo no tiene precio fijo');
+        $pagina->assertDontSee('Con «Todas las sedes» el motivo se ofrece en cualquier sede');
+        $pagina->assertDontSee('Para servicios que se agendan seguido');
     }
 
     public function test_sin_motivos_el_listado_ofrece_crear_el_primero(): void

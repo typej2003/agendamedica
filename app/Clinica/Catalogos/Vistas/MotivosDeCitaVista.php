@@ -97,7 +97,7 @@ final class MotivosDeCitaVista
             'razon' => $razon,
             'codigo' => trim((string) $fila->codigo),
             'sede' => MotivosDeCitaDelCatalogo::sedeDelMotivo($fila),
-            'precio' => $fila->precio === null ? null : number_format((float) $fila->precio, 2, ',', '.'),
+            'precio' => $fila->precio === null ? null : number_format((float) $fila->precio, 2, ',', '.') . ' USD',
             'repetido' => $repetidos > 1 ? 'Hay ' . $repetidos . ' con este nombre en esta sede' : null,
             'mismoCodigo' => $mismoCodigo > 1 ? 'Código en ' . $mismoCodigo . ' sedes' : null,
             'marca' => $marcado
