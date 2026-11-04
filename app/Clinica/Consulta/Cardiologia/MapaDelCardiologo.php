@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Consulta\Cardiologia;
 
+use App\Clinica\Consulta\Interna\MapaDelInternista;
 use App\Models\DopplerArterialMiembrosInferiores;
 use App\Models\DopplerCarotidas;
 use App\Models\DopplerMiembrosSuperiores;
@@ -9,6 +10,7 @@ use App\Models\DopplerVenoso;
 use App\Models\Ecocardiografia;
 use App\Models\EcocardiogramaEte;
 use App\Models\EcocardiograficoInforme;
+use App\Models\Ekg;
 use App\Models\ImplantacionMarcapasos;
 use App\Models\Oscilometria;
 use App\Models\PruebaDeEsfuerzo;
@@ -47,6 +49,8 @@ final class MapaDelCardiologo
     public const PESTANA_OSCILOMETRIA = 'oscilometria';
     public const PESTANA_MARCAPASOS = 'marcapasos';
     public const PESTANA_ARTERIAL_MI = 'doppler-arterial-mi';
+    /** El **E.K.G.** (CAR-5): reusa el mapa y la tabla de medicina interna (MI-3). */
+    public const PESTANA_EKG = 'ekg';
 
     /**
      * Las tablas de una fila por consulta: tabla => [modelo, columna de la historia, columna de la consulta].
@@ -65,6 +69,8 @@ final class MapaDelCardiologo
         'implantacion_marcapasos' => [ImplantacionMarcapasos::class, 'historia', 'consulta'],
         // ⚠️ Clave del legado `numhistoria` + `num_consulta` (con guion bajo), no `numconsulta`.
         'dd_arterial_mi' => [DopplerArterialMiembrosInferiores::class, 'numhistoria', 'num_consulta'],
+        // El E.K.G. es la misma tabla de medicina interna (MI-3): clave `numhistoria` + `numconsulta`.
+        'ekg' => [Ekg::class, 'numhistoria', 'numconsulta'],
     ];
 
     /**
@@ -84,6 +90,7 @@ final class MapaDelCardiologo
             self::PESTANA_OSCILOMETRIA => 'Oscilometría',
             self::PESTANA_MARCAPASOS => 'Marcapasos',
             self::PESTANA_ARTERIAL_MI => 'Doppler arterial de miembros inferiores',
+            self::PESTANA_EKG => 'E.K.G.',
         ],
     ];
 
@@ -293,7 +300,29 @@ final class MapaDelCardiologo
                         'columna' => 'conclusion', 'tipo' => 'parrafo'],
                 ],
             ),
+            // CAR-5: el **E.K.G.** (reusa el mapa y la tabla de medicina interna, MI-3).
+            self::PESTANA_EKG => self::camposDelEkg(),
         ];
+    }
+
+    /**
+     * Los campos del E.K.G., tomados del mapa de medicina interna con las claves prefijadas (`cardio_`) para no chocar con
+     * las de los estudios del cardiólogo. Las columnas y la tabla (`ekg`) son las mismas: el escritorio comparte el dato.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private static function camposDelEkg(): array
+    {
+        // Sólo las columnas de `ekg` (el mapa del internista comparte la tabla con la web).
+        $campos = array_filter(
+            MapaDelInternista::deLaPestana('ekg'),
+            fn (array $campo) => $campo['tabla'] === 'ekg',
+        );
+
+        return array_map(
+            fn (array $campo) => array_merge($campo, ['clave' => 'cardio_' . $campo['clave']]),
+            array_values($campos),
+        );
     }
 
     /**

@@ -363,6 +363,10 @@ final class SeccionesDeLaConsulta
         ['numero' => 14, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
             'detalle' => 'Los conceptos que se cobran por la consulta, del catálogo del consultorio, con su total.', 'tarea' => 'F9',
             'estado' => 'listo', 'seccion' => self::SECCION_PREFACTURA],
+        // La evaluación pre-operatoria del cardiólogo (CAR-5): la pantalla y las tablas son las de medicina interna (MI-5).
+        ['numero' => 15, 'grupo' => 'Documentos', 'titulo' => 'Evaluación pre-operatoria', 'icono' => 'bi-scissors',
+            'detalle' => 'Estimaciones (ASA, trombosis, infección, espirometría, situaciones especiales) y riesgo operatorio.',
+            'tarea' => 'CAR-5', 'estado' => 'listo', 'seccion' => Interna\MapaDelInternista::SECCION_PREOPERATORIA],
     ];
 
     /**

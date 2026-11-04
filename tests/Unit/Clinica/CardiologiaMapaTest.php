@@ -25,13 +25,14 @@ class CardiologiaMapaTest extends TestCase
             'oscilometria' => 'Oscilometría',
             'marcapasos' => 'Marcapasos',
             'doppler-arterial-mi' => 'Doppler arterial de miembros inferiores',
+            'ekg' => 'E.K.G.',
         ], MapaDelCardiologo::PESTANAS[MapaDelCardiologo::SECCION]);
         $this->assertTrue(MapaDelCardiologo::esSeccion('cardiologia'));
         $this->assertFalse(MapaDelCardiologo::esSeccion('estudio'));
         $this->assertSame([
             'ecocardiografia', 'ecocardiografico_in', 'ecocardiograma_ete',
             'dd_arterial_venoso_ms', 'dd_arterias_carotidas_dos', 'ddflujo_venoso',
-            'prueba_esfuerzo', 'oscilometria', 'implantacion_marcapasos', 'dd_arterial_mi',
+            'prueba_esfuerzo', 'oscilometria', 'implantacion_marcapasos', 'dd_arterial_mi', 'ekg',
         ], array_keys(MapaDelCardiologo::TABLAS));
     }
 
@@ -127,6 +128,18 @@ class CardiologiaMapaTest extends TestCase
         $this->assertSame('iliaca_ext', $arterial['iliaca_ext_morfologia']['columna']);
         $this->assertSame('texto', $arterial['iliaca_ext_morfologia']['tipo']);
         $this->assertSame('conclusion', $arterial['conclusion_arterial_mi']['columna']);
+    }
+
+    public function test_el_ekg_reusa_el_mapa_de_medicina_interna(): void
+    {
+        $ekg = collect(MapaDelCardiologo::deLaPestana(MapaDelCardiologo::PESTANA_EKG))->keyBy('clave');
+
+        $this->assertSame('ekg', $ekg['cardio_ekg_ritmo']['tabla']);
+        $this->assertSame('ritmo', $ekg['cardio_ekg_ritmo']['columna']);
+        $this->assertSame('si_no', $ekg['cardio_ekg_hbsai']['tipo']);
+        $this->assertSame('parrafo', $ekg['cardio_ekg_conclusiones']['tipo']);
+        $this->assertSame('conclusiones', $ekg['cardio_ekg_conclusiones']['columna']);
+        $this->assertSame('texto', $ekg['cardio_ekg_fc']['tipo']);
     }
 
     public function test_la_pestana_pedida_se_normaliza_a_la_que_existe(): void

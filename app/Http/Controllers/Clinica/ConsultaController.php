@@ -691,6 +691,11 @@ class ConsultaController extends Controller
             return $this->seccionDelCardiologo($seccion, $consulta);
         }
 
+        // La **evaluación pre-operatoria** del cardiólogo (CAR-5): reusa la pantalla y las tablas de medicina interna (MI-5).
+        if ($this->alcance()->esCardiologia() && $seccion === \App\Clinica\Consulta\Interna\MapaDelInternista::SECCION_PREOPERATORIA) {
+            return $this->seccionDelInternista($seccion, $consulta, $regMedico, $imagenes);
+        }
+
         $numero = (int) $consulta->numhistoria;
         $nroconsulta = (int) $consulta->nroconsulta;
 

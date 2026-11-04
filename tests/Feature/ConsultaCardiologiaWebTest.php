@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Clinica\Consulta\Cardiologia\MapaDelCardiologo;
+use App\Clinica\Consulta\Interna\MapaDelInternista;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Models\Consulta;
 use App\Models\Historia;
@@ -108,6 +109,8 @@ class ConsultaCardiologiaWebTest extends TestCase
             ->assertSee('Oscilometría')
             ->assertSee('Marcapasos')
             ->assertSee('Doppler arterial de miembros inferiores')
+            ->assertSee('E.K.G.')
+            ->assertSee('Evaluación pre-operatoria')
             ->assertSee('Guardar el estudio');
     }
 
@@ -358,6 +361,33 @@ class ConsultaCardiologiaWebTest extends TestCase
             ->assertSee('Aurícula izquierda')
             ->assertSee('3,4')
             ->assertSee('Función sistólica conservada.');
+    }
+
+    public function test_guarda_el_ekg_y_abre_la_evaluacion_preoperatoria(): void
+    {
+        [$user, $medico, $especialidad] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->conContexto($user, $medico, $especialidad)->post(route('clinica.consulta.cardiologia.guardar', $consulta->id), [
+            'pestana' => MapaDelCardiologo::PESTANA_EKG,
+            'cardio_ekg_ritmo' => 'Sinusal',
+            'cardio_ekg_fc' => '72',
+            'cardio_ekg_pr' => '0,16',
+            'cardio_ekg_hbsai' => 'S',
+            'cardio_ekg_conclusiones' => 'Sin alteraciones agudas.',
+        ])->assertSessionHas('estado', 'Estudio guardado.');
+
+        $this->assertDatabaseHas('ekg', [
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 3001, 'numconsulta' => 1,
+            'ritmo' => 'Sinusal', 'fc' => '72', 'pr' => '0,16', 'hbsai' => 'S', 'conclusiones' => 'Sin alteraciones agudas.',
+        ]);
+
+        // La evaluación pre-operatoria reusa la sección de medicina interna (MI-5).
+        $this->conContexto($user, $medico, $especialidad)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => MapaDelInternista::SECCION_PREOPERATORIA]))
+            ->assertOk()
+            ->assertSee('Estimaciones')
+            ->assertSee('Riesgo operatorio');
     }
 
     public function test_una_pestana_que_no_existe_no_guarda(): void
