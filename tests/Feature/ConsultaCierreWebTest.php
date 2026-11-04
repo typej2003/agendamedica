@@ -145,15 +145,20 @@ class ConsultaCierreWebTest extends TestCase
         return $sede;
     }
 
-    /** El paciente del médico, con historia, y su consulta. */
+    /**
+     * El paciente del médico, con historia, y su consulta.
+     *
+     * @param  array<string,mixed>  $datosDelPaciente  columnas de `pacientes` que pisa (el niño migrado: nombre completo, sin apellido ni teléfono)
+     */
     private function pacienteConConsulta(
         Medico $medico,
         int $numhistoria,
         int $nroconsulta = 1,
         ?string $fecha = null,
         ?int $sede = null,
+        array $datosDelPaciente = [],
     ): Consulta {
-        $pacienteId = DB::table('pacientes')->insertGetId([
+        $pacienteId = DB::table('pacientes')->insertGetId(array_merge([
             'nombres'     => 'Ana',
             'apellidos'   => 'Alvarez',
             'cedula'      => (string) random_int(10000000, 30000000),
@@ -162,7 +167,7 @@ class ConsultaCierreWebTest extends TestCase
             'telefono'    => '04141234567',
             'created_at'  => now(),
             'updated_at'  => now(),
-        ]);
+        ], $datosDelPaciente));
 
         DB::table('medico_pacientes')->insert([
             'medico_id'   => $medico->id,
@@ -520,6 +525,60 @@ class ConsultaCierreWebTest extends TestCase
 
         $respuesta->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => 'datos']));
         $respuesta->assertSessionHas('error', fn ($e) => str_contains($e, 'teléfono'));
+    }
+
+    /**
+     * El médico suma pediatría al pivote: `ContextoTrabajo::actual()` resuelve la especialidad **entre las suyas**
+     * y cae en la primera, así que cambiar sólo el `specialty_id` de la sesión no alcanza (trampa 137).
+     */
+    private function conPediatria(Medico $medico): Specialty
+    {
+        $pediatria = Specialty::where('slug', 'pediatria')->firstOrFail();
+        $medico->specialties()->syncWithoutDetaching([$pediatria->id]);
+
+        return $pediatria;
+    }
+
+    public function test_en_pediatria_la_consulta_se_cierra_con_el_nombre_completo_y_el_telefono_del_representante(): void
+    {
+        // El paciente migrado de PediaReport trae el **nombre completo** en `nombres`, sin apellido, y no tiene
+        // teléfono propio: lo que lo deja cerrar es el teléfono del representante (WEB-7.4.2c), no el suyo.
+        [$user, $medico] = $this->medicoConAcceso();
+        $pediatria = $this->conPediatria($medico);
+        $sede = $this->sede($medico);
+        $consulta = $this->pacienteConConsulta($medico, 6001, 1, null, $sede->medical_center_id, [
+            'nombres' => 'OUBIED ALHENAWI ALIA', 'apellidos' => null, 'cedula' => null, 'telefono' => null,
+        ]);
+        $cita = $this->cita($medico, $sede, [
+            'numhistoria' => 6001, 'atendido' => 0, 'estado' => Cola::ESTADO_NO_CONFIRMADA,
+        ]);
+        DB::table('representante')->insert([
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 6001, 'nombre' => 'REPRESENTANTE',
+            'telefono'   => '04141112222', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $pediatria)->actingAs($user)->post($this->urlCerrar($consulta));
+
+        $respuesta->assertRedirect($this->urlAgenda($sede));
+        $respuesta->assertSessionHas('estado', fn ($estado) => str_contains($estado, 'Consulta N.º 1 terminada'));
+        $this->assertSame(1, (int) $cita->fresh()->atendido);
+    }
+
+    public function test_en_pediatria_sin_representante_lo_que_falta_es_su_telefono_y_no_el_nombre_y_apellido(): void
+    {
+        // La vara del cierre es la de pediatría: el nombre va completo y sin apellido, y el teléfono que falta
+        // es el del representante, no el del paciente (el bug: el contexto no tiene `specialty_id`).
+        [$user, $medico] = $this->medicoConAcceso();
+        $pediatria = $this->conPediatria($medico);
+        $consulta = $this->pacienteConConsulta($medico, 6002, 1, null, null, [
+            'nombres' => 'OUBIED ALHENAWI ALIA', 'apellidos' => null, 'cedula' => null, 'telefono' => null,
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $pediatria)->actingAs($user)->post($this->urlCerrar($consulta));
+
+        $respuesta->assertRedirect(route('clinica.consulta', [$consulta->id, 'seccion' => 'datos']));
+        $respuesta->assertSessionHas('error', fn ($e) => str_contains($e, 'teléfono del representante')
+            && ! str_contains($e, 'nombre y apellido'));
     }
 
     public function test_la_seccion_de_datos_personales_se_edita_dentro_de_la_consulta_y_vuelve_a_ella(): void
