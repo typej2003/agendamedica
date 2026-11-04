@@ -67,7 +67,7 @@ final class HojasDeDocumentoVista
                 ? $this->distribuidor
                 : new DistribuidorDeDocumento(ModoDeLaHoja::medidas($modo));
 
-            $reparto = $distribuidor->distribuir($this->membrete, $documento);
+            $reparto = $distribuidor->distribuir($this->membrete, $documento, $this->pediatria);
 
             foreach (array_chunk($reparto['mitades'], ModoDeLaHoja::porPagina($modo)) as $par) {
                 $hojas[] = [
@@ -101,6 +101,9 @@ final class HojasDeDocumentoVista
             'clase' => 'documento',
             'primera' => $mitad['primera'],
             'titulo' => $mitad['primera'] ? $documento->titulo : $documento->titulo . ' (continuación)',
+            // La cabecera de pediatría (2026-11-03): el paciente con la fecha, la edad con el sexo y el representante,
+            // las medidas y la historia, sin la cédula. Fuera de pediatría la vista pinta la de siempre.
+            'pediatria' => $this->pediatria,
             'paciente' => $persona['nombre'],
             'cedula' => $persona['cedula'] ?? '',
             'edad' => $this->edad($persona['edad'] ?? null, $this->pediatria ? ($persona['edadCompacta'] ?? null) : null),

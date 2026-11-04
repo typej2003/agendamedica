@@ -219,14 +219,16 @@ final class MedidasDeLaMitad
      *
      * @param  string  $paciente  el nombre que se imprime en `PACIENTE`
      * @param  string|null  $direccion  la dirección, sólo en la mitad "Rp." (en la de indicaciones es `null`)
-     * @param  array<int,string>  $lineasExtra  las líneas que agrega la cabecera de pediatría: la de `SEXO` / `Rep.` /
-     *                                         `Historia` en las dos mitades y, en la de indicaciones, la de las medidas
+     * @param  array<int,string>  $lineasExtra  las líneas que agrega la cabecera de pediatría, en el orden en que salen:
+     *                                         `EDAD` / `SEXO` / `Rep.`, la de las medidas y la de `Historia`
+     * @param  bool  $fechaConElPaciente  `true` en la cabecera de pediatría (2026-11-03): la `FECHA` va a la derecha de
+     *                                    la línea del paciente y no en la de `C.I.` / `EDAD` / `FECHA`
      */
-    public function altoDelCuerpo(Membrete $membrete, string $paciente, ?string $direccion, array $lineasExtra = []): float
+    public function altoDelCuerpo(Membrete $membrete, string $paciente, ?string $direccion, array $lineasExtra = [], bool $fechaConElPaciente = false): float
     {
         $ocupado = $this->altoDelMembrete($membrete)
             + self::LINEA_MM
-            + $this->altoDeLosDatos($paciente, $direccion, $lineasExtra) + self::AIRE_DE_LOS_DATOS_MM
+            + $this->altoDeLosDatos($paciente, $direccion, $lineasExtra, $fechaConElPaciente) + self::AIRE_DE_LOS_DATOS_MM
             + self::TITULO_MM
             + self::FIRMA_MM
             + $this->altoDelPie($membrete)
@@ -256,15 +258,17 @@ final class MedidasDeLaMitad
      * @param  bool  $conFirma  `true` si es la última mitad del documento (lleva la firma), `false` si sigue en otra
      * @param  ?string  $para  el destinatario que va **en la cabecera, en una caja con borde** (el resumen médico, WEB-5.3c);
      *                         ocupa su franja sólo en la primera mitad
-     * @param  array<int,string>  $datosExtra  las líneas que agrega la cabecera de pediatría (`SEXO` / `Rep.` / `Historia`),
-     *                                         sólo en la primera mitad
+     * @param  array<int,string>  $datosExtra  las líneas que agrega la cabecera de pediatría (`SEXO` / `Rep.` /
+     *                                         `Historia` y las medidas), sólo en la primera mitad
+     * @param  bool  $fechaConElPaciente  `true` en la cabecera de pediatría (2026-11-03): la `FECHA` va a la derecha de
+     *                                    la línea del paciente, no en la de `C.I.` / `EDAD` / `FECHA`
      */
-    public function altoDelCuerpoDeDocumento(Membrete $membrete, string $paciente, bool $primera, bool $conFirma, ?string $para = null, array $datosExtra = []): float
+    public function altoDelCuerpoDeDocumento(Membrete $membrete, string $paciente, bool $primera, bool $conFirma, ?string $para = null, array $datosExtra = [], bool $fechaConElPaciente = false): float
     {
         $arriba = $primera
             ? $this->altoDelMembrete($membrete)
                 + self::LINEA_MM
-                + $this->altoDeLosDatos($paciente, null, $datosExtra) + self::AIRE_DE_LOS_DATOS_MM
+                + $this->altoDeLosDatos($paciente, null, $datosExtra, $fechaConElPaciente) + self::AIRE_DE_LOS_DATOS_MM
                 + self::TITULO_MM
                 + ($para === null ? 0.0 : self::PARA_MM)
             : $this->altoDelEncabezadoDeContinuacion($paciente)
@@ -352,19 +356,27 @@ final class MedidasDeLaMitad
      * Los datos del paciente: `PACIENTE`, luego `C.I.` / `EDAD` / `FECHA` en una sola línea y, en la mitad
      * "Rp.", la `DIRECCIÓN` (que puede ocupar más de una línea).
      *
-     * En pediatría se les suma una **línea extra** con `SEXO` / `Rep.` / `Historia` (y, en la mitad de *Indicaciones*,
-     * la de las medidas): se miden como texto corrido, que es como las pinta el CSS (`.recipe-dato-linea`, sin flex,
-     * así una línea del navegador es una línea de la cuenta).
+     * En pediatría la cabecera es otra (2026-11-03): el `PACIENTE` y la `FECHA` comparten la primera línea, la segunda
+     * lleva `EDAD` / `SEXO` / `Rep.` y las demás lo que traiga `$lineasExtra` —las medidas y la `Historia`—, así que
+     * **no hay línea de `C.I.`** y la fecha le come ancho al nombre. Eso lo dice `$fechaConElPaciente`.
      *
      * @param  array<int,string>  $lineasExtra
      */
-    public function altoDeLosDatos(string $paciente, ?string $direccion, array $lineasExtra = []): float
+    public function altoDeLosDatos(string $paciente, ?string $direccion, array $lineasExtra = [], bool $fechaConElPaciente = false): float
     {
         $linea = 9.0 * self::INTERLINEA * MedidorDeTexto::MM_POR_PUNTO;
 
-        // "PACIENTE:" en negrita ocupa ~17 mm antes del nombre.
-        $lineasDelNombre = max($this->medidor->lineas($paciente, $this->anchoUtil - 17.0, 9.0), 1);
-        $alto = $lineasDelNombre * $linea + 1.0 + $linea;
+        // "PACIENTE:" en negrita ocupa ~17 mm antes del nombre; la fecha, cuando comparte la línea, lo que se le
+        // reserva en el encabezado de continuación (30 mm).
+        $anchoDelNombre = $this->anchoUtil - 17.0 - ($fechaConElPaciente ? self::FECHA_DE_CONTINUACION_MM : 0.0);
+        $lineasDelNombre = max($this->medidor->lineas($paciente, $anchoDelNombre, 9.0), 1);
+        $alto = $lineasDelNombre * $linea;
+
+        // La línea de `C.I.` / `EDAD` / `FECHA` de las demás especialidades. En la cabecera de pediatría no existe:
+        // su segunda línea es la de `EDAD` / `SEXO` / `Rep.`, que llega en `$lineasExtra` como las demás.
+        if (! $fechaConElPaciente) {
+            $alto += 1.0 + $linea;
+        }
 
         foreach ($lineasExtra as $texto) {
             $alto += self::AIRE_DE_LA_LINEA_EXTRA_MM

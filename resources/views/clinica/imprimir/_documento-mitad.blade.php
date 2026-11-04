@@ -13,6 +13,10 @@
 
         @if ($mitad['enBlanco'] ?? false)
             @include('clinica.imprimir._datos-en-blanco')
+        @elseif ($mitad['pediatria'] ?? false)
+            {{-- La cabecera de pediatría (2026-11-03): el paciente con la fecha, edad / sexo / representante, las medidas
+                 y la historia. Sin la cédula del paciente. Los documentos no imprimen la dirección. --}}
+            @include('clinica.imprimir._datos-pediatricos')
         @else
             <div class="recipe-datos">
                 <p class="recipe-dato recipe-dato-paciente"><span class="recipe-dato-etiqueta">PACIENTE:</span> {{ $mitad['paciente'] }}</p>

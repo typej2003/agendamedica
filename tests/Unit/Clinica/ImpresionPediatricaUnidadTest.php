@@ -152,15 +152,19 @@ class ImpresionPediatricaUnidadTest extends TestCase
         $this->assertNull($mitades[0]['sexo']);
         $this->assertNull($mitades[0]['representante']);
         $this->assertSame('00025', $mitades[0]['historia']);
-        // La línea que se mide (y que la vista pinta) no deja rótulos vacíos: sólo dice la historia.
-        $this->assertSame('Historia: 00025', PacienteImpreso::lineaPediatrica($persona));
+        // La línea que se mide (y que la vista pinta) no deja rótulos vacíos: la edad queda sola y la historia aparte.
+        $this->assertSame(['EDAD: 21A 10M 16D', 'Historia: 00025'], PacienteImpreso::lineasPediatricas($persona));
     }
 
-    public function test_sin_sexo_representante_ni_historia_no_hay_linea_pediatrica(): void
+    public function test_sin_sexo_representante_ni_historia_no_hay_lineas_pediatricas(): void
     {
-        $this->assertNull(PacienteImpreso::lineaPediatrica([]));
-        $this->assertNull(PacienteImpreso::lineaPediatrica(['sexo' => null, 'representante' => '  ', 'historia' => null]));
-        $this->assertSame('SEXO: F   Rep.: ELDRIS MENDOZA   Historia: 00025', PacienteImpreso::lineaPediatrica($this->personaPediatrica()));
+        $this->assertSame([], PacienteImpreso::lineasPediatricas([]));
+        $this->assertSame([], PacienteImpreso::lineasPediatricas(['sexo' => null, 'representante' => '  ', 'historia' => null]));
+        // La edad va con el sexo y el representante; la historia, sola y al final (2026-11-03).
+        $this->assertSame(
+            ['EDAD: 21A 10M 16D   SEXO: F   Rep.: ELDRIS MENDOZA', 'Historia: 00025'],
+            PacienteImpreso::lineasPediatricas($this->personaPediatrica()),
+        );
     }
 
     public function test_el_recipe_de_la_pareja_no_lleva_el_bloque_pediatrico(): void
@@ -173,6 +177,8 @@ class ImpresionPediatricaUnidadTest extends TestCase
         $mitades = $this->mitadesDelRecipe(true, $this->recipe($persona, [], DocumentoDeRecipe::PAREJA));
 
         foreach ($mitades as $mitad) {
+            // La hoja de la pareja no estrena la cabecera de pediatría: sigue con la de siempre (con `C.I.`).
+            $this->assertFalse($mitad['pediatria']);
             $this->assertNull($mitad['sexo']);
             $this->assertNull($mitad['representante']);
             $this->assertNull($mitad['historia']);
@@ -235,11 +241,11 @@ class ImpresionPediatricaUnidadTest extends TestCase
     {
         $medidas = new MedidasDeLaMitad();
         $membrete = $this->membrete();
-        $cabecera = PacienteImpreso::lineaPediatrica($this->personaPediatrica());
+        $cabecera = PacienteImpreso::lineasPediatricas($this->personaPediatrica());
         $lineaDeLasMedidas = MedidasDeLaConsulta::linea([['etiqueta' => 'PESO:', 'valor' => '20 Kg']]);
 
-        $sinMedidas = $medidas->altoDelCuerpoDeDocumento($membrete, 'Alexandra Tocuyo', true, true, null, [$cabecera]);
-        $conMedidas = $medidas->altoDelCuerpoDeDocumento($membrete, 'Alexandra Tocuyo', true, true, null, [$cabecera, $lineaDeLasMedidas]);
+        $sinMedidas = $medidas->altoDelCuerpoDeDocumento($membrete, 'Alexandra Tocuyo', true, true, null, $cabecera, true);
+        $conMedidas = $medidas->altoDelCuerpoDeDocumento($membrete, 'Alexandra Tocuyo', true, true, null, array_merge($cabecera, [$lineaDeLasMedidas]), true);
 
         // Una línea de 9 pt por su renglón más el milímetro de aire de `.recipe-dato-linea`.
         $lineaExtra = 9.0 * MedidasDeLaMitad::INTERLINEA * MedidorDeTexto::MM_POR_PUNTO + 1.0;
@@ -313,21 +319,33 @@ class ImpresionPediatricaUnidadTest extends TestCase
     {
         $medidas = new MedidasDeLaMitad();
         $membrete = $this->membrete();
-        $linea = PacienteImpreso::lineaPediatrica($this->personaPediatrica());
+        $lineas = PacienteImpreso::lineasPediatricas($this->personaPediatrica());
         $lineaDeLasMedidas = MedidasDeLaConsulta::linea([['etiqueta' => 'PESO:', 'valor' => '20 Kg']]);
 
-        $sinPediatria = $medidas->altoDelCuerpo($membrete, 'Alexandra Tocuyo', null);
-        $conLaCabecera = $medidas->altoDelCuerpo($membrete, 'Alexandra Tocuyo', null, [$linea]);
-        $conTodo = $medidas->altoDelCuerpo($membrete, 'Alexandra Tocuyo', null, [$linea, $lineaDeLasMedidas]);
+        $conLaEdadYSexo = $medidas->altoDelCuerpo($membrete, 'Alexandra Tocuyo', null, [$lineas[0]], true);
+        $conLaHistoria = $medidas->altoDelCuerpo($membrete, 'Alexandra Tocuyo', null, $lineas, true);
+        $conTodo = $medidas->altoDelCuerpo($membrete, 'Alexandra Tocuyo', null, array_merge($lineas, [$lineaDeLasMedidas]), true);
 
-        // Una línea de 9 pt por la cabecera y otra por las medidas: el cuerpo tiene que achicarse en esa medida, o la
-        // lista de medicamentos se sale de la hoja. Una línea extra es su renglón (9 pt por la interlínea) más el milímetro
-        // de aire de `.recipe-dato-linea`.
+        // Una línea de 9 pt por su renglón más el milímetro de aire de `.recipe-dato-linea`: el cuerpo tiene que achicarse
+        // en esa medida por cada línea de la cabecera, o la lista de medicamentos se sale de la hoja.
         $lineaExtra = 9.0 * MedidasDeLaMitad::INTERLINEA * MedidorDeTexto::MM_POR_PUNTO + 1.0;
 
-        $this->assertLessThan($sinPediatria, $conLaCabecera);
-        $this->assertLessThan($conLaCabecera, $conTodo);
-        $this->assertEqualsWithDelta($lineaExtra, $sinPediatria - $conLaCabecera, 0.01);
-        $this->assertEqualsWithDelta($lineaExtra, $conLaCabecera - $conTodo, 0.01);
+        $this->assertLessThan($conLaEdadYSexo, $conLaHistoria);
+        $this->assertLessThan($conLaHistoria, $conTodo);
+        $this->assertEqualsWithDelta($lineaExtra, $conLaEdadYSexo - $conLaHistoria, 0.01);
+        $this->assertEqualsWithDelta($lineaExtra, $conLaHistoria - $conTodo, 0.01);
+
+        // La fecha comparte la línea del paciente (2026-11-03): en vez de la línea de `C.I.` / `EDAD` / `FECHA` hay una
+        // menos, y el nombre se mide contra 30 mm menos de ancho (nunca más alto que el de la hoja de siempre).
+        $linea = 9.0 * MedidasDeLaMitad::INTERLINEA * MedidorDeTexto::MM_POR_PUNTO;
+        $conFecha = $medidas->altoDeLosDatos('Ana Pérez', null, [], true);
+        $sinFecha = $medidas->altoDeLosDatos('Ana Pérez', null, [], false);
+        $this->assertEqualsWithDelta(1.0 + $linea, $sinFecha - $conFecha, 0.01);
+
+        $nombreLargo = 'Alexandra María de los Ángeles Tocuyo Mendoza de la Santísima Trinidad';
+        $this->assertGreaterThanOrEqual(
+            $medidas->altoDeLosDatos($nombreLargo, null, [], false) - (1.0 + $linea) - 0.01,
+            $medidas->altoDeLosDatos($nombreLargo, null, [], true),
+        );
     }
 }

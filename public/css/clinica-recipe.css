@@ -87,6 +87,13 @@
 .recipe-dato-linea .recipe-dato { margin-right: 4mm; }
 .recipe-dato-linea .recipe-dato:last-child { margin-right: 0; }
 
+/* La cabecera de pediatría (2026-11-03): el paciente y la fecha en la misma línea, sin `C.I.`, y la historia sola y
+   alineada a la derecha. Las medidas que no son parte de un `.recipe-dato-linea` no tienen flex tampoco, por la misma
+   razón que la línea extra. */
+.recipe-datos-pediatricos .recipe-datos-fila-paciente { margin-top: 0; }
+.recipe-dato-fecha { white-space: nowrap; }
+.recipe-dato-historia { text-align: right; }
+
 /* ------------------------------------------------------------------------------------------------ Título
    "Rp." / "Indicaciones:" a 14 pt en negrita itálica; a la derecha, "Hoja 1 de 2" si el récipe sigue. */
 
