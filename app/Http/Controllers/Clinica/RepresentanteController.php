@@ -111,10 +111,8 @@ class RepresentanteController extends Controller
         // Sin número de historia no hay clave con la que guardar: la ficha no ofrece el formulario, así
         // que llegar acá es un POST armado a mano. Se explica y se vuelve, sin escribir nada.
         if ($vinculo->numhistoria === null) {
-            return redirect()
-                ->route('clinica.pacientes.ver', $paciente)
-                ->with('error', 'El representante se guarda con el número de historia del paciente. '
-                    . 'Asígnale el número y después se carga.');
+            return $this->volver($request, $paciente, 'error', 'El representante se guarda con el número de historia del paciente. '
+                . 'Asígnale el número y después se carga.');
         }
 
         $datos = $request->validate([
@@ -149,9 +147,7 @@ class RepresentanteController extends Controller
         try {
             $accion->ejecutar($contexto['reg_medico'], $vinculo->numhistoria, $datos);
         } catch (InvalidArgumentException $excepcion) {
-            return redirect()
-                ->route('clinica.pacientes.ver', $paciente)
-                ->with('error', $excepcion->getMessage());
+            return $this->volver($request, $paciente, 'error', $excepcion->getMessage());
         } catch (Throwable $excepcion) {
             // El escritorio también escribe esta tabla (la sube por la lista blanca del sync) y su clave
             // real es `numhistoria`: si justo subió la fila mientras se guardaba, el insert choca contra
@@ -160,13 +156,26 @@ class RepresentanteController extends Controller
                 'reg_medico' => $contexto['reg_medico'], 'paciente' => $paciente, 'error' => $excepcion->getMessage(),
             ]);
 
-            return redirect()
-                ->route('clinica.pacientes.ver', $paciente)
-                ->with('error', 'No se pudo guardar el representante. Prueba otra vez.');
+            return $this->volver($request, $paciente, 'error', 'No se pudo guardar el representante. Prueba otra vez.');
         }
 
-        return redirect()
-            ->route('clinica.pacientes.ver', $paciente)
-            ->with('estado', 'Se guardó el representante del paciente.');
+        return $this->volver($request, $paciente, 'estado', 'Se guardó el representante del paciente.');
+    }
+
+    /**
+     * Vuelve a la ficha o, cuando el diálogo se abrió desde la consulta, a su sección «Datos del paciente»
+     * (`volver_a_consulta`): el médico no sale de la atención para cargar el representante.
+     */
+    private function volver(Request $request, int $paciente, string $clave, string $mensaje)
+    {
+        $consulta = (int) $request->input('volver_a_consulta', 0);
+
+        if ($consulta > 0) {
+            return redirect()
+                ->route('clinica.consulta', [$consulta, 'seccion' => 'datos'])
+                ->with($clave, $mensaje);
+        }
+
+        return redirect()->route('clinica.pacientes.ver', $paciente)->with($clave, $mensaje);
     }
 }

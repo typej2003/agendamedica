@@ -267,6 +267,38 @@ class ConsultaExamenPediatricoWebTest extends TestCase
             ->assertDontSee('Cédula <span aria-hidden="true">*</span>', false);
     }
 
+    public function test_los_datos_personales_en_pediatria_muestran_el_grupo_sanguineo_y_el_representante(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $consulta = $this->consulta($medico);
+
+        DB::table('paciente_chamo')->insert([
+            'reg_medico' => $medico->reg_medico, 'historia' => 9701, 'familia' => 1,
+            'nombre' => 'Mateo Examen', 'celular' => 'O+', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('familia_bebe')->insert([
+            'reg_medico' => $medico->reg_medico, 'familia' => 1,
+            'nom_madre' => 'Ana Perez', 'localidad' => 'A+', 'procedencia' => '00',
+            'situacion_pareja' => 'E', 'email' => 'ana@example.com', 'direccion' => 'Calle 1',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('representante')->insert([
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 9701,
+            'nombre' => 'Ana Perez', 'codeparentesco' => 'M', 'cedula' => '12345678',
+            'telefono' => '04141234567', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'datos']))
+            ->assertOk()
+            ->assertSee('Grupo sanguíneo')
+            ->assertSee('O+')
+            ->assertSee('Representante')
+            ->assertSee('Ana Perez')
+            ->assertSee('G.S. del representante')
+            ->assertSee('A+');
+    }
+
     // ------------------------------------------------------------------------------------------ Acceso
 
     public function test_la_secretaria_y_el_consultorio_ajeno_no_escriben(): void
