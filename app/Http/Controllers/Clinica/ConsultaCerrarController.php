@@ -53,9 +53,13 @@ class ConsultaCerrarController extends Controller
 
         // Los datos obligatorios de la filiación (WEB-11.25): no se termina la consulta sin ellos. El médico los completa en la sección
         // «Datos personales», a la que se lo lleva. La lista depende de la especialidad (pediatría: sin cédula y con el teléfono del representante).
+        //
+        // La especialidad viene **resuelta** en `specialty` (`ContextoTrabajo::actual()`): el contexto no tiene `specialty_id`
+        // —ése es el nombre de la clave de la sesión—, así que leerla de ahí devolvía `null` y la consulta pediátrica se cerraba
+        // con la vara de medicina general: «nombre y apellido» y el teléfono del paciente, datos que el niño migrado no tiene.
         $ficha = \App\Models\Paciente::find($paciente->id);
         $faltan = $ficha === null ? [] : \App\Clinica\Pacientes\FiliacionPendiente::de(
-            $ficha, $contexto['reg_medico'], $paciente->numhistoria ?? null, $contexto['specialty_id'] ?? null,
+            $ficha, $contexto['reg_medico'], $paciente->numhistoria ?? null, $contexto['specialty']?->id,
         );
         if ($faltan !== []) {
             return redirect()

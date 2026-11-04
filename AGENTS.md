@@ -1539,7 +1539,7 @@ hay que saber sin volver a deducirlo (las trampas **151 a 156** de [`TRAMPAS.md`
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **173** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **188** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
 crudos, los roles de la consulta (**trampa 19: "Atender" es sólo del médico**, WEB-4.9), los `[hidden]`,
 `examen_fisico_nuevo`, las **reglas de archivo de
