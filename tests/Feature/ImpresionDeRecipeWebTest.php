@@ -467,6 +467,43 @@ class ImpresionDeRecipeWebTest extends TestCase
         $this->assertSame('solo_indicaciones', RecipeFormato::where('reg_medico', $medico->reg_medico)->value('modo_impresion'));
     }
 
+    /**
+     * **La web instalada bajo una carpeta** (2026-11-03, QA vive en `https://ddrsistemas.com/medic-report`): `route()` y
+     * `getRequestUri()` arman el camino **con** la carpeta (`/medic-report/clinica/…`), así que el campo `siguiente` del
+     * diálogo llega así y no con el `/clinica/…` de siempre. Sin quitarla, imprimir un récipe contestaba «No se sabe a qué
+     * récipe volver».
+     */
+    public function test_el_siguiente_puede_venir_con_la_carpeta_donde_esta_instalada_la_web(): void
+    {
+        [$user, $medico, $gineco, , $consulta] = $this->escenario();
+        $ruta = '/clinica/consulta/' . $consulta->id . '/recipes/1/imprimir';
+        $carpeta = '/medic-report';
+
+        $this->withServerVariables([
+            'SCRIPT_NAME' => $carpeta . '/index.php',
+            'SCRIPT_FILENAME' => $carpeta . '/index.php',
+            'PHP_SELF' => $carpeta . '/index.php',
+        ]);
+
+        // El POST va a la URL con la carpeta: es la que pinta `route()` en ese servidor (y la que hace que la petición
+        // misma vea la carpeta como su raíz). Se arma una sola vez, absoluta, para que no se le vuelva a anteponer.
+        $urlGuardar = url($carpeta . '/clinica/recipes/opciones-de-impresion');
+
+        // La URL absoluta de `route()`, que es la de los botones «Imprimir».
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($urlGuardar, ['modo' => 'solo_indicaciones', 'nombre' => 'comercial', 'siguiente' => url($carpeta . $ruta)])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect($ruta);
+
+        // Y la relativa de la propia vista previa (el `getRequestUri()` del diálogo «Opciones»).
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post($urlGuardar, ['modo' => 'rp_indicaciones', 'nombre' => 'comercial', 'siguiente' => $carpeta . $ruta])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect($ruta);
+
+        $this->assertSame('rp_indicaciones', RecipeFormato::where('reg_medico', $medico->reg_medico)->value('modo_impresion'));
+    }
+
     public function test_las_opciones_son_validadas_y_el_siguiente_solo_puede_ser_una_vista_previa(): void
     {
         [$user, $medico, $gineco, , $consulta] = $this->escenario();
