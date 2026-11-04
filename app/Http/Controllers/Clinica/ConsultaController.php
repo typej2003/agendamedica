@@ -536,6 +536,21 @@ class ConsultaController extends Controller
             'pestana' => $clave,
         ]));
 
+        // Los PDF de la consulta (CAR-5): la pestaña no tiene campos, se listan las filas de `archivos_historia`.
+        $archivos = [];
+        if ($pestana === $mapa::PESTANA_ARCHIVOS) {
+            foreach ((new \App\Clinica\Consulta\Cardiologia\ArchivosDeLaConsulta())->de($consulta) as $fila) {
+                $deLaWeb = \App\Clinica\Consulta\Cardiologia\ArchivosDeLaConsulta::esDeLaWeb($fila->archivo);
+                $archivos[] = [
+                    'id' => (int) $fila->id,
+                    'nombre' => \App\Clinica\Consulta\Cardiologia\ArchivosDeLaConsulta::nombreVisible($fila->archivo),
+                    'url' => $deLaWeb ? route('clinica.consulta.archivos.descargar', [$consulta->id, $fila->id]) : null,
+                    'urlQuitar' => $deLaWeb ? route('clinica.consulta.archivos.quitar', [$consulta->id, $fila->id]) : null,
+                    'quitables' => $deLaWeb,
+                ];
+            }
+        }
+
         $pestanas = [];
         foreach ($mapa::PESTANAS[$seccion] ?? [] as $clave => $texto) {
             $pestanas[] = [
@@ -543,7 +558,7 @@ class ConsultaController extends Controller
                 'texto' => $texto,
                 'url' => $url($clave),
                 'activa' => $clave === $pestana,
-                'cargada' => $datos->tieneDatos($consulta, $clave),
+                'cargada' => $clave === $mapa::PESTANA_ARCHIVOS ? $archivos !== [] : $datos->tieneDatos($consulta, $clave),
             ];
         }
 
@@ -551,10 +566,12 @@ class ConsultaController extends Controller
             $seccion,
             $pestana,
             $pestanas,
-            $datos->valores($consulta, $pestana),
+            $pestana === $mapa::PESTANA_ARCHIVOS ? [] : $datos->valores($consulta, $pestana),
             route('clinica.consulta.cardiologia.guardar', $consulta->id),
             $url($pestana),
             (array) old(),
+            $archivos,
+            route('clinica.consulta.archivos.subir', $consulta->id),
         );
     }
 

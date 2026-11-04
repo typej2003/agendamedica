@@ -51,6 +51,8 @@ final class MapaDelCardiologo
     public const PESTANA_ARTERIAL_MI = 'doppler-arterial-mi';
     /** El **E.K.G.** (CAR-5): reusa el mapa y la tabla de medicina interna (MI-3). */
     public const PESTANA_EKG = 'ekg';
+    /** Los **archivos PDF** de la consulta (CAR-5): no tiene campos, la pantalla es la lista y la subida. */
+    public const PESTANA_ARCHIVOS = 'archivos';
 
     /**
      * Las tablas de una fila por consulta: tabla => [modelo, columna de la historia, columna de la consulta].
@@ -91,6 +93,7 @@ final class MapaDelCardiologo
             self::PESTANA_MARCAPASOS => 'Marcapasos',
             self::PESTANA_ARTERIAL_MI => 'Doppler arterial de miembros inferiores',
             self::PESTANA_EKG => 'E.K.G.',
+            self::PESTANA_ARCHIVOS => 'Archivos PDF',
         ],
     ];
 

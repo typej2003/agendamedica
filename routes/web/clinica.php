@@ -530,6 +530,14 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
                 Route::post('/consulta/{consulta}/cardiologia', [\App\Http\Controllers\Clinica\ConsultaCardiologoController::class, 'guardar'])
                     ->name('consulta.cardiologia.guardar');
 
+                // Los **archivos PDF** de la consulta del cardiólogo (CAR-5, 2026-11-04): el «Archivos-PDF» del escritorio.
+                Route::post('/consulta/{consulta}/archivos', [\App\Http\Controllers\Clinica\ConsultaArchivosController::class, 'subir'])
+                    ->name('consulta.archivos.subir');
+                Route::get('/consulta/{consulta}/archivos/{archivo}', [\App\Http\Controllers\Clinica\ConsultaArchivosController::class, 'descargar'])
+                    ->name('consulta.archivos.descargar');
+                Route::delete('/consulta/{consulta}/archivos/{archivo}', [\App\Http\Controllers\Clinica\ConsultaArchivosController::class, 'quitar'])
+                    ->name('consulta.archivos.quitar');
+
                 // Exámenes e imágenes de la consulta (WEB-4.7): el ítem 7 del panel. La sección **lee**
                 // los exámenes de laboratorio de la consulta (`examen_paciente`, que escribe el
                 // escritorio: su ABM es F5/WEB-5.4) y **escribe** las imágenes (`imagen_consulta`, la

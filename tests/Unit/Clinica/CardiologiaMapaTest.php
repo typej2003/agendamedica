@@ -26,6 +26,7 @@ class CardiologiaMapaTest extends TestCase
             'marcapasos' => 'Marcapasos',
             'doppler-arterial-mi' => 'Doppler arterial de miembros inferiores',
             'ekg' => 'E.K.G.',
+            'archivos' => 'Archivos PDF',
         ], MapaDelCardiologo::PESTANAS[MapaDelCardiologo::SECCION]);
         $this->assertTrue(MapaDelCardiologo::esSeccion('cardiologia'));
         $this->assertFalse(MapaDelCardiologo::esSeccion('estudio'));

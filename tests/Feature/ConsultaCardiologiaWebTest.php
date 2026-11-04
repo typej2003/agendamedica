@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Clinica\Consulta\Cardiologia\MapaDelCardiologo;
 use App\Clinica\Consulta\Interna\MapaDelInternista;
 use App\Clinica\Impresion\DocumentoImpreso;
+use App\Models\ArchivoDeHistoria;
 use App\Models\Consulta;
 use App\Models\Historia;
 use App\Models\Medico;
@@ -16,6 +17,8 @@ use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 /**
@@ -388,6 +391,55 @@ class ConsultaCardiologiaWebTest extends TestCase
             ->assertOk()
             ->assertSee('Estimaciones')
             ->assertSee('Riesgo operatorio');
+    }
+
+    public function test_sube_lista_descarga_y_quita_un_pdf_de_la_consulta(): void
+    {
+        Storage::fake('clinica');
+        [$user, $medico, $especialidad] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->conContexto($user, $medico, $especialidad)
+            ->post(route('clinica.consulta.archivos.subir', $consulta->id), [
+                'archivo' => UploadedFile::fake()->create('informe de eco.pdf', 120, 'application/pdf'),
+            ])->assertSessionHas('estado', 'Archivo subido.');
+
+        $fila = ArchivoDeHistoria::firstOrFail();
+        $this->assertSame($medico->reg_medico, $fila->reg_medico);
+        $this->assertSame(3001, (int) $fila->nrohistoria);
+        $this->assertSame(1, (int) $fila->nroconsulta);
+        Storage::disk('clinica')->assertExists($fila->archivo);
+
+        $this->conContexto($user, $medico, $especialidad)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'cardiologia', 'pestana' => 'archivos']))
+            ->assertOk()
+            ->assertSee('informe de eco')
+            ->assertSee('Descargar');
+
+        $this->conContexto($user, $medico, $especialidad)
+            ->get(route('clinica.consulta.archivos.descargar', [$consulta->id, $fila->id]))
+            ->assertOk();
+
+        $this->conContexto($user, $medico, $especialidad)
+            ->delete(route('clinica.consulta.archivos.quitar', [$consulta->id, $fila->id]))
+            ->assertSessionHas('estado', 'Archivo quitado.');
+
+        $this->assertDatabaseMissing('archivos_historia', ['id' => $fila->id]);
+        Storage::disk('clinica')->assertMissing($fila->archivo);
+    }
+
+    public function test_un_archivo_que_no_es_pdf_no_se_sube(): void
+    {
+        Storage::fake('clinica');
+        [$user, $medico, $especialidad] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->conContexto($user, $medico, $especialidad)
+            ->post(route('clinica.consulta.archivos.subir', $consulta->id), [
+                'archivo' => UploadedFile::fake()->create('foto.png', 40, 'image/png'),
+            ])->assertSessionHasErrors('archivo');
+
+        $this->assertSame(0, ArchivoDeHistoria::count());
     }
 
     public function test_una_pestana_que_no_existe_no_guarda(): void

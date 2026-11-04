@@ -25,6 +25,9 @@ final class CardiologoVista
         private string $urlGuardar,
         private string $urlVolver,
         private array $old = [],
+        /** @var array<int,array{id:int, nombre:string, url:?string, quitables:bool}> los PDF de la pestaña «Archivos PDF» */
+        private array $archivos = [],
+        private string $urlSubirArchivo = '',
     ) {
     }
 
@@ -68,6 +71,23 @@ final class CardiologoVista
     public function urlVolver(): string
     {
         return $this->urlVolver;
+    }
+
+    /** ¿La pestaña es la de los PDF? (No tiene campos: la pantalla es la lista y la subida.) */
+    public function esArchivos(): bool
+    {
+        return $this->pestana === MapaDelCardiologo::PESTANA_ARCHIVOS;
+    }
+
+    /** @return array<int,array{id:int, nombre:string, url:?string, quitables:bool}> */
+    public function archivos(): array
+    {
+        return $this->archivos;
+    }
+
+    public function urlSubirArchivo(): string
+    {
+        return $this->urlSubirArchivo;
     }
 
     public function textoGuardar(): string
