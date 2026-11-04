@@ -324,8 +324,49 @@ class CatalogosInicialesTest extends TestCase
         $sesion()->post(route('clinica.catalogos.cargar-inicial', 'inexistente'))->assertNotFound();
     }
 
-    public function test_la_secretaria_no_carga_el_catalogo_inicial(): void
+    /**
+     * El diálogo lateral (2026-11-03): lista **lo que falta** con una casilla por fila, y el alta copia **sólo lo
+     * marcado**. Lo que quedó sin marcar se sigue ofreciendo en la próxima visita.
+     */
+    public function test_el_dialogo_lista_lo_que_falta_y_carga_solo_lo_elegido(): void
     {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $asma = $this->ini('diagnosticos', ['codediagnostico' => '0001', 'descripcion' => 'ASMA']);
+        $gripe = $this->ini('diagnosticos', ['codediagnostico' => '0002', 'descripcion' => 'GRIPE']);
+        $sesion = fn () => $this->conContexto($medico, $pediatria)->actingAs($user);
+
+        $pagina = $sesion()->get(route('clinica.catalogos.diagnosticos'))->assertOk();
+        // El botón de siempre abre el diálogo y la lista trae las dos novedades, con sus ids.
+        $pagina->assertSee('Cargar el catálogo inicial');
+        $pagina->assertSee('data-abrir-dialogo="dialogo-catalogo-inicial"', false);
+        $pagina->assertSee('Catálogo inicial de diagnósticos');
+        $pagina->assertSee('data-catalogo-inicial-cuantos>2<', false);
+        $pagina->assertSee('data-catalogo-inicial-buscar', false);
+        $pagina->assertSee('name="ids[]" value="' . $asma . '"', false);
+        $pagina->assertSee('name="ids[]" value="' . $gripe . '"', false);
+        $pagina->assertSee('ASMA')->assertSee('GRIPE');
+        $pagina->assertSee('Agregar');
+
+        // Sólo el elegido: el otro sigue siendo una novedad.
+        $sesion()->post(route('clinica.catalogos.cargar-inicial', 'diagnosticos'), ['ids' => [$gripe]])
+            ->assertRedirect(route('clinica.catalogos.diagnosticos'))->assertSessionHas('estado');
+
+        $this->assertSame(['GRIPE'], DB::table('diagnosticos')->where('reg_medico', $medico->reg_medico)->pluck('descripcion')->all());
+        // El diálogo vuelve a ofrecer sólo lo que quedó: el que se copió ya no es una novedad.
+        $sesion()->get(route('clinica.catalogos.diagnosticos'))->assertOk()
+            ->assertSee('Hay 1 diagnóstico nuevo')->assertSee('data-catalogo-inicial-cuantos>1<', false)
+            ->assertSee('name="ids[]" value="' . $asma . '"', false)
+            ->assertDontSee('name="ids[]" value="' . $gripe . '"', false);
+
+        // Sin nada marcado no se copia y se avisa.
+        $sesion()->post(route('clinica.catalogos.cargar-inicial', 'diagnosticos'), ['ids' => []])
+            ->assertRedirect(route('clinica.catalogos.diagnosticos'))
+            ->assertSessionHas('error', 'Elige al menos una fila del catálogo inicial para agregar.');
+
+        $this->assertSame(1, DB::table('diagnosticos')->where('reg_medico', $medico->reg_medico)->count());
+    }
+
+    public function test_la_secretaria_no_carga_el_catalogo_inicial(): void    {
         [, $medico, $pediatria] = $this->medicoConAcceso();
         $secretaria = User::create(['name' => 'Secre', 'email' => 'cat-ini-secre' . substr(uniqid(), -6) . '@example.com', 'password' => Hash::make('secreto123'), 'is_active' => true, 'must_change_password' => false]);
         $secretaria->assignRole('Secretaria');

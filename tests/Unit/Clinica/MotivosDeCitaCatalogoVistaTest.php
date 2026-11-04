@@ -116,7 +116,7 @@ class MotivosDeCitaCatalogoVistaTest extends TestCase
         $this->assertSame('ECOGRAFIA', $a['razon']);
         $this->assertSame('03', $a['codigo']);
         $this->assertSame('Todas las sedes', $a['sede']);
-        $this->assertSame('120,00', $a['precio']);
+        $this->assertSame('120,00 USD', $a['precio']);
         $this->assertNull($a['repetido']);
         $this->assertNull($a['mismoCodigo']);
         $this->assertSame('Una sola cita', $a['marca']['texto']);
@@ -127,7 +127,7 @@ class MotivosDeCitaCatalogoVistaTest extends TestCase
         $this->assertStringContainsString('«ECOGRAFIA»', $a['avisoQuitar']);
 
         $this->assertSame('San José — C1', $b['sede']);
-        $this->assertSame('80,50', $b['precio']);
+        $this->assertSame('80,50 USD', $b['precio']);
         $this->assertSame('Hay 2 con este nombre en esta sede', $b['repetido']);
         $this->assertSame('Código en 3 sedes', $b['mismoCodigo']);
         $this->assertSame('Varias citas', $b['marca']['texto']);

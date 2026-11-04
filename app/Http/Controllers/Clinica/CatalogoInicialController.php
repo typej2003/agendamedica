@@ -12,6 +12,9 @@ use Illuminate\Http\Request;
 /**
  * **«Cargar el catálogo inicial»** de los catálogos del médico (WEB-12.8): `POST /clinica/catalogos/{catalogo}/cargar-inicial` copia al consultorio lo que el catálogo
  * inicial tiene y el médico no (`CopiarCatalogoInicial`), sin pisar nada suyo; sólo lo general y lo de sus especialidades (WEB-12.9). Es del **médico** (el grupo de rutas lleva `role:Root|Medico`); la regla vive en la Action.
+ *
+ * Desde el 2026-11-03 el diálogo manda en `ids[]` **cuáles** filas iniciales quiere cargar; sin `ids` se cargan todas
+ * (el camino de siempre, que siguen usando los ayudantes y los pedidos completos).
  */
 class CatalogoInicialController extends Controller
 {
@@ -25,15 +28,24 @@ class CatalogoInicialController extends Controller
         $def = CatalogosIniciales::de($catalogo);
         $destino = redirect()->route(CatalogosDisponibles::rutaDe($catalogo) ?? 'clinica.inicio');
 
-        $r = $accion->ejecutar($catalogo, (string) $contexto['reg_medico'], $this->registrosDelMedico($contexto['medico']), self::especialidades($contexto));
+        // `null` = todas las novedades; una lista (aunque venga vacía) = sólo las elegidas.
+        $seleccion = $request->has('ids')
+            ? array_values(array_filter(array_map('intval', (array) $request->input('ids', []))))
+            : null;
+
+        if ($seleccion === []) {
+            return $destino->with('error', 'Elige al menos una fila del catálogo inicial para agregar.');
+        }
+
+        $r = $accion->ejecutar($catalogo, (string) $contexto['reg_medico'], $this->registrosDelMedico($contexto['medico']), self::especialidades($contexto), $seleccion);
 
         if ($r['copiadas'] === 0 && $r['dependencias'] === 0) {
             return $destino->with('estado', 'Ya tienes todo lo que trae el catálogo inicial de ' . mb_strtolower($def['titulo']) . ': no se agregó nada.')
                 ->with('omitidas', $r['omitidas']);
         }
 
-        $texto = 'Se cargaron ' . $r['copiadas'] . ' ' . ($r['copiadas'] === 1 ? $def['singular'] : mb_strtolower($def['titulo']))
-            . ($r['dependencias'] > 0 ? ', más ' . $r['dependencias'] . ' de lo que dependen' : '')
+        $texto = 'Se ' . ($r['copiadas'] === 1 ? 'cargó 1 ' . $def['singular'] : 'cargaron ' . $r['copiadas'] . ' ' . mb_strtolower($def['titulo']))
+            . ($r['dependencias'] > 0 ? ($r['copiadas'] === 1 ? ', más ' : ', más ') . $r['dependencias'] . ' de lo que dependen' : '')
             . ($r['hijas'] > 0 ? ' y ' . $r['hijas'] . ' líneas de detalle' : '')
             . ' del catálogo inicial. Lo que ya tenías no se tocó.'
             . ($r['omitidas'] !== [] ? ' No se copiaron ' . count($r['omitidas']) . ' por falta de una dependencia en el catálogo inicial.' : '');

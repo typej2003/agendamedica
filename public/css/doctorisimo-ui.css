@@ -1950,6 +1950,12 @@ progress.cupo-lleno::-moz-progress-bar { background: #d99b00; }
 .tabla-catalogo-motivos th:last-child { width: 160px; white-space: nowrap; }
 .tabla-sedes th:last-child { width: 22%; white-space: nowrap; }
 
+/* El diálogo del catálogo inicial (2026-11-03): la lista de lo que falta, con su propio scroll para que el botón
+   «Agregar» quede siempre a la vista, aunque el catálogo inicial traiga cientos de filas. */
+.catalogo-inicial-lista { max-height: 55vh; overflow-y: auto; margin-right: -0.5rem; padding-right: 0.5rem; }
+.catalogo-inicial-lista .form-check { margin-bottom: 0.25rem; }
+.catalogo-inicial-lista .form-check-label { overflow-wrap: anywhere; }
+
 .tabla-catalogo-tratamientos th:nth-child(1) { width: 38%; }
 .tabla-catalogo-examenes th:nth-child(1) { width: 55%; }
 .tabla-catalogo-doctores th:nth-child(1) { width: 30%; }

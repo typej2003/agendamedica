@@ -55,15 +55,25 @@ final class CopiarCatalogoInicial
     /**
      * @param  array<int,string>  $registros
      * @param  array<int,int>|null  $especialidades  las del médico (`null` = sin filtrar)
+     * @param  array<int,int>|null  $seleccion  los `id` de las filas iniciales que el médico eligió (2026-11-03); `null` = todas
      * @return array{copiadas:int, dependencias:int, hijas:int, omitidas:array<int,string>}
      */
-    public function ejecutar(string $slug, string $regMedico, array $registros, ?array $especialidades = null): array
+    public function ejecutar(string $slug, string $regMedico, array $registros, ?array $especialidades = null, ?array $seleccion = null): array
     {
         $registros = array_values(array_unique(array_merge($registros, [$regMedico])));
         $resultado = ['copiadas' => 0, 'dependencias' => 0, 'hijas' => 0, 'omitidas' => []];
 
-        return DB::transaction(function () use ($slug, $regMedico, $registros, $especialidades, &$resultado) {
-            foreach ($this->novedades($slug, $registros, $especialidades) as $fila) {
+        return DB::transaction(function () use ($slug, $regMedico, $registros, $especialidades, $seleccion, &$resultado) {
+            $novedades = $this->novedades($slug, $registros, $especialidades);
+
+            if ($seleccion !== null) {
+                // Sólo lo que marcó el médico, y sólo si sigue siendo una novedad: el diálogo pudo quedar abierto
+                // mientras lo cargaba en otra pestaña.
+                $pedidas = array_map('intval', $seleccion);
+                $novedades = $novedades->filter(fn ($fila) => in_array((int) $fila->id, $pedidas, true))->values();
+            }
+
+            foreach ($novedades as $fila) {
                 $this->memo = [];
                 $this->insertar(CatalogosIniciales::de($slug), $fila, $regMedico, $registros, $resultado, false);
             }
