@@ -2,6 +2,9 @@
 
 namespace App\Clinica\Consulta\Cardiologia;
 
+use App\Models\DopplerCarotidas;
+use App\Models\DopplerMiembrosSuperiores;
+use App\Models\DopplerVenoso;
 use App\Models\Ecocardiografia;
 use App\Models\EcocardiogramaEte;
 use App\Models\EcocardiograficoInforme;
@@ -29,10 +32,13 @@ final class MapaDelCardiologo
     /** La sección de los estudios cardiológicos dentro de la consulta (`?seccion=cardiologia`). */
     public const SECCION = 'cardiologia';
 
-    /** Las pestañas de la sección: el eco transtorácico (CAR-2), el de estrés y el ETE (CAR-3). */
+    /** Las pestañas de la sección: eco transtorácico (CAR-2), estrés y ETE (CAR-3) y los Doppler (CAR-4). */
     public const PESTANA_ECO = 'eco';
     public const PESTANA_ESTRES = 'estres';
     public const PESTANA_ETE = 'ete';
+    public const PESTANA_DOPPLER_MS = 'doppler-ms';
+    public const PESTANA_CAROTIDAS = 'carotidas';
+    public const PESTANA_VENOSO = 'doppler-venoso';
 
     /**
      * Las tablas de una fila por consulta: tabla => [modelo, columna de la historia, columna de la consulta].
@@ -43,6 +49,9 @@ final class MapaDelCardiologo
         'ecocardiografia' => [Ecocardiografia::class, 'numhistoria', 'numconsulta'],
         'ecocardiografico_in' => [EcocardiograficoInforme::class, 'numhistoria', 'numconsulta'],
         'ecocardiograma_ete' => [EcocardiogramaEte::class, 'numhistoria', 'numconsulta'],
+        'dd_arterial_venoso_ms' => [DopplerMiembrosSuperiores::class, 'historia', 'consulta'],
+        'dd_arterias_carotidas_dos' => [DopplerCarotidas::class, 'numhistoria', 'numconsulta'],
+        'ddflujo_venoso' => [DopplerVenoso::class, 'numhistoria', 'numconsulta'],
     ];
 
     /**
@@ -55,6 +64,9 @@ final class MapaDelCardiologo
             self::PESTANA_ECO => 'Ecocardiograma',
             self::PESTANA_ESTRES => 'Eco de estrés',
             self::PESTANA_ETE => 'Eco transesofágico',
+            self::PESTANA_DOPPLER_MS => 'Doppler de miembros superiores',
+            self::PESTANA_CAROTIDAS => 'Doppler carotídeo',
+            self::PESTANA_VENOSO => 'Doppler venoso de miembros inferiores',
         ],
     ];
 
@@ -139,7 +151,156 @@ final class MapaDelCardiologo
                 ['clave' => 'conclusiones_ete', 'etiqueta' => 'Conclusión', 'tabla' => 'ecocardiograma_ete',
                     'columna' => 'conclusiones', 'tipo' => 'parrafo'],
             ],
+            // CAR-4: el **Doppler arterial y venoso de los miembros superiores** (`dd_arterial_venoso_ms`). El escritorio lo
+            // comparte con la oscilometría en la ventana de miembros superiores; la web los separa.
+            self::PESTANA_DOPPLER_MS => [
+                ['clave' => 'indicacion_ms', 'etiqueta' => 'Indicación', 'tabla' => 'dd_arterial_venoso_ms',
+                    'columna' => 'indicacion', 'tipo' => 'texto', 'max' => 30],
+                ['clave' => 'equipo_ms', 'etiqueta' => 'Equipo', 'tabla' => 'dd_arterial_venoso_ms',
+                    'columna' => 'equipo', 'tipo' => 'texto', 'max' => 30],
+                ['clave' => 'transductor_ms', 'etiqueta' => 'Transductor', 'tabla' => 'dd_arterial_venoso_ms',
+                    'columna' => 'transductor', 'tipo' => 'texto', 'max' => 30],
+                ['clave' => 'miembro_superior_derecho', 'etiqueta' => 'Miembro superior derecho', 'tabla' => 'dd_arterial_venoso_ms',
+                    'columna' => 'miembro_superior_derecho', 'tipo' => 'parrafo'],
+                ['clave' => 'miembro_superior_izquierdo', 'etiqueta' => 'Miembro superior izquierdo', 'tabla' => 'dd_arterial_venoso_ms',
+                    'columna' => 'miembro_superior_izquierdo', 'tipo' => 'parrafo'],
+                ['clave' => 'texto_ms', 'etiqueta' => 'Texto del informe', 'tabla' => 'dd_arterial_venoso_ms',
+                    'columna' => 'texto', 'tipo' => 'parrafo'],
+                ['clave' => 'conclusion_ms', 'etiqueta' => 'Conclusión', 'tabla' => 'dd_arterial_venoso_ms',
+                    'columna' => 'conclusion', 'tipo' => 'parrafo'],
+            ],
+            // CAR-4: el **Doppler carotídeo** (`dd_arterias_carotidas_dos`). Las medidas son velocidades sistólicas pico en
+            // cm/s, como en `d_dd_carotidas.srd`; `ar_aci_ace_izq` es la razón ACI/ACE izquierda (el nombre del esquema).
+            self::PESTANA_CAROTIDAS => array_merge(
+                [
+                    ['clave' => 'indicacion_car', 'etiqueta' => 'Indicación', 'tabla' => 'dd_arterias_carotidas_dos',
+                        'columna' => 'indicacion', 'tipo' => 'texto', 'max' => 100],
+                    ['clave' => 'equipo_car', 'etiqueta' => 'Equipo', 'tabla' => 'dd_arterias_carotidas_dos',
+                        'columna' => 'equipo', 'tipo' => 'texto', 'max' => 60],
+                    ['clave' => 'transductor_car', 'etiqueta' => 'Transductor', 'tabla' => 'dd_arterias_carotidas_dos',
+                        'columna' => 'transductor', 'tipo' => 'texto', 'max' => 60],
+                ],
+                self::medidasCarotidas(),
+                [
+                    ['clave' => 'hallasgos_car', 'etiqueta' => 'Hallazgos', 'tabla' => 'dd_arterias_carotidas_dos',
+                        'columna' => 'hallasgos', 'tipo' => 'parrafo'],
+                    ['clave' => 'conclusion_car', 'etiqueta' => 'Conclusión', 'tabla' => 'dd_arterias_carotidas_dos',
+                        'columna' => 'conclusion', 'tipo' => 'texto', 'max' => 250],
+                ],
+            ),
+            // CAR-4: el **Doppler venoso de miembros inferiores** (`ddflujo_venoso`). El escritorio lo muestra como una
+            // grilla de venas × fases (espontáneo, fásico, augmentado y reflujo) por lado; acá se agrupa por vena.
+            self::PESTANA_VENOSO => array_merge(
+                [
+                    ['clave' => 'indicacion_venoso', 'etiqueta' => 'Indicación', 'tabla' => 'ddflujo_venoso',
+                        'columna' => 'indicacion', 'tipo' => 'texto', 'max' => 100],
+                    ['clave' => 'equipo_venoso', 'etiqueta' => 'Equipo', 'tabla' => 'ddflujo_venoso',
+                        'columna' => 'equipo', 'tipo' => 'texto', 'max' => 60],
+                    ['clave' => 'transductor_venoso', 'etiqueta' => 'Transductor', 'tabla' => 'ddflujo_venoso',
+                        'columna' => 'tansductor', 'tipo' => 'texto', 'max' => 60],
+                ],
+                self::rejillaVenosa(),
+                [
+                    ['clave' => 'texto_venoso', 'etiqueta' => 'Texto del informe', 'tabla' => 'ddflujo_venoso',
+                        'columna' => 'texto_reporte', 'tipo' => 'parrafo'],
+                    ['clave' => 'conclusion_venoso', 'etiqueta' => 'Conclusiones', 'tabla' => 'ddflujo_venoso',
+                        'columna' => 'conclusiones', 'tipo' => 'parrafo'],
+                ],
+            ),
         ];
+    }
+
+    /**
+     * La grilla del Doppler venoso: seis venas × cuatro fases × dos lados, con la fila del escritorio como grupo.
+     *
+     * Las columnas del esquema son `<vena>_<fase><lado>`: `e` espontáneo, `f` fásico, `a` augmentado y `r` reflujo;
+     * `1` derecha y `2` izquierda. Cada celda es texto corto (`char(2)`), como en `d_dd_venoso_miembros_inf.srd`.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private static function rejillaVenosa(): array
+    {
+        $venas = [
+            'venas' => 'Venas',
+            'fem_comun' => 'Femoral común',
+            'fem_superf' => 'Femoral superficial',
+            'poplitea' => 'Poplítea',
+            'tibial_post' => 'Tibial posterior',
+            'tibial_ante' => 'Tibial anterior',
+            'safena' => 'Safena',
+        ];
+        $fases = ['e' => 'espontáneo', 'f' => 'fásico', 'a' => 'augmentado', 'r' => 'reflujo'];
+        $lados = ['1' => 'derecha', '2' => 'izquierda'];
+
+        $campos = [];
+
+        foreach ($venas as $vena => $titulo) {
+            foreach ($fases as $fase => $nombre) {
+                foreach ($lados as $lado => $texto) {
+                    $campos[] = [
+                        'clave' => $vena . '_' . $fase . $lado,
+                        'etiqueta' => ucfirst($nombre) . ' (' . $texto . ')',
+                        'grupo' => $titulo,
+                        'tabla' => 'ddflujo_venoso',
+                        'columna' => $vena . '_' . $fase . $lado,
+                        'tipo' => 'texto',
+                        'max' => 2,
+                    ];
+                }
+            }
+        }
+
+        return $campos;
+    }
+
+    /**
+     * Las medidas del Doppler carotídeo, en pares **derecha / izquierda** como el DataWindow del escritorio.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private static function medidasCarotidas(): array
+    {
+        $par = function (string $colDer, string $colIzq, string $claveBase, string $etiqueta, ?string $unidad = 'cm/s') {
+            $campos = [];
+
+            foreach (['der' => ['derecha', $colDer], 'izq' => ['izquierda', $colIzq]] as $lado => [$texto, $columna]) {
+                $campos[] = [
+                    'clave' => $claveBase . '_' . $lado, 'etiqueta' => $etiqueta . ' (' . $texto . ')',
+                    'tabla' => 'dd_arterias_carotidas_dos', 'columna' => $columna,
+                    'tipo' => 'numero', 'unidad' => $unidad,
+                ];
+            }
+
+            return $campos;
+        };
+
+        return array_merge(
+            $par('ar_accp_der', 'ar_accp_izq', 'accp', 'Carótida común proximal (ACCp)'),
+            $par('ar_accd_der', 'ar_accd_izq', 'accd', 'Carótida común distal (ACCd)'),
+            $par('ar_ace_der', 'ar_ace_izq', 'ace', 'Carótida externa (ACE)'),
+            $par('ar_aci_der', 'ar_aci_izq', 'aci', 'Carótida interna (ACI)'),
+            // La razón ACI/ACC y el pico diastólico de la ACI tienen nombres propios en el esquema.
+            [
+                ['clave' => 'aci_acc_der', 'etiqueta' => 'Razón ACI/ACC (derecha)', 'tabla' => 'dd_arterias_carotidas_dos',
+                    'columna' => 'ar_aci_acc_der', 'tipo' => 'numero', 'unidad' => null],
+                ['clave' => 'aci_ace_izq', 'etiqueta' => 'Razón ACI/ACE (izquierda)', 'tabla' => 'dd_arterias_carotidas_dos',
+                    'columna' => 'ar_aci_ace_izq', 'tipo' => 'numero', 'unidad' => null],
+                ['clave' => 'pico_diastolico_der', 'etiqueta' => 'Pico diastólico de la ACI (derecha)', 'tabla' => 'dd_arterias_carotidas_dos',
+                    'columna' => 'ar_carotida_interna_der', 'tipo' => 'numero', 'unidad' => 'cm/s'],
+                ['clave' => 'pico_diastolico_izq', 'etiqueta' => 'Pico diastólico de la ACI (izquierda)', 'tabla' => 'dd_arterias_carotidas_dos',
+                    'columna' => 'ar_carotida_interna_izq', 'tipo' => 'numero', 'unidad' => 'cm/s'],
+            ],
+            $par('av_diametro_der', 'av_diametro_izq', 'vertebral_diametro', 'Diámetro de la vertebral (AV)', 'mm'),
+            $par('av_veloci_sp_der', 'av_veloci_sp_izq', 'vertebral_velocidad', 'Velocidad sistólica de la vertebral (AV)'),
+            $par('av_direccionf_der', 'av_direccionf_izq', 'vertebral_direccion', 'Dirección del flujo de la vertebral (AV)', null),
+            // R.I.M.: el sufijo `_d` del esquema es la derecha; el otro es la izquierda.
+            [
+                ['clave' => 'rim_der', 'etiqueta' => 'R.I.M.D. (grosor íntima-media derecho)', 'tabla' => 'dd_arterias_carotidas_dos',
+                    'columna' => 'relac_intima_media_d', 'tipo' => 'numero', 'unidad' => 'mm'],
+                ['clave' => 'rim_izq', 'etiqueta' => 'R.I.M.I. (grosor íntima-media izquierdo)', 'tabla' => 'dd_arterias_carotidas_dos',
+                    'columna' => 'relac_intima_media', 'tipo' => 'numero', 'unidad' => 'mm'],
+            ],
+        );
     }
 
     /** Los campos de una pestaña (lista vacía si no existe). */

@@ -99,6 +99,8 @@ final class CardiologoVista
                 'columna' => ($campo['tipo'] ?? 'texto') === 'parrafo' ? 'col-12' : 'col-md-4',
                 'opciones' => $campo['opciones'] ?? [],
                 'marcado' => $valor === 'S',
+                // Los campos que forman una fila de la grilla del escritorio (las venas del Doppler venoso).
+                'grupo' => $campo['grupo'] ?? null,
             ];
         }
 

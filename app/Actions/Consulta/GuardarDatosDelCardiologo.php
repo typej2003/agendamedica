@@ -81,6 +81,8 @@ final class GuardarDatosDelCardiologo
             // Las casillas S/N del escritorio (`farmacologico`): una desmarcada viaja como `N`.
             'si_no' => $texto === 'S' ? 'S' : 'N',
             'opcion' => $texto !== null && isset($campo['opciones'][$texto]) ? $texto : null,
+            // Las medidas del Doppler: se acepta la coma decimal y se guarda como número.
+            'numero' => $texto !== null && is_numeric(str_replace(',', '.', $texto)) ? (float) str_replace(',', '.', $texto) : null,
             default => $texto === null ? null : mb_substr($texto, 0, $campo['max'] ?? 65535),
         };
     }

@@ -42,10 +42,30 @@ final class DatosDelCardiologo
             $filas[$tabla] ??= $this->fila($consulta, $tabla);
             $crudo = $filas[$tabla]?->getAttribute($campo['columna']);
 
-            $valores[$campo['clave']] = TextoDeLaConsulta::limpio($crudo === null ? null : (string) $crudo);
+            $valores[$campo['clave']] = self::legible($crudo, $campo['tipo'] ?? 'texto');
         }
 
         return $valores;
+    }
+
+    /** Un valor crudo como lo muestra la pantalla: los vacíos del legado como `null` y los números con la coma decimal. */
+    public static function legible($crudo, string $tipo): ?string
+    {
+        $texto = TextoDeLaConsulta::limpio($crudo === null ? null : (string) $crudo);
+
+        if ($texto === null || $tipo !== 'numero') {
+            return $texto;
+        }
+
+        $numero = str_replace(',', '.', $texto);
+
+        return is_numeric($numero) ? self::numeroLegible((float) $numero) : $texto;
+    }
+
+    /** Un número sin ceros de más y con la coma decimal de la web (`72.50` → `72,5`, `72.00` → `72`). */
+    public static function numeroLegible(float $numero): string
+    {
+        return rtrim(rtrim(number_format($numero, 2, ',', ''), '0'), ',');
     }
 
     /** ¿La pestaña tiene algún dato cargado en esta consulta? */

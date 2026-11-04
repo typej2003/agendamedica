@@ -100,7 +100,61 @@ class ConsultaCardiologiaWebTest extends TestCase
             ->assertSee('Conclusiones')
             ->assertSee('Eco de estrés')
             ->assertSee('Eco transesofágico')
+            ->assertSee('Doppler de miembros superiores')
+            ->assertSee('Doppler carotídeo')
+            ->assertSee('Doppler venoso de miembros inferiores')
             ->assertSee('Guardar el estudio');
+    }
+
+    public function test_guarda_el_doppler_de_miembros_superiores_y_el_carotideo(): void
+    {
+        [$user, $medico, $especialidad] = $this->medico();
+        $consulta = $this->consulta($medico);
+        $url = route('clinica.consulta.cardiologia.guardar', $consulta->id);
+
+        $this->conContexto($user, $medico, $especialidad)->post($url, [
+            'pestana' => MapaDelCardiologo::PESTANA_DOPPLER_MS,
+            'indicacion_ms' => 'Claudicación',
+            'equipo_ms' => 'Voluson',
+            'miembro_superior_derecho' => 'Flujo conservado.',
+            'miembro_superior_izquierdo' => 'Estenosis leve.',
+            'conclusion_ms' => 'Sin trombosis.',
+        ])->assertSessionHas('estado', 'Estudio guardado.');
+
+        $this->assertDatabaseHas('dd_arterial_venoso_ms', [
+            'reg_medico' => $medico->reg_medico, 'historia' => 3001, 'consulta' => 1,
+            'indicacion' => 'Claudicación', 'conclusion' => 'Sin trombosis.',
+        ]);
+
+        $this->conContexto($user, $medico, $especialidad)->post($url, [
+            'pestana' => MapaDelCardiologo::PESTANA_CAROTIDAS,
+            'indicacion_car' => 'Soplo carotídeo',
+            'accp_der' => '119,3',
+            'accd_izq' => '92',
+            'rim_der' => '0,9',
+            'hallasgos_car' => 'Placa blanda en la bifurcación.',
+            'conclusion_car' => 'Estenosis leve.',
+        ])->assertSessionHas('estado', 'Estudio guardado.');
+
+        $this->assertDatabaseHas('dd_arterias_carotidas_dos', [
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 3001, 'numconsulta' => 1,
+            'indicacion' => 'Soplo carotídeo', 'conclusion' => 'Estenosis leve.',
+        ]);
+        $this->assertSame(119.3, (float) DB::table('dd_arterias_carotidas_dos')->where('numhistoria', 3001)->value('ar_accp_der'));
+        $this->assertSame(0.9, (float) DB::table('dd_arterias_carotidas_dos')->where('numhistoria', 3001)->value('relac_intima_media_d'));
+
+        $this->conContexto($user, $medico, $especialidad)->post($url, [
+            'pestana' => MapaDelCardiologo::PESTANA_VENOSO,
+            'indicacion_venoso' => 'Varices',
+            'fem_comun_r2' => 'SI',
+            'poplitea_e1' => 'NO',
+            'conclusion_venoso' => 'Insuficiencia venosa superficial.',
+        ])->assertSessionHas('estado', 'Estudio guardado.');
+
+        $this->assertDatabaseHas('ddflujo_venoso', [
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 3001, 'numconsulta' => 1,
+            'fem_comun_r2' => 'SI', 'poplitea_e1' => 'NO', 'conclusiones' => 'Insuficiencia venosa superficial.',
+        ]);
     }
 
     public function test_guarda_el_eco_de_estres_y_el_ete_en_sus_tablas(): void

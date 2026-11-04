@@ -12,7 +12,14 @@
             <input type="hidden" name="pestana" value="{{ $seccion->pestana() }}">
 
             <div class="row g-3">
+                @php $grupoActual = null; @endphp
                 @foreach ($seccion->campos() as $campo)
+                    @if ($campo['grupo'] !== $grupoActual)
+                        @php $grupoActual = $campo['grupo']; @endphp
+                        @if ($grupoActual !== null)
+                            <div class="col-12"><h3 class="h6 mt-2 mb-0">{{ $grupoActual }}</h3></div>
+                        @endif
+                    @endif
                     <div class="{{ $campo['columna'] }}">
                         <label class="form-label" for="{{ $campo['id'] }}">
                             {{ $campo['etiqueta'] }}
@@ -41,7 +48,8 @@
                         @else
                             <input type="text" class="form-control @error($campo['clave']) is-invalid @enderror"
                                    id="{{ $campo['id'] }}" name="{{ $campo['clave'] }}" value="{{ $campo['valor'] }}"
-                                   autocomplete="off" @if ($campo['max']) maxlength="{{ $campo['max'] }}" @endif>
+                                   autocomplete="off" @if ($campo['tipo'] === 'numero') inputmode="decimal" @endif
+                                   @if ($campo['max']) maxlength="{{ $campo['max'] }}" @endif>
                         @endif
 
                         @error($campo['clave'])<div class="invalid-feedback">{{ $message }}</div>@enderror

@@ -51,13 +51,15 @@ class ConsultaCardiologoController extends Controller
             $reglas[$campo['clave']] = match ($campo['tipo'] ?? 'texto') {
                 'si_no' => ['nullable', Rule::in(['S', 'N'])],
                 'opcion' => ['nullable', Rule::in(array_keys($campo['opciones']))],
+                // Se acepta la coma decimal (`119,3`), como en el resto de la consulta.
+                'numero' => ['nullable', 'regex:/^\s*\d{1,4}([.,]\d{1,2})?\s*$/'],
                 default => array_values(array_filter([
                     'nullable', 'string', isset($campo['max']) ? 'max:' . $campo['max'] : null,
                 ])),
             };
         }
 
-        $datos = $request->validate($reglas, [], $nombres);
+        $datos = $request->validate($reglas, ['regex' => 'Escribe un número (por ejemplo 119,3).'], $nombres);
 
         $resultado = $guardar->ejecutar($consulta, $pestana, $datos, null, 'web');
 
