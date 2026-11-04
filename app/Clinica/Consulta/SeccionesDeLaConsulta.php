@@ -199,10 +199,10 @@ final class SeccionesDeLaConsulta
      *
      * No está el estudio ecográfico ni el control de embarazo (pediatría no los tiene), y el **ítem 5
      * «Indicadores incidentes» tampoco está acá**: es el panel de nefrología pediátrica y lo agrega ese
-     * postgrado (`EXTRA['indicadores']`). Un pediatra general tiene 14 ítems; uno con nefrología, 15.
+     * postgrado (`EXTRA['indicadores']`). Un pediatra general tiene 13 ítems; uno con nefrología, 14.
      *
      * Los ítems que ya tienen pantalla la abren con su clave; los que la tienen en otra pantalla (el carnet
-     * de vacunas, la dieta, la ficha del representante) los redirige el controlador a donde corresponde.
+     * de vacunas y la dieta) los redirige el controlador a donde corresponde.
      */
     private const ITEMS_PEDIATRIA = [
         ['numero' => 1, 'grupo' => 'Consulta', 'titulo' => 'Motivos de consulta', 'icono' => 'bi-list-check',
@@ -241,10 +241,7 @@ final class SeccionesDeLaConsulta
         ['numero' => 13, 'grupo' => 'Documentos', 'titulo' => 'Datos del paciente', 'icono' => 'bi-person-vcard',
             'detalle' => 'La filiación y el contacto del paciente, para completar sin salir de la consulta.', 'tarea' => 'WEB-11.25', 'estado' => 'listo',
             'seccion' => self::SECCION_DATOS],
-        ['numero' => 14, 'grupo' => 'Documentos', 'titulo' => 'Representante', 'icono' => 'bi-person-hearts',
-            'detalle' => 'El adulto que responde por el paciente: quién lo trae y a quién se le avisa.', 'tarea' => 'F3', 'estado' => 'listo',
-            'seccion' => self::SECCION_REPRESENTANTE],
-        ['numero' => 15, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
+        ['numero' => 14, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
             'detalle' => 'Los conceptos que se cobran por la consulta, del catálogo del consultorio, con su total.', 'tarea' => 'F9',
             'estado' => 'listo', 'seccion' => self::SECCION_PREFACTURA],
     ];

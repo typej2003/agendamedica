@@ -153,9 +153,9 @@ consulta.
   especialidad con los de sus postgrados, sin duplicar. El middleware comparte esa colección como `$modulos`.
 - **Catálogo de la consulta**: `SeccionesDeLaConsulta` tiene **dos catálogos** (`ITEMS_GINECOLOGIA` e `ITEMS_PEDIATRIA`) y un
   mapa `EXTRA` de secciones que agrega un postgrado (hoy `indicadores` = ítem 5 de pediatría, nefrología). El pediátrico es el
-  árbol de PediaReport: 14 ítems sin nefrología y 15 con ella; sin estudio ecográfico ni control de embarazo. Los ítems que ya
+  árbol de PediaReport: 13 ítems sin nefrología y 14 con ella; sin estudio ecográfico ni control de embarazo. Los ítems que ya
   tienen pantalla en otro lado **redirigen** desde `ConsultaController::destinoDeLaSeccionPediatrica()` (inmunizaciones →
-  carnet de vacunas; alimentación → *Dieta*; representante → ficha), y sólo si la sección existe en el catálogo de esa
+  carnet de vacunas; alimentación → *Dieta*), y sólo si la sección existe en el catálogo de esa
   especialidad. **Exámenes/Estudios y Alimentación salieron de esa lista el 2026-10-19**: cada una tiene sección
   propia, como el escritorio.
 - **Admin**: `/admin/especialidades` asigna los postgrados de las especialidades que el médico ya tiene

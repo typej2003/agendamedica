@@ -9,12 +9,13 @@
 --}}
 @php
     $campos = ['nom_madre', 'fecn_madre', 'ocupa_madre', 'celu_madre', 'nom_padre', 'fecn_padre', 'ocupa_padre', 'cel_padre', 'telefono',
-               'ced_representante', 'email', 'direccion', 'localidad', 'dinamica_familiar', 'familia_texto'];
+               'ced_representante', 'email', 'direccion', 'localidad', 'grupo_sanguineo', 'dinamica_familiar', 'familia_texto'];
 @endphp
 <x-ui.dialogo id="dialogo-familia" titulo="{{ $familia->botonEditar() }}" lateral
               data-abrir-al-cargar="{{ $errors->hasAny($campos) ? '1' : '0' }}">
     <form method="POST" action="{{ $familia->urlGuardar() }}">
         @csrf
+        @isset($volverA)<input type="hidden" name="volver_a_consulta" value="{{ $volverA }}">@endisset
         <div class="dialogo-cuerpo">
             <p class="mb-3 texto-tenue">
                 Los padres y el contacto de la familia. Si el niño no tiene teléfono propio, los recordatorios salen al celular de la madre,
@@ -69,9 +70,17 @@
                     <input type="email" name="email" id="familia-email" class="form-control" maxlength="120" autocapitalize="off"
                            value="{{ old('email', $familia->valor('email')) }}">
                 </x-ui.campo>
-                <x-ui.campo etiqueta="Localidad" for="familia-localidad" error="localidad" class="col-md-6">
+                <x-ui.campo etiqueta="{{ $familia->esPediatria() ? 'G.S. del representante' : 'Localidad' }}" for="familia-localidad" error="localidad" class="col-md-6">
                     <input type="text" name="localidad" id="familia-localidad" class="form-control" maxlength="200"
                            value="{{ old('localidad', $familia->valor('localidad')) }}">
+                </x-ui.campo>
+                <x-ui.campo etiqueta="Grupo sanguíneo" for="familia-grupo_sanguineo" error="grupo_sanguineo" class="col-md-6">
+                    <select name="grupo_sanguineo" id="familia-grupo_sanguineo" class="form-select">
+                        <option value="">Sin dato</option>
+                        @foreach ($familia->gruposSanguineos() as $grupo)
+                            <option value="{{ $grupo }}" {{ old('grupo_sanguineo', $familia->grupoSanguineoDelNino()) === $grupo ? 'selected' : '' }}>{{ $grupo }}</option>
+                        @endforeach
+                    </select>
                 </x-ui.campo>
                 <x-ui.campo etiqueta="Dirección" for="familia-direccion" error="direccion" class="col-12">
                     <textarea name="direccion" id="familia-direccion" class="form-control" rows="2" maxlength="2000">{{ old('direccion', $familia->valor('direccion')) }}</textarea>

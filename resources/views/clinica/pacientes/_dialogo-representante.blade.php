@@ -17,6 +17,7 @@
               data-abrir-al-cargar="{{ $errors->hasAny(['nombre', 'codeparentesco', 'cedula', 'telefono', 'email', 'direccion']) ? '1' : '0' }}">
     <form method="POST" action="{{ $rep->urlGuardar() }}">
         @csrf
+        @isset($volverA)<input type="hidden" name="volver_a_consulta" value="{{ $volverA }}">@endisset
         <div class="dialogo-cuerpo">
             <p class="mb-3 texto-tenue">
                 Es el adulto que responde por el paciente y el que presta su teléfono para el recordatorio

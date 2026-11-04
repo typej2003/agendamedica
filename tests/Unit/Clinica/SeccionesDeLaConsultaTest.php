@@ -172,11 +172,12 @@ class SeccionesDeLaConsultaTest extends TestCase
     {
         $this->assertFalse(config('clinica.facturacion.prefactura'), 'La bandera tiene que venir apagada del archivo.');
 
-        // Doce en ginecología (trece menos la pre-factura), trece en pediatría y catorce en medicina interna
-        // (los trece del escritorio más *Resultados de exámenes*, que es una sección nuestra: O-49).
+        // Doce en ginecología (trece menos la pre-factura), doce en pediatría (sin Representante desde
+        // 2026-11-03: sus datos viven en «Datos del paciente») y catorce en medicina interna (los trece del
+        // escritorio más *Resultados de exámenes*, que es una sección nuestra: O-49).
         $this->assertSame(12, SeccionesDeLaConsulta::total('ginecologia-y-obstetricia'));
         $this->assertSame(12, SeccionesDeLaConsulta::disponibles('ginecologia-y-obstetricia'));
-        $this->assertSame(13, SeccionesDeLaConsulta::total('pediatria'));
+        $this->assertSame(12, SeccionesDeLaConsulta::total('pediatria'));
         $this->assertSame(14, SeccionesDeLaConsulta::total('medicina-interna'));
         $this->assertSame(10, SeccionesDeLaConsulta::total());
 

@@ -14,11 +14,21 @@ use Illuminate\Support\Collection;
  * hermano (la URL la pone el controlador). Se muestra únicamente si el paciente es un niño del escritorio de pediatría
  * (`cargada()`); en cualquier otro paciente no existe.
  *
- * ⚠️ `familia_bebe.situacion_pareja` es un código de un carácter cuyo significado no está documentado; **no se muestra** hasta que
- * Alexander lo confirme (no se inventa una equivalencia).
+ * ⚠️ `familia_bebe.situacion_pareja` se muestra con los códigos del DataWindow de PediaReport (`E` estable, `S` separados,
+ * `V` viudo/a, `D` soltero/a), que son los mismos que pide el alta de la cita; un código desconocido se muestra tal cual.
  */
 final class FamiliaDePacienteVista
 {
+    /** Los grupos sanguíneos que ofrece PediaReport (el mismo `values` del DataWindow del alta). */
+    public const GRUPOS_SANGUINEOS = ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'];
+
+    /** Los códigos de `familia_bebe.situacion_pareja` del DataWindow de PediaReport. */
+    public const SITUACIONES_DE_PAREJA = [
+        'E' => 'Estable',
+        'S' => 'Separados',
+        'V' => 'Viudo(a)',
+        'D' => 'Soltera(o)',
+    ];
     /**
      * @param  array{chamo:object, familia:?object, hermanos:Collection<int,object>}|null  $datos
      * @param  Closure(int):string|null  $urlFicha  arma el enlace a la ficha de un paciente por su `id`
@@ -131,6 +141,48 @@ final class FamiliaDePacienteVista
     public function localidad(): ?string
     {
         return CamposDePaciente::texto($this->familia()->localidad ?? null);
+    }
+
+    /** ¿La pantalla es de pediatría? Decide el rótulo de `localidad` (allí es el G.S. del representante). */
+    public function esPediatria(): bool
+    {
+        return $this->esPediatria;
+    }
+
+    /** @return array<int,string> */
+    public function gruposSanguineos(): array
+    {
+        return self::GRUPOS_SANGUINEOS;
+    }
+
+    /** El G.S. del niño: PediaReport lo guarda en `paciente_chamo.celular` (no en `pacientes`). */
+    public function grupoSanguineoDelNino(): ?string
+    {
+        return CamposDePaciente::texto($this->datos['chamo']->celular ?? null);
+    }
+
+    /** El G.S. del representante: PediaReport lo guarda en `familia_bebe.localidad`. */
+    public function grupoSanguineoDelRepresentante(): ?string
+    {
+        return $this->localidad();
+    }
+
+    /** La empresa del representante (`familia_bebe.procedencia`, un código de `seg_emp`). */
+    public function empresa(): ?string
+    {
+        return CamposDePaciente::texto($this->familia()->procedencia ?? null);
+    }
+
+    /** La situación de pareja con su rótulo; un código desconocido se muestra tal cual. */
+    public function situacionPareja(): ?string
+    {
+        $codigo = CamposDePaciente::texto($this->familia()->situacion_pareja ?? null);
+
+        if ($codigo === null) {
+            return null;
+        }
+
+        return self::SITUACIONES_DE_PAREJA[$codigo] ?? $codigo;
     }
 
     public function correo(): ?string

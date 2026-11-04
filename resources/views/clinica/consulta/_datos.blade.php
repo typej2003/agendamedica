@@ -1,7 +1,9 @@
 {{-- Los datos personales del paciente dentro de la consulta (WEB-11.25, ítem 13 del panel): la ficha editable sin salir de la atención.
      Los campos son los de la ficha (`clinica.pacientes._campos`) y se guardan con la misma ruta y la misma validación; `volver_a_consulta`
      hace que se vuelva a esta sección. Arriba, lo de sólo lectura y el aviso de lo que falta para terminar la consulta. --}}
-@php($formulario = $seccion->formulario())
+@php
+    $formulario = $seccion->formulario();
+@endphp
 
 <div class="consulta-seccion" id="consulta-datos">
     <x-ui.tarjeta titulo="Datos personales" icono="bi-person-vcard" class="mb-3">
@@ -38,4 +40,32 @@
             </button>
         </div>
     </form>
+
+    {{-- En pediatría, el representante y la familia del niño (2026-11-03): los mismos bloques de la
+         ficha, con sus diálogos, para completarlos sin salir de la consulta. --}}
+    @if ($seccion->esPediatria())
+        @php
+            $rep = $seccion->representante();
+            $familia = $seccion->familia();
+        @endphp
+
+        @if ($rep)
+            @include('clinica.pacientes._representante', ['rep' => $rep])
+        @endif
+
+        @if ($familia)
+            @include('clinica.pacientes._familia', ['familia' => $familia])
+        @endif
+
+        @if ($rep)
+            @include('clinica.pacientes._dialogo-representante', ['rep' => $rep, 'volverA' => $seccion->consultaId()])
+        @endif
+
+        @if ($familia)
+            @include('clinica.pacientes._dialogo-familia', ['familia' => $familia, 'volverA' => $seccion->consultaId()])
+        @endif
+
+        <script src="{{ asset('js/clinica/representante.js') }}"></script>
+        <script src="{{ asset('js/clinica/familia.js') }}"></script>
+    @endif
 </div>
