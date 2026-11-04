@@ -21,12 +21,16 @@ class CardiologiaMapaTest extends TestCase
             'doppler-ms' => 'Doppler de miembros superiores',
             'carotidas' => 'Doppler carotídeo',
             'doppler-venoso' => 'Doppler venoso de miembros inferiores',
+            'esfuerzo' => 'Prueba de esfuerzo',
+            'oscilometria' => 'Oscilometría',
+            'marcapasos' => 'Marcapasos',
         ], MapaDelCardiologo::PESTANAS[MapaDelCardiologo::SECCION]);
         $this->assertTrue(MapaDelCardiologo::esSeccion('cardiologia'));
         $this->assertFalse(MapaDelCardiologo::esSeccion('estudio'));
         $this->assertSame([
             'ecocardiografia', 'ecocardiografico_in', 'ecocardiograma_ete',
             'dd_arterial_venoso_ms', 'dd_arterias_carotidas_dos', 'ddflujo_venoso',
+            'prueba_esfuerzo', 'oscilometria', 'implantacion_marcapasos',
         ], array_keys(MapaDelCardiologo::TABLAS));
     }
 
@@ -86,6 +90,28 @@ class CardiologiaMapaTest extends TestCase
         $this->assertSame('fem_comun_r2', collect($venoso)->firstWhere('clave', 'fem_comun_r2')['columna']);
         $this->assertSame('Femoral común', collect($venoso)->firstWhere('clave', 'fem_comun_r2')['grupo']);
         $this->assertSame('tansductor', collect($venoso)->firstWhere('clave', 'transductor_venoso')['columna']);
+    }
+
+    public function test_esfuerzo_oscilometria_y_marcapasos_tienen_sus_columnas(): void
+    {
+        $esfuerzo = collect(MapaDelCardiologo::deLaPestana(MapaDelCardiologo::PESTANA_ESFUERZO))->keyBy('clave');
+        $oscilo = collect(MapaDelCardiologo::deLaPestana(MapaDelCardiologo::PESTANA_OSCILOMETRIA))->keyBy('clave');
+        $marcapasos = collect(MapaDelCardiologo::deLaPestana(MapaDelCardiologo::PESTANA_MARCAPASOS))->keyBy('clave');
+
+        $this->assertSame('prueba_esfuerzo', $esfuerzo['mets']['tabla']);
+        $this->assertSame('conclusiones', $esfuerzo['conclusion_esfuerzo']['columna']);
+        $this->assertSame('ccO2/kg/min', $esfuerzo['cons_max_oxigeno']['unidad']);
+
+        $this->assertSame('ind_tobillo_brazo_derecho', $oscilo['itb_tobillo_der']['columna']);
+        $this->assertSame('segmentos_t_md_izq', $oscilo['segmento_t_md_izq']['columna']);
+        $this->assertSame('si_no', $oscilo['reserva_der']['tipo']);
+        $this->assertSame('numero', $oscilo['itb_tobillo_der']['tipo']);
+
+        $this->assertSame('implantacion_marcapasos', $marcapasos['mp_marca']['tabla']);
+        $this->assertSame('Generador', $marcapasos['mp_marca']['grupo']);
+        $this->assertSame('numero', $marcapasos['mp_umbral_ventriculo']['tipo']);
+        $this->assertSame('Mediciones', $marcapasos['mp_resistencia_auricula']['grupo']);
+        $this->assertCount(34, $marcapasos, 'las 34 columnas editables del marcapasos');
     }
 
     public function test_la_pestana_pedida_se_normaliza_a_la_que_existe(): void

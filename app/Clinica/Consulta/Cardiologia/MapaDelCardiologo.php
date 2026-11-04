@@ -8,6 +8,9 @@ use App\Models\DopplerVenoso;
 use App\Models\Ecocardiografia;
 use App\Models\EcocardiogramaEte;
 use App\Models\EcocardiograficoInforme;
+use App\Models\ImplantacionMarcapasos;
+use App\Models\Oscilometria;
+use App\Models\PruebaDeEsfuerzo;
 
 /**
  * **El mapa del dato de los estudios cardiológicos** (CAR-2, 2026-11-04): qué columna guarda cada campo, medido en
@@ -39,6 +42,9 @@ final class MapaDelCardiologo
     public const PESTANA_DOPPLER_MS = 'doppler-ms';
     public const PESTANA_CAROTIDAS = 'carotidas';
     public const PESTANA_VENOSO = 'doppler-venoso';
+    public const PESTANA_ESFUERZO = 'esfuerzo';
+    public const PESTANA_OSCILOMETRIA = 'oscilometria';
+    public const PESTANA_MARCAPASOS = 'marcapasos';
 
     /**
      * Las tablas de una fila por consulta: tabla => [modelo, columna de la historia, columna de la consulta].
@@ -52,6 +58,9 @@ final class MapaDelCardiologo
         'dd_arterial_venoso_ms' => [DopplerMiembrosSuperiores::class, 'historia', 'consulta'],
         'dd_arterias_carotidas_dos' => [DopplerCarotidas::class, 'numhistoria', 'numconsulta'],
         'ddflujo_venoso' => [DopplerVenoso::class, 'numhistoria', 'numconsulta'],
+        'prueba_esfuerzo' => [PruebaDeEsfuerzo::class, 'numhistoria', 'numconsulta'],
+        'oscilometria' => [Oscilometria::class, 'historia', 'consulta'],
+        'implantacion_marcapasos' => [ImplantacionMarcapasos::class, 'historia', 'consulta'],
     ];
 
     /**
@@ -67,6 +76,9 @@ final class MapaDelCardiologo
             self::PESTANA_DOPPLER_MS => 'Doppler de miembros superiores',
             self::PESTANA_CAROTIDAS => 'Doppler carotídeo',
             self::PESTANA_VENOSO => 'Doppler venoso de miembros inferiores',
+            self::PESTANA_ESFUERZO => 'Prueba de esfuerzo',
+            self::PESTANA_OSCILOMETRIA => 'Oscilometría',
+            self::PESTANA_MARCAPASOS => 'Marcapasos',
         ],
     ];
 
@@ -207,6 +219,155 @@ final class MapaDelCardiologo
                         'columna' => 'conclusiones', 'tipo' => 'parrafo'],
                 ],
             ),
+            // CAR-5: la **prueba de esfuerzo** (`d_d_prueba_esfuerzo.srd`).
+            self::PESTANA_ESFUERZO => [
+                ['clave' => 'diag_esfuerzo', 'etiqueta' => 'Diagnóstico', 'tabla' => 'prueba_esfuerzo',
+                    'columna' => 'diagnostico', 'tipo' => 'texto', 'max' => 60],
+                ['clave' => 'tratamiento_anterior', 'etiqueta' => 'Tratamiento antes de la prueba', 'tabla' => 'prueba_esfuerzo',
+                    'columna' => 'tratamiento_anterior', 'tipo' => 'texto', 'max' => 60],
+                ['clave' => 'fre_max_alc', 'etiqueta' => 'Frecuencia máxima', 'tabla' => 'prueba_esfuerzo',
+                    'columna' => 'fre_max_alc', 'tipo' => 'texto', 'max' => 30, 'unidad' => 'lpm'],
+                ['clave' => 'fre_sub_max', 'etiqueta' => 'Frecuencia submáxima', 'tabla' => 'prueba_esfuerzo',
+                    'columna' => 'fre_sub_max', 'tipo' => 'texto', 'max' => 30, 'unidad' => 'lpm'],
+                ['clave' => 'frec_alc_xmin', 'etiqueta' => 'Frecuencia alcanzada (1 × min)', 'tabla' => 'prueba_esfuerzo',
+                    'columna' => 'frec_alc_xmin', 'tipo' => 'texto', 'max' => 30],
+                ['clave' => 'porc_fre_max', 'etiqueta' => '% de frecuencia máxima', 'tabla' => 'prueba_esfuerzo',
+                    'columna' => 'porc_fre_max', 'tipo' => 'texto', 'max' => 30, 'unidad' => '%'],
+                ['clave' => 'fcm', 'etiqueta' => 'FCM', 'tabla' => 'prueba_esfuerzo',
+                    'columna' => 'fcm', 'tipo' => 'texto', 'max' => 60],
+                ['clave' => 'mets', 'etiqueta' => 'Mets', 'tabla' => 'prueba_esfuerzo',
+                    'columna' => 'mets', 'tipo' => 'texto', 'max' => 30],
+                ['clave' => 'cons_max_oxigeno', 'etiqueta' => 'Consumo máximo de oxígeno', 'tabla' => 'prueba_esfuerzo',
+                    'columna' => 'cons_max_oxigeno', 'tipo' => 'texto', 'max' => 30, 'unidad' => 'ccO2/kg/min'],
+                ['clave' => 'clasif_nyha', 'etiqueta' => 'Clasificación funcional (NYHA)', 'tabla' => 'prueba_esfuerzo',
+                    'columna' => 'clasif_nyha', 'tipo' => 'texto', 'max' => 30],
+                ['clave' => 'clasif_astrand', 'etiqueta' => 'Clasificación Astrand', 'tabla' => 'prueba_esfuerzo',
+                    'columna' => 'clasif_astrand', 'tipo' => 'texto', 'max' => 30],
+                ['clave' => 'nivel_entrenamiento', 'etiqueta' => 'Nivel de entrenamiento', 'tabla' => 'prueba_esfuerzo',
+                    'columna' => 'nivel_entrenamiento', 'tipo' => 'texto', 'max' => 30],
+                ['clave' => 'observaciones_esfuerzo', 'etiqueta' => 'Observaciones', 'tabla' => 'prueba_esfuerzo',
+                    'columna' => 'observaciones', 'tipo' => 'parrafo'],
+                ['clave' => 'conclusion_esfuerzo', 'etiqueta' => 'Conclusiones', 'tabla' => 'prueba_esfuerzo',
+                    'columna' => 'conclusiones', 'tipo' => 'parrafo'],
+            ],
+            // CAR-5: la **oscilometría** (`d_dd_osciloscopio.srd`): índices, gradientes segmentarios y compensación.
+            self::PESTANA_OSCILOMETRIA => array_merge(
+                [
+                    ['clave' => 'indicacion_oscilo', 'etiqueta' => 'Indicación', 'tabla' => 'oscilometria',
+                        'columna' => 'indicacion', 'tipo' => 'texto', 'max' => 30],
+                ],
+                self::indicesOscilometria(),
+                [
+                    ['clave' => 'tobillos', 'etiqueta' => 'Tobillos', 'tabla' => 'oscilometria',
+                        'columna' => 'tobillos', 'tipo' => 'texto', 'max' => 30],
+                    ['clave' => 'pantorrillas', 'etiqueta' => 'Pantorrillas', 'tabla' => 'oscilometria',
+                        'columna' => 'pantorrillas', 'tipo' => 'texto', 'max' => 30],
+                    ['clave' => 'muslo_distal', 'etiqueta' => 'Muslo (distal)', 'tabla' => 'oscilometria',
+                        'columna' => 'muslo_distal', 'tipo' => 'texto', 'max' => 30],
+                    ['clave' => 'muslo_proximal', 'etiqueta' => 'Muslo (proximal)', 'tabla' => 'oscilometria',
+                        'columna' => 'muslo_proximal', 'tipo' => 'texto', 'max' => 30],
+                    ['clave' => 'conclusion_oscilo', 'etiqueta' => 'Conclusiones', 'tabla' => 'oscilometria',
+                        'columna' => 'conclusiones', 'tipo' => 'parrafo'],
+                ],
+            ),
+            // CAR-5: el **marcapasos** (`d_marcapasos.srd`): el generador, su programación, las mediciones y el implante.
+            self::PESTANA_MARCAPASOS => self::marcapasos(),
+        ];
+    }
+
+    /**
+     * Los índices y gradientes de la oscilometría, en pares derecha / izquierda como el DataWindow.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private static function indicesOscilometria(): array
+    {
+        $par = function (string $colDer, string $colIzq, string $claveBase, string $etiqueta, ?string $unidad = null) {
+            $campos = [];
+
+            foreach (['der' => ['derecho', $colDer], 'izq' => ['izquierdo', $colIzq]] as $lado => [$texto, $columna]) {
+                $campos[] = [
+                    'clave' => $claveBase . '_' . $lado, 'etiqueta' => $etiqueta . ' (' . $texto . ')',
+                    'grupo' => $etiqueta, 'tabla' => 'oscilometria', 'columna' => $columna,
+                    'tipo' => 'numero', 'unidad' => $unidad,
+                ];
+            }
+
+            return $campos;
+        };
+
+        return array_merge(
+            $par('ind_tobillo_brazo_derecho', 'ind_tobillo_brazo_izquierdo', 'itb_tobillo', 'Índice tobillo-brazo (ITB)'),
+            $par('ind_muslo_brazo_derecho', 'ind_muslo_brazo_izquierdo', 'itb_muslo', 'Índice muslo-brazo'),
+            $par('segmentos_mp_p_der', 'segmentos_mp_p_izq', 'segmento_mp_p', 'Gradiente segmentario MP-P'),
+            $par('segmentos_mp_md_der', 'segmentos_mp_md_izq', 'segmento_mp_md', 'Gradiente segmentario MP-MD'),
+            $par('segmentos_t_p_der', 'segmentos_t_p_izq', 'segmento_t_p', 'Gradiente segmentario T-P'),
+            $par('segmentos_t_md_der', 'segmentos_t_md_izq', 'segmento_t_md', 'Gradiente segmentario T-MD'),
+            // Las dos casillas de reserva y compensación son `char(1)` (S/N) por lado.
+            [
+                ['clave' => 'reserva_der', 'etiqueta' => 'Reserva circulatoria derecha', 'grupo' => 'Reserva y compensación',
+                    'tabla' => 'oscilometria', 'columna' => 'reserva_circulatoria_der', 'tipo' => 'si_no'],
+                ['clave' => 'reserva_izq', 'etiqueta' => 'Reserva circulatoria izquierda', 'grupo' => 'Reserva y compensación',
+                    'tabla' => 'oscilometria', 'columna' => 'reserva_circulatoria_izq', 'tipo' => 'si_no'],
+                ['clave' => 'compensacion_der', 'etiqueta' => 'Compensación hemodinámica derecha', 'grupo' => 'Reserva y compensación',
+                    'tabla' => 'oscilometria', 'columna' => 'compensacion_hemodinamica_der', 'tipo' => 'si_no'],
+                ['clave' => 'compensacion_izq', 'etiqueta' => 'Compensación hemodinámica izquierda', 'grupo' => 'Reserva y compensación',
+                    'tabla' => 'oscilometria', 'columna' => 'compensacion_hemodinamica_izq', 'tipo' => 'si_no'],
+            ],
+        );
+    }
+
+    /**
+     * Los campos del marcapasos, agrupados como en la pantalla del escritorio.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private static function marcapasos(): array
+    {
+        $campo = fn (string $columna, string $etiqueta, ?string $grupo = null, string $tipo = 'texto', ?int $max = 30, ?string $unidad = null) => [
+            'clave' => 'mp_' . $columna, 'etiqueta' => $etiqueta, 'grupo' => $grupo,
+            'tabla' => 'implantacion_marcapasos', 'columna' => $columna, 'tipo' => $tipo, 'max' => $max, 'unidad' => $unidad,
+        ];
+
+        return [
+            // Generador.
+            $campo('marca', 'Marca', 'Generador'),
+            $campo('modelo', 'Modelo', 'Generador'),
+            $campo('serie', 'Serie', 'Generador'),
+            $campo('serial', 'Serial', 'Generador'),
+            $campo('modo', 'Modo', 'Generador', 'texto', 20),
+            $campo('tipo_cable', 'Tipo de cable', 'Generador', 'texto', 10),
+            $campo('camara_del_electrodo', 'Cámara del electrodo', 'Generador', 'texto', 10),
+            // Programación.
+            $campo('frecuencia_basica', 'Frecuencia básica', 'Programación', 'texto', 10),
+            $campo('frecuencia_histeresis', 'Frecuencia de histéresis', 'Programación', 'texto', 10),
+            $campo('periodo_refractario', 'Período refractario V.', 'Programación', 'texto', 10),
+            $campo('periodo_refractario_a', 'Período refractario A.', 'Programación'),
+            $campo('autocapture_ventricular', 'Autocapture ventricular', 'Programación', 'texto', 10),
+            $campo('sencibilidad_respuesta_evocada', 'Sensibilidad de respuesta evocada', 'Programación', 'texto', 10),
+            $campo('amplitud_impulso_v', 'Amplitud de impulso V', 'Programación', 'texto', 10),
+            $campo('anchura_impulso_v', 'Anchura de impulso V', 'Programación', 'texto', 10),
+            $campo('amplitud_impulso_a', 'Amplitud de impulso A', 'Programación'),
+            $campo('anchura_impulso_a', 'Anchura de impulso A', 'Programación'),
+            $campo('sencibilidad_pr', 'Sensibilidad P/R', 'Programación', 'texto', 10),
+            $campo('configuracion_impulso_v', 'Configuración de impulso V', 'Programación', 'texto', 10),
+            $campo('configuracion_deteccion_v', 'Configuración de detección V', 'Programación', 'texto', 10),
+            $campo('vario', 'Vario', 'Programación', 'texto', 10),
+            // Mediciones: umbrales, corrientes, resistencias y ondas.
+            $campo('umbral_auricula', 'Umbral de aurícula', 'Mediciones', 'numero', null, 'V'),
+            $campo('umbral_ventriculo', 'Umbral de ventrículo', 'Mediciones', 'numero', null, 'V'),
+            $campo('corriente_auricula', 'Corriente de aurícula', 'Mediciones', 'numero', null, 'mA'),
+            $campo('corriente_ventriculo', 'Corriente de ventrículo', 'Mediciones', 'numero', null, 'mA'),
+            $campo('resistencia_auricula', 'Resistencia de aurícula', 'Mediciones', 'numero', null, 'ohmios'),
+            $campo('resistencia_ventriculo', 'Resistencia de ventrículo', 'Mediciones', 'numero', null, 'ohmios'),
+            $campo('onda_pr_auricula', 'Onda P/R de aurícula', 'Mediciones', 'numero', null, 'mV'),
+            $campo('onda_pr_ventricula', 'Onda P/R de ventrículo', 'Mediciones', 'numero', null, 'mV'),
+            $campo('ancho_pulso_auricula', 'Ancho de pulso de aurícula', 'Mediciones', 'numero', null, 'ms'),
+            $campo('ancho_pulso_ventricula', 'Ancho de pulso de ventrículo', 'Mediciones', 'numero', null, 'ms'),
+            // Implante y cierre.
+            $campo('protocolo_implante', 'Protocolo de implante', 'Implante', 'parrafo', null),
+            $campo('textazo', 'Texto del informe', 'Implante', 'parrafo', null),
+            $campo('conclusiones', 'Conclusiones', 'Implante', 'parrafo', null),
         ];
     }
 

@@ -103,6 +103,9 @@ class ConsultaCardiologiaWebTest extends TestCase
             ->assertSee('Doppler de miembros superiores')
             ->assertSee('Doppler carotídeo')
             ->assertSee('Doppler venoso de miembros inferiores')
+            ->assertSee('Prueba de esfuerzo')
+            ->assertSee('Oscilometría')
+            ->assertSee('Marcapasos')
             ->assertSee('Guardar el estudio');
     }
 
@@ -261,6 +264,54 @@ class ConsultaCardiologiaWebTest extends TestCase
             ])->assertRedirect();
 
         $this->assertDatabaseMissing('ecocardiografia', ['numhistoria' => 3001, 'numconsulta' => 1]);
+    }
+
+    public function test_guarda_la_prueba_de_esfuerzo_la_oscilometria_y_el_marcapasos(): void
+    {
+        [$user, $medico, $especialidad] = $this->medico();
+        $consulta = $this->consulta($medico);
+        $url = route('clinica.consulta.cardiologia.guardar', $consulta->id);
+
+        $this->conContexto($user, $medico, $especialidad)->post($url, [
+            'pestana' => MapaDelCardiologo::PESTANA_ESFUERZO,
+            'diag_esfuerzo' => 'Angina estable',
+            'mets' => '9,5',
+            'porc_fre_max' => '85',
+            'conclusion_esfuerzo' => 'Prueba negativa para isquemia.',
+        ])->assertSessionHas('estado', 'Estudio guardado.');
+
+        $this->assertDatabaseHas('prueba_esfuerzo', [
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 3001, 'numconsulta' => 1,
+            'diagnostico' => 'Angina estable', 'mets' => '9,5', 'conclusiones' => 'Prueba negativa para isquemia.',
+        ]);
+
+        $this->conContexto($user, $medico, $especialidad)->post($url, [
+            'pestana' => MapaDelCardiologo::PESTANA_OSCILOMETRIA,
+            'indicacion_oscilo' => 'Claudicación',
+            'itb_tobillo_der' => '1,1',
+            'reserva_der' => 'S',
+            'conclusion_oscilo' => 'Índices conservados.',
+        ])->assertSessionHas('estado', 'Estudio guardado.');
+
+        $this->assertDatabaseHas('oscilometria', [
+            'reg_medico' => $medico->reg_medico, 'historia' => 3001, 'consulta' => 1,
+            'indicacion' => 'Claudicación', 'reserva_circulatoria_der' => 'S', 'conclusiones' => 'Índices conservados.',
+        ]);
+        $this->assertSame(1.1, (float) DB::table('oscilometria')->where('historia', 3001)->value('ind_tobillo_brazo_derecho'));
+
+        $this->conContexto($user, $medico, $especialidad)->post($url, [
+            'pestana' => MapaDelCardiologo::PESTANA_MARCAPASOS,
+            'mp_marca' => 'Medtronic',
+            'mp_modelo' => 'Azure',
+            'mp_modo' => 'DDDR',
+            'mp_umbral_ventriculo' => '0,5',
+            'mp_conclusiones' => 'Implante sin complicaciones.',
+        ])->assertSessionHas('estado', 'Estudio guardado.');
+
+        $this->assertDatabaseHas('implantacion_marcapasos', [
+            'reg_medico' => $medico->reg_medico, 'historia' => 3001, 'consulta' => 1,
+            'marca' => 'Medtronic', 'modo' => 'DDDR', 'conclusiones' => 'Implante sin complicaciones.',
+        ]);
     }
 
     public function test_una_pestana_que_no_existe_no_guarda(): void
