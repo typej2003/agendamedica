@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Consulta\Cardiologia;
 
+use App\Models\DopplerArterialMiembrosInferiores;
 use App\Models\DopplerCarotidas;
 use App\Models\DopplerMiembrosSuperiores;
 use App\Models\DopplerVenoso;
@@ -45,6 +46,7 @@ final class MapaDelCardiologo
     public const PESTANA_ESFUERZO = 'esfuerzo';
     public const PESTANA_OSCILOMETRIA = 'oscilometria';
     public const PESTANA_MARCAPASOS = 'marcapasos';
+    public const PESTANA_ARTERIAL_MI = 'doppler-arterial-mi';
 
     /**
      * Las tablas de una fila por consulta: tabla => [modelo, columna de la historia, columna de la consulta].
@@ -61,6 +63,8 @@ final class MapaDelCardiologo
         'prueba_esfuerzo' => [PruebaDeEsfuerzo::class, 'numhistoria', 'numconsulta'],
         'oscilometria' => [Oscilometria::class, 'historia', 'consulta'],
         'implantacion_marcapasos' => [ImplantacionMarcapasos::class, 'historia', 'consulta'],
+        // ⚠️ Clave del legado `numhistoria` + `num_consulta` (con guion bajo), no `numconsulta`.
+        'dd_arterial_mi' => [DopplerArterialMiembrosInferiores::class, 'numhistoria', 'num_consulta'],
     ];
 
     /**
@@ -79,6 +83,7 @@ final class MapaDelCardiologo
             self::PESTANA_ESFUERZO => 'Prueba de esfuerzo',
             self::PESTANA_OSCILOMETRIA => 'Oscilometría',
             self::PESTANA_MARCAPASOS => 'Marcapasos',
+            self::PESTANA_ARTERIAL_MI => 'Doppler arterial de miembros inferiores',
         ],
     ];
 
@@ -272,7 +277,62 @@ final class MapaDelCardiologo
             ),
             // CAR-5: el **marcapasos** (`d_marcapasos.srd`): el generador, su programación, las mediciones y el implante.
             self::PESTANA_MARCAPASOS => self::marcapasos(),
+            // CAR-5: el **Doppler arterial de miembros inferiores** (`d_dd_arterial_miembros_inf.srd`).
+            self::PESTANA_ARTERIAL_MI => array_merge(
+                [
+                    ['clave' => 'indicacion_arterial_mi', 'etiqueta' => 'Indicación', 'tabla' => 'dd_arterial_mi',
+                        'columna' => 'indicacion', 'tipo' => 'texto', 'max' => 100],
+                    ['clave' => 'equipo_arterial_mi', 'etiqueta' => 'Equipo', 'tabla' => 'dd_arterial_mi',
+                        'columna' => 'equipo', 'tipo' => 'texto', 'max' => 30],
+                    ['clave' => 'transductor_arterial_mi', 'etiqueta' => 'Transductor', 'tabla' => 'dd_arterial_mi',
+                        'columna' => 'tansductor', 'tipo' => 'texto', 'max' => 30],
+                ],
+                self::arteriasMiembrosInferiores(),
+                [
+                    ['clave' => 'conclusion_arterial_mi', 'etiqueta' => 'Conclusión', 'tabla' => 'dd_arterial_mi',
+                        'columna' => 'conclusion', 'tipo' => 'parrafo'],
+                ],
+            ),
         ];
+    }
+
+    /**
+     * Las arterias del Doppler de miembros inferiores: la velocidad sistólica pico de cada lado (`_der`/`_izq`, `float`) y la
+     * morfología de la arteria (`char(5)`), que es una sola para las dos piernas, como en `d_dd_arterial_miembros_inf.srd`.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private static function arteriasMiembrosInferiores(): array
+    {
+        $arterias = [
+            'iliaca_ext' => 'Ilíaca externa',
+            'feromonal_comun' => 'Femoral común',
+            'fer_superf_prox' => 'Femoral superficial (proximal)',
+            'fer_superf_distal' => 'Femoral superficial (distal)',
+            'poplitea' => 'Poplítea',
+            'tibial_ante' => 'Tibial anterior',
+            'tibial_post' => 'Tibial posterior',
+            'peronea' => 'Peronea',
+        ];
+
+        $campos = [];
+
+        foreach ($arterias as $columna => $titulo) {
+            foreach (['der' => 'derecha', 'izq' => 'izquierda'] as $lado => $texto) {
+                $campos[] = [
+                    'clave' => $columna . '_' . $lado, 'etiqueta' => 'Velocidad sistólica pico (' . $texto . ')',
+                    'grupo' => $titulo, 'tabla' => 'dd_arterial_mi', 'columna' => $columna . '_' . $lado,
+                    'tipo' => 'numero', 'unidad' => 'cm/s',
+                ];
+            }
+
+            $campos[] = [
+                'clave' => $columna . '_morfologia', 'etiqueta' => 'Morfología', 'grupo' => $titulo,
+                'tabla' => 'dd_arterial_mi', 'columna' => $columna, 'tipo' => 'texto', 'max' => 5,
+            ];
+        }
+
+        return $campos;
     }
 
     /**

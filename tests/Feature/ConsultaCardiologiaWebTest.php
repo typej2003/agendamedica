@@ -106,6 +106,7 @@ class ConsultaCardiologiaWebTest extends TestCase
             ->assertSee('Prueba de esfuerzo')
             ->assertSee('Oscilometría')
             ->assertSee('Marcapasos')
+            ->assertSee('Doppler arterial de miembros inferiores')
             ->assertSee('Guardar el estudio');
     }
 
@@ -314,6 +315,29 @@ class ConsultaCardiologiaWebTest extends TestCase
         ]);
     }
 
+    public function test_guarda_el_doppler_arterial_de_miembros_inferiores_con_su_clave_del_legado(): void
+    {
+        [$user, $medico, $especialidad] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->conContexto($user, $medico, $especialidad)
+            ->post(route('clinica.consulta.cardiologia.guardar', $consulta->id), [
+                'pestana' => MapaDelCardiologo::PESTANA_ARTERIAL_MI,
+                'indicacion_arterial_mi' => 'Claudicación',
+                'iliaca_ext_der' => '85,4',
+                'iliaca_ext_izq' => '80',
+                'iliaca_ext_morfologia' => 'Placa',
+                'conclusion_arterial_mi' => 'Sin estenosis significativa.',
+            ])->assertSessionHas('estado', 'Estudio guardado.');
+
+        // La clave de la tabla es numhistoria + num_consulta (con guion bajo).
+        $this->assertDatabaseHas('dd_arterial_mi', [
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 3001, 'num_consulta' => 1,
+            'indicacion' => 'Claudicación', 'iliaca_ext' => 'Placa', 'conclusion' => 'Sin estenosis significativa.',
+        ]);
+        $this->assertSame(85.4, (float) DB::table('dd_arterial_mi')->where('num_consulta', 1)->value('iliaca_ext_der'));
+    }
+
     public function test_una_pestana_que_no_existe_no_guarda(): void
     {
         [$user, $medico, $especialidad] = $this->medico();
@@ -335,3 +359,4 @@ class ConsultaCardiologiaWebTest extends TestCase
             ->assertDontSee('Estudios cardiológicos');
     }
 }
+

@@ -24,13 +24,14 @@ class CardiologiaMapaTest extends TestCase
             'esfuerzo' => 'Prueba de esfuerzo',
             'oscilometria' => 'Oscilometría',
             'marcapasos' => 'Marcapasos',
+            'doppler-arterial-mi' => 'Doppler arterial de miembros inferiores',
         ], MapaDelCardiologo::PESTANAS[MapaDelCardiologo::SECCION]);
         $this->assertTrue(MapaDelCardiologo::esSeccion('cardiologia'));
         $this->assertFalse(MapaDelCardiologo::esSeccion('estudio'));
         $this->assertSame([
             'ecocardiografia', 'ecocardiografico_in', 'ecocardiograma_ete',
             'dd_arterial_venoso_ms', 'dd_arterias_carotidas_dos', 'ddflujo_venoso',
-            'prueba_esfuerzo', 'oscilometria', 'implantacion_marcapasos',
+            'prueba_esfuerzo', 'oscilometria', 'implantacion_marcapasos', 'dd_arterial_mi',
         ], array_keys(MapaDelCardiologo::TABLAS));
     }
 
@@ -112,6 +113,20 @@ class CardiologiaMapaTest extends TestCase
         $this->assertSame('numero', $marcapasos['mp_umbral_ventriculo']['tipo']);
         $this->assertSame('Mediciones', $marcapasos['mp_resistencia_auricula']['grupo']);
         $this->assertCount(34, $marcapasos, 'las 34 columnas editables del marcapasos');
+    }
+
+    public function test_el_doppler_arterial_de_miembros_inferiores_usa_num_consulta_con_guion_bajo(): void
+    {
+        $arterial = collect(MapaDelCardiologo::deLaPestana(MapaDelCardiologo::PESTANA_ARTERIAL_MI))->keyBy('clave');
+
+        // La tabla ya existía (ginecología) y su clave del legado es numhistoria + num_consulta.
+        $this->assertSame('num_consulta', MapaDelCardiologo::TABLAS['dd_arterial_mi'][2]);
+        $this->assertSame('iliaca_ext_der', $arterial['iliaca_ext_der']['columna']);
+        $this->assertSame('numero', $arterial['iliaca_ext_der']['tipo']);
+        $this->assertSame('Ilíaca externa', $arterial['iliaca_ext_der']['grupo']);
+        $this->assertSame('iliaca_ext', $arterial['iliaca_ext_morfologia']['columna']);
+        $this->assertSame('texto', $arterial['iliaca_ext_morfologia']['tipo']);
+        $this->assertSame('conclusion', $arterial['conclusion_arterial_mi']['columna']);
     }
 
     public function test_la_pestana_pedida_se_normaliza_a_la_que_existe(): void
