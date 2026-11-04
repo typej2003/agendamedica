@@ -5,7 +5,7 @@
      **continuación** —cuando el texto no entra— van sin membrete: un encabezado corto (PACIENTE y FECHA), el título «… (continuación)»
      y el resto del texto. Al pie, **una sola lleva la firma** (la última); las demás, la línea «Continúa →». El pie de página va
      en todas. Las medidas tienen su gemela en `App\Clinica\Impresion\MedidasDeLaMitad` y `DistribuidorDeDocumento`. --}}
-<section class="recipe-mitad recipe-mitad-documento" aria-label="{{ $mitad['titulo'] }}">
+<section class="recipe-mitad recipe-mitad-documento tamano-{{ $mitad['tamano'] ?? 10 }}" aria-label="{{ $mitad['titulo'] }}">
     @if ($mitad['primera'])
         <x-impresion.membrete :membrete="$membrete" />
 

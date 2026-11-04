@@ -79,6 +79,23 @@ final class MembreteDelMedico
         return OpcionesDeRecipe::desde($registro === null ? null : RecipeFormato::where('reg_medico', $registro)->first());
     }
 
+    /**
+     * **La hoja que este médico eligió para sus documentos de texto** (2026-11-04): `recipe_formatos.formato_imprimibles`
+     * traducida al modo del motor, o `null` si no eligió (cada documento sale como hasta hoy). Es del **doctor que firma**,
+     * igual que las opciones del récipe: la fila del centro no decide la hoja de sus doctores.
+     *
+     * Los récipes no la usan (siempre media hoja horizontal) y los ecos, el control de embarazo, la colposcopía, la
+     * histeroscopía y el preoperatorio tampoco (tienen su hoja fija).
+     */
+    public function hojaDeLosImprimibles(Medico $medico): ?string
+    {
+        $registro = $medico->registroDelFormato();
+
+        return ModoDeLaHoja::deLaPreferencia(
+            $registro === null ? null : RecipeFormato::where('reg_medico', $registro)->first()?->formato_imprimibles,
+        );
+    }
+
     // ----------------------------------------------------------------------------------------- Adentro
 
     /**

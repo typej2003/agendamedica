@@ -50,6 +50,8 @@ class FormatosEnBlancoController extends Controller
                         ? ['formato' => $formato]
                         : ['formato' => $formato, 'reg_medico' => $this->registroPedido($request)]),
                 ],
+                // La hoja que eligió el médico para sus documentos de texto: la hoja en blanco sale igual que la real.
+                $this->membretes->hojaDeLosImprimibles($medico),
             ),
         ]);
     }

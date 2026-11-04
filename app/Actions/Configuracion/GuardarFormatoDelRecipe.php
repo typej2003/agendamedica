@@ -75,10 +75,18 @@ final class GuardarFormatoDelRecipe
             );
         }
 
-        foreach (['color_linea', 'sello_posicion'] as $campo) {
+        // `formato_imprimibles` (2026-11-04): la hoja de los documentos de texto. Si la clave viene con `null` se borra la
+        // preferencia y vuelve la hoja de siempre; si no viene, no se toca.
+        foreach (['color_linea', 'sello_posicion', 'formato_imprimibles'] as $campo) {
             if (array_key_exists($campo, $datos)) {
                 $formato->$campo = $datos[$campo];
             }
+        }
+
+        // La hoja no viaja al teléfono: si es lo único que cambia, no se mueve `updated_at`, que el móvil usa para decidir
+        // si vuelve a bajar la firma y el sello (la misma precaución de `GuardarOpcionesDeImpresion`).
+        if ($formato->exists && array_keys($formato->getDirty()) === ['formato_imprimibles']) {
+            $formato->timestamps = false;
         }
 
         $nuevos = [];
