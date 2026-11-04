@@ -462,6 +462,114 @@ class RegistroDeMedicoWebTest extends TestCase
         $this->assertSame($ficha->id, (int) $solicitud->fresh()->medico_id);
     }
 
+    /**
+     * El caso del 2026-11-04: la ficha que ya tiene ese `reg_medico` **ya tiene cuenta y es la del mismo médico**.
+     * Antes la aprobación se cortaba con «ya es de un médico con cuenta. Usa otro» y la bandeja quedaba sin salida.
+     */
+    public function test_aprobar_cuando_la_ficha_ya_tiene_cuenta_del_mismo_correo_no_crea_otra(): void
+    {
+        $solicitud = $this->solicitar();
+        $reg = 'MPPS-' . $solicitud->mpps;
+
+        $cuenta = $this->cuenta('Medico');
+        $cuenta->update(['email' => $solicitud->email]);
+        $ficha = Medico::create([
+            'user_id' => $cuenta->id,
+            'name' => 'Lucía',
+            'lastname' => 'Prueba',
+            'email' => $solicitud->email,
+            'reg_medico' => $reg,
+            'license_number' => $solicitud->mpps,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->administrador());
+        Livewire::test(SolicitudesDeMedicos::class)
+            ->call('abrir', $solicitud->id)
+            ->set('reg_medico', $reg)
+            ->call('aprobar')
+            ->assertHasNoErrors()
+            ->assertSet('claveGenerada.clave', null)
+            ->assertSee('ya tenía');
+
+        $solicitud->refresh();
+
+        $this->assertSame(SolicitudMedico::APROBADA, $solicitud->estado);
+        $this->assertSame($ficha->id, (int) $solicitud->medico_id);
+        $this->assertSame(1, Medico::where('reg_medico', $reg)->count());
+        $this->assertSame(1, User::where('email', $solicitud->email)->count());
+        Mail::assertSent(
+            SolicitudDeMedicoAprobada::class,
+            fn ($m) => $m->hasTo($solicitud->email) && $m->clave === null
+        );
+    }
+
+    /**
+     * La misma persona con **otro correo**: el MPPS la identifica. Tampoco se crea una segunda ficha ni una
+     * segunda cuenta: se vincula la solicitud a la ficha que ya tiene su cuenta.
+     */
+    public function test_aprobar_cuando_la_ficha_con_cuenta_es_la_misma_por_el_mpps(): void
+    {
+        $solicitud = $this->solicitar();
+        $reg = 'MPPS-' . $solicitud->mpps;
+
+        $cuenta = $this->cuenta('Medico');
+        $ficha = Medico::create([
+            'user_id' => $cuenta->id,
+            'name' => 'Lucía',
+            'lastname' => 'Prueba',
+            'email' => $cuenta->email,
+            'reg_medico' => $reg,
+            'license_number' => $solicitud->mpps,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->administrador());
+        Livewire::test(SolicitudesDeMedicos::class)
+            ->call('abrir', $solicitud->id)
+            ->set('reg_medico', $reg)
+            ->call('aprobar')
+            ->assertHasNoErrors()
+            ->assertSet('claveGenerada.clave', null);
+
+        $this->assertSame(1, Medico::where('reg_medico', $reg)->count());
+        $this->assertSame(1, User::where('email', $cuenta->email)->count()); // no se creó ninguna con el correo nuevo
+        $this->assertDatabaseMissing('users', ['email' => $solicitud->email]);
+        $this->assertSame($ficha->id, (int) $solicitud->fresh()->medico_id);
+        $this->assertSame($cuenta->email, $ficha->fresh()->email); // no se pisa el correo de la ficha
+    }
+
+    /** Cuando la ficha con cuenta es de **otra persona**, se dice de quién es la cuenta; no se toca nada. */
+    public function test_aprobar_sobre_una_ficha_con_cuenta_ajena_dice_de_quien_es_la_cuenta(): void
+    {
+        $solicitud = $this->solicitar();
+        $reg = 'MPPS-' . $solicitud->mpps;
+
+        $cuenta = $this->cuenta('Medico');
+        $ficha = Medico::create([
+            'user_id' => $cuenta->id,
+            'name' => 'Otra',
+            'lastname' => 'Persona',
+            'email' => $cuenta->email,
+            'reg_medico' => $reg,
+            'license_number' => '999999',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->administrador());
+        Livewire::test(SolicitudesDeMedicos::class)
+            ->call('abrir', $solicitud->id)
+            ->set('reg_medico', $reg)
+            ->call('aprobar')
+            ->assertHasErrors('reg_medico')
+            ->assertSee($cuenta->email);
+
+        $this->assertTrue($solicitud->fresh()->estaPendiente());
+        $this->assertSame(1, Medico::where('reg_medico', $reg)->count());
+        $this->assertSame($ficha->email, $ficha->fresh()->email);
+        $this->assertDatabaseMissing('users', ['email' => $solicitud->email]);
+    }
+
     public function test_no_se_aprueba_sobre_la_ficha_de_otro_correo_ni_dos_veces(): void
     {
         $solicitud = $this->solicitar();

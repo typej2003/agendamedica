@@ -155,7 +155,12 @@
                                 @if ($fichaExistente)
                                     <div class="form-text text-warning-emphasis">
                                         Ya existe la ficha de {{ trim($fichaExistente->name . ' ' . $fichaExistente->lastname) }}
-                                        con ese reg_medico: se le da acceso a esa ficha en vez de crear otra.
+                                        con ese reg_medico:
+                                        @if ($fichaExistente->user_id)
+                                            ya tiene cuenta, así que la solicitud se vincula a su ficha y no se crea otra.
+                                        @else
+                                            se le da acceso a esa ficha en vez de crear otra.
+                                        @endif
                                     </div>
                                 @else
                                     <div class="form-text">Se crea una ficha nueva con este reg_medico.</div>
@@ -325,7 +330,12 @@
                     <div class="modal-body">
                         <div class="alert {{ $claveGenerada['correoEnviado'] ? 'alert-info' : 'alert-warning' }} small">
                             @if (! $claveGenerada['clave'])
-                                Ya tenía cuenta: le habilitamos el área médica y entra con <strong>su contraseña de siempre</strong>, no le cambiamos ninguna clave.
+                                @if ($claveGenerada['yaTeniaCuenta'])
+                                    Ese médico ya tenía su cuenta y su ficha: la solicitud quedó vinculada a la ficha y
+                                    <strong>no se creó otra</strong>. Entra con su contraseña de siempre.
+                                @else
+                                    Ya tenía cuenta: le habilitamos el área médica y entra con <strong>su contraseña de siempre</strong>, no le cambiamos ninguna clave.
+                                @endif
                                 @if (! $claveGenerada['correoEnviado'])
                                     <strong>El correo no salió:</strong> avísale por otro medio.
                                 @endif

@@ -30,6 +30,9 @@ use Throwable;
  *    web): se le **da acceso a esa ficha** (`darAccesoAMedico`) en vez de crear otra, así trabaja con sus
  *    pacientes. Sólo si la ficha no tiene correo o tiene el mismo de la solicitud: si tiene otro, el
  *    administrador tiene que resolverlo antes (no se pisa el correo de una ficha que no sabemos de quién es).
+ *  - **Ya existe la ficha y su cuenta es del mismo médico** (se volvió a registrar después de estar aprobado,
+ *    2026-11-04): se **vincula la solicitud a esa ficha** y no se crea nada. Antes se cortaba con «ya es de un
+ *    médico con cuenta. Usa otro», que dejaba la bandeja sin salida aunque el `reg_medico` fuera el suyo.
  *  - **El correo ya es de una cuenta que no es de médico** (paciente, administración, secretaría, 2026-10-24): se
  *    le **habilita el área médica en esa misma cuenta** (`darRolDeMedico`), con su misma clave y sus mismos
  *    roles; el login le empieza a preguntar en qué área entrar. No se manda clave temporal.
@@ -53,7 +56,7 @@ final class AprobarSolicitudDeMedico
     }
 
     /**
-     * @return array{medico: Medico, clave: string, enlazada: bool, correoEnviado: bool}
+     * @return array{medico: Medico, clave: string|null, enlazada: bool, yaTeniaCuenta: bool, correoEnviado: bool}
      *
      * @throws ValidationException
      */
@@ -92,6 +95,7 @@ final class AprobarSolicitudDeMedico
                 $r = $this->darAccesoALaFicha($ficha, $solicitud);
                 $enlazada = true;
                 $clave = $r['clave'];
+                $yaTeniaCuenta = $r['yaTeniaCuenta'];
             } elseif (($cuenta = $this->cuentaQueYaExiste($solicitud)) !== null) {
                 // Ya es paciente, administración o secretaría: se le habilita el área médica **en su cuenta**,
                 // sin crear otra ni cambiarle la clave (2026-10-24).
@@ -106,6 +110,7 @@ final class AprobarSolicitudDeMedico
                 $ficha = $r['medico'];
                 $enlazada = false;
                 $clave = null;
+                $yaTeniaCuenta = false;
             } else {
                 $r = $this->cuentas->crearMedico([
                     'name' => $solicitud->nombres,
@@ -119,11 +124,16 @@ final class AprobarSolicitudDeMedico
                 $ficha = $r['medico'];
                 $enlazada = false;
                 $clave = $r['clave'];
+                $yaTeniaCuenta = false;
             }
 
             // Las tres verificaciones del perfil nacen acá (2026-11-03): el correo ya está verificado por
             // el código, y el carnet queda pendiente o sin verificar salvo que el administrador lo confirme.
-            $this->verificaciones->registrarAlta($solicitud, $ficha, $carnetVerificado, $revisor);
+            // Si la ficha **ya tenía cuenta** (mismo médico que se volvió a registrar), el alta ya ocurrió:
+            // volver a registrarla bajaría a `pendiente` un carnet que ya estaba verificado.
+            if (! $yaTeniaCuenta) {
+                $this->verificaciones->registrarAlta($solicitud, $ficha, $carnetVerificado, $revisor);
+            }
 
             $solicitud->update([
                 'estado' => SolicitudMedico::APROBADA,
@@ -142,6 +152,7 @@ final class AprobarSolicitudDeMedico
                 'medico' => $ficha,
                 'clave' => $clave,
                 'enlazada' => $enlazada,
+                'yaTeniaCuenta' => $yaTeniaCuenta,
                 'solicitud' => $solicitud,
                 'referido' => $referido,
             ];
@@ -163,6 +174,7 @@ final class AprobarSolicitudDeMedico
             'medico' => $resultado['medico'],
             'clave' => $resultado['clave'],
             'enlazada' => $resultado['enlazada'],
+            'yaTeniaCuenta' => $resultado['yaTeniaCuenta'],
             'correoEnviado' => $correoEnviado,
         ];
     }
@@ -176,7 +188,7 @@ final class AprobarSolicitudDeMedico
      * ya tiene otra ficha médica, la Action lanza `ValidationException` y la solicitud **queda pendiente**
      * para que la resuelva la bandeja: no se crea nada a medias.
      *
-     * @return array{medico: Medico, clave: string, enlazada: bool, correoEnviado: bool}
+     * @return array{medico: Medico, clave: string|null, enlazada: bool, yaTeniaCuenta: bool, correoEnviado: bool}
      *
      * @throws ValidationException
      */
@@ -299,7 +311,7 @@ final class AprobarSolicitudDeMedico
         }
     }
 
-    /** @return array{user: User, clave: string} */
+    /** @return array{user: User, clave: string|null, yaTeniaCuenta: bool} */
     private function darAccesoALaFicha(Medico $ficha, SolicitudMedico $solicitud): array
     {
         if ($ficha->es_centro) {
@@ -308,14 +320,30 @@ final class AprobarSolicitudDeMedico
             ]);
         }
 
-        if ($ficha->user_id && User::whereKey($ficha->user_id)->exists()) {
+        $correoDeLaFicha = mb_strtolower(trim((string) $ficha->email));
+
+        // La ficha **ya tiene cuenta** (2026-11-04): el médico se volvió a registrar (o registró a la vez en
+        // otra pestaña) después de que su alta anterior le creara la cuenta. Antes la aprobación se cortaba con
+        // «Ese reg_medico ya es de un médico con cuenta. Usa otro», que dejaba la bandeja sin salida aunque la
+        // ficha fuera la del mismo médico. Ahora, si es la misma persona, se vincula la solicitud a su ficha y
+        // no se crea nada; si no se puede probar, se dice de quién es la cuenta y qué hacer.
+        $cuenta = $ficha->user_id ? User::whereKey($ficha->user_id)->first() : null;
+
+        if ($cuenta !== null) {
+            if ($this->esElMismoMedico($ficha, $solicitud, $cuenta)) {
+                return ['user' => $cuenta, 'clave' => null, 'yaTeniaCuenta' => true];
+            }
+
+            $nombre = trim($ficha->name . ' ' . $ficha->lastname);
+
             throw ValidationException::withMessages([
-                'reg_medico' => 'Ese reg_medico ya es de un médico con cuenta. Usa otro.',
+                'reg_medico' => "Ese reg_medico es de la ficha de «{$nombre}», que ya tiene la cuenta {$cuenta->email}. "
+                    . 'No es el correo de esta solicitud: si es el mismo médico, que entre con esa cuenta; si se registró '
+                    . 'con otro correo, corrígelo en «Cuentas» o usa otro reg_medico.',
             ]);
         }
 
-        $correoDeLaFicha = mb_strtolower(trim((string) $ficha->email));
-        if ($correoDeLaFicha !== '' && $correoDeLaFicha !== mb_strtolower($solicitud->email)) {
+        if ($correoDeLaFicha !== '' && $correoDeLaFicha !== mb_strtolower(trim((string) $solicitud->email))) {
             throw ValidationException::withMessages([
                 'reg_medico' => "La ficha de ese reg_medico tiene otro correo ({$ficha->email}). Corrígelo en «Cuentas» si es el mismo médico, o usa otro reg_medico.",
             ]);
@@ -330,6 +358,29 @@ final class AprobarSolicitudDeMedico
         }
         $ficha->forceFill($completar)->save();
 
-        return $this->cuentas->darAccesoAMedico($ficha);
+        return $this->cuentas->darAccesoAMedico($ficha) + ['yaTeniaCuenta' => false];
+    }
+
+    /**
+     * ¿La ficha con cuenta es de la persona que se está registrando? Se prueba por el **correo** (el de la
+     * cuenta o el de la ficha) y, si no coincide, por el **MPPS**, que es el registro profesional del médico.
+     * Con dos datos distintos no se toca nada: podría ser otra persona con el mismo `reg_medico`.
+     */
+    private function esElMismoMedico(Medico $ficha, SolicitudMedico $solicitud, User $cuenta): bool
+    {
+        $correo = mb_strtolower(trim((string) $solicitud->email));
+
+        foreach ([$cuenta->email, $ficha->email] as $suyo) {
+            $suyo = mb_strtolower(trim((string) $suyo));
+
+            if ($correo !== '' && $suyo !== '' && $correo === $suyo) {
+                return true;
+            }
+        }
+
+        $mppsSolicitud = preg_replace('/\D/', '', (string) $solicitud->mpps);
+        $mppsFicha = preg_replace('/\D/', '', (string) $ficha->license_number);
+
+        return $mppsSolicitud !== '' && $mppsFicha !== '' && $mppsSolicitud === $mppsFicha;
     }
 }

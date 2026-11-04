@@ -170,12 +170,14 @@ class SolicitudesDeMedicos extends Component
 
         $this->claveGenerada = [
             'titulo' => match (true) {
+                $r['yaTeniaCuenta'] => 'Aprobada: el médico ya tenía su cuenta',
                 $r['clave'] === null => 'Aprobada: se habilitó su área médica',
                 $r['enlazada'] => 'Aprobada: acceso a la ficha existente',
                 default => 'Aprobada: médico creado',
             },
             'correo' => $r['medico']->email,
             'clave' => $r['clave'],
+            'yaTeniaCuenta' => $r['yaTeniaCuenta'],
             'correoEnviado' => $r['correoEnviado'],
         ];
         $this->cerrar();
