@@ -526,6 +526,10 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
                 Route::post('/consulta/{consulta}/internista/resumen', [\App\Http\Controllers\Clinica\ConsultaInternistaController::class, 'resumen'])
                     ->name('consulta.internista.resumen');
 
+                // **Cardiología** (CAR-2, 2026-11-04): una pestaña de sus estudios (la pestaña viaja en el cuerpo).
+                Route::post('/consulta/{consulta}/cardiologia', [\App\Http\Controllers\Clinica\ConsultaCardiologoController::class, 'guardar'])
+                    ->name('consulta.cardiologia.guardar');
+
                 // Exámenes e imágenes de la consulta (WEB-4.7): el ítem 7 del panel. La sección **lee**
                 // los exámenes de laboratorio de la consulta (`examen_paciente`, que escribe el
                 // escritorio: su ABM es F5/WEB-5.4) y **escribe** las imágenes (`imagen_consulta`, la

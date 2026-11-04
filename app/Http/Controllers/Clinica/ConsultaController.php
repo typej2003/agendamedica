@@ -521,6 +521,44 @@ class ConsultaController extends Controller
     }
 
     /**
+     * **Una sección de los estudios cardiológicos** (CAR-2, 2026-11-04): sus pestañas y los valores de la pestaña abierta.
+     * El guardado lo hace `ConsultaCardiologoController`; acá sólo se lee.
+     */
+    private function seccionDelCardiologo(string $seccion, Consulta $consulta): \App\Clinica\Consulta\Vistas\CardiologoVista
+    {
+        $mapa = \App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::class;
+        $datos = new \App\Clinica\Consulta\Cardiologia\DatosDelCardiologo();
+
+        $pestana = $mapa::pestana($seccion, (string) request()->query('pestana', ''));
+        $url = fn (?string $clave = null) => route('clinica.consulta', array_filter([
+            $consulta->id,
+            'seccion' => $seccion,
+            'pestana' => $clave,
+        ]));
+
+        $pestanas = [];
+        foreach ($mapa::PESTANAS[$seccion] ?? [] as $clave => $texto) {
+            $pestanas[] = [
+                'clave' => $clave,
+                'texto' => $texto,
+                'url' => $url($clave),
+                'activa' => $clave === $pestana,
+                'cargada' => $datos->tieneDatos($consulta, $clave),
+            ];
+        }
+
+        return new \App\Clinica\Consulta\Vistas\CardiologoVista(
+            $seccion,
+            $pestana,
+            $pestanas,
+            $datos->valores($consulta, $pestana),
+            route('clinica.consulta.cardiologia.guardar', $consulta->id),
+            $url($pestana),
+            (array) old(),
+        );
+    }
+
+    /**
      * **La lista y la subida de las fotos de la placa de la Rx de tórax** (O-44).
      *
      * Es el ViewModel de siempre (`ImagenesDeLaConsultaVista`) con la etiqueta `rx` de `TagDeImagen`: la subida
@@ -646,6 +684,11 @@ class ConsultaController extends Controller
         // **Las secciones del internista** (MI-2 a MI-5, 2026-10-28): las arma `seccionDelInternista`.
         if ($this->alcance()->esMedicinaInterna() && \App\Clinica\Consulta\Interna\MapaDelInternista::esSeccion($seccion)) {
             return $this->seccionDelInternista($seccion, $consulta, $regMedico, $imagenes);
+        }
+
+        // **Los estudios cardiológicos** (CAR-2, 2026-11-04): los arma `seccionDelCardiologo`.
+        if ($this->alcance()->esCardiologia() && \App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::esSeccion($seccion)) {
+            return $this->seccionDelCardiologo($seccion, $consulta);
         }
 
         $numero = (int) $consulta->numhistoria;

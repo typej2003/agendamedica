@@ -94,6 +94,13 @@ final class SeccionesDeLaConsulta
     /** El valor de `?recipe=` que abre el récipe de la pareja (WEB-5.1b): la segunda pestaña de la sección de récipes. */
     public const RECIPE_PAREJA = 'pareja';
 
+    /**
+     * Los **estudios cardiológicos** (CAR-2, 2026-11-04): el ecocardiograma transtorácico y los estudios que sumen las
+     * olas CAR-3 a CAR-5 (Doppler, esfuerzo, oscilometría, marcapasos e implantes). El escritorio los abre desde «Plan de
+     * diagnóstico»; en la web son una sección propia.
+     */
+    public const SECCION_CARDIOLOGIA = 'cardiologia';
+
     /*
     |--------------------------------------------------------------------------
     | Las secciones propias de la consulta PEDIÁTRICA (2026-10-19)
@@ -314,6 +321,51 @@ final class SeccionesDeLaConsulta
     ];
 
     /**
+     * **El catálogo de la consulta de cardiología** (CAR-2, 2026-11-04): el árbol del escritorio de CardioReport
+     * (`fuentes-cardiologia/ventana_consulta/w_consulta_principal.srw`, `ue_populate`). El escritorio tiene la misma
+     * forma que ginecología (sin «Tratamiento»): los estudios propios viven dentro de «Plan de diagnóstico», y en la web
+     * son la sección **Estudios cardiológicos**.
+     *
+     * No tiene el estudio ecográfico ni el control de embarazo: son de ginecología. Las pestañas «Archivos-PDF», la
+     * evaluación pre-operatoria y el análisis evolutivo llegan con CAR-5.
+     */
+    private const ITEMS_CARDIOLOGIA = [
+        ['numero' => 1, 'grupo' => 'Consulta', 'titulo' => 'Motivos de consulta', 'icono' => 'bi-list-check',
+            'detalle' => 'Catálogo del médico, varios por consulta.', 'tarea' => 'WEB-4.2', 'estado' => 'listo',
+            'seccion' => self::SECCION_MOTIVOS],
+        ['numero' => 2, 'grupo' => 'Consulta', 'titulo' => 'Enfermedad actual', 'icono' => 'bi-file-text',
+            'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.2', 'estado' => 'listo',
+            'seccion' => self::SECCION_ENFERMEDAD],
+        ['numero' => 3, 'grupo' => 'Consulta', 'titulo' => 'Antecedentes', 'icono' => 'bi-clipboard2-pulse',
+            'detalle' => 'Del paciente, por categorías, con la casilla de alerta.', 'tarea' => 'WEB-4.4', 'estado' => 'listo',
+            'seccion' => self::SECCION_ANTECEDENTES],
+        ['numero' => 4, 'grupo' => 'Consulta', 'titulo' => 'Evaluación física', 'icono' => 'bi-heart-pulse',
+            'detalle' => 'Antropometría, signos vitales y examen por aparatos.', 'tarea' => 'WEB-4.3', 'estado' => 'listo',
+            'seccion' => self::SECCION_EVALUACION],
+        ['numero' => 5, 'grupo' => 'Consulta', 'titulo' => 'Estudios cardiológicos', 'icono' => 'bi-heart-pulse',
+            'detalle' => 'Ecocardiograma y los estudios del cardiólogo, con su informe.', 'tarea' => 'CAR-2', 'estado' => 'listo',
+            'seccion' => self::SECCION_CARDIOLOGIA],
+        ['numero' => 8, 'grupo' => 'Consulta', 'titulo' => 'Diagnóstico', 'icono' => 'bi-clipboard2-check',
+            'detalle' => 'Catálogo del médico; se propaga a constancias y presupuesto.', 'tarea' => 'WEB-4.5', 'estado' => 'listo',
+            'seccion' => self::SECCION_DIAGNOSTICO],
+        ['numero' => 9, 'grupo' => 'Consulta', 'titulo' => 'Evolución', 'icono' => 'bi-activity',
+            'detalle' => 'Texto libre o por plantilla.', 'tarea' => 'WEB-4.6', 'estado' => 'listo',
+            'seccion' => self::SECCION_EVOLUCION],
+        ['numero' => 10, 'grupo' => 'Documentos', 'titulo' => 'Récipes', 'icono' => 'bi-prescription2',
+            'detalle' => 'Varios por consulta, por medicamento o por tratamiento.', 'tarea' => 'WEB-5.1', 'estado' => 'listo',
+            'seccion' => self::SECCION_RECIPES],
+        ['numero' => 12, 'grupo' => 'Documentos', 'titulo' => 'Solicitudes', 'icono' => 'bi-send',
+            'detalle' => 'Laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe médico y dieta / recomendaciones.',
+            'tarea' => 'WEB-5.3a', 'estado' => 'listo', 'seccion' => self::SECCION_SOLICITUDES],
+        ['numero' => 13, 'grupo' => 'Documentos', 'titulo' => 'Datos personales', 'icono' => 'bi-person-vcard',
+            'detalle' => 'La filiación y el contacto del paciente, para completar sin salir de la consulta.', 'tarea' => 'WEB-11.25', 'estado' => 'listo',
+            'seccion' => self::SECCION_DATOS],
+        ['numero' => 14, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
+            'detalle' => 'Los conceptos que se cobran por la consulta, del catálogo del consultorio, con su total.', 'tarea' => 'F9',
+            'estado' => 'listo', 'seccion' => self::SECCION_PREFACTURA],
+    ];
+
+    /**
      * **Las secciones que agrega un postgrado** cuando el médico lo tiene (2026-10-19). No están en el catálogo
      * base de ninguna especialidad: se insertan después del ítem que dice `despues_de`, con la numeración del
      * legado.
@@ -401,6 +453,9 @@ final class SeccionesDeLaConsulta
 
         if ($alcance->esMedicinaInterna()) {
             $base = self::ITEMS_MEDICINA_INTERNA;
+            $extras = [];
+        } elseif ($alcance->esCardiologia()) {
+            $base = self::ITEMS_CARDIOLOGIA;
             $extras = [];
         } elseif (self::esPediatria($especialidad)) {
             $base = self::ITEMS_PEDIATRIA;

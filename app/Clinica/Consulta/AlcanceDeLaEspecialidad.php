@@ -99,6 +99,15 @@ final class AlcanceDeLaEspecialidad
     }
 
     /**
+     * **¿Es cardiología?** (CAR-2, 2026-11-04). Es la que estrena los estudios cardiológicos: el ecocardiograma, el
+     * Doppler, la prueba de esfuerzo y el marcapasos. Sin esta rama, cardiología veía el núcleo de medicina general.
+     */
+    public function esCardiologia(): bool
+    {
+        return $this->slug !== null && str_contains($this->slug, 'cardiolog');
+    }
+
+    /**
      * **El modo medicina general** (Alexander, 2026-10-22): cualquier especialidad que no sea ginecología ni pediatría. Es el
      * núcleo compartido —agenda, consulta, récipes y documentos— sin nada de las otras dos: sin estudio ecográfico, sin
      * control de embarazo, sin examen ginecológico y sin la consulta de pareja. Es lo que permite **habilitar las nueve

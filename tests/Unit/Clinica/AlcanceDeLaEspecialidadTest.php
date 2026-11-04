@@ -20,8 +20,8 @@ class AlcanceDeLaEspecialidadTest extends TestCase
 {
     private const GINECO = 'ginecologia-y-obstetricia';
 
-    /** Una especialidad sin módulos propios: es el modo medicina general. */
-    private const GENERAL = 'cardiologia';
+    /** Una especialidad sin módulos propios: es el modo medicina general (cardiología salió de acá con CAR-2). */
+    private const GENERAL = 'oftalmologia';
 
     private function shell(?string $especialidad): ConsultaShellVista
     {
@@ -77,8 +77,23 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         $this->assertSame(10, $vm->totalListos());
     }
 
-    /** En el modo general las dos secciones ginecológicas no existen en el catálogo: su URL directa cae en el estado vacío. */
-    public function test_el_modo_general_no_abre_el_estudio_ni_el_embarazo(): void
+    /**
+     * **Cardiología tiene su catálogo desde CAR-2** (2026-11-04): el árbol de CardioReport, con sus **Estudios
+     * cardiológicos** en el ítem 5 y sin el estudio ecográfico ni el control de embarazo. No tiene «Tratamiento»
+     * (el escritorio no lo ofrece) y la pre-factura sigue apagada por O-45.
+     */
+    public function test_cardiologia_tiene_sus_estudios_y_no_los_de_ginecologia(): void
+    {
+        $vm = $this->shell('cardiologia');
+
+        $this->assertSame([1, 2, 3, 4, 5, 8, 9, 10, 12, 13], $this->numeros($vm));
+        $this->assertSame(10, $vm->totalItems());
+        $this->assertSame(10, $vm->totalListos());
+        $this->assertFalse(SeccionesDeLaConsulta::existeSeccion(SeccionesDeLaConsulta::SECCION_ESTUDIO, 'cardiologia'));
+        $this->assertTrue(SeccionesDeLaConsulta::existeSeccion(SeccionesDeLaConsulta::SECCION_CARDIOLOGIA, 'cardiologia'));
+    }
+
+    /** En el modo general las dos secciones ginecológicas no existen en el catálogo: su URL directa cae en el estado vacío. */    public function test_el_modo_general_no_abre_el_estudio_ni_el_embarazo(): void
     {
         foreach ([ConsultaShellVista::SECCION_EMBARAZO, ConsultaShellVista::SECCION_ESTUDIO] as $oculta) {
             $vm = new ConsultaShellVista(
