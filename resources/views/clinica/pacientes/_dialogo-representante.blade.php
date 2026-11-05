@@ -1,6 +1,7 @@
 {{--
     El formulario del **representante del paciente** (WEB-3.4), en un diálogo: nombre, parentesco del
-    catálogo de AppDDR, cédula, teléfono, correo y dirección.
+    catálogo de AppDDR, estado civil, cédula, teléfono, correo y dirección. El estado civil es el del
+    adulto (O-59): en pediatría es el dato que el alta del niño ya no pide.
 
     Un solo diálogo para toda la página y uno solo para cargar y para editar: en el legado la tabla
     `representante` tiene `PRIMARY KEY (numhistoria)`, así que **es una fila por paciente** y "cargar" y
@@ -14,7 +15,7 @@
     Recibe `$rep` (App\Clinica\Pacientes\Vistas\RepresentanteDePacienteVista).
 --}}
 <x-ui.dialogo id="dialogo-representante" titulo="{{ $rep->tituloFormulario() }}" lateral
-              data-abrir-al-cargar="{{ $errors->hasAny(['nombre', 'codeparentesco', 'cedula', 'telefono', 'email', 'direccion']) ? '1' : '0' }}">
+              data-abrir-al-cargar="{{ $errors->hasAny(['nombre', 'codeparentesco', 'estado_civil', 'cedula', 'telefono', 'email', 'direccion']) ? '1' : '0' }}">
     <form method="POST" action="{{ $rep->urlGuardar() }}">
         @csrf
         @isset($volverA)<input type="hidden" name="volver_a_consulta" value="{{ $volverA }}">@endisset
@@ -38,6 +39,18 @@
                             ayuda="Si no lo sabes, déjalo en “Sin dato”: no es obligatorio.">
                     <select name="codeparentesco" id="representante-parentesco" class="form-select">
                         @foreach ($rep->parentescos() as $opcion)
+                            <option value="{{ $opcion['valor'] }}" {{ $opcion['elegido'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
+                        @endforeach
+                    </select>
+                </x-ui.campo>
+
+                {{-- El estado civil es **del adulto** (O-59, 2026-11-05): en pediatría el del niño no se
+                     pide y el que vale es este. La lista es la misma del alta del paciente
+                     (`FormularioDePacienteVista::ESTADOS_CIVILES`), no una nueva. --}}
+                <x-ui.campo etiqueta="Estado civil" for="representante-estado_civil" error="estado_civil" class="col-md-6"
+                            ayuda="Es el del representante, no el del paciente.">
+                    <select name="estado_civil" id="representante-estado_civil" class="form-select">
+                        @foreach ($rep->estadosCiviles() as $opcion)
                             <option value="{{ $opcion['valor'] }}" {{ $opcion['elegido'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
                         @endforeach
                     </select>

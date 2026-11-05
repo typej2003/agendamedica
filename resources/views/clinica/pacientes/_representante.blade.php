@@ -1,6 +1,7 @@
-{{-- El bloque **«Representante»** de la ficha (WEB-3.4): el adulto que responde por el paciente, con su parentesco y su
-     contacto. Lo usan la ficha y la sección «Datos del paciente» de la consulta (2026-11-03), y el diálogo que lo edita es
-     `_dialogo-representante`. Recibe `$rep` (App\Clinica\Pacientes\Vistas\RepresentanteDePacienteVista). --}}
+{{-- El bloque **«Representante»** de la ficha (WEB-3.4): el adulto que responde por el paciente, con su parentesco, su estado
+     civil y su contacto (en pediatría el estado civil es suyo, no del niño: O-59). Lo usan la ficha y la sección «Datos del
+     paciente» de la consulta (2026-11-03), y el diálogo que lo edita es `_dialogo-representante`. Recibe `$rep`
+     (App\Clinica\Pacientes\Vistas\RepresentanteDePacienteVista). --}}
 <x-ui.tarjeta id="ficha-representante" titulo="Representante" icono="bi-person-hearts" class="mb-3">
     <x-slot name="acciones">
         @if ($rep->puedeEditar())
@@ -20,6 +21,7 @@
             </div>
             <dl class="datos-rejilla">
                 <x-ui.dato etiqueta="Cédula" :valor="$rep->cedula()" />
+                <x-ui.dato etiqueta="Estado civil" :valor="$rep->estadoCivil()" />
                 <x-ui.dato etiqueta="Teléfono" :valor="$rep->telefono()" />
                 <x-ui.dato etiqueta="Correo" :valor="$rep->correo()" />
                 <x-ui.dato etiqueta="Dirección" :valor="$rep->direccion()" />

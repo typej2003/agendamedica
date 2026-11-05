@@ -27,6 +27,7 @@ class RepresentanteDePacienteVistaTest extends TestCase
             'telefono'       => '04149876543',
             'email'          => 'rosa@example.com',
             'direccion'      => 'Calle 1',
+            'estado_civil'   => 'C',
         ], $campos);
     }
 
@@ -66,6 +67,9 @@ class RepresentanteDePacienteVistaTest extends TestCase
         $this->assertSame('04149876543', $vista->telefono());
         $this->assertSame('rosa@example.com', $vista->correo());
         $this->assertSame('Calle 1', $vista->direccion());
+        // El estado civil es del adulto (O-59) y se lee con el catálogo del paciente.
+        $this->assertSame('C', $vista->codigoEstadoCivil());
+        $this->assertSame('Casado(a)', $vista->estadoCivil());
         $this->assertSame('Editar el representante', $vista->botonEditar());
         $this->assertSame('/clinica/pacientes/51/representante', $vista->urlGuardar());
     }
@@ -152,7 +156,7 @@ class RepresentanteDePacienteVistaTest extends TestCase
     {
         $vista = $this->vista($this->representante([
             'nombre' => '   ', 'cedula' => '', 'telefono' => '  ', 'email' => null, 'direccion' => ' ',
-            'codeparentesco' => '  ',
+            'codeparentesco' => '  ', 'estado_civil' => ' ',
         ]));
 
         $this->assertTrue($vista->cargado(), 'la fila existe: el bloque muestra el estado con datos');
@@ -163,6 +167,7 @@ class RepresentanteDePacienteVistaTest extends TestCase
         $this->assertNull($vista->direccion());
         $this->assertNull($vista->parentesco());
         $this->assertNull($vista->codigoParentesco());
+        $this->assertNull($vista->estadoCivil());
     }
 
     /** `S.C.` es el marcador de "sin cédula" del legado: no es un dato, y la ficha muestra `—`. */
@@ -182,6 +187,55 @@ class RepresentanteDePacienteVistaTest extends TestCase
         $this->assertNull($catalogo->nombreDe($leido, 'X'));
         $this->assertNull($catalogo->nombreDe($leido, ''));
         $this->assertNull($catalogo->nombreDe($leido, null));
+    }
+
+    // ------------------------------------------- El estado civil es del representante (O-59, 2026-11-05)
+
+    /**
+     * **El estado civil es del adulto.** Se lee con el catálogo del paciente (`S`/`C`/`D`/`V`) y, si el
+     * representante no lo tiene, queda vacío: **no** se completa con `familia_bebe.situacion_pareja`, que es
+     * la situación de pareja de los padres y tiene otra escala (`S` ahí es «Separados»). El ViewModel ni
+     * siquiera recibe la familia: el respaldo no existe a propósito.
+     */
+    public function test_el_estado_civil_sin_dato_queda_vacio_y_no_se_completa_con_la_familia(): void
+    {
+        $vista = $this->vista($this->representante(['estado_civil' => null]));
+
+        $this->assertNull($vista->codigoEstadoCivil());
+        $this->assertNull($vista->estadoCivil());
+
+        // Y con espacios (los datos sucios del legado) es lo mismo: no hay dato.
+        $this->assertNull($this->vista($this->representante(['estado_civil' => '   ']))->estadoCivil());
+    }
+
+    public function test_el_select_de_estado_civil_es_el_catalogo_del_paciente_con_sin_dato(): void
+    {
+        $vista = $this->vista($this->representante(['estado_civil' => 'V']));
+        $opciones = $vista->estadosCiviles();
+
+        $this->assertSame('— Sin dato —', $opciones[0]['texto']);
+        $this->assertNull($opciones[0]['valor']);
+        $this->assertFalse($opciones[0]['elegido']);
+
+        // Es la misma lista del `<select name="codeestado">` del alta, en el mismo orden.
+        $this->assertSame(['Soltero(a)', 'Casado(a)', 'Divorciado(a)', 'Viudo(a)'], array_slice(array_column($opciones, 'texto'), 1));
+        $this->assertSame(['S', 'C', 'D', 'V'], array_slice(array_column($opciones, 'valor'), 1));
+        $this->assertTrue(collect($opciones)->firstWhere('valor', 'V')['elegido']);
+        $this->assertFalse(collect($opciones)->firstWhere('valor', 'C')['elegido']);
+        $this->assertCount(5, $opciones);
+    }
+
+    /**
+     * Un código que no está en el catálogo se muestra **tal cual**, como el parentesco: la columna es nueva
+     * y la web sólo guarda los cuatro códigos, pero si alguna fila trae otra cosa no se le inventa un
+     * nombre.
+     */
+    public function test_un_codigo_de_estado_civil_que_no_esta_en_el_catalogo_se_muestra_tal_cual(): void
+    {
+        $vista = $this->vista($this->representante(['estado_civil' => 'X']));
+
+        $this->assertSame('X', $vista->codigoEstadoCivil());
+        $this->assertSame('X', $vista->estadoCivil());
     }
 
     // ------------------------------------------- Un representante con varios hijos (2026-10-19)

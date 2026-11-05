@@ -60,14 +60,20 @@
                    value="{{ $vm->valor('lnacimiento') }}">
         </x-ui.campo>
 
-        <x-ui.campo etiqueta="Estado civil" for="codeestado" class="col-md-3">
-            <select name="codeestado" id="codeestado" class="form-select">
-                <option value="">— Sin dato —</option>
-                @foreach ($vm->estadosCiviles() as $opcion)
-                    <option value="{{ $opcion['valor'] }}" {{ $opcion['elegido'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
-                @endforeach
-            </select>
-        </x-ui.campo>
+        {{-- En pediatría el estado civil no es del niño, es del representante (O-59, 2026-11-05): el alta,
+             la edición y la sección «Datos personales» de la consulta no lo piden, y el del adulto se carga
+             en el bloque «Representante» de la ficha. Fuera de pediatría sigue igual: el paciente declara
+             el suyo. --}}
+        @if (! $vm->esPediatria())
+            <x-ui.campo etiqueta="Estado civil" for="codeestado" class="col-md-3">
+                <select name="codeestado" id="codeestado" class="form-select">
+                    <option value="">— Sin dato —</option>
+                    @foreach ($vm->estadosCiviles() as $opcion)
+                        <option value="{{ $opcion['valor'] }}" {{ $opcion['elegido'] ? 'selected' : '' }}>{{ $opcion['texto'] }}</option>
+                    @endforeach
+                </select>
+            </x-ui.campo>
+        @endif
     </div>
 </x-ui.tarjeta>
 

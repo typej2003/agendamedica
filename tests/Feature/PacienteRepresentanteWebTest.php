@@ -888,4 +888,107 @@ class PacienteRepresentanteWebTest extends TestCase
             ->assertSee('ROSA PEREZ')
             ->assertDontSee('También es representante de:');
     }
+
+    // ------------------------------------------- El estado civil es del representante (O-59, 2026-11-05)
+
+    /**
+     * **En pediatría el estado civil es del adulto, no del niño** (O-59): el bloque «Representante» muestra
+     * el del representante, con el rótulo del catálogo de `codeestado` (`S`/`C`/`D`/`V`).
+     *
+     * Y **no** lo completa con `familia_bebe.situacion_pareja`: esa es la situación de pareja de los padres
+     * y su escala es otra (`S` ahí es «Separados»), así que usarla como respaldo afirmaría una equivalencia
+     * que nadie verificó. Si la columna está vacía, el dato se muestra vacío aunque la familia tenga su
+     * situación cargada.
+     */
+    public function test_la_ficha_muestra_el_estado_civil_del_representante_y_no_lo_completa_con_la_familia(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoPediatra();
+        $reg = $medico->reg_medico;
+
+        $conEstado = $this->paciente($medico, 'Mateo', '1701');
+        $this->representante($medico, '1701', ['estado_civil' => 'C']);
+
+        $respuesta = $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $conEstado));
+
+        $respuesta->assertOk();
+        $this->assertFichaDiceEstadoCivil($respuesta, 'Casado(a)');
+        // El diálogo abre con el mismo valor elegido.
+        $respuesta->assertSee('<option value="C" selected>Casado(a)</option>', false);
+
+        // Sin la columna, vacío: la familia tiene «Separados» en `situacion_pareja` y **no** se usa.
+        $sinEstado = $this->paciente($medico, 'Lucía', '1702');
+        $this->representante($medico, '1702');
+        $this->chamo($reg, 1702, 91);
+        $this->familia($reg, 91, ['situacion_pareja' => 'S']);
+
+        $respuesta = $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $sinEstado));
+
+        $respuesta->assertOk();
+        $this->assertFichaDiceEstadoCivil($respuesta, null);
+        // La familia sigue mostrando su situación de pareja como lo que es, con su propio rótulo.
+        $respuesta->assertSee('Situación de pareja');
+        $respuesta->assertSee('Separados');
+        // Pero el estado civil del representante no quedó elegido con ese código.
+        $respuesta->assertSee('<option value="" selected>— Sin dato —</option>', false);
+        $respuesta->assertDontSee('<option value="S" selected>', false);
+    }
+
+    /**
+     * El diálogo del representante guarda el estado civil con la **misma escala del alta del paciente**,
+     * dejarlo en «Sin dato» lo vuelve a `null`, y un código que no es del catálogo se rechaza.
+     */
+    public function test_el_dialogo_del_representante_guarda_el_estado_civil(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoPediatra();
+        $paciente = $this->paciente($medico, 'Sofía', '1801');
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->post(route('clinica.pacientes.representante', $paciente), [
+                'nombre'       => 'ROSA PEREZ',
+                'estado_civil' => 'V',
+            ])
+            ->assertRedirect(route('clinica.pacientes.ver', $paciente))
+            ->assertSessionHasNoErrors();
+
+        $fila = DB::table('representante')->where('reg_medico', $medico->reg_medico)->first();
+        $this->assertNotNull($fila);
+        $this->assertSame('V', $fila->estado_civil);
+
+        // La ficha lo muestra con su rótulo.
+        $respuesta = $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $paciente));
+        $respuesta->assertOk();
+        $this->assertFichaDiceEstadoCivil($respuesta, 'Viudo(a)');
+
+        // «Sin dato» lo deja en `null`: es "no se dijo", no un código inventado.
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->post(route('clinica.pacientes.representante', $paciente), [
+                'nombre'       => 'ROSA PEREZ',
+                'estado_civil' => '',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertNull(DB::table('representante')->where('reg_medico', $medico->reg_medico)->value('estado_civil'));
+
+        // Un código de la otra escala (`E`, situación de pareja) no es un estado civil válido.
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->post(route('clinica.pacientes.representante', $paciente), [
+                'nombre'       => 'ROSA PEREZ',
+                'estado_civil' => 'E',
+            ])
+            ->assertSessionHasErrors('estado_civil');
+
+        $this->assertNull(DB::table('representante')->where('reg_medico', $medico->reg_medico)->value('estado_civil'));
+    }
+
+    /** El dato «Estado civil» del bloque del representante, con el texto que le toca (`null` = el vacío). */
+    private function assertFichaDiceEstadoCivil($respuesta, ?string $texto): void
+    {
+        $respuesta->assertSeeInOrder([
+            '<dt class="etiqueta">Estado civil</dt>',
+            $texto === null ? '<dd><span class="dato-vacio">—</span></dd>' : '<dd>' . e($texto) . '</dd>',
+        ], false);
+    }
 }

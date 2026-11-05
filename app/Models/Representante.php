@@ -13,7 +13,9 @@ use Illuminate\Database\Eloquent\Model;
  * (2026-11-04), que es para lo que existe este modelo: el camino genérico de `updated` del sync necesita una
  * fila Eloquent para escribir una columna con su last-write-wins.
  *
- * `cedula`, `telefono` y `email` son columnas **nullable nuevas** de WEB-3.4; el resto es del legado.
+ * `cedula`, `telefono` y `email` son columnas **nullable nuevas** de WEB-3.4, y `estado_civil` lo es de
+ * O-59 (2026-11-05): el estado civil del adulto, con la misma escala que `pacientes.codeestado`
+ * (`S`/`C`/`D`/`V`). El resto es del legado.
  */
 class Representante extends Model
 {
@@ -21,6 +23,7 @@ class Representante extends Model
 
     protected $fillable = [
         'reg_medico', 'numhistoria', 'nombre', 'codeparentesco', 'cedula', 'telefono', 'email', 'direccion',
+        'estado_civil',
     ];
 
     protected $casts = ['numhistoria' => 'integer'];
