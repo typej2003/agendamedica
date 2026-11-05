@@ -828,6 +828,33 @@ class AgendaWebTest extends TestCase
         $this->assertSame('REV', $cita->fresh()->tipo);
     }
 
+    /**
+     * El «+» del alta de paciente, en el paso 2 de «Nueva cita», va en violeta lleno (2026-11-05): es el
+     * `btn-primary` de la marca, el mismo de «Nueva cita» y «Nuevo paciente», porque como
+     * `btn-outline-secondary` pasaba desapercibido. El CSS del buscador le apagaba el fondo, así que también
+     * se fija que no vuelva a hacerlo: con el fondo en `transparent` el violeta no se ve aunque la clase sea
+     * la primaria.
+     */
+    public function test_el_mas_del_alta_de_paciente_en_la_cita_va_en_violeta_lleno(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString())
+            ->assertOk()
+            // Sigue siendo el botón que abre el diálogo lateral del alta y conserva su etiqueta accesible.
+            ->assertSee('class="btn btn-primary" data-abrir-dialogo="dialogo-paciente-nuevo"', false)
+            ->assertSee('aria-label="Cargar un paciente nuevo" title="Cargar un paciente nuevo"', false)
+            ->assertDontSee('btn-outline-secondary" data-abrir-dialogo="dialogo-paciente-nuevo"', false);
+
+        // El bloque del buscador no le apaga el fondo ni el color: los pone la variante primaria.
+        $css = file_get_contents(public_path('css/doctorisimo-ui.css'));
+        $this->assertSame(1, preg_match('/\.buscador-accion \.btn\s*\{([^}]*)\}/', $css, $bloque), 'El «+» del buscador tiene que tener su bloque en el CSS.');
+        $this->assertStringNotContainsString('--bs-btn-bg', $bloque[1], 'El fondo lo pone `btn-primary`: el buscador no puede apagarlo.');
+        $this->assertStringNotContainsString('--bs-btn-color', $bloque[1], 'El «+» tiene que heredar el blanco del `btn-primary` para leerse sobre el violeta.');
+    }
+
     public function test_agendar_da_de_alta_al_paciente_nuevo_y_le_numera_la_historia(): void
     {
         // O-04 (2026-10-17): el alta rápida del paso 2 es un alta **desde la web**, así que numera en el
