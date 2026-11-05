@@ -42,6 +42,7 @@ final class LinkDeCitaVista
         return $this->qr;
     }
 
+    /** El nombre del paciente de la cita, **el mismo de la fila de la agenda** (`PacientesDeCita::nombreDeLaCita()`). */
     public function paciente(): string
     {
         return $this->paciente;
