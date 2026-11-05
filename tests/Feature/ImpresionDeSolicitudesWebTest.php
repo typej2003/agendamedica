@@ -229,12 +229,13 @@ class ImpresionDeSolicitudesWebTest extends TestCase
             $grande = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $documento))->assertOk()->getContent();
             $this->assertStringContainsString('recipe-hoja recipe-hoja-completa tamano-', $grande, $documento);
             $this->assertStringNotContainsString('recipe-mitad-vacia', $grande, $documento);
-            // La hoja única está oculta (2026-11-05): la vista previa no ofrece el selector de hojas.
+            // La vista previa no ofrece el segmentado viejo: la hoja se elige con el botón de configuración (2026-11-05).
             $this->assertStringNotContainsString('barra-impresion-modos', $grande, $documento);
 
+            // `?pagina=pequena` es la media hoja vertical: la página mide la mitad y no deja el espacio de abajo (2026-11-05).
             $pequena = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $documento) . '&pagina=pequena')->assertOk()->getContent();
-            $this->assertStringContainsString('recipe-hoja recipe-hoja-completa recipe-hoja-mitad-superior', $pequena, $documento);
-            $this->assertStringNotContainsString('barra-impresion-modos', $pequena, $documento);
+            $this->assertStringContainsString('recipe-hoja recipe-hoja-media-vertical', $pequena, $documento);
+            $this->assertStringNotContainsString('recipe-mitad-vacia', $pequena, $documento);
         }
 
         // Con un récipe en el lote la elección no le cambia la hoja: sigue en media hoja horizontal.

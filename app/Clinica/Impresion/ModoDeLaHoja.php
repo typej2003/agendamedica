@@ -5,8 +5,8 @@ namespace App\Clinica\Impresion;
 /**
  * **El modo de la hoja de cada documento** (O-26): la **única** regla que dice cómo se imprime un documento —en **media hoja
  * horizontal** (dos por A4), en **hoja completa vertical** (una por A4), en la **mitad superior de un A4 vertical** (una por
- * página, con la mitad de abajo en blanco) o en la **media hoja horizontal sola** (una por A4, con la mitad derecha en
- * blanco)—.
+ * página, con la mitad de abajo en blanco), en la **media hoja horizontal sola** (una por página, con la mitad derecha en
+ * blanco) o en la **media hoja vertical** (la página es la mitad de un A4 vertical y el contenido la ocupa entera)—.
  *
  * Vive acá, al lado de las medidas (`MedidasDeLaMitad`), porque el motor de documentos no repite la decisión por documento: un
  * documento **declara** su modo —en los mapas de abajo, con su clave— y `HojasDeDocumentoVista` le pide a esta clase las
@@ -18,30 +18,39 @@ namespace App\Clinica\Impresion;
  *  - **Hoja completa vertical** (decisión del usuario, 2026-10-17): el informe del **control de embarazo** y los informes de
  *    **los siete ecos** (pélvico, obstétrico del 1.º, del 2.º y del 3.er trimestre, Doppler, mamario, abdominal y cardiograma
  *    fetal).
- *  - **Mitad superior de un A4 vertical** (2026-10-18, Alexander): los informes de **colposcopía y histeroscopía**. Usan media
- *    hoja —el contenido en la mitad de arriba de una página vertical, como el escritorio— y llevan la imagen del examen **en la
- *    misma página**, debajo del texto (el subreporte de la banda *detail* de `d_colposcopia_1` y `d_histeroscopia`). La mitad
- *    de abajo de la hoja queda en blanco a propósito.
- *  - **A4 vertical, completa o mitad superior a elección** (2026-10-21, como el «Página: Grande / Pequeña» del escritorio): las
- *    solicitudes — informe médico, reposo, constancia, referencia, hospitalización, dieta, laboratorio (también el de la
- *    pareja) y estudios. Por defecto, la grande; nunca media hoja horizontal.
- *  - **Media hoja horizontal**: todo lo demás — los récipes y el resumen médico.
- *  - **Media hoja horizontal sola** (2026-11-04): una opción más para los documentos de texto, con la misma geometría que la
- *    media hoja pero **un documento por A4** (la mitad derecha queda en blanco). No la declara ningún documento: la elige el
- *    médico.
+ *  - **Mitad superior de un A4 vertical** (2026-10-18, Alexander): los informes de **colposcopía y histeroscopía**. La página
+ *    es un A4 vertical y el contenido va en la mitad de arriba, como el escritorio, con la imagen del examen **en la misma
+ *    página** (el subreporte de la banda *detail* de `d_colposcopia_1` y `d_histeroscopia`). La mitad de abajo queda en
+ *    blanco a propósito.
+ *  - **A4 vertical, completa o media vertical a elección** (2026-10-21, como el «Página: Grande / Pequeña» del escritorio):
+ *    las solicitudes —informe médico, reposo, constancia, referencia, hospitalización, dieta, laboratorio (también el de la
+ *    pareja) y estudios—. Por defecto, la completa.
+ *  - **Media hoja horizontal**: todo lo demás — los récipes y el resumen médico—.
+ *  - **Media hoja horizontal sola**: la misma mitad izquierda del A4 horizontal que `MITAD`, pero un documento por página (la
+ *    mitad derecha queda en blanco). Es una de las tres hojas que el médico elige por imprimible.
+ *  - **Media hoja vertical** (2026-11-05): la mitad de arriba de un A4 vertical, pero **la página del PDF mide la mitad**
+ *    (A5 acostada, 210 × 148,5 mm) y el contenido la ocupa entera, así que no queda el espacio de abajo. También es una de
+ *    las tres que elige el médico.
  *
- * ## La hoja que elige el médico
+ * ## La hoja que elige el médico, por imprimible
  *
- * Desde el 2026-11-04 el médico puede elegir una de **cuatro** formas para sus documentos de texto (las solicitudes y el
- * resumen médico): vertical, media vertical, horizontal o estilo récipe (`HOJAS_DE_LOS_IMPRIMIBLES`). Se guarda en
- * `recipe_formatos.formato_imprimibles` y llega acá como el modo ya resuelto (`deLaPreferencia`); `NULL` es «como hasta hoy».
- * Los **récipes no la leen**: siguen siempre en media hoja horizontal, y las solicitudes conservan además el `?pagina=`
- * histórico de una impresión concreta, que manda sobre lo guardado. Los ecos, el control de embarazo, la colposcopía, la
- * histeroscopía y el informe preoperatorio tienen su hoja fija y no entran en la elección.
+ * Desde el 2026-11-05 el médico elige la hoja de **cada documento de texto** —no una sola para todos— con el botón de
+ * configuración que está al lado de «Imprimir» en la vista previa. Las tres opciones son `completa`, `media-vertical` y
+ * `media-horizontal` (`HojaDelImprimible`, que guarda el mapa en `recipe_formatos.hojas_de_los_imprimibles` y lo traduce a
+ * los modos de esta clase). Llega acá como el modo ya resuelto (`HojaDelImprimible::modoDe()`), en el tercer parámetro de
+ * `de()`; `null` es «la hoja de siempre».
  *
- * **Oculta desde el 2026-11-05:** era **una sola** hoja para todos los reportes, así que se retiró de la vista previa y de
- * «Formato de impresión» hasta que la elección sea **por reporte** (`hojaUnicaHabilitada()`). Con la bandera apagada —el
- * default— la preferencia guardada se ignora y cada documento sale como hasta hoy.
+ * Los **récipes no la leen**: siguen siempre en media hoja horizontal, y las solicitudes conservan además el
+ * `?pagina=grande|pequena` histórico de una impresión concreta, que manda sobre lo guardado. Los ecos, el control de
+ * embarazo, la colposcopía, la histeroscopía y el informe preoperatorio tienen su hoja fija y no entran en la elección.
+ *
+ * ## La página de cada hoja
+ *
+ * La completa y la mitad superior usan la **página vertical**; la media hoja compartida y la media horizontal sola usan el
+ * **A4 acostado**, y la media vertical, una página del tamaño de la mitad. Las páginas con nombre están en
+ * `public/css/clinica-documento.css` (`@page documento-completo`, `documento-media-vertical`, `documento-media-horizontal`)
+ * y se eligen con la propiedad `page` del `<article>`: así un lote mixto —un récipe, una constancia en media vertical y un
+ * eco— sale cada hoja en su tamaño.
  *
  * Los ecos imprimen además su **informe en formulario** (WEB-11.13), que no sale de acá: lo pinta `_informe-eco` a página
  * completa. Esta clase decide la hoja de los documentos que se reparten como texto (`DistribuidorDeDocumento`), que es el caso
@@ -65,34 +74,23 @@ final class ModoDeLaHoja
 
     /**
      * Media hoja horizontal **sola**: la misma mitad izquierda del A4 horizontal que `MITAD`, pero un documento por página
-     * (la mitad derecha queda en blanco). Es una de las cuatro hojas que el médico puede elegir para sus documentos de texto.
+     * (la mitad derecha queda en blanco). Es una de las tres hojas que el médico puede elegir para sus documentos de texto.
      */
     public const HORIZONTAL = 'horizontal';
 
-    /** Las cuatro hojas que el médico elige para sus documentos de texto (`HOJAS_DE_LOS_IMPRIMIBLES`). */
-    public const HOJA_VERTICAL = 'vertical';
-
-    public const HOJA_MEDIA_VERTICAL = 'media-vertical';
-
-    public const HOJA_HORIZONTAL = 'horizontal';
-
-    public const HOJA_RECIPE = 'recipe';
-
-    /** @var array<int,string> */
-    public const HOJAS_DE_LOS_IMPRIMIBLES = [
-        self::HOJA_VERTICAL,
-        self::HOJA_MEDIA_VERTICAL,
-        self::HOJA_HORIZONTAL,
-        self::HOJA_RECIPE,
-    ];
+    /**
+     * Media hoja vertical (2026-11-05): la mitad de arriba de un A4 vertical, pero la **página del PDF mide la mitad**
+     * (A5 acostada, 210 × 148,5 mm) y el contenido la ocupa entera. Es una de las tres hojas que elige el médico.
+     */
+    public const MEDIA_VERTICAL = 'media-vertical';
 
     /** Los modos de hoja que puede devolver `de()`; se usa para no aceptar cualquier texto guardado. @var array<int,string> */
-    private const MODOS = [self::MITAD, self::COMPLETA, self::MITAD_SUPERIOR, self::HORIZONTAL];
+    private const MODOS = [self::MITAD, self::COMPLETA, self::MITAD_SUPERIOR, self::HORIZONTAL, self::MEDIA_VERTICAL];
 
     /** «Página grande» del escritorio: el A4 vertical completo. Es la que sale si no se elige. */
     public const PAGINA_GRANDE = 'grande';
 
-    /** «Página pequeña» del escritorio: la mitad superior de un A4 vertical. */
+    /** «Página pequeña» del escritorio: la media hoja vertical. */
     public const PAGINA_PEQUENA = 'pequena';
 
     /**
@@ -145,15 +143,15 @@ final class ModoDeLaHoja
      *
      * `$pagina` es el `?pagina=grande|pequena` histórico de una impresión concreta: sólo cuenta en los documentos con la
      * página a elegir (`PAGINA_GRANDE`/`PAGINA_PEQUENA`) y **manda sobre `$preferido`**. `$preferido` es la hoja que el
-     * médico guardó, ya resuelta a un modo (`deLaPreferencia`); sólo se aplica a los documentos de texto
-     * (`aceptaLaPreferencia`). Con los dos en `null` la hoja es la de siempre.
+     * médico guardó para ese imprimible, ya resuelta a un modo (`HojaDelImprimible::modoDe`); sólo se aplica a los
+     * documentos de texto (`aceptaLaPreferencia`). Con los dos en `null` la hoja es la de siempre.
      */
     public static function de(string $clave, ?string $pagina = null, ?string $preferido = null): string
     {
         if (self::aceptaLaPreferencia($clave)) {
             // El `?pagina=` histórico es de las solicitudes; el resumen médico no lo tiene y sólo lee la preferencia.
             if ($pagina !== null && self::seEligeLaPagina($clave)) {
-                return self::pagina($pagina) === self::PAGINA_PEQUENA ? self::MITAD_SUPERIOR : self::COMPLETA;
+                return self::pagina($pagina) === self::PAGINA_PEQUENA ? self::MEDIA_VERTICAL : self::COMPLETA;
             }
 
             if ($preferido !== null && in_array($preferido, self::MODOS, true)) {
@@ -162,7 +160,7 @@ final class ModoDeLaHoja
         }
 
         if (self::seEligeLaPagina($clave)) {
-            return self::pagina($pagina) === self::PAGINA_PEQUENA ? self::MITAD_SUPERIOR : self::COMPLETA;
+            return self::pagina($pagina) === self::PAGINA_PEQUENA ? self::MEDIA_VERTICAL : self::COMPLETA;
         }
 
         if (in_array($clave, self::HOJA_COMPLETA, true)) {
@@ -180,45 +178,6 @@ final class ModoDeLaHoja
     public static function aceptaLaPreferencia(string $clave): bool
     {
         return self::seEligeLaPagina($clave) || $clave === DocumentoImpreso::RESUMEN_MEDICO;
-    }
-
-    /**
-     * La hoja guardada por el médico (`recipe_formatos.formato_imprimibles`) traducida al modo del motor. `null` o un
-     * valor que no es de los cuatro es «sin preferencia»: se queda la hoja de siempre.
-     */
-    public static function deLaPreferencia(?string $preferencia): ?string
-    {
-        return match ($preferencia) {
-            self::HOJA_VERTICAL => self::COMPLETA,
-            self::HOJA_MEDIA_VERTICAL => self::MITAD_SUPERIOR,
-            self::HOJA_HORIZONTAL => self::HORIZONTAL,
-            self::HOJA_RECIPE => self::MITAD,
-            default => null,
-        };
-    }
-
-    /**
-     * ¿Está habilitada la **hoja única** para todos los documentos de texto? (2026-11-05)
-     *
-     * Apagada por defecto: la elección de una sola hoja para todos los reportes está oculta hasta que cada reporte tenga la
-     * suya. Mientras esté apagada no se ofrece en «Formato de impresión» ni en la vista previa, y la preferencia guardada
-     * se ignora: todo sale como hasta hoy. Cuando se extienda, se enciende `clinica.hoja_de_los_imprimibles`.
-     */
-    public static function hojaUnicaHabilitada(): bool
-    {
-        return (bool) config('clinica.hoja_de_los_imprimibles', false);
-    }
-
-    /** El camino inverso de `deLaPreferencia`: qué opción de la pantalla corresponde a un modo. */
-    public static function preferenciaDe(string $modo): ?string
-    {
-        return match ($modo) {
-            self::COMPLETA => self::HOJA_VERTICAL,
-            self::MITAD_SUPERIOR => self::HOJA_MEDIA_VERTICAL,
-            self::HORIZONTAL => self::HOJA_HORIZONTAL,
-            self::MITAD => self::HOJA_RECIPE,
-            default => null,
-        };
     }
 
     /** ¿Ese documento se imprime con la página a elegir (grande o pequeña)? */
@@ -247,7 +206,8 @@ final class ModoDeLaHoja
 
     /**
      * Las medidas con las que se mide y se reparte ese modo: la media hoja de siempre, el A4 vertical completo o su mitad
-     * superior. La media hoja sola (`HORIZONTAL`) mide lo mismo que `MITAD`: lo único que cambia es cuántos entran por página.
+     * superior. La media hoja sola (`HORIZONTAL`) y la media vertical (`MEDIA_VERTICAL`) miden lo mismo que `MITAD` y
+     * `MITAD_SUPERIOR`: lo único que cambia es el tamaño de la página y cuántos entran por página.
      *
      * Es lo único que el distribuidor necesita saber del modo; el resto de la cuenta es la misma.
      */
@@ -257,12 +217,15 @@ final class ModoDeLaHoja
             return MedidasDeLaMitad::deLaHojaCompleta();
         }
 
-        return $modo === self::MITAD_SUPERIOR ? MedidasDeLaMitad::deLaMitadSuperior() : new MedidasDeLaMitad();
+        return in_array($modo, [self::MITAD_SUPERIOR, self::MEDIA_VERTICAL], true)
+            ? MedidasDeLaMitad::deLaMitadSuperior()
+            : new MedidasDeLaMitad();
     }
 
     /**
      * Cuántos documentos entran en **una página** de ese modo: dos en la hoja horizontal compartida (`MITAD`) y uno solo en
-     * las tres hojas que dejan el resto de la página en blanco (la completa, la mitad superior y la media hoja sola).
+     * las cuatro hojas que dejan el resto de la página en blanco (la completa, la mitad superior, la media horizontal sola y
+     * la media vertical).
      */
     public static function porPagina(string $modo): int
     {
@@ -270,24 +233,18 @@ final class ModoDeLaHoja
     }
 
     /**
-     * ¿Ese modo usa una **página vertical** (A4 retrato)? La completa y la mitad superior sí; la media hoja compartida y la
-     * media hoja sola no: las dos van en el A4 horizontal.
-     */
-    public static function esVertical(string $modo): bool
-    {
-        return in_array($modo, [self::COMPLETA, self::MITAD_SUPERIOR], true);
-    }
-
-    /**
-     * Las clases CSS del `<article>` de una hoja de ese modo: la hoja completa y la mitad superior comparten la **página
-     * vertical con nombre** (`recipe-hoja-completa`), y la mitad superior suma la clase que recorta el alto de la mitad.
+     * La clase CSS del `<article>` de una hoja de ese modo: la completa y la mitad superior comparten la **página vertical
+     * con nombre** (`recipe-hoja-completa`), la mitad superior suma la clase que recorta el alto de la mitad y cada una de
+     * las dos medias hojas nuevas lleva la suya, que fija el tamaño de la página.
      */
     public static function clasesDeLaHoja(string $modo): string
     {
-        if ($modo === self::COMPLETA) {
-            return ' recipe-hoja-completa';
-        }
-
-        return $modo === self::MITAD_SUPERIOR ? ' recipe-hoja-completa recipe-hoja-mitad-superior' : '';
+        return match ($modo) {
+            self::COMPLETA => ' recipe-hoja-completa',
+            self::MITAD_SUPERIOR => ' recipe-hoja-completa recipe-hoja-mitad-superior',
+            self::MEDIA_VERTICAL => ' recipe-hoja-media-vertical',
+            self::HORIZONTAL => ' recipe-hoja-horizontal',
+            default => '',
+        };
     }
 }

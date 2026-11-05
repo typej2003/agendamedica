@@ -34,10 +34,17 @@
         aplicar();
     });
 
-    // ---- Los diálogos de las opciones.
+    // ---- Los diálogos de las opciones y de la hoja.
     document.querySelectorAll('[data-abrir-opciones]').forEach(function (boton) {
         boton.addEventListener('click', function () {
             var dialogo = document.getElementById('dialogo-opciones');
+            if (dialogo && typeof dialogo.showModal === 'function') dialogo.showModal();
+        });
+    });
+
+    document.querySelectorAll('[data-abrir-hoja]').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            var dialogo = document.getElementById('dialogo-hoja');
             if (dialogo && typeof dialogo.showModal === 'function') dialogo.showModal();
         });
     });
@@ -65,7 +72,8 @@
         }
     });
 
-    // ---- La vista previa: que la hoja entre en el ancho de la pantalla (en el celular no hay 297 mm).
+    // ---- La vista previa: que la hoja entre en el ancho de la pantalla (en el celular no hay 297 mm). Se toma la hoja
+    // más ancha de la corrida: desde 2026-11-05 un lote puede mezclar la media hoja (148,5 mm) con el A4 (297 mm).
     var hojas = document.querySelector('[data-recipe-hojas]');
 
     function ajustar() {
@@ -73,12 +81,14 @@
 
         hojas.style.setProperty('--escala', '1');
 
-        var hoja = hojas.querySelector('.recipe-hoja, .informe-hoja');
-        if (!hoja) return;
+        var natural = 0;
+        hojas.querySelectorAll('.recipe-hoja, .informe-hoja').forEach(function (hoja) {
+            natural = Math.max(natural, hoja.offsetWidth);
+        });
+        if (natural === 0) return;
 
-        var natural = hoja.offsetWidth;
         var disponible = document.documentElement.clientWidth - 16;
-        var escala = natural > 0 ? Math.min(1, disponible / natural) : 1;
+        var escala = Math.min(1, disponible / natural);
 
         hojas.style.setProperty('--escala', escala.toFixed(4));
     }

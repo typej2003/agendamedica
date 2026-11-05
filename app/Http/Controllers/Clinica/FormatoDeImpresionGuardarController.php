@@ -8,7 +8,6 @@ use App\Actions\Configuracion\LimitesDelMembrete;
 use App\Actions\Configuracion\ReglasDelFormato;
 use App\Actions\Configuracion\ResultadoDelMembrete;
 use App\Clinica\Archivos\ImagenesDelMembrete;
-use App\Clinica\Impresion\ModoDeLaHoja;
 use App\Http\Controllers\Clinica\Concerns\ResuelveElRegistroDelFormato;
 use App\Http\Controllers\Controller;
 use App\Models\Medico;
@@ -27,8 +26,10 @@ use RuntimeException;
  *    (`recipe_formatos.elementos.logo`).
  *  - `estilo`: la fuente, la alineación y el estilo de médico, especialidad, RIF y pie, y el color de la línea.
  *  - `firma`: la firma y el sello (`recipe_formatos`) y la posición del sello.
- *  - `hoja`: la hoja de los documentos de texto —vertical, media vertical, horizontal o estilo récipe— (2026-11-04).
  *  - `restablecer`: una sección vuelve a los valores del legado.
+ *
+ * **La hoja de cada imprimible** no se configura acá (2026-11-05): se elige en la vista previa de la impresión, con el botón
+ * de configuración que está al lado de «Imprimir».
  *
  * Todo es de la **ficha del formato** (el médico del contexto o, con `?reg_medico=`, un centro médico — Fase 5 del
  * cambio de `reg_medico`) y se guarda bajo su registro (`Medico::registroDelFormato()`), igual que el móvil. Las reglas
@@ -152,35 +153,10 @@ class FormatoDeImpresionGuardarController extends Controller
     }
 
     /**
-     * **La hoja de los documentos de texto** (2026-11-04): vertical, media vertical, horizontal o estilo récipe. Es del
-     * **doctor que firma**, como las opciones del récipe; la hoja de un centro no se imprime nunca (sus doctores usan la
-     * suya), así que un centro no la configura. Vacío = «como está hoy».
-     *
-     * **Oculta desde el 2026-11-05** hasta que la elección sea por reporte: la ruta no existe (404) y la tarjeta no se
-     * ofrece, así que una pestaña vieja tampoco puede guardar una hoja que ya no se lee.
+     * **La hoja de cada imprimible** ya no se configura acá (2026-11-05): se elige en la vista previa de la impresión, con
+     * el botón de configuración que está al lado de «Imprimir», y se recuerda en `recipe_formatos.hojas_de_los_imprimibles`.
+     * La tarjeta «Hoja de los imprimibles» de esta pantalla —que era una sola hoja para todos— se retiró.
      */
-    public function hoja(Request $request, GuardarFormatoDelRecipe $guardar)
-    {
-        abort_unless(ModoDeLaHoja::hojaUnicaHabilitada(), 404);
-
-        if ($this->esElFormatoDeUnCentro($request)) {
-            return $this->aFormato($request, 'formato-hoja')->with('error', 'La hoja de los imprimibles es de cada doctor: el centro no la configura.');
-        }
-
-        $datos = $request->validate([
-            'formato_imprimibles' => ['nullable', Rule::in(ModoDeLaHoja::HOJAS_DE_LOS_IMPRIMIBLES)],
-        ], $this->mensajes());
-
-        try {
-            $guardar->ejecutar($this->medico($request), ['formato_imprimibles' => $datos['formato_imprimibles'] ?? null]);
-        } catch (InvalidArgumentException $excepcion) {
-            return back()->withInput()->with('error', $excepcion->getMessage());
-        }
-
-        return $this->aFormato($request, 'formato-hoja')->with('estado', ($datos['formato_imprimibles'] ?? null) === null
-            ? 'Listo: la hoja de tus documentos vuelve a como estaba.'
-            : 'Listo: la hoja de tus documentos quedó guardada.');
-    }
 
     /** «Restablecer valores»: una sección vuelve a los valores del legado. */
     public function restablecer(Request $request, GuardarFormatoDelRecipe $guardar)
@@ -276,7 +252,6 @@ class FormatoDeImpresionGuardarController extends Controller
             'color_linea.in' => 'Elige uno de los colores de la lista.',
             'sello_posicion.required' => 'Elige dónde va el sello.',
             'sello_posicion.in' => 'Elige izquierda, centro o derecha.',
-            'formato_imprimibles.in' => 'Elige una de las cuatro hojas de la lista.',
             'seccion.required' => 'No se sabe qué sección restablecer.',
             'seccion.in' => 'No se sabe qué sección restablecer.',
             'elementos.array' => 'Las opciones del formato no llegaron bien: recarga la página.',

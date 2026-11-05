@@ -628,6 +628,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
                 Route::delete('/consulta/{consulta}/referencias/{cedula}', [ConsultaReferenciasController::class, 'eliminar'])->whereNumber('cedula')->name('consulta.referencias.eliminar');
                 // La hoja impresa de un documento (o de «todos»): `?documento=reposo`. La misma que imprime la secretaría desde la cita.
                 Route::get('/consulta/{consulta}/documentos/imprimir', [ImpresionDeDocumentosController::class, 'delaConsulta'])->middleware('clinica.plan.impresion')->name('consulta.documentos.imprimir');
+                // **La hoja de cada imprimible** (2026-11-05): el botón de configuración de la vista previa elige entre hoja
+                // completa, media vertical y media horizontal, y la recuerda en la fila del doctor que firma.
+                Route::post('/consulta/{consulta}/documentos/hoja', [ImpresionDeDocumentosController::class, 'guardarHojaDeLaConsulta'])->name('consulta.documentos.hoja');
 
                 // **Terminar la consulta** (WEB-4.8): la acción primaria del shell. "Cerrar" **no crea un
                 // estado nuevo** (PLAN-WEB.md §3.13): es terminar la atención —dejar la cita de la agenda
@@ -787,6 +790,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
             // informe de esa consulta (`?documento=recipe-1|reposo|referencia-3|todos`).
             Route::get('/agenda/{cola}/documentos', [ImpresionDeDocumentosController::class, 'listaDeLaCita'])->name('agenda.documentos');
             Route::get('/agenda/{cola}/documentos/imprimir', [ImpresionDeDocumentosController::class, 'imprimirDeLaCita'])->middleware('clinica.plan.impresion')->name('agenda.documentos.imprimir');
+            // La hoja del imprimible que la secretaría está imprimiendo (2026-11-05): se guarda en la fila del doctor que
+            // atendió, igual que las opciones del récipe.
+            Route::post('/agenda/{cola}/documentos/hoja', [ImpresionDeDocumentosController::class, 'guardarHojaDeLaCita'])->name('agenda.documentos.hoja');
             // Cómo sale la hoja (modo y nombre del medicamento) es **del médico del contexto**: lo guarda quien
             // imprime —el médico o su asistente— y los dos ven lo mismo la próxima vez.
             Route::post('/recipes/opciones-de-impresion', [ImpresionDeRecipeController::class, 'guardarOpciones'])->name('recipes.opciones');
@@ -858,9 +864,6 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
             Route::post('/formato/logo', [FormatoDeImpresionGuardarController::class, 'logo'])->name('formato.logo');
             Route::post('/formato/estilo', [FormatoDeImpresionGuardarController::class, 'estilo'])->name('formato.estilo');
             Route::post('/formato/firma', [FormatoDeImpresionGuardarController::class, 'firma'])->name('formato.firma');
-            // **La hoja de los imprimibles** (2026-11-04): vertical, media vertical, horizontal o estilo récipe. Es del
-            // médico que firma; la hoja de los récipes no se toca y un centro no la configura.
-            Route::post('/formato/hoja', [FormatoDeImpresionGuardarController::class, 'hoja'])->name('formato.hoja');
             Route::post('/formato/restablecer', [FormatoDeImpresionGuardarController::class, 'restablecer'])->name('formato.restablecer');
         });
     });

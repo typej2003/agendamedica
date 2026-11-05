@@ -16,11 +16,17 @@ class RecipeFormato extends Model
 
     protected $fillable = [
         'reg_medico', 'elementos', 'color_linea', 'firma', 'sello', 'sello_posicion',
-        // La hoja que el médico eligió para sus documentos de texto (2026-11-04); `NULL` = como hasta hoy.
+        // La hoja única de los documentos de texto (2026-11-04): quedó sin uso con la hoja **por imprimible**
+        // (2026-11-05); se conserva la columna para no borrar lo que un médico ya tenía guardado.
         'formato_imprimibles',
+        // La hoja de **cada** imprimible (2026-11-05): `{clave: completa|media-vertical|media-horizontal}`.
+        'hojas_de_los_imprimibles',
     ];
 
-    protected $casts = ['elementos' => 'array'];
+    protected $casts = [
+        'elementos' => 'array',
+        'hojas_de_los_imprimibles' => 'array',
+    ];
 
     /** Bloques del membrete que se configuran por separado — las pestañas del legado. */
     public const ELEMENTOS = ['logo', 'medico', 'especialidad', 'rif', 'pie'];

@@ -5,7 +5,6 @@ namespace App\Clinica\Impresion\Vistas;
 use App\Clinica\Impresion\DocumentoDeRecipe;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\Membrete;
-use App\Clinica\Impresion\ModoDeLaHoja;
 use App\Clinica\Impresion\OpcionesDeRecipe;
 
 /**
@@ -31,8 +30,9 @@ final class HojasImpresasVista
      * @param  array{volver:string, volverTexto:string}  $urls
      * @param  bool  $pediatria  si el contexto de impresión es pediatría (lo decide el controlador): cada hoja lleva la
      *                           cabecera del escritorio (sexo, representante, historia y edad compacta) y el récipe sus medidas
-     * @param  array<string,string>  $paginas  la URL de esta hoja con cada una de las cuatro hojas (`vertical`,
-     *                                        `media-vertical`, `horizontal`, `recipe`), para `paginas()`
+     * @param  array{documento:string, nombre:string, actual:string, opciones:array<int,array{valor:string,titulo:string,descripcion:string,activa:bool}>, urlGuardar:string}|null  $hojaDelImprimible
+     *                           la hoja del **único** documento configurable que se imprime (2026-11-05), para el botón
+     *                           de configuración y su diálogo; `null` si no hay uno solo
      */
     public function __construct(
         private Membrete $membrete,
@@ -42,57 +42,20 @@ final class HojasImpresasVista
         private array $urls,
         private OpcionesDeImpresionVista $dialogo,
         private bool $pediatria = false,
-        private array $paginas = [],
+        private ?array $hojaDelImprimible = null,
     ) {
     }
 
     /**
-     * Las **cuatro hojas** que puede elegir el médico para sus documentos de texto (2026-11-04): vertical, media vertical,
-     * horizontal y estilo récipe. Son enlaces GET a esta misma hoja con `?hoja=`: **previsualizan sin guardar**; lo que se
-     * recuerda se elige en «Formato de impresión». Vacío si lo que se imprime no tiene ningún documento de texto (un récipe
-     * solo, por ejemplo).
+     * **La hoja del documento que se está imprimiendo** (2026-11-05): con el botón de configuración de la barra se elige
+     * una de las tres hojas y se recuerda para ese imprimible. Sólo se ofrece cuando lo que se imprime es **un** documento
+     * configurable: si son varios, cada uno tiene su hoja ya guardada y no hay una sola que cambiar.
      *
-     * **Ocultas desde el 2026-11-05** hasta que la elección sea por reporte: con la bandera apagada devuelve `[]` y la barra
-     * de la vista previa no se dibuja.
-     *
-     * @return array<int,array{texto:string, url:string, activa:bool}>
+     * @return array{documento:string, nombre:string, actual:string, opciones:array<int,array{valor:string,titulo:string,descripcion:string,activa:bool}>, urlGuardar:string}|null
      */
-    public function paginas(): array
+    public function hojaDelDocumento(): ?array
     {
-        if (! ModoDeLaHoja::hojaUnicaHabilitada()) {
-            return [];
-        }
-
-        $actual = null;
-
-        foreach ($this->documentos as $documento) {
-            if ($documento instanceof DocumentoImpreso
-                && $documento->informe === null
-                && $documento->preoperatorio === null
-                && ModoDeLaHoja::aceptaLaPreferencia($documento->tipo)) {
-                $actual = ModoDeLaHoja::preferenciaDe($documento->modo());
-                break;
-            }
-        }
-
-        if ($actual === null || $this->paginas === []) {
-            return [];
-        }
-
-        $textos = [
-            ModoDeLaHoja::HOJA_VERTICAL => 'Vertical',
-            ModoDeLaHoja::HOJA_MEDIA_VERTICAL => 'Media vertical',
-            ModoDeLaHoja::HOJA_HORIZONTAL => 'Horizontal',
-            ModoDeLaHoja::HOJA_RECIPE => 'Estilo récipe',
-        ];
-
-        $opciones = [];
-
-        foreach ($textos as $hoja => $texto) {
-            $opciones[] = ['texto' => $texto, 'url' => $this->paginas[$hoja], 'activa' => $actual === $hoja];
-        }
-
-        return $opciones;
+        return $this->hojaDelImprimible;
     }
 
     public function titulo(): string

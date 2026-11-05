@@ -75,17 +75,22 @@ final class GuardarFormatoDelRecipe
             );
         }
 
-        // `formato_imprimibles` (2026-11-04): la hoja de los documentos de texto. Si la clave viene con `null` se borra la
-        // preferencia y vuelve la hoja de siempre; si no viene, no se toca.
-        foreach (['color_linea', 'sello_posicion', 'formato_imprimibles'] as $campo) {
+        // `formato_imprimibles` (2026-11-04) y `hojas_de_los_imprimibles` (2026-11-05): la hoja de los documentos de texto,
+        // primero una sola para todos y ahora una por imprimible. Si la clave viene con `null` se borra la preferencia y
+        // vuelve la hoja de siempre; si no viene, no se toca.
+        foreach (['color_linea', 'sello_posicion', 'formato_imprimibles', 'hojas_de_los_imprimibles'] as $campo) {
             if (array_key_exists($campo, $datos)) {
                 $formato->$campo = $datos[$campo];
             }
         }
 
         // La hoja no viaja al teléfono: si es lo único que cambia, no se mueve `updated_at`, que el móvil usa para decidir
-        // si vuelve a bajar la firma y el sello (la misma precaución de `GuardarOpcionesDeImpresion`).
-        if ($formato->exists && array_keys($formato->getDirty()) === ['formato_imprimibles']) {
+        // si vuelve a bajar la firma y el sello (la misma precaución de `GuardarOpcionesDeImpresion`). Tiene que haber algo
+        // sucio: sin cambios no se desactivan los timestamps, porque después se asigna la firma nueva y su `save()` sí tiene
+        // que mover la marca.
+        $sucios = array_keys($formato->getDirty());
+
+        if ($formato->exists && $sucios !== [] && array_diff($sucios, ['formato_imprimibles', 'hojas_de_los_imprimibles']) === []) {
             $formato->timestamps = false;
         }
 

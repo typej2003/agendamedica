@@ -7,7 +7,6 @@ use App\Actions\Configuracion\LimitesDelMembrete;
 use App\Clinica\Archivos\ImagenesDelMembrete;
 use App\Clinica\Impresion\FormatoGuardado;
 use App\Clinica\Impresion\Membrete;
-use App\Clinica\Impresion\ModoDeLaHoja;
 use App\Models\RecipeFormato;
 
 /**
@@ -64,34 +63,7 @@ final class FormatoDeImpresionVista
     ];
 
     /**
-     * Las cuatro hojas de los documentos de texto (2026-11-04), con lo que dice la tarjeta de cada una. Las claves son las
-     * de `ModoDeLaHoja::HOJAS_DE_LOS_IMPRIMIBLES`.
-     */
-    private const HOJAS = [
-        ModoDeLaHoja::HOJA_VERTICAL => [
-            'titulo' => 'Hoja vertical',
-            'descripcion' => 'Una página A4 vertical por documento. Es la hoja en la que ya salen las solicitudes.',
-            'icono' => 'bi-file-earmark-portrait',
-        ],
-        ModoDeLaHoja::HOJA_MEDIA_VERTICAL => [
-            'titulo' => 'Media hoja vertical',
-            'descripcion' => 'La mitad de arriba de una página vertical; el resto queda en blanco.',
-            'icono' => 'bi-file-earmark-medical',
-        ],
-        ModoDeLaHoja::HOJA_HORIZONTAL => [
-            'titulo' => 'Horizontal',
-            'descripcion' => 'Media hoja sobre un A4 acostado, con la mitad derecha en blanco.',
-            'icono' => 'bi-file-earmark-landscape',
-        ],
-        ModoDeLaHoja::HOJA_RECIPE => [
-            'titulo' => 'Estilo récipe',
-            'descripcion' => 'Dos documentos por hoja acostada, uno al lado del otro.',
-            'icono' => 'bi-file-earmark-break',
-        ],
-    ];
-
-    /**
-     * @param  array{vistaPrevia:string, vistaPreviaCompleta:string, membrete:string, logo:string, estilo:string, firma:string, hoja:string, restablecer:string}  $urls
+     * @param  array{vistaPrevia:string, vistaPreviaCompleta:string, membrete:string, logo:string, estilo:string, firma:string, restablecer:string}  $urls
      * @param  bool  $esCentro  ¿se está editando el formato de un **centro médico**? (Fase 5: sin firma ni sello)
      */
     public function __construct(
@@ -136,51 +108,6 @@ final class FormatoDeImpresionVista
     public function conFirma(): bool
     {
         return ! $this->esCentro;
-    }
-
-    /**
-     * ¿Se ofrece la sección «Hoja de los imprimibles»? Sólo en el formato del médico: la hoja es de cada doctor que firma,
-     * no del centro (la de un centro no se imprime nunca). Tampoco se ofrece si no hay registro principal donde guardar.
-     *
-     * **Oculta desde el 2026-11-05** hasta que la elección sea por reporte: con la bandera apagada no se ofrece.
-     */
-    public function conHoja(): bool
-    {
-        return ModoDeLaHoja::hojaUnicaHabilitada() && ! $this->esCentro && ! $this->sinRegistro();
-    }
-
-    /** La hoja guardada (`vertical`, `media-vertical`, `horizontal`, `recipe`) o `null` si el médico todavía no eligió. */
-    public function hojaActual(): ?string
-    {
-        return $this->guardado->hojaDeLosImprimibles();
-    }
-
-    /**
-     * Las cuatro opciones de la tarjeta, con la que está marcada. Sin preferencia no hay ninguna marcada: cada documento
-     * sigue saliendo como hasta hoy.
-     *
-     * @return array<int,array{valor:string, titulo:string, descripcion:string, icono:string, activa:bool}>
-     */
-    public function opcionesDeHoja(): array
-    {
-        $opciones = [];
-
-        foreach (self::HOJAS as $valor => $hoja) {
-            $opciones[] = [
-                'valor' => $valor,
-                'titulo' => $hoja['titulo'],
-                'descripcion' => $hoja['descripcion'],
-                'icono' => $hoja['icono'],
-                'activa' => $this->hojaActual() === $valor,
-            ];
-        }
-
-        return $opciones;
-    }
-
-    public function urlGuardarHoja(): string
-    {
-        return $this->urls['hoja'];
     }
 
     /** ¿El médico no tiene un registro principal? Sin él no hay dónde guardar el formato. */
