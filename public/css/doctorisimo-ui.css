@@ -1359,23 +1359,37 @@ a.identidad-nombre:hover { color: var(--ds-violeta-700); text-decoration: underl
 
 .buscador-campo .form-control { padding-left: 2.3rem; }
 
-/* El botón que va al final del buscador («+» del alta de paciente en la cita): el campo le deja el lugar. */
-.buscador-campo .form-control.buscador-con-accion { padding-right: 2.6rem; }
+/* El botón que va al final del buscador («+» del alta de paciente en la cita): el campo le deja el lugar.
+   Va **incrustado** en el campo (2026-11-05): sin borde ni fondo, como el «×» de un buscador; el hover lo
+   tiñe de violeta suave para que se note que se puede apretar. Antes era un `btn-outline-secondary` y se
+   veía como una cajita encima del input. */
+.buscador-campo .form-control.buscador-con-accion { padding-right: 2.4rem; }
 .buscador-accion {
     position: absolute;
     top: 50%;
-    right: .35rem;
+    right: .3rem;
     transform: translateY(-50%);
 }
 .buscador-accion .btn {
     --bs-btn-padding-y: 0;
     --bs-btn-padding-x: 0;
+    --bs-btn-bg: transparent;
+    --bs-btn-border-color: transparent;
+    --bs-btn-color: var(--ds-violeta-700);
+    --bs-btn-hover-bg: var(--ds-violeta-100);
+    --bs-btn-hover-border-color: transparent;
+    --bs-btn-hover-color: var(--ds-violeta-800);
+    --bs-btn-active-bg: var(--ds-violeta-200);
+    --bs-btn-active-border-color: transparent;
+    --bs-btn-active-color: var(--ds-violeta-800);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.9rem;
-    height: 1.9rem;
+    width: 1.6rem;
+    height: 1.6rem;
     padding: 0;
+    border: 0;
+    border-radius: var(--ds-radio-sm);
     line-height: 1;
     font-weight: 700;
 }
