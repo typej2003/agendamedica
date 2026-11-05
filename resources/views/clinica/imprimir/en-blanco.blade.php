@@ -5,9 +5,9 @@
 @section('estilos')
     {{-- Los formatos en blanco (WEB-5.5b): la misma hoja de la impresión real (récipe y documentos) con el bloque del paciente y los datos
          cortos vacíos y renglones en lugar del texto. Sólo se agrega `clinica-en-blanco.css`. --}}
-    <link rel="stylesheet" href="{{ asset('css/clinica-recipe.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/clinica-documento.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/clinica-en-blanco.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/clinica-recipe.css') }}?v={{ @filemtime(public_path('css/clinica-recipe.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/clinica-documento.css') }}?v={{ @filemtime(public_path('css/clinica-documento.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/clinica-en-blanco.css') }}?v={{ @filemtime(public_path('css/clinica-en-blanco.css')) }}">
 @endsection
 
 @section('barra')
@@ -62,5 +62,5 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ asset('js/clinica/imprimir-recipe.js') }}"></script>
+    <script src="{{ asset('js/clinica/imprimir-recipe.js') }}?v={{ @filemtime(public_path('js/clinica/imprimir-recipe.js')) }}"></script>
 @endsection

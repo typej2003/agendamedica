@@ -6,12 +6,14 @@
     {{-- El @page de la hoja: A4 horizontal, sin márgenes (los pone cada mitad). `clinica-recipe.css` trae la hoja, la mitad y
          los datos del paciente (de los récipes y de los documentos); `clinica-documento.css` suma el cuerpo de un documento
          de la consulta (constancia, reposo, referencia, informe: WEB-5.3a). --}}
-    <link rel="stylesheet" href="{{ asset('css/clinica-recipe.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/clinica-documento.css') }}">
+    {{-- El `?v=` con la fecha del archivo: sin él el navegador sirve la hoja y el JS viejos tras un despliegue, y un
+         botón nuevo parece no hacer nada (2026-11-05). --}}
+    <link rel="stylesheet" href="{{ asset('css/clinica-recipe.css') }}?v={{ @filemtime(public_path('css/clinica-recipe.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/clinica-documento.css') }}?v={{ @filemtime(public_path('css/clinica-documento.css')) }}">
     {{-- El informe de una eco a hoja completa, A4 vertical (WEB-11.13). --}}
-    <link rel="stylesheet" href="{{ asset('css/clinica-informe-eco.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/clinica-informe-eco.css') }}?v={{ @filemtime(public_path('css/clinica-informe-eco.css')) }}">
     {{-- El informe pre-operatorio, también A4 vertical, en dos páginas (O-47). --}}
-    <link rel="stylesheet" href="{{ asset('css/clinica-informe-preoperatorio.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/clinica-informe-preoperatorio.css') }}?v={{ @filemtime(public_path('css/clinica-informe-preoperatorio.css')) }}">
 @endsection
 
 @section('barra')
@@ -153,5 +155,5 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ asset('js/clinica/imprimir-recipe.js') }}"></script>
+    <script src="{{ asset('js/clinica/imprimir-recipe.js') }}?v={{ @filemtime(public_path('js/clinica/imprimir-recipe.js')) }}"></script>
 @endsection
