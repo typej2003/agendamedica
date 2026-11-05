@@ -1,6 +1,10 @@
-{{-- Ventana "Generar API key". Requiere $modal, $seleccionado (Medico), $equipo, $mostrarReemplazo. Ver Concerns\EmiteApiKeys. --}}
+{{-- Ventana "Generar API key". Requiere $modal, $seleccionado (Medico), $equipo, $registro, $mostrarReemplazo. Ver Concerns\EmiteApiKeys. --}}
 {{-- Generar API key --}}
 @if ($modal === 'emitir' && $seleccionado)
+    @php
+        $registros = $seleccionado->registrosDeTrabajo();
+        $principal = $seleccionado->regMedicoPrincipal();
+    @endphp
     <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,.5)">
         <div class="modal-dialog modal-lateral">
             <div class="modal-content">
@@ -11,10 +15,32 @@
                     </div>
                     <div class="modal-body">
                         <p class="mb-3">
-                            Para <strong>{{ trim($seleccionado->name . ' ' . $seleccionado->lastname) }}</strong>
-                            <small class="text-muted">({{ $seleccionado->regMedicoPrincipal() }})</small>.
+                            Para <strong>{{ trim($seleccionado->name . ' ' . $seleccionado->lastname) }}</strong>.
                             Es una por PC: se guarda en el equipo del consultorio y se puede revocar por separado.
                         </p>
+
+                        {{-- El registro es el **consultorio al que esa PC sube sus datos**. Con una sola sede no hay
+                             nada que elegir; con varias (el médico que atiende en tres sitios, cada uno con su
+                             reg_medico) hay que decir cuál, o la segunda PC subiría al tenant de la primera. --}}
+                        @if (count($registros) > 1)
+                            <div class="mb-3">
+                                <label class="form-label" for="api-key-registro">Consultorio <span class="text-danger">*</span></label>
+                                <select class="form-select" id="api-key-registro" wire:model="registro">
+                                    @foreach ($registros as $r)
+                                        <option value="{{ $r }}">{{ $r }}{{ $r === $principal ? ' · su consultorio' : ' · sede asignada' }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="form-text">
+                                    La credencial queda atada a este registro: los datos de esa PC entran a ese consultorio.
+                                    Elige el de la sede donde está el equipo.
+                                </div>
+                                @error('registro') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                            </div>
+                        @else
+                            <p class="mb-3 small text-muted">
+                                Registro: <code>{{ $registros[0] ?? '—' }}</code>
+                            </p>
+                        @endif
 
                         <div class="mb-3">
                             <label class="form-label">Nombre del equipo <span class="text-danger">*</span></label>

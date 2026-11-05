@@ -1143,6 +1143,11 @@ con aprobación** y el de la suscripción son las fases siguientes. Lo nuevo se 
   y muestra por médico la última sincronización del escritorio y del app, la carga inicial, las API keys activas y
   los conteos de pacientes e historias (`SyncResumenService`, en lote por página). El token en claro se muestra una
   sola vez (copiar o descargar `sync-token.txt`); en la base solo queda su SHA-256.
+  **El registro se elige** (2026-11-05): un médico con varias sedes (varios `reg_medico`) emite la credencial para
+  **la que se elija** en el diálogo —antes tomaba siempre `regMedicoPrincipal()` y la segunda PC subía al tenant de
+  la primera sin avisar— y la lista de credenciales muestra el registro de cada una, que es lo que permite revocar
+  la correcta. Tests: `ApiKeysPanelTest`; verificación en Chrome:
+  `../.agent-tools/verificar-api-keys-registro-web.js` con `../.agent-tools/api-keys-registro-preparar.php`.
   **Última actividad web** (2026-10-20): `users.ultima_actividad_web_at`. El middleware `RegistrarActividadWeb` (grupo
   `web`, sin el latido `clinica.sesion`) **no escribe en la base**: dispara `ActividadWebRegistrada` como mucho una vez
   cada 5 min por cuenta (`Cache::add`) y el listener `GuardarUltimaActividadWeb` (`ShouldQueue`) hace un `UPDATE` que
