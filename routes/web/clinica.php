@@ -564,7 +564,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
                 Route::post('/consulta/{consulta}/recipe-pareja', [ConsultaRecipeParejaController::class, 'guardar'])->name('consulta.recipe-pareja.guardar');
                 Route::delete('/consulta/{consulta}/recipe-pareja', [ConsultaRecipeParejaController::class, 'eliminar'])->name('consulta.recipe-pareja.eliminar');
 
-                // **Imprimir el récipe desde la consulta** (WEB-5.2): la vista previa de la hoja A4 horizontal que
+                // **Imprimir el récipe desde la consulta** (WEB-5.2): la vista previa de la hoja Carta horizontal que
                 // imprime el navegador, la de un récipe del paciente (por su número) y la de la pareja. Es la
                 // **misma hoja** que imprime la secretaría desde la agenda (más abajo): acá sólo cambia por dónde
                 // se entra, y como la consulta es del médico estas dos van en su grupo.

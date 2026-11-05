@@ -152,11 +152,8 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
         $superior = ModoDeLaHoja::medidas(ModoDeLaHoja::MITAD_SUPERIOR);
 
         $this->assertSame($completa->anchoDelCuerpo(), $superior->anchoDelCuerpo());
-        $this->assertSame(
-            MedidasDeLaMitad::ALTO_UTIL_DE_LA_HOJA_COMPLETA_MM / 2 - 5.5,
-            MedidasDeLaMitad::ALTO_UTIL_DE_LA_MITAD_SUPERIOR_MM,
-            'la mitad superior es media página menos 9 de margen arriba y 5 de aire abajo',
-        );
+        // Media Carta (279,4 / 2 = 139,7) menos 9 de margen arriba y 5 de aire abajo.
+        $this->assertSame(125.7, MedidasDeLaMitad::ALTO_UTIL_DE_LA_MITAD_SUPERIOR_MM, 'la mitad superior es media página menos 9 de margen arriba y 5 de aire abajo');
     }
 
     // =========================================================== El informe del control de embarazo

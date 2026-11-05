@@ -7,7 +7,7 @@ namespace App\Clinica\Impresion;
  * marcada, como lo imprime el escritorio (Alexander, 2026-10-15), más una **hoja aparte con las imágenes** del estudio.
  *
  * Es un objeto de valores ya resuelto, sin base de datos: lo arma `ArmadorDeInformeDeEco` desde el mapa del dato del estudio y lo pinta
- * `clinica/imprimir/_informe-eco`. Un `DocumentoImpreso` que lo trae se imprime en una hoja A4 vertical completa (no en mitades).
+ * `clinica/imprimir/_informe-eco`. Un `DocumentoImpreso` que lo trae se imprime en una hoja Carta vertical completa (no en mitades).
  *
  * @phpstan-type Campo array{etiqueta:string, tipo:string, valor:?string, unidad:?string, opciones:array<int,array{texto:string, marcada:bool}>}
  */

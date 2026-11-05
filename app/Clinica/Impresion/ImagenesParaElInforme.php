@@ -19,7 +19,7 @@ use Throwable;
  */
 final class ImagenesParaElInforme
 {
-    /** El lado mayor, en píxeles: una hoja A4 a 150 dpi con dos columnas no necesita más. */
+    /** El lado mayor, en píxeles: una hoja Carta a 150 dpi con dos columnas no necesita más. */
     private const LADO_MAXIMO = 1200;
 
     public function __construct(private ImagenesDeLaConsulta $imagenes)

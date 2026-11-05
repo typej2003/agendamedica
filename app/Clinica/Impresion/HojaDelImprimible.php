@@ -6,15 +6,15 @@ namespace App\Clinica\Impresion;
  * **La hoja de cada imprimible** (2026-11-05): la elección que el médico hace **documento por documento** en la vista previa
  * de la impresión, con el botón de configuración que está al lado de «Imprimir».
  *
- * Son **tres** formas y no cuatro: el A4 horizontal entero no se usa (nadie lo pide), y el «estilo récipe» —dos documentos
+ * Son **tres** formas y no cuatro: la Carta horizontal entera no se usa (nadie lo pide), y el «estilo récipe» —dos documentos
  * por hoja— era de la hoja única y se retiró con ella.
  *
- *  - `COMPLETA` — hoja completa: un A4 vertical entero. Si el texto no entra, sigue en **otra hoja igual**.
- *  - `MEDIA_VERTICAL` — media hoja vertical: la mitad de arriba de un A4 vertical. La página del PDF mide **la mitad**
- *    (A5 acostada, 210 × 148,5 mm), así que no queda el espacio en blanco de abajo; si el texto no entra, sigue en **otra
+ *  - `COMPLETA` — hoja completa: una Carta vertical entera. Si el texto no entra, sigue en **otra hoja igual**.
+ *  - `MEDIA_VERTICAL` — media hoja vertical: la mitad de arriba de una Carta vertical. La página del PDF mide **la mitad**
+ *    (215,9 × 139,7 mm), así que no queda el espacio en blanco de abajo; si el texto no entra, sigue en **otra
  *    media hoja vertical**. El doctor recorta la hoja antes de ponerla en la impresora.
- *  - `MEDIA_HORIZONTAL` — media hoja horizontal: la mitad izquierda de un A4 acostado. La página del PDF mide la mitad
- *    (A5 vertical, 148,5 × 210 mm) y **nunca** sale la página completa; si el texto no entra, la siguiente hoja es **otra
+ *  - `MEDIA_HORIZONTAL` — media hoja horizontal: la mitad izquierda de una Carta acostada. La página del PDF mide la mitad
+ *    (139,7 × 215,9 mm) y **nunca** sale la página completa; si el texto no entra, la siguiente hoja es **otra
  *    mitad izquierda**.
  *
  * Qué documentos la aceptan: los **documentos de texto** —las nueve solicitudes y el resumen médico—, que son los que
@@ -67,7 +67,7 @@ final class HojaDelImprimible
 
     /** Qué dice de cada opción el diálogo de la vista previa. */
     private const DESCRIPCIONES = [
-        self::COMPLETA => 'Una hoja A4 entera. Si el texto no entra, sigue en otra hoja igual.',
+        self::COMPLETA => 'Una hoja entera. Si el texto no entra, sigue en otra hoja igual.',
         self::MEDIA_VERTICAL => 'La mitad de arriba de la hoja. Si el texto no entra, sigue en otra media hoja.',
         self::MEDIA_HORIZONTAL => 'La mitad izquierda de la hoja acostada. Si el texto no entra, sigue en otra media hoja.',
     ];

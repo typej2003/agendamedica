@@ -8,7 +8,7 @@ use App\Clinica\Vacunas\CalendarioDeVacunas;
 use Carbon\Carbon;
 
 /**
- * **El carnet de vacunación imprimible** (WEB-7.4.4c): la hoja A4 con el membrete del médico, los datos del niño, **las vacunas aplicadas** (el
+ * **El carnet de vacunación imprimible** (WEB-7.4.4c): la hoja Carta con el membrete del médico, los datos del niño, **las vacunas aplicadas** (el
  * reporte «VACUNAS APLICADAS» del escritorio, `d_vacunas_reporte`) y las **dosis que le faltan** según el calendario del consultorio. La
  * imprime el navegador (PLAN-WEB.md, R6); también sale en la vista previa («Visualizar»).
  *

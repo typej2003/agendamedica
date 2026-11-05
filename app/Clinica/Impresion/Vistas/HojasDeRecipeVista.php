@@ -11,10 +11,10 @@ use App\Clinica\Impresion\ProximaCitaDelRecipe;
 use App\Support\FechaClinica;
 
 /**
- * **La vista previa del récipe** (WEB-5.2): las hojas A4 horizontales tal como las imprime el navegador, ya
+ * **La vista previa del récipe** (WEB-5.2): las hojas Carta horizontales tal como las imprime el navegador, ya
  * repartidas y con todos los textos formateados.
  *
- * Una hoja es una página A4 horizontal con dos mitades; cada mitad es un récipe completo (membrete, datos del
+ * Una hoja es una página Carta horizontal con dos mitades; cada mitad es un récipe completo (membrete, datos del
  * paciente, cuerpo, próxima cita, firma, sello y pie). Si los medicamentos no entran en una hoja el récipe sigue
  * en otra (`DistribuidorDeRecipe`), y cada hoja repite el membrete y la firma. Con varios récipes (la secretaría
  * puede imprimir "todos") las hojas van una detrás de otra.

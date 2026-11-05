@@ -22,7 +22,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 /**
- * **La historia pediátrica imprimible** (WEB-12.5): la hoja A4 con el membrete del médico, la familia, los antecedentes por categoría, las mediciones y las vacunas del niño.
+ * **La historia pediátrica imprimible** (WEB-12.5): la hoja Carta con el membrete del médico, la familia, los antecedentes por categoría, las mediciones y las vacunas del niño.
  * Es clínica —sólo del médico (`role:Root|Medico`)— y de un paciente del consultorio (uno ajeno da 404). Sólo lee: compone lo que ya leen la ficha, la consulta, el
  * crecimiento y el carnet de vacunación.
  */
