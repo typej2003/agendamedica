@@ -155,12 +155,14 @@
                     <div class="position-relative" id="paciente-busqueda-caja">
                         <label class="form-label" for="paciente-busqueda">Buscar por apellido, cédula o n.º de historia</label>
                         {{-- El «+» al final del buscador abre el diálogo lateral del alta (2026-11-03): antes el alta
-                             era un `<details>` y, al desplegarlo, «Agendar la cita» quedaba fuera de la pantalla. --}}
+                             era un `<details>` y, al desplegarlo, «Agendar la cita» quedaba fuera de la pantalla.
+                             Va en violeta lleno (2026-11-05), el `btn-primary` de la marca, para que el alta no pase
+                             desapercibida como cuando era un `btn-outline-secondary`. --}}
                         <x-ui.buscador-vivo id="paciente-busqueda" resultados="paciente-resultados"
                                             :valor="$vm->paciente()['nombre'] ?? ''" placeholder="Escribe al menos dos letras"
                                             etiqueta="Buscar paciente" :data-url="$vm->urlBuscarPacientes()">
                             <x-slot:accion>
-                                <button type="button" class="btn btn-outline-secondary" data-abrir-dialogo="dialogo-paciente-nuevo"
+                                <button type="button" class="btn btn-primary" data-abrir-dialogo="dialogo-paciente-nuevo"
                                         aria-label="Cargar un paciente nuevo" title="Cargar un paciente nuevo">
                                     <span class="signo-mas" aria-hidden="true">+</span>
                                 </button>
