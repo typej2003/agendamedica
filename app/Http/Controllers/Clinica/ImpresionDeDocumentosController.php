@@ -220,7 +220,8 @@ class ImpresionDeDocumentosController extends Controller
      *
      * **La hoja** de cada documento de texto es la que el médico eligió (`MembreteDelMedico::hojaDeLosImprimibles`), salvo
      * que esta impresión pida otra con `?hoja=` (vista previa) o con el `?pagina=grande|pequena` histórico. Los récipes y
-     * los documentos con hoja fija no la leen.
+     * los documentos con hoja fija no la leen. **La elección está oculta desde el 2026-11-05** hasta que sea por reporte:
+     * con la bandera apagada no se lee la preferencia ni se atiende `?hoja=`, y todo sale como hasta hoy.
      *
      * @param  array<int,string>  $registros  los `reg_medico` del médico
      * @param  array<int,string>  $claves  `recipe-2`, `reposo`, `referencia-3`… lo que se imprime, en orden
@@ -248,10 +249,12 @@ class ImpresionDeDocumentosController extends Controller
 
         // **La hoja de los documentos de texto** (2026-11-04): la que el médico guardó en su formato, o `?hoja=` para
         // previsualizar otra sin guardarla. El `?pagina=grande|pequena` histórico del escritorio sigue mandando sobre las
-        // dos (es una elección de esa impresión concreta).
-        $preferido = $this->membretes->hojaDeLosImprimibles($firmante);
+        // dos (es una elección de esa impresión concreta). **Oculta desde el 2026-11-05** hasta que sea por reporte: con la
+        // bandera apagada no se lee la preferencia ni se atiende `?hoja=`, y cada documento sale como hasta hoy.
+        $hojaUnica = ModoDeLaHoja::hojaUnicaHabilitada();
+        $preferido = $hojaUnica ? $this->membretes->hojaDeLosImprimibles($firmante) : null;
 
-        if (is_string($hoja = $request->query('hoja'))) {
+        if ($hojaUnica && is_string($hoja = $request->query('hoja'))) {
             $preferido = ModoDeLaHoja::deLaPreferencia($hoja) ?? $preferido;
         }
 
@@ -293,10 +296,17 @@ class ImpresionDeDocumentosController extends Controller
      * previa**: no guardan nada (lo que se recuerda se elige en «Formato de impresión»). Se arma desde la URL sin query y
      * se le vuelve a poner la actual, sacando `hoja` y `pagina` para que la elección nueva no quede pisada por la vieja.
      *
+     * **Ocultas desde el 2026-11-05** hasta que la elección sea por reporte: con la bandera apagada no hay enlaces y la
+     * barra de la vista previa no se dibuja.
+     *
      * @return array<string,string>
      */
     private function urlsDeLaHoja(Request $request): array
     {
+        if (! ModoDeLaHoja::hojaUnicaHabilitada()) {
+            return [];
+        }
+
         $urls = [];
 
         foreach (ModoDeLaHoja::HOJAS_DE_LOS_IMPRIMIBLES as $hoja) {

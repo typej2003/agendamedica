@@ -39,6 +39,10 @@ namespace App\Clinica\Impresion;
  * histórico de una impresión concreta, que manda sobre lo guardado. Los ecos, el control de embarazo, la colposcopía, la
  * histeroscopía y el informe preoperatorio tienen su hoja fija y no entran en la elección.
  *
+ * **Oculta desde el 2026-11-05:** era **una sola** hoja para todos los reportes, así que se retiró de la vista previa y de
+ * «Formato de impresión» hasta que la elección sea **por reporte** (`hojaUnicaHabilitada()`). Con la bandera apagada —el
+ * default— la preferencia guardada se ignora y cada documento sale como hasta hoy.
+ *
  * Los ecos imprimen además su **informe en formulario** (WEB-11.13), que no sale de acá: lo pinta `_informe-eco` a página
  * completa. Esta clase decide la hoja de los documentos que se reparten como texto (`DistribuidorDeDocumento`), que es el caso
  * del control de embarazo y de **los formatos en blanco** de los ecos (O-26).
@@ -191,6 +195,18 @@ final class ModoDeLaHoja
             self::HOJA_RECIPE => self::MITAD,
             default => null,
         };
+    }
+
+    /**
+     * ¿Está habilitada la **hoja única** para todos los documentos de texto? (2026-11-05)
+     *
+     * Apagada por defecto: la elección de una sola hoja para todos los reportes está oculta hasta que cada reporte tenga la
+     * suya. Mientras esté apagada no se ofrece en «Formato de impresión» ni en la vista previa, y la preferencia guardada
+     * se ignora: todo sale como hasta hoy. Cuando se extienda, se enciende `clinica.hoja_de_los_imprimibles`.
+     */
+    public static function hojaUnicaHabilitada(): bool
+    {
+        return (bool) config('clinica.hoja_de_los_imprimibles', false);
     }
 
     /** El camino inverso de `deLaPreferencia`: qué opción de la pantalla corresponde a un modo. */

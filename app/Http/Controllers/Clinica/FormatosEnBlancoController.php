@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Clinica;
 
 use App\Clinica\Impresion\FormatosEnBlanco;
 use App\Clinica\Impresion\MembreteDelMedico;
+use App\Clinica\Impresion\ModoDeLaHoja;
 use App\Clinica\Impresion\Vistas\HojaEnBlancoVista;
 use App\Http\Controllers\Clinica\Concerns\ResuelveElRegistroDelFormato;
 use App\Http\Controllers\Controller;
@@ -51,7 +52,8 @@ class FormatosEnBlancoController extends Controller
                         : ['formato' => $formato, 'reg_medico' => $this->registroPedido($request)]),
                 ],
                 // La hoja que eligió el médico para sus documentos de texto: la hoja en blanco sale igual que la real.
-                $this->membretes->hojaDeLosImprimibles($medico),
+                // **Oculta desde el 2026-11-05** hasta que la elección sea por reporte: sin preferencia, como hasta hoy.
+                ModoDeLaHoja::hojaUnicaHabilitada() ? $this->membretes->hojaDeLosImprimibles($medico) : null,
             ),
         ]);
     }

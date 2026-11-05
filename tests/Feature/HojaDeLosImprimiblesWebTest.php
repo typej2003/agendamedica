@@ -24,6 +24,9 @@ use Tests\TestCase;
  *  - **Los récipes no cambian**: siempre media hoja horizontal, aunque la preferencia sea vertical.
  *  - El selector de la hoja de la vista previa (`?hoja=`) **no guarda**: es sólo una vista previa.
  *  - `horizontal` deja la mitad derecha en blanco; `recipe` mete dos documentos en la misma hoja acostada.
+ *
+ * **La feature está oculta por defecto** (2026-11-05) hasta que la elección sea por reporte: la clase enciende la bandera
+ * en `setUp` para probar el código que queda listo, y el último caso la apaga y fija que no se ofrece ni se aplica.
  */
 class HojaDeLosImprimiblesWebTest extends TestCase
 {
@@ -33,6 +36,8 @@ class HojaDeLosImprimiblesWebTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // La hoja única está apagada en producción (`config/clinica.php`); estos casos prueban la feature que queda lista.
+        config(['clinica.hoja_de_los_imprimibles' => true]);
         $this->fijarHoy();
     }
 
@@ -266,5 +271,55 @@ class HojaDeLosImprimiblesWebTest extends TestCase
             DB::table('recipe_formatos')->where('reg_medico', $medico->reg_medico)->value('formato_imprimibles'),
             'la vista previa no guarda la elección',
         );
+    }
+
+    // ===================================================================== La feature oculta
+
+    public function test_la_hoja_esta_oculta_y_todo_sale_como_hasta_hoy(): void
+    {
+        config(['clinica.hoja_de_los_imprimibles' => false]);
+
+        [$user, $medico, $gineco] = $this->escenario();
+        [, $consulta] = $this->pacienteYConsulta($medico, 1001, 1);
+        $this->constancia($medico);
+
+        // Aunque haya una preferencia guardada (la que dejó una prueba en QA), no se aplica.
+        $this->hoja($medico, ModoDeLaHoja::HOJA_HORIZONTAL);
+
+        $this->como($user, $medico, $gineco)->get(route('clinica.formato'))
+            ->assertOk()
+            ->assertDontSee('Hoja de los imprimibles')
+            ->assertDontSee('name="formato_imprimibles"', false);
+
+        // La ruta de guardado tampoco existe: una pestaña vieja no puede guardar una hoja que ya no se lee.
+        $this->como($user, $medico, $gineco)
+            ->post(route('clinica.formato.hoja'), ['formato_imprimibles' => ModoDeLaHoja::HOJA_HORIZONTAL])
+            ->assertNotFound();
+
+        $html = $this->como($user, $medico, $gineco)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::CONSTANCIA]))
+            ->assertOk()
+            ->assertDontSee('barra-impresion-modos', false)
+            ->getContent();
+
+        // La constancia vuelve a su hoja de siempre: A4 vertical completo.
+        $this->assertSame(1, substr_count($html, 'recipe-hoja-completa'));
+        $this->assertSame(0, substr_count($html, 'recipe-mitad-vacia'));
+
+        // `?hoja=` tampoco cambia la hoja: la vista previa de las cuatro hojas está apagada.
+        $html = $this->como($user, $medico, $gineco)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::CONSTANCIA, 'hoja' => 'horizontal']))
+            ->assertOk()
+            ->getContent();
+        $this->assertSame(1, substr_count($html, 'recipe-hoja-completa'));
+        $this->assertSame(0, substr_count($html, 'recipe-mitad-vacia'));
+
+        // El formato en blanco también sale como el documento real.
+        $html = $this->como($user, $medico, $gineco)
+            ->get(route('clinica.formato.en-blanco', ['formato' => DocumentoImpreso::CONSTANCIA]))
+            ->assertOk()
+            ->getContent();
+        $this->assertSame(1, substr_count($html, 'recipe-hoja-completa'));
+        $this->assertSame(0, substr_count($html, 'recipe-mitad-vacia'));
     }
 }

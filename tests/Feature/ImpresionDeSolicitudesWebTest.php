@@ -229,11 +229,12 @@ class ImpresionDeSolicitudesWebTest extends TestCase
             $grande = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $documento))->assertOk()->getContent();
             $this->assertStringContainsString('recipe-hoja recipe-hoja-completa tamano-', $grande, $documento);
             $this->assertStringNotContainsString('recipe-mitad-vacia', $grande, $documento);
-            $this->assertMatchesRegularExpression('/hoja=vertical"\s+aria-current="true"\s*>Vertical</', $grande);
+            // La hoja única está oculta (2026-11-05): la vista previa no ofrece el selector de hojas.
+            $this->assertStringNotContainsString('barra-impresion-modos', $grande, $documento);
 
             $pequena = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $documento) . '&pagina=pequena')->assertOk()->getContent();
             $this->assertStringContainsString('recipe-hoja recipe-hoja-completa recipe-hoja-mitad-superior', $pequena, $documento);
-            $this->assertMatchesRegularExpression('/hoja=media-vertical"\s+aria-current="true"\s*>Media vertical</', $pequena);
+            $this->assertStringNotContainsString('barra-impresion-modos', $pequena, $documento);
         }
 
         // Con un récipe en el lote la elección no le cambia la hoja: sigue en media hoja horizontal.
