@@ -2,9 +2,10 @@
     El icono de una hoja con la parte que se imprime sombreada (2026-11-05). Lo usan el botón de configuración de la
     vista previa (con la hoja actual) y las tres opciones del diálogo.
 
-    `$opcion`: `completa` (toda la hoja), `media-vertical` (la mitad de arriba) o `media-horizontal` (la mitad izquierda).
-    La hoja es la misma en los tres casos —un A4 vertical con su esquina doblada, como la referencia que pasó el
-    usuario— y lo que cambia es la zona sombreada y la línea punteada de dónde se corta.
+    `$opcion`: `completa` (toda la hoja), `media-vertical` (la mitad de arriba) o `media-horizontal` (también la mitad
+    de arriba, porque al acostar la hoja esa mitad es la izquierda). La hoja es la misma en los tres casos —un A4
+    vertical con su esquina doblada, como la referencia que pasó el usuario— y la media horizontal se distingue de la
+    media vertical **sólo por la orientación del texto**: las líneas van en vertical, porque la hoja va acostada.
 
     El trazo y el relleno van con `currentColor`: el botón los pinta del color del texto y las opciones, del suyo.
 --}}
@@ -16,27 +17,25 @@
     $hoja = 'M5 2.5 H30.8 L43.5 15.2 V59.5 H5 Z';
     $solapa = 'M30.8 2.5 V13.2 A2 2 0 0 0 32.8 15.2 H43.5';
 
-    // La zona imprimible: toda la hoja, su mitad de arriba o su mitad izquierda.
+    // La zona imprimible: toda la hoja o su mitad de arriba (la media horizontal es la misma mitad, vista acostada).
     $zonas = [
         'completa' => 'M5 2.5 H30.8 V15.2 H43.5 V59.5 H5 Z',
         'media-vertical' => 'M5 2.5 H30.8 V15.2 H43.5 V31 H5 Z',
-        'media-horizontal' => 'M5 2.5 H24 V59.5 H5 Z',
+        'media-horizontal' => 'M5 2.5 H30.8 V15.2 H43.5 V31 H5 Z',
     ];
 
-    // La línea del corte: horizontal en la media vertical y vertical en la media horizontal.
+    // La línea del corte: la mitad de arriba en las dos medias hojas.
     $corte = [
         'media-vertical' => ['x1' => 5, 'y1' => 31, 'x2' => 43.5, 'y2' => 31],
-        'media-horizontal' => ['x1' => 24, 'y1' => 15.2, 'x2' => 24, 'y2' => 59.5],
+        'media-horizontal' => ['x1' => 5, 'y1' => 31, 'x2' => 43.5, 'y2' => 31],
     ];
 
-    // Las líneas que hacen de texto: horizontales en las dos hojas verticales y en vertical en la media horizontal.
+    // Las líneas que hacen de texto: horizontales en las dos hojas verticales y verticales en la media horizontal, sólo
+    // dentro de la mitad que se imprime. Es lo único que distingue los dos iconos de media hoja.
     if ($opcion === 'media-horizontal') {
         $lineas = [];
-        foreach ([10.5, 16, 21.5] as $x) {
-            $lineas[] = ['x1' => $x, 'y1' => 21, 'x2' => $x, 'y2' => 53, 'dentro' => true];
-        }
-        foreach ([29.5, 35, 40.5] as $x) {
-            $lineas[] = ['x1' => $x, 'y1' => 21, 'x2' => $x, 'y2' => 53, 'dentro' => false];
+        foreach ([10, 14.5, 19, 23.5, 28, 32.5, 37] as $x) {
+            $lineas[] = ['x1' => $x, 'y1' => 19, 'x2' => $x, 'y2' => 28.5, 'dentro' => true];
         }
     } else {
         $lineas = [];
