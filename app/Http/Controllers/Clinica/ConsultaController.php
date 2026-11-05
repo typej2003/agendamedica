@@ -1784,9 +1784,11 @@ class ConsultaController extends Controller
             'tipo' => $fila->tipo,
             'aviso' => $fila->nombre === $fila->codigo ? 'No está en tu catálogo: se muestra el código.' : null,
             // El **resultado** y si **sale en el informe** (O-47): las dos columnas del escritorio, que esta pantalla
-            // ahora edita. `vinculante = 'S'` es «sale»; `NULL` y `'N'` son «no sale».
+            // ahora edita. `vinculante = 'S'` es «sale»; `NULL` y `'N'` son «no sale». La casilla viene **marcada por
+            // defecto** (2026-11-05): sólo un `'N'` explícito la apaga —lo que se guarda al destildarla—; el `NULL` es
+            // el valor que dejan el escritorio y las órdenes cargadas antes de esto, y ésos también salen.
             'resultado' => (string) ($fila->resultado ?? ''),
-            'reporte' => trim((string) ($fila->vinculante ?? '')) === GuardarOrdenDeLaboratorio::REPORTE,
+            'reporte' => trim((string) ($fila->vinculante ?? '')) !== GuardarOrdenDeLaboratorio::NO_REPORTE,
         ])->all();
 
         $orden = OrdenVista::laboratorio(
