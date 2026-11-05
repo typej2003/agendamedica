@@ -11,21 +11,7 @@
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>
 
-        <nav class="pestanas-en-fila mb-3" aria-label="Cirugía">
-            @foreach ($seccion->pestanas() as $pestana)
-                @if ($pestana['pendiente'])
-                    <span class="pestana" title="Llega en la próxima entrega">
-                        {{ $pestana['texto'] }} <small class="texto-tenue">(próximamente)</small>
-                    </span>
-                @else
-                    <a class="pestana {{ $pestana['activa'] ? 'activa' : '' }}" href="{{ $pestana['url'] }}"
-                       @if ($pestana['activa']) aria-current="page" @endif>
-                        {{ $pestana['texto'] }}
-                        @if ($pestana['cargada'])<i class="bi bi-check2-circle ms-1" title="Con datos" aria-hidden="true"></i>@endif
-                    </a>
-                @endif
-            @endforeach
-        </nav>
+        <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()" etiqueta="Cirugía" />
 
         @if ($seccion->esPestana('riesgo'))
             @include('clinica.consulta._quirurgico-riesgo', ['seccion' => $seccion])
