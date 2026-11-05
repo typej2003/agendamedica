@@ -91,7 +91,7 @@ class FormatoDeImpresionController extends Controller
      * Las direcciones de la pantalla. Cuando se está editando un **centro** todas llevan `?reg_medico=`, para que cada
      * sección guarde bajo el centro y no bajo el médico del contexto (el guardado lo vuelve a resolver igual).
      *
-     * @return array{vistaPrevia:string, vistaPreviaCompleta:string, membrete:string, logo:string, estilo:string, firma:string, restablecer:string}
+     * @return array{vistaPrevia:string, vistaPreviaCompleta:string, membrete:string, logo:string, estilo:string, firma:string, hoja:string, restablecer:string}
      */
     private function urls(string $pedido): array
     {
@@ -102,6 +102,7 @@ class FormatoDeImpresionController extends Controller
             'logo' => route('clinica.formato.logo', $this->conRegistro([], $pedido)),
             'estilo' => route('clinica.formato.estilo', $this->conRegistro([], $pedido)),
             'firma' => route('clinica.formato.firma', $this->conRegistro([], $pedido)),
+            'hoja' => route('clinica.formato.hoja', $this->conRegistro([], $pedido)),
             'restablecer' => route('clinica.formato.restablecer', $this->conRegistro([], $pedido)),
         ];
     }

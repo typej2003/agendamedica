@@ -52,19 +52,28 @@
     </div>
 
     @if ($seleccionada)
-        <div class="card mb-3 border-primary">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-start gap-2">
-                <div>
+        {{-- El detalle en un diálogo lateral (2026-11-04): la tabla queda a la vista para comparar el número de
+             esta solicitud con el de otra que parezca duplicada. --}}
+        <div class="offcanvas offcanvas-end show" tabindex="-1" id="solicitud-detalle"
+             role="dialog" aria-modal="true" aria-labelledby="solicitud-detalle-titulo"
+             wire:keydown.escape.window="cerrar"
+             style="visibility: visible; width: min(40rem, 100vw);">
+            <div class="offcanvas-header border-bottom align-items-start">
+                <div class="me-2">
+                    <h2 class="h5 mb-1" id="solicitud-detalle-titulo">Solicitud #{{ $seleccionada->id }}</h2>
                     <div class="fw-semibold">{{ $seleccionada->nombreCompleto() }}</div>
-                    <small class="text-muted">Recibida el {{ \App\Support\HoraLocal::fechaHora($seleccionada->created_at) }}</small>
+                    <small class="text-muted d-block">
+                        Recibida el {{ \App\Support\HoraLocal::fechaHora($seleccionada->created_at) }}
+                        · Cédula {{ $seleccionada->cedula }} · MPPS {{ $seleccionada->mpps }}
+                    </small>
                     @if ($seleccionada->aprobada_automaticamente)
                         <x-ui.estado tono="info">Aprobada automáticamente</x-ui.estado>
                     @endif
                 </div>
-                <button type="button" class="btn btn-sm btn-outline-secondary" wire:click="cerrar">Cerrar</button>
+                <button type="button" class="btn-close" wire:click="cerrar" aria-label="Cerrar la solicitud"></button>
             </div>
 
-            <div class="card-body">
+            <div class="offcanvas-body">
                 <div class="row g-3">
                     <div class="col-lg-7">
                         <dl class="row mb-0">
@@ -141,10 +150,28 @@
                 <hr>
 
                 @if ($seleccionada->estaPendiente())
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <h3 class="h6">Aprobar</h3>
-                            <div class="mb-2">
+                    {{-- La decisión se pregunta **antes** y sin opción marcada (guía de UI, §11): aprobar y
+                         rechazar piden datos distintos, así que sólo se muestra la rama elegida y el botón
+                         de abajo cambia con ella. --}}
+                    <div class="mb-3">
+                        <span class="form-label d-block" id="decision-titulo">¿Qué haces con la solicitud?</span>
+                        <div class="d-flex flex-wrap gap-4" role="radiogroup" aria-labelledby="decision-titulo">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" id="decision-aprobar"
+                                       value="aprobar" wire:model.live="decision">
+                                <label class="form-check-label" for="decision-aprobar">Aprobar</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" id="decision-rechazar"
+                                       value="rechazar" wire:model.live="decision">
+                                <label class="form-check-label" for="decision-rechazar">Rechazar</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if ($decision === 'aprobar')
+                        <div class="row g-3">
+                            <div class="col-md-6">
                                 <label for="reg_medico" class="form-label">reg_medico</label>
                                 <input type="text" id="reg_medico" maxlength="100"
                                        class="form-control @error('reg_medico') is-invalid @enderror"
@@ -155,13 +182,18 @@
                                 @if ($fichaExistente)
                                     <div class="form-text text-warning-emphasis">
                                         Ya existe la ficha de {{ trim($fichaExistente->name . ' ' . $fichaExistente->lastname) }}
-                                        con ese reg_medico: se le da acceso a esa ficha en vez de crear otra.
+                                        con ese reg_medico:
+                                        @if ($fichaExistente->user_id)
+                                            ya tiene cuenta, así que la solicitud se vincula a su ficha y no se crea otra.
+                                        @else
+                                            se le da acceso a esa ficha en vez de crear otra.
+                                        @endif
                                     </div>
                                 @else
                                     <div class="form-text">Se crea una ficha nueva con este reg_medico.</div>
                                 @endif
                             </div>
-                            <div class="mb-3">
+                            <div class="col-md-6">
                                 <label for="specialty_id" class="form-label">Especialidad</label>
                                 <select id="specialty_id" class="form-select" wire:model="specialty_id">
                                     <option value="">Sin especialidad</option>
@@ -170,40 +202,40 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="carnet_verificado"
-                                       wire:model="carnet_verificado">
-                                <label class="form-check-label" for="carnet_verificado">
-                                    Revisé el carnet y lo doy por verificado
-                                </label>
-                                @if (! $seleccionada->carnet_ruta)
-                                    <div class="form-text text-warning-emphasis">
-                                        No adjuntó foto: su carnet quedará sin verificar.
-                                    </div>
-                                @endif
-                            </div>
-                            <button type="button" class="btn btn-success" wire:click="aprobar" wire:loading.attr="disabled">
-                                Aprobar y crear la cuenta
-                            </button>
                         </div>
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" id="carnet_verificado"
+                                   wire:model="carnet_verificado">
+                            <label class="form-check-label" for="carnet_verificado">
+                                Revisé el carnet y lo doy por verificado
+                            </label>
+                            @if (! $seleccionada->carnet_ruta)
+                                <div class="form-text text-warning-emphasis">
+                                    No adjuntó foto: su carnet quedará sin verificar.
+                                </div>
+                            @endif
+                        </div>
+                    @elseif ($decision === 'rechazar')
+                        <div class="mb-3">
+                            <label for="motivo" class="form-label">Motivo (le llega al médico por correo)</label>
+                            <textarea id="motivo" rows="4" maxlength="2000"
+                                      class="form-control @error('motivo') is-invalid @enderror"
+                                      wire:model="motivo"
+                                      placeholder="Por ejemplo: el número del MPPS no coincide con la cédula."></textarea>
+                            @error('motivo')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    @endif
 
-                        <div class="col-md-6">
-                            <h3 class="h6">Rechazar</h3>
-                            <div class="mb-3">
-                                <label for="motivo" class="form-label">Motivo (le llega al médico por correo)</label>
-                                <textarea id="motivo" rows="4" maxlength="2000"
-                                          class="form-control @error('motivo') is-invalid @enderror"
-                                          wire:model="motivo"
-                                          placeholder="Por ejemplo: el número del MPPS no coincide con la cédula."></textarea>
-                                @error('motivo')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <button type="button" class="btn btn-outline-danger" wire:click="rechazar" wire:loading.attr="disabled">
-                                Rechazar
-                            </button>
-                        </div>
-                    </div>
+                    @if ($decision === 'aprobar' || $decision === 'rechazar')
+                        <button type="button"
+                                class="btn {{ $decision === 'aprobar' ? 'btn-success' : 'btn-outline-danger' }}"
+                                wire:click="{{ $decision === 'aprobar' ? 'aprobar' : 'rechazar' }}"
+                                wire:loading.attr="disabled">
+                            {{ $decision === 'aprobar' ? 'Aprobar y crear la cuenta' : 'Rechazar solicitud' }}
+                        </button>
+                    @endif
 
                     @error('solicitud')
                         <div class="alert alert-warning mt-3 mb-0">{{ $message }}</div>
@@ -229,6 +261,8 @@
                 @endif
             </div>
         </div>
+
+        <div class="offcanvas-backdrop fade show" wire:click="cerrar" aria-hidden="true"></div>
     @endif
 
     <div class="card">
@@ -236,15 +270,16 @@
 
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-sm table-hover align-middle mb-0">
                     <thead class="table-dark">
                         <tr>
+                            <th title="Número de solicitud"><span class="visually-hidden">Solicitud </span>#</th>
                             <th>Médico</th>
                             <th>Cédula</th>
                             <th>MPPS</th>
                             <th>Especialidad</th>
                             <th>Correo</th>
-                            <th>Referido por</th>
+                            <th>Referido</th>
                             <th>Recibida</th>
                             <th>Estado</th>
                             <th class="text-end">Acciones</th>
@@ -252,7 +287,9 @@
                     </thead>
                     <tbody>
                         @forelse ($solicitudes as $solicitud)
-                            <tr wire:key="solicitud-{{ $solicitud->id }}">
+                            <tr wire:key="solicitud-{{ $solicitud->id }}"
+                                @class(['table-active' => $seleccionada && $seleccionada->id === $solicitud->id])>
+                                <td class="text-muted">#{{ $solicitud->id }}</td>
                                 <td class="fw-semibold">{{ $solicitud->nombreCompleto() }}</td>
                                 <td>{{ $solicitud->cedula }}</td>
                                 <td>{{ $solicitud->mpps }}</td>
@@ -297,7 +334,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">
+                                <td colspan="10" class="text-center text-muted py-4">
                                     {{ $estado === 'pendiente' ? 'No hay solicitudes por revisar.' : 'No hay solicitudes en esta lista.' }}
                                 </td>
                             </tr>
@@ -325,7 +362,12 @@
                     <div class="modal-body">
                         <div class="alert {{ $claveGenerada['correoEnviado'] ? 'alert-info' : 'alert-warning' }} small">
                             @if (! $claveGenerada['clave'])
-                                Ya tenía cuenta: le habilitamos el área médica y entra con <strong>su contraseña de siempre</strong>, no le cambiamos ninguna clave.
+                                @if ($claveGenerada['yaTeniaCuenta'])
+                                    Ese médico ya tenía su cuenta y su ficha: la solicitud quedó vinculada a la ficha y
+                                    <strong>no se creó otra</strong>. Entra con su contraseña de siempre.
+                                @else
+                                    Ya tenía cuenta: le habilitamos el área médica y entra con <strong>su contraseña de siempre</strong>, no le cambiamos ninguna clave.
+                                @endif
                                 @if (! $claveGenerada['correoEnviado'])
                                     <strong>El correo no salió:</strong> avísale por otro medio.
                                 @endif

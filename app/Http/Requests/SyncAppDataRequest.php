@@ -86,6 +86,11 @@ class SyncAppDataRequest extends FormRequest
         'informe' => ['para', 'descripcion', 'fe_cha'],
         'hospitalizacion' => ['hospital', 'diagprev', 'dieta'],
         'dieta_paciente' => ['dieta', 'descripcion'],
+        // **El representante del paciente** (2026-11-04): el adulto que responde por el niño y el teléfono
+        // que vale para los datos obligatorios de pediatría. El app lo edita columna a columna, como el
+        // resto; `numhistoria` no está porque cambiar de historia no es editar la fila, es otro
+        // representante (y el número es la clave del legado).
+        'representante' => ['nombre', 'codeparentesco', 'cedula', 'telefono', 'email', 'direccion'],
         // ⚠️ Los **cuatro estudios ecográficos** (`eco_pelvico`, `eco_obstetrico`, `eco_obstetrico_tercer_2` y
         // `eco_obstetrico_tercer`, EC-A3 de PLAN-MOVIL.md) **no están acá a propósito**: sus columnas editables
         // son las del mapa del dato de cada estudio —181 nombres entre los cuatro— y duplicarlas en esta lista
@@ -166,17 +171,32 @@ class SyncAppDataRequest extends FormRequest
             'codeestado', 'direccion', 'telefono', 'fingreso', 'escolaridad', 'ocupacion',
             'profesion', 'email', 'dependencia', 'sms',
         ],
+        // **El representante del niño** (2026-11-04). Se crea por su historia —la clave del legado— y la
+        // Action de la web (`GuardarRepresentante`) lo deja en **una sola** fila por historia: si ya
+        // existe, la completa en el lugar. Después de creado, el app lo corrige por `updated`.
+        'representante' => [
+            'numhistoria', 'nombre', 'codeparentesco', 'cedula', 'telefono', 'email', 'direccion',
+        ],
     ];
 
     /**
      * Sin estas columnas la fila no se crea. En `cola` son las `NOT NULL` del esquema (sin ellas
-     * el INSERT explota); en `pacientes` son las que hacen identificable a la persona: la cédula
-     * es además la clave por la que el legado reconoce al mismo paciente entre médicos, así que
-     * sin ella se crearían fichas duplicadas.
+     * el INSERT explota); en `pacientes`, el nombre: **la cédula y el apellido no** (2026-11-04).
+     *
+     * La cédula dejó de exigirse porque "sin cédula" es un estado válido y explícito del alta (`S.C.`,
+     * wiki `04-historia-clinica.md`), y porque los pacientes de pediatría **no tienen**: el niño se
+     * identifica por nombre, nacimiento y sexo, y la cédula que importa es la del representante. El
+     * apellido tampoco: PediaReport guarda el **nombre completo** en `nombres` y no tiene columna de
+     * apellidos. Es la misma regla que ya aplica `CrearPaciente` para la web, así que el sync no puede
+     * ser más estricto que la puerta que comparte (R3).
+     *
+     * Consecuencia asumida: un alta sin cédula no puede enlazarse con una ficha existente y crea una
+     * nueva —lo mismo que hace la web con "S.C."—, porque el vacío no identifica a nadie.
      */
     public const REQUIRED_COLUMNS = [
         'cola' => ['fecha', 'hora_ini'],
-        'pacientes' => ['cedula', 'nombres', 'apellidos'],
+        'pacientes' => ['nombres'],
+        'representante' => ['numhistoria'],
     ];
 
     /** Columnas con dominio cerrado. Ver la convención de estados en `App\Models\Cola`. */
@@ -216,6 +236,10 @@ class SyncAppDataRequest extends FormRequest
         // Documentos de la consulta (constancia, reposo, referencia e informe): el teléfono los crea y, si
         // la consulta ya tiene la fila que dejó el escritorio, la corrige por columna.
         'constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'hospitalizacion', 'dieta_paciente',
+        // El representante del niño (2026-11-04): el app completa su teléfono sin conexión y lo sube por
+        // columna. No se borra —es uno por historia y la ficha no lo da de baja—, así que no entra en
+        // `TABLAS_BORRABLES`.
+        'representante',
     ];
 
     /**
@@ -319,6 +343,9 @@ class SyncAppDataRequest extends FormRequest
         'constancia_obs', 'reposo_paciente', 'referencia', 'informe', 'hospitalizacion', 'dieta_paciente',
         // La edición/baja de un récipe ya subido viaja como creación de esta tabla de operaciones.
         'recipes_ediciones',
+        // El representante del niño (2026-11-04): sin esta entrada, `changes.*.table` responde 422 y
+        // rechaza el lote entero, incluido el pull.
+        'representante',
     ];
 
     /**

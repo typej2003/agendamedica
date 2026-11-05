@@ -36,11 +36,11 @@
     <main class="recipe-hojas" id="recipe-hojas" data-recipe-hojas>
         @foreach ($vm->hojas() as $hoja)
             {{-- La hoja en blanco sale en el **mismo modo** que la hoja real de ese documento (O-26): media hoja horizontal
-                 para el récipe y las solicitudes y hoja vertical para los ecos, el control de embarazo y los dos informes del
-                 examen (`ModoDeLaHoja::clasesDeLaHoja()`). --}}
+                 para el récipe y, para los documentos de texto, la que eligió el médico (2026-11-04); hoja vertical para los
+                 ecos, el control de embarazo y los dos informes del examen (`ModoDeLaHoja::clasesDeLaHoja()`). --}}
             @php
                 $modo = $hoja['modo'] ?? \App\Clinica\Impresion\ModoDeLaHoja::MITAD;
-                $vertical = $modo !== \App\Clinica\Impresion\ModoDeLaHoja::MITAD;
+                $vertical = \App\Clinica\Impresion\ModoDeLaHoja::esVertical($modo);
             @endphp
             <article class="recipe-hoja{{ \App\Clinica\Impresion\ModoDeLaHoja::clasesDeLaHoja($modo) }} tamano-{{ $hoja['tamano'] }}">
                 @foreach ($hoja['mitades'] as $mitad)

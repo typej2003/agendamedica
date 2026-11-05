@@ -21,10 +21,11 @@
         <h1 class="barra-impresion-titulo">{{ $vm->titulo() }}</h1>
         <p class="barra-impresion-detalle">{{ $vm->resumenDeLaImpresion() }}@if ($vm->conOpciones()) · {{ $vm->resumenDeLasOpciones() }}@endif</p>
 
-        {{-- «Página: Grande / Pequeña» de las solicitudes: A4 vertical entero o su mitad de arriba. --}}
+        {{-- Las cuatro hojas de los documentos de texto (vertical, media vertical, horizontal y estilo récipe). Los enlaces
+             sólo cambian esta vista previa: lo que se recuerda se elige en «Formato de impresión». --}}
         @if ($vm->paginas() !== [])
-            <div class="barra-impresion-modos" role="group" aria-label="Página">
-                <span class="barra-impresion-modos-rotulo">Página</span>
+            <div class="barra-impresion-modos" role="group" aria-label="Hoja de los documentos">
+                <span class="barra-impresion-modos-rotulo">Hoja</span>
                 @foreach ($vm->paginas() as $pagina)
                     <a class="barra-impresion-modo" href="{{ $pagina['url'] }}" @if ($pagina['activa']) aria-current="true" @endif>{{ $pagina['texto'] }}</a>
                 @endforeach
@@ -68,8 +69,10 @@
                  blanco (media hoja), como en el móvil. --}}
             @php
                 $modo = $hoja['modo'] ?? \App\Clinica\Impresion\ModoDeLaHoja::MITAD;
-                $vertical = $modo !== \App\Clinica\Impresion\ModoDeLaHoja::MITAD;
+                $vertical = \App\Clinica\Impresion\ModoDeLaHoja::esVertical($modo);
             @endphp
+            {{-- La letra va en la hoja y también en cada mitad de documento: dos documentos de una misma hoja pueden tener
+                 tamaños distintos y gana la regla más específica de `clinica-recipe.css`. --}}
             <article class="recipe-hoja{{ \App\Clinica\Impresion\ModoDeLaHoja::clasesDeLaHoja($modo) }} tamano-{{ $hoja['tamano'] }}">
                 @foreach ($hoja['mitades'] as $mitad)
                     @if (($hoja['tipo'] ?? 'recipe') === 'documento')

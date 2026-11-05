@@ -950,6 +950,7 @@
                         <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
                             <div>
                                 <strong class="text-capitalize">{{ $solicitud->estado }}</strong>
+                                <span class="text-muted small">· Solicitud #{{ $solicitud->id }}</span>
                                 <span class="text-muted small">· recibida {{ $fecha($solicitud->created_at) }}</span>
                                 @if ($solicitud->cedula) <span class="text-muted small">· cédula {{ $solicitud->cedula }}</span> @endif
                                 @if ($solicitud->mpps) <span class="text-muted small">· MPPS {{ $solicitud->mpps }}</span> @endif
@@ -970,46 +971,67 @@
                 @endforelse
 
                 @if ($solicitudAbiertaId)
-                    <div class="border rounded p-3 mt-3">
-                        <h3 class="h6">Resolver la solicitud</h3>
-                        <form wire:submit.prevent="aprobarSolicitud">
-                            <div class="row g-3">
-                                <div class="col-md-5">
-                                    <label class="form-label" for="sol-reg">Registro con el que trabajará</label>
-                                    <input type="text" class="form-control" id="sol-reg" wire:model="solRegMedico" maxlength="100">
-                                    @error('solRegMedico') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                    <div class="border rounded p-3 mt-3" wire:key="resolver-solicitud-{{ $solicitudAbiertaId }}">
+                        <h3 class="h6">Resolver la solicitud #{{ $solicitudAbiertaId }}</h3>
+
+                        {{-- La decisión primero (guía de UI, §11): aprobar y rechazar piden datos distintos y
+                             no se muestran los dos a la vez. Sin opción marcada. --}}
+                        <div class="mb-3">
+                            <span class="form-label d-block" id="sol-decision-titulo">¿Qué haces con la solicitud?</span>
+                            <div class="d-flex flex-wrap gap-4" role="radiogroup" aria-labelledby="sol-decision-titulo">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" id="sol-decision-aprobar"
+                                           value="aprobar" wire:model.live="solDecision">
+                                    <label class="form-check-label" for="sol-decision-aprobar">Aprobar</label>
                                 </div>
-                                <div class="col-md-5">
-                                    <label class="form-label" for="sol-especialidad">Especialidad</label>
-                                    <select class="form-select" id="sol-especialidad" wire:model="solSpecialty">
-                                        <option value="">— La del registro —</option>
-                                        @foreach ($especialidadesSolicitud as $especialidad)
-                                            <option value="{{ $especialidad->id }}">{{ $especialidad->name }}</option>
-                                        @endforeach
-                                    </select>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" id="sol-decision-rechazar"
+                                           value="rechazar" wire:model.live="solDecision">
+                                    <label class="form-check-label" for="sol-decision-rechazar">Rechazar</label>
                                 </div>
-                                <div class="col-12">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="sol-carnet" wire:model="solCarnet">
-                                        <label class="form-check-label" for="sol-carnet">Revisé el carnet y lo doy por verificado</label>
+                            </div>
+                        </div>
+
+                        <form wire:submit.prevent="{{ $solDecision === 'rechazar' ? 'rechazarSolicitud' : 'aprobarSolicitud' }}">
+                            @if ($solDecision === 'aprobar')
+                                <div class="row g-3">
+                                    <div class="col-md-5">
+                                        <label class="form-label" for="sol-reg">Registro con el que trabajará</label>
+                                        <input type="text" class="form-control" id="sol-reg" wire:model="solRegMedico" maxlength="100">
+                                        @error('solRegMedico') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label" for="sol-especialidad">Especialidad</label>
+                                        <select class="form-select" id="sol-especialidad" wire:model="solSpecialty">
+                                            <option value="">— La del registro —</option>
+                                            @foreach ($especialidadesSolicitud as $especialidad)
+                                                <option value="{{ $especialidad->id }}">{{ $especialidad->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="sol-carnet" wire:model="solCarnet">
+                                            <label class="form-check-label" for="sol-carnet">Revisé el carnet y lo doy por verificado</label>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            @elseif ($solDecision === 'rechazar')
+                                <div>
+                                    <label class="form-label" for="sol-motivo">Motivo del rechazo (se le manda por correo)</label>
+                                    <input type="text" class="form-control" id="sol-motivo" wire:model="solMotivo" maxlength="2000">
+                                    @error('solMotivo') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+
                             <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
                                 <button type="button" class="btn btn-secondary" wire:click="cerrarSolicitud">Cerrar</button>
-                                <button type="submit" class="btn btn-primary">Aprobar</button>
-                            </div>
-                        </form>
-
-                        <hr>
-                        <form wire:submit.prevent="rechazarSolicitud" class="row g-2 align-items-end">
-                            <div class="col-md-9">
-                                <label class="form-label" for="sol-motivo">Motivo del rechazo (se le manda por correo)</label>
-                                <input type="text" class="form-control" id="sol-motivo" wire:model="solMotivo" maxlength="2000">
-                                @error('solMotivo') <span class="text-danger small d-block">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-outline-danger w-100">Rechazar</button>
+                                @if ($solDecision !== '')
+                                    <button type="submit"
+                                            class="btn {{ $solDecision === 'aprobar' ? 'btn-primary' : 'btn-outline-danger' }}">
+                                        {{ $solDecision === 'aprobar' ? 'Aprobar' : 'Rechazar solicitud' }}
+                                    </button>
+                                @endif
                             </div>
                         </form>
                     </div>

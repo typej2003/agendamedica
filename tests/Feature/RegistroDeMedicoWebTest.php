@@ -262,7 +262,7 @@ class RegistroDeMedicoWebTest extends TestCase
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
             ->set('reg_medico', $reg)
-            ->call('aprobar')
+            ->set('decision', 'aprobar')->call('aprobar')
             ->assertHasNoErrors()
             ->assertSet('claveGenerada.clave', null)
             ->assertSet('claveGenerada.correoEnviado', true)
@@ -388,7 +388,7 @@ class RegistroDeMedicoWebTest extends TestCase
             ->call('abrir', $solicitud->id)
             ->assertSet('reg_medico', $reg)
             ->assertSet('specialty_id', (string) $especialidad->id)
-            ->call('aprobar')
+            ->set('decision', 'aprobar')->call('aprobar')
             ->assertHasNoErrors()
             ->assertSet('claveGenerada.correoEnviado', true);
 
@@ -434,7 +434,7 @@ class RegistroDeMedicoWebTest extends TestCase
         $this->actingAs($this->administrador());
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
-            ->call('aprobar')
+            ->set('decision', 'aprobar')->call('aprobar')
             ->assertHasErrors('reg_medico');
 
         $this->assertSame(SolicitudMedico::PENDIENTE, $solicitud->fresh()->estado);
@@ -450,7 +450,7 @@ class RegistroDeMedicoWebTest extends TestCase
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
             ->set('reg_medico', $reg)
-            ->call('aprobar')
+            ->set('decision', 'aprobar')->call('aprobar')
             ->assertHasNoErrors();
 
         $ficha->refresh();
@@ -460,6 +460,114 @@ class RegistroDeMedicoWebTest extends TestCase
         // Lo que vino del escritorio no se pisa.
         $this->assertSame('0212-0000000', $ficha->phone);
         $this->assertSame($ficha->id, (int) $solicitud->fresh()->medico_id);
+    }
+
+    /**
+     * El caso del 2026-11-04: la ficha que ya tiene ese `reg_medico` **ya tiene cuenta y es la del mismo médico**.
+     * Antes la aprobación se cortaba con «ya es de un médico con cuenta. Usa otro» y la bandeja quedaba sin salida.
+     */
+    public function test_aprobar_cuando_la_ficha_ya_tiene_cuenta_del_mismo_correo_no_crea_otra(): void
+    {
+        $solicitud = $this->solicitar();
+        $reg = 'MPPS-' . $solicitud->mpps;
+
+        $cuenta = $this->cuenta('Medico');
+        $cuenta->update(['email' => $solicitud->email]);
+        $ficha = Medico::create([
+            'user_id' => $cuenta->id,
+            'name' => 'Lucía',
+            'lastname' => 'Prueba',
+            'email' => $solicitud->email,
+            'reg_medico' => $reg,
+            'license_number' => $solicitud->mpps,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->administrador());
+        Livewire::test(SolicitudesDeMedicos::class)
+            ->call('abrir', $solicitud->id)
+            ->set('reg_medico', $reg)
+            ->set('decision', 'aprobar')->call('aprobar')
+            ->assertHasNoErrors()
+            ->assertSet('claveGenerada.clave', null)
+            ->assertSee('ya tenía');
+
+        $solicitud->refresh();
+
+        $this->assertSame(SolicitudMedico::APROBADA, $solicitud->estado);
+        $this->assertSame($ficha->id, (int) $solicitud->medico_id);
+        $this->assertSame(1, Medico::where('reg_medico', $reg)->count());
+        $this->assertSame(1, User::where('email', $solicitud->email)->count());
+        Mail::assertSent(
+            SolicitudDeMedicoAprobada::class,
+            fn ($m) => $m->hasTo($solicitud->email) && $m->clave === null
+        );
+    }
+
+    /**
+     * La misma persona con **otro correo**: el MPPS la identifica. Tampoco se crea una segunda ficha ni una
+     * segunda cuenta: se vincula la solicitud a la ficha que ya tiene su cuenta.
+     */
+    public function test_aprobar_cuando_la_ficha_con_cuenta_es_la_misma_por_el_mpps(): void
+    {
+        $solicitud = $this->solicitar();
+        $reg = 'MPPS-' . $solicitud->mpps;
+
+        $cuenta = $this->cuenta('Medico');
+        $ficha = Medico::create([
+            'user_id' => $cuenta->id,
+            'name' => 'Lucía',
+            'lastname' => 'Prueba',
+            'email' => $cuenta->email,
+            'reg_medico' => $reg,
+            'license_number' => $solicitud->mpps,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->administrador());
+        Livewire::test(SolicitudesDeMedicos::class)
+            ->call('abrir', $solicitud->id)
+            ->set('reg_medico', $reg)
+            ->set('decision', 'aprobar')->call('aprobar')
+            ->assertHasNoErrors()
+            ->assertSet('claveGenerada.clave', null);
+
+        $this->assertSame(1, Medico::where('reg_medico', $reg)->count());
+        $this->assertSame(1, User::where('email', $cuenta->email)->count()); // no se creó ninguna con el correo nuevo
+        $this->assertDatabaseMissing('users', ['email' => $solicitud->email]);
+        $this->assertSame($ficha->id, (int) $solicitud->fresh()->medico_id);
+        $this->assertSame($cuenta->email, $ficha->fresh()->email); // no se pisa el correo de la ficha
+    }
+
+    /** Cuando la ficha con cuenta es de **otra persona**, se dice de quién es la cuenta; no se toca nada. */
+    public function test_aprobar_sobre_una_ficha_con_cuenta_ajena_dice_de_quien_es_la_cuenta(): void
+    {
+        $solicitud = $this->solicitar();
+        $reg = 'MPPS-' . $solicitud->mpps;
+
+        $cuenta = $this->cuenta('Medico');
+        $ficha = Medico::create([
+            'user_id' => $cuenta->id,
+            'name' => 'Otra',
+            'lastname' => 'Persona',
+            'email' => $cuenta->email,
+            'reg_medico' => $reg,
+            'license_number' => '999999',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->administrador());
+        Livewire::test(SolicitudesDeMedicos::class)
+            ->call('abrir', $solicitud->id)
+            ->set('reg_medico', $reg)
+            ->set('decision', 'aprobar')->call('aprobar')
+            ->assertHasErrors('reg_medico')
+            ->assertSee($cuenta->email);
+
+        $this->assertTrue($solicitud->fresh()->estaPendiente());
+        $this->assertSame(1, Medico::where('reg_medico', $reg)->count());
+        $this->assertSame($ficha->email, $ficha->fresh()->email);
+        $this->assertDatabaseMissing('users', ['email' => $solicitud->email]);
     }
 
     public function test_no_se_aprueba_sobre_la_ficha_de_otro_correo_ni_dos_veces(): void
@@ -472,14 +580,45 @@ class RegistroDeMedicoWebTest extends TestCase
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
             ->set('reg_medico', $reg)
-            ->call('aprobar')
+            ->set('decision', 'aprobar')->call('aprobar')
             ->assertHasErrors('reg_medico');
 
         $this->assertTrue($solicitud->fresh()->estaPendiente());
         $this->assertDatabaseMissing('users', ['email' => $solicitud->email]);
 
-        $componente = Livewire::test(SolicitudesDeMedicos::class)->call('abrir', $solicitud->id)->call('aprobar')->assertHasNoErrors();
-        $componente->call('abrir', $solicitud->id)->call('aprobar')->assertHasErrors('solicitud');
+        $componente = Livewire::test(SolicitudesDeMedicos::class)->call('abrir', $solicitud->id)->set('decision', 'aprobar')->call('aprobar')->assertHasNoErrors();
+        $componente->call('abrir', $solicitud->id)->set('decision', 'aprobar')->call('aprobar')->assertHasErrors('solicitud');
+    }
+
+    /**
+     * La decisión se pregunta **antes** (2026-11-04): sin opción marcada, el detalle no muestra ni los
+     * campos de aprobar ni los de rechazar, y el botón cambia con la rama elegida.
+     */
+    public function test_los_campos_de_aprobar_y_rechazar_aparecen_al_elegir_la_decision(): void
+    {
+        $solicitud = $this->solicitar();
+
+        $this->actingAs($this->administrador());
+
+        $componente = Livewire::test(SolicitudesDeMedicos::class)
+            ->call('abrir', $solicitud->id)
+            ->assertSet('decision', '')
+            ->assertDontSee('Aprobar y crear la cuenta')
+            ->assertDontSee('Rechazar solicitud')
+            ->assertDontSee('Motivo (le llega al médico por correo)')
+            ->assertDontSee('Revisé el carnet y lo doy por verificado');
+
+        $componente->set('decision', 'aprobar')
+            ->assertSee('Aprobar y crear la cuenta')
+            ->assertSee('Revisé el carnet y lo doy por verificado')
+            ->assertDontSee('Motivo (le llega al médico por correo)')
+            ->assertDontSee('Rechazar solicitud');
+
+        $componente->set('decision', 'rechazar')
+            ->assertSee('Rechazar solicitud')
+            ->assertSee('Motivo (le llega al médico por correo)')
+            ->assertDontSee('Aprobar y crear la cuenta')
+            ->assertDontSee('Revisé el carnet y lo doy por verificado');
     }
 
     public function test_rechazar_guarda_el_motivo_y_avisa(): void
@@ -489,10 +628,10 @@ class RegistroDeMedicoWebTest extends TestCase
         $this->actingAs($this->administrador());
         Livewire::test(SolicitudesDeMedicos::class)
             ->call('abrir', $solicitud->id)
-            ->call('rechazar')
+            ->set('decision', 'rechazar')->call('rechazar')
             ->assertHasErrors('motivo')
             ->set('motivo', 'El número del MPPS no coincide con la cédula.')
-            ->call('rechazar')
+            ->set('decision', 'rechazar')->call('rechazar')
             ->assertHasNoErrors();
 
         $solicitud->refresh();
@@ -500,6 +639,29 @@ class RegistroDeMedicoWebTest extends TestCase
         $this->assertSame('El número del MPPS no coincide con la cédula.', $solicitud->motivo_rechazo);
         $this->assertDatabaseMissing('users', ['email' => $solicitud->email]);
         Mail::assertSent(SolicitudDeMedicoRechazada::class, fn ($m) => $m->hasTo($solicitud->email));
+    }
+
+    /**
+     * El número de la solicitud a la vista (2026-11-04): en la tabla y en el diálogo lateral, para distinguir dos
+     * solicitudes parecidas del mismo médico. El detalle se abre en un `offcanvas`, no en una tarjeta arriba.
+     */
+    public function test_la_bandeja_numera_las_solicitudes_y_abre_el_detalle_en_un_dialogo_lateral(): void
+    {
+        $solicitud = $this->solicitar();
+
+        $this->actingAs($this->administrador());
+
+        $componente = Livewire::test(SolicitudesDeMedicos::class)
+            ->assertSee('#'.$solicitud->id)
+            ->assertSeeHtml('title="Número de solicitud"');
+
+        $componente->call('abrir', $solicitud->id)
+            ->assertSee('Solicitud #'.$solicitud->id)
+            ->assertSeeHtml('id="solicitud-detalle"')
+            ->assertSeeHtml('offcanvas-backdrop');
+
+        $componente->call('cerrar')
+            ->assertDontSeeHtml('id="solicitud-detalle"');
     }
 
     public function test_la_bandeja_es_solo_de_administradores(): void

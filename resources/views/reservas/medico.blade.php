@@ -7,6 +7,16 @@
 
 @push('estilos')
     <link rel="stylesheet" href="{{ asset('css/reservas.css') }}">
+
+    {{-- Sin JavaScript no se puede reaccionar a «¿Quién reserva?»: los campos del representante se dejan
+         siempre a la vista, como estaban antes, para que el formulario siga funcionando. --}}
+    <noscript>
+        <style>[data-representante-campos][hidden] { display: flex !important; }</style>
+    </noscript>
+@endpush
+
+@push('js')
+    <script src="{{ asset('js/reservas.js') }}?v={{ @filemtime(public_path('js/reservas.js')) }}"></script>
 @endpush
 
 @section('content')
@@ -251,30 +261,34 @@
 
                     <div class="row g-3">
                         <div class="col-12">
-                            {{-- ¿Quién reserva? (O-52). Los campos del representante son opcionales hasta que
-                                 se elige «su representante», y en ese caso se validan en el servidor. --}}
-                            <fieldset class="reservas-quien">
+                            {{-- ¿Quién reserva? (O-52). Se pregunta **antes** de pedir los datos del
+                                 representante y sin opción marcada (guía de UI, §11): el bloque de abajo
+                                 sólo existe para una de las dos respuestas. Sin JavaScript queda visible,
+                                 para que el formulario siga funcionando. --}}
+                            <fieldset class="reservas-quien" data-quien-reserva>
                                 <legend class="form-label mb-2">¿Quién reserva?</legend>
 
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="reservado_por" id="reservado_por_p"
-                                           value="P" {{ old('reservado_por', 'P') === 'P' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="reservado_por_p">Soy el paciente</label>
-                                </div>
+                                <div class="d-flex flex-wrap gap-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="reservado_por" id="reservado_por_p"
+                                               value="P" {{ old('reservado_por') === 'P' ? 'checked' : '' }} required>
+                                        <label class="form-check-label" for="reservado_por_p">Soy el paciente</label>
+                                    </div>
 
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="reservado_por" id="reservado_por_r"
-                                           value="R" {{ old('reservado_por') === 'R' ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="reservado_por_r">
-                                        Soy su representante
-                                    </label>
-                                </div>
-
-                                <div class="row g-3 mt-1">
-                                    <div class="col-md-6">
-                                        <label for="representante_nombre" class="form-label">
-                                            Tu nombre <span class="text-muted">(si eres el representante)</span>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="reservado_por" id="reservado_por_r"
+                                               value="R" {{ old('reservado_por') === 'R' ? 'checked' : '' }} required>
+                                        <label class="form-check-label" for="reservado_por_r">
+                                            Soy su representante
                                         </label>
+                                    </div>
+                                </div>
+
+                                @error('reservado_por') <div class="text-danger small">{{ $message }}</div> @enderror
+
+                                <div class="row g-3 mt-1" data-representante-campos hidden>
+                                    <div class="col-md-6">
+                                        <label for="representante_nombre" class="form-label">Tu nombre</label>
                                         <input type="text" class="form-control @error('representante_nombre') is-invalid @enderror"
                                                id="representante_nombre" name="representante_nombre"
                                                value="{{ old('representante_nombre') }}" autocomplete="name">
@@ -282,9 +296,7 @@
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label for="representante_documento" class="form-label">
-                                            Tu documento <span class="text-muted">(si eres el representante)</span>
-                                        </label>
+                                        <label for="representante_documento" class="form-label">Tu documento</label>
                                         <input type="text" class="form-control @error('representante_documento') is-invalid @enderror"
                                                id="representante_documento" name="representante_documento"
                                                value="{{ old('representante_documento') }}" inputmode="numeric">

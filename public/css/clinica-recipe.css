@@ -109,6 +109,12 @@
 .tamano-9 .recipe-cuerpo { font-size: 9pt; }
 .tamano-8 .recipe-cuerpo { font-size: 8pt; }
 
+/* «Estilo récipe» (2026-11-04): dos documentos pueden compartir la hoja y cada uno conserva la letra con la que se midió.
+   La mitad manda sobre la hoja; estas reglas son más específicas que `.tamano-10 .recipe-cuerpo`. */
+.recipe-mitad.tamano-10 .recipe-cuerpo { font-size: 10pt; }
+.recipe-mitad.tamano-9 .recipe-cuerpo { font-size: 9pt; }
+.recipe-mitad.tamano-8 .recipe-cuerpo { font-size: 8pt; }
+
 .recipe-lista { margin: 0; padding: 0; list-style: none; }
 .recipe-nombre { font-weight: 700; }
 

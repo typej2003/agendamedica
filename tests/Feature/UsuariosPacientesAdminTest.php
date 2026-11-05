@@ -257,6 +257,7 @@ class UsuariosPacientesAdminTest extends TestCase
             'apellidos' => 'Cuenta',
             'telefono' => '0414-1110007',
             'email' => 'otro-correo@example.com',
+            'reservado_por' => 'P',
         ];
 
         $this->post(route('reservas.codigo.enviar', $this->medico), $datos)
@@ -299,6 +300,7 @@ class UsuariosPacientesAdminTest extends TestCase
         $this->post(route('reservas.codigo.enviar', $this->medico), [
             'horario' => $this->fecha->toDateString() . '|08:00|' . $this->sede->id,
             'cedula' => '12345020', 'nombres' => 'Ana', 'apellidos' => 'Cuenta', 'telefono' => '0414-1110020', 'email' => $cuenta->email,
+            'reservado_por' => 'P',
         ])->assertRedirect(route('reservas.codigo', $this->medico));
         $this->post(route('reservas.confirmar', $this->medico), ['codigo' => (string) session('reservas.pendiente.codigo')])
             ->assertRedirect(route('reservas.confirmada'));

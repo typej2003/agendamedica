@@ -26,6 +26,8 @@ final class HojaEnBlancoVista
     /**
      * @param  string|null  $modoElegido  el `?modo=` de la página (uno de `RecipeFormato::MODOS_IMPRESION`); `null` usa el guardado
      * @param  array{volver:string, hoja:string}  $urls  adónde vuelve la barra y la dirección de esta misma hoja (para los enlaces del modo)
+     * @param  string|null  $preferido  la hoja que el médico eligió para sus documentos de texto, ya resuelta a un modo
+     *                                  (`ModoDeLaHoja::deLaPreferencia`); `null` usa la de siempre
      */
     public function __construct(
         private string $clave,
@@ -33,6 +35,7 @@ final class HojaEnBlancoVista
         private OpcionesDeRecipe $opciones,
         private ?string $modoElegido,
         private array $urls,
+        private ?string $preferido = null,
     ) {
     }
 
@@ -104,16 +107,16 @@ final class HojaEnBlancoVista
     }
 
     /**
-     * La hoja (siempre una). Trae el `modo` de la hoja —media o completa vertical, el mismo de la hoja real de ese documento
-     * (O-26: `ModoDeLaHoja`, que es la única regla)—, el `tipo` (`recipe` o `documento`, que decide el parcial de cada mitad), el
-     * `tamano` de la letra del cuerpo y sus `mitades`: una o dos.
+     * La hoja (siempre una). Trae el `modo` de la hoja —el mismo de la hoja real de ese documento (O-26: `ModoDeLaHoja`, que
+     * es la única regla), incluida la que el médico eligió para sus documentos de texto (2026-11-04)—, el `tipo` (`recipe` o
+     * `documento`, que decide el parcial de cada mitad), el `tamano` de la letra del cuerpo y sus `mitades`: una o dos.
      *
      * @return array<int,array{modo:string, tipo:string, etiqueta:?string, tamano:int, mitades:array<int,array<string,mixed>>}>
      */
     public function hojas(): array
     {
         return [[
-            'modo' => ModoDeLaHoja::de($this->clave),
+            'modo' => ModoDeLaHoja::de($this->clave, null, $this->preferido),
             'tipo' => $this->esRecipe() ? 'recipe' : 'documento',
             'etiqueta' => null,
             'tamano' => 10,

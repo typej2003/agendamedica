@@ -145,7 +145,7 @@ class ReferidosAdminTest extends TestCase
         $this->actingAs($this->usuario('Administrador'))
             ->get(route('admin.solicitudes-medicos'))
             ->assertOk()
-            ->assertSee('Referido por')
+            ->assertSee('Referido')
             ->assertSee('Dr. Admin Referente')
             ->assertSee($codigo)
             ->assertSee($referente->reg_medico);
