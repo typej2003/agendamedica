@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Notifications\RestablecerContrasena;
+use App\Notifications\VerificarCorreo;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -82,6 +84,27 @@ class User extends Authenticatable
     public function paciente(): HasOne
     {
         return $this->hasOne(Paciente::class, 'user_id');
+    }
+
+    /**
+     * El correo de restablecer contraseña, en español.
+     *
+     * La notificación del framework arma sus textos con `Lang::get()` y claves en inglés literal, que
+     * `resources/lang/es` no cubre. La nuestra extiende esa misma clase, así que el enlace no cambia.
+     */
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $this->notify(new RestablecerContrasena($token));
+    }
+
+    /**
+     * El correo de verificar el correo electrónico, en español.
+     *
+     * Mismo caso que el de la contraseña: se cambia el texto, no la URL firmada de `verification.verify`.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerificarCorreo());
     }
 
     /**
