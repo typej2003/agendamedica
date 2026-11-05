@@ -53,7 +53,7 @@
                         @csrf
 
                         <p class="texto-tenue small mb-2">
-                            Escribe el resultado de cada examen y marca «Reporte» en los que salen en el informe.
+                            Escribe el resultado de cada examen. «Reporte» viene marcado en todos: destilda los que no salen en el informe.
                         </p>
 
                         @error('resultados')

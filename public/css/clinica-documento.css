@@ -63,6 +63,15 @@
 
 .documento-parrafo { margin: 0 0 2.6mm; text-align: justify; }
 
+/* Un párrafo de lista **con un elemento por renglón** (la solicitud de exámenes de laboratorio, 2026-11-05): cada examen en su
+   línea y **una línea en blanco** entre uno y otro, como los medicamentos de un récipe. El `1.25em` es exactamente el alto de una
+   línea (el `line-height` del cuerpo) y su gemela en la cuenta es `DistribuidorDeDocumento::altoDeUnParrafo()` (un elemento por
+   línea, con `$linea` de aire entre uno y otro): si una cambia sola, el texto se desborda. */
+.documento-parrafo-lista { text-align: left; }
+.documento-lista { margin: 0; padding: 0; list-style: none; }
+.documento-lista li { break-inside: avoid; }
+.documento-lista li + li { margin-top: 1.25em; }
+
 /* ------------------------------------------------------------------------------- Las imágenes del informe
    El informe de la **colposcopía** y el de la **histeroscopía** llevan la imagen del examen en su misma página, debajo del
    texto (2026-10-18, Alexander): el escritorio las imprime así, en el subreporte de la banda *detail*. La casilla «Incluir
@@ -145,3 +154,36 @@
    (`MedidasDeLaMitad::ALTO_UTIL_DE_LA_MITAD_SUPERIOR_MM`) y tienen que cambiar juntos con esto. */
 
 .recipe-hoja-mitad-superior .recipe-mitad { height: 148.25mm; padding: 9mm 14mm 5mm; }
+
+/* ------------------------------------- Las dos medias hojas de los imprimibles (2026-11-05)
+   Las elige el médico **por documento** en la vista previa (`HojaDelImprimible`). La página del PDF mide **la mitad**, no un
+   A4 con la otra mitad en blanco: el doctor recorta la hoja antes de ponerla en la impresora y así no se imprime espacio
+   vacío. Las medidas del reparto son las mismas que la mitad superior y que la media hoja compartida (la página cambia,
+   el texto no).
+
+   - **Media hoja vertical**: 210 × 148,5 mm (la mitad de arriba de un A4 vertical). El contenido sigue midiendo 182 × 134,25
+     mm útiles.
+   - **Media hoja horizontal**: 148,5 × 210 mm (la mitad izquierda de un A4 acostado), con sus 128,5 × 193 mm útiles.
+
+   Van con `page` con nombre, como la hoja completa, para que un lote mixto —un récipe, una constancia en media vertical y
+   un eco— salga cada hoja en su tamaño. La línea de corte de `.recipe-hoja::before` no tiene sentido acá: se apaga. */
+
+@page documento-media-vertical { size: 210mm 148.5mm; margin: 0; }
+@page documento-media-horizontal { size: 148.5mm 210mm; margin: 0; }
+
+.recipe-hoja-media-vertical {
+    page: documento-media-vertical;
+    width: 210mm;
+    height: 148.25mm;
+}
+
+.recipe-hoja-media-vertical .recipe-mitad { width: 210mm; padding: 9mm 14mm 5mm; }
+
+.recipe-hoja-horizontal {
+    page: documento-media-horizontal;
+    width: 148.5mm;
+    height: 209.5mm;
+}
+
+.recipe-hoja-media-vertical::before,
+.recipe-hoja-horizontal::before { display: none; }

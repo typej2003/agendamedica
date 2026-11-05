@@ -14,7 +14,9 @@ namespace App\Clinica\Impresion;
  *  - `parrafos`: el texto, que **sí se parte por palabra** si no entra. Cada uno puede llevar un rótulo en negrita
  *    (`IDX:`, inline, o `MOTIVO DE LA REFERENCIA:`, en su propia línea). Un párrafo **de lista** (WEB-5.4, los exámenes de un tipo) lleva
  *    además `items`: el texto es esos elementos unidos por ` · ` y, si no entra, se parte **entre elementos** y nunca por palabra (un
- *    examen no queda cortado en dos mitades); la parte que sigue repite el rótulo con «(cont.)».
+ *    examen no queda cortado en dos mitades); la parte que sigue repite el rótulo con «(cont.)». Con `lineas` (la solicitud de
+ *    exámenes de laboratorio, 2026-11-05) los elementos salen **uno debajo del otro, con una línea en blanco entre uno y otro**,
+ *    como los medicamentos de un récipe; el reparto sigue cortando entre elementos.
  *
  * `clave` es con lo que se pide el documento (`constancia`, `reposo`, `referencia-3`, `informe`, `hospitalizacion`, `dieta`, `laboratorio`, `estudios`): es la misma que usan la
  * historia del paciente, la lista de la cita de la agenda y las rutas de impresión.
@@ -250,7 +252,7 @@ final class DocumentoImpreso
      * @param  string  $fecha  `AAAA-MM-DD`: la que sale en los datos del paciente
      * @param  array{nombre:string, cedula:?string, edad:?int, direccion:?string}  $persona
      * @param  array<int,array{etiqueta:string, valor:string}>  $fijos
-     * @param  array<int,array{texto:string, etiqueta:?string, aparte:bool, items?:array<int,string>}>  $parrafos
+     * @param  array<int,array{texto:string, etiqueta:?string, aparte:bool, items?:array<int,string>, lineas?:bool}>  $parrafos
      * @param  ?string  $para  el destinatario que sale **en la cabecera, en una caja con borde** (`informe.para`
      *                         del resumen médico, WEB-5.3c); en los demás documentos va en la cabecera del
      *                         paciente y no se imprime: `null`
@@ -282,7 +284,7 @@ final class DocumentoImpreso
      * No se decide acá: el documento lo **declara** con su clave en `ModoDeLaHoja`, que es la única tabla de esa regla. Un
      * documento con `informe` (los ecos, WEB-11.13) va siempre a hoja completa, porque su informe es un formulario lleno y
      * ocupa una página entera. El **informe pre-operatorio** (O-47) también: son dos páginas fijas. `preferido` es la hoja
-     * que eligió el médico (`ModoDeLaHoja::deLaPreferencia`), ya resuelta; `null` es la de siempre.
+     * que eligió el médico **para este imprimible** (`HojaDelImprimible::modoDe`), ya resuelta; `null` es la de siempre.
      */
     public function modo(): string
     {
@@ -304,8 +306,8 @@ final class DocumentoImpreso
     }
 
     /**
-     * El mismo documento con la **hoja que eligió el médico** para sus documentos de texto, ya resuelta a un modo
-     * (`ModoDeLaHoja::deLaPreferencia`). Los documentos con hoja fija (ecos, colposcopía, preoperatorio) la ignoran.
+     * El mismo documento con la **hoja que eligió el médico para ese imprimible**, ya resuelta a un modo
+     * (`HojaDelImprimible::modoDe`). Los documentos con hoja fija (ecos, colposcopía, preoperatorio) la ignoran.
      */
     public function conPreferencia(?string $preferido): self
     {
@@ -361,14 +363,20 @@ final class DocumentoImpreso
     /**
      * Un párrafo de lista (WEB-5.4): un rótulo en su propia línea y debajo los elementos, unidos por ` · `. Se parte entre elementos, no por palabra.
      *
+     * Con `$unaPorLinea` (la solicitud de exámenes de laboratorio, 2026-11-05) los elementos no van en un renglón sino **uno
+     * debajo del otro, con una línea en blanco entre uno y otro**, como los medicamentos de un récipe. El reparto sigue
+     * cortando entre elementos y la parte que sigue repite el rótulo con «(cont.)».
+     *
      * @param  array<int,string>  $items  cada elemento en una sola línea de texto (los espacios de más ya colapsados)
-     * @return array{texto:string, etiqueta:string, aparte:bool, items:array<int,string>}
+     * @return array{texto:string, etiqueta:string, aparte:bool, items:array<int,string>, lineas?:bool}
      */
-    public static function parrafoDeLista(string $etiqueta, array $items): array
+    public static function parrafoDeLista(string $etiqueta, array $items, bool $unaPorLinea = false): array
     {
         $items = array_values(array_map(fn (string $item) => trim((string) preg_replace('/\s+/u', ' ', $item)), $items));
 
-        return ['texto' => implode(self::SEPARADOR_DE_ITEMS, $items), 'etiqueta' => $etiqueta, 'aparte' => true, 'items' => $items];
+        $parrafo = ['texto' => implode(self::SEPARADOR_DE_ITEMS, $items), 'etiqueta' => $etiqueta, 'aparte' => true, 'items' => $items];
+
+        return $unaPorLinea ? $parrafo + ['lineas' => true] : $parrafo;
     }
 
     /**

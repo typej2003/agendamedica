@@ -7,7 +7,8 @@
 
      En el **laboratorio** suma el resultado y la casilla «Reporte» (O-47): `examen_paciente.resultado` y
      `.vinculante`, las dos columnas del escritorio. Van con `form="orden-resultados"` porque esta fila ya tiene
-     el formulario del «Quitar» y un formulario no puede ir dentro de otro: el botón vive al pie de la lista. --}}
+     el formulario del «Quitar» y un formulario no puede ir dentro de otro: el botón vive al pie de la lista.
+     La casilla viene **marcada por defecto** (2026-11-05): sólo se destilda la excepción. --}}
 <li class="orden-fila" data-codigo="{{ $item['codigo'] }}">
     <span class="orden-fila-datos">
         <span class="orden-nombre">{{ $item['nombre'] }}</span>
@@ -15,7 +16,7 @@
     </span>
 
     @if ($vm->pideResultados())
-        <span class="orden-resultado">
+        <span class="orden-fila-resultado">
             <input type="text" class="form-control form-control-sm @error('resultados.' . $item['codigo']) is-invalid @enderror"
                    name="resultados[{{ $item['codigo'] }}]" value="{{ $item['resultado'] ?? '' }}"
                    maxlength="{{ $vm->largoDelResultado() }}" placeholder="Resultado" autocomplete="off"
@@ -23,7 +24,7 @@
 
             <label class="form-check form-check-inline mb-0" title="Sale en el informe">
                 <input class="form-check-input" type="checkbox" name="reportes[]" value="{{ $item['codigo'] }}"
-                       form="orden-resultados" @checked($item['reporte'] ?? false)>
+                       form="orden-resultados" @checked($item['reporte'] ?? true)>
                 <span class="form-check-label small">Reporte</span>
             </label>
         </span>

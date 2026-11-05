@@ -128,13 +128,21 @@ class ImpresionDeLaboratorioEstudiosWebTest extends TestCase
         $this->assertSame(1, substr_count($html, 'class="firmas"'));
         $this->assertSame(1, substr_count($html, 'class="membrete '));
 
-        // Cada grupo es un párrafo: sus exámenes por nombre y unidos con « · »; los grupos, por nombre de tipo.
-        $this->assertStringContainsString('GLICEMIA · HEMATOLOGÍA COMPLETA · UREA', $html);
-        $this->assertStringContainsString('ELECTROCARDIOGRAMA · TIEMPO DE PROTROMBINA', $html);
+        // Cada grupo es una lista **con un examen por renglón y una línea en blanco entre uno y otro** (2026-11-05), por
+        // nombre dentro del tipo; los grupos, por nombre de tipo. El resumen, después.
+        $this->assertStringContainsString('documento-parrafo-lista', $html);
+        $this->assertSame(2, substr_count($html, '<ul class="documento-lista">'), 'un grupo por tipo');
+        foreach (['GLICEMIA', 'HEMATOLOGÍA COMPLETA', 'UREA', 'ELECTROCARDIOGRAMA', 'TIEMPO DE PROTROMBINA'] as $examen) {
+            $this->assertStringContainsString('<li>' . $examen . '</li>', $html, $examen . ' en su renglón');
+        }
+        $this->assertStringNotContainsString('GLICEMIA · HEMATOLOGÍA COMPLETA', $html, 'ya no van uno al lado del otro');
+        $this->assertLessThan(strpos($html, 'HEMATOLOGÍA COMPLETA'), strpos($html, 'GLICEMIA'));
+        $this->assertLessThan(strpos($html, 'UREA'), strpos($html, 'HEMATOLOGÍA COMPLETA'));
         $this->assertLessThan(strpos($html, 'PREOPERATORIOS:'), strpos($html, 'LABORATORIO:'));
         $this->assertLessThan(strpos($html, 'RESUMEN CLÍNICO:'), strpos($html, 'PREOPERATORIOS:'));
         // Dos grupos y las dos líneas del resumen: el resumen no lleva diagnósticos ni nada que el médico no haya escrito.
-        $this->assertSame(4, substr_count($html, 'class="documento-parrafo"'));
+        $this->assertSame(2, substr_count($html, 'class="documento-parrafo"'), 'las dos líneas del resumen');
+        $this->assertSame(4, substr_count($html, 'class="documento-parrafo'), 'los dos grupos y las dos líneas');
     }
 
     public function test_los_examenes_que_no_estan_en_el_catalogo_salen_en_otros_examenes_al_final(): void
@@ -194,7 +202,7 @@ class ImpresionDeLaboratorioEstudiosWebTest extends TestCase
 
     // ================================================================== Lo largo sigue en la otra mitad
 
-    public function test_una_orden_de_80_examenes_cabe_y_cada_examen_sale_una_sola_vez_completo(): void
+    public function test_una_orden_de_80_examenes_sale_completa_y_una_sola_vez_aunque_ocupe_varias_hojas(): void
     {
         [$user, $medico, $gineco, $consulta] = $this->escenario();
         $nombres = $this->ordenGrande($medico, 80);
@@ -203,7 +211,8 @@ class ImpresionDeLaboratorioEstudiosWebTest extends TestCase
         $html = $respuesta->getContent();
 
         $respuesta->assertOk();
-        $this->assertSame(1, $this->hojasDe($html));
+        // Con un examen por renglón y una línea en blanco entre uno y otro (2026-11-05) una orden larga ocupa más de una hoja.
+        $this->assertGreaterThan(1, $this->hojasDe($html));
         $this->assertSame(1, substr_count($html, 'class="firmas"'));
         foreach ($nombres as $nombre) {
             $this->assertSame(1, substr_count($html, $nombre), $nombre . ' sale una sola vez, completo');

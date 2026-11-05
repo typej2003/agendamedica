@@ -77,6 +77,54 @@ class LaboratorioEstudiosUnidadTest extends TestCase
         $this->assertSame(['GLICEMIA', 'HEMATOLOGÍA COMPLETA', 'UREA'], $parrafo['items']);
         $this->assertSame('LABORATORIO:', $parrafo['etiqueta']);
         $this->assertTrue($parrafo['aparte']);
+        $this->assertArrayNotHasKey('lineas', $parrafo, 'sin pedirlo, siguen en un renglón');
+    }
+
+    public function test_un_parrafo_de_lista_de_una_por_linea_marca_sus_elementos(): void
+    {
+        $parrafo = DocumentoImpreso::parrafoDeLista('HEMATOLOGÍA:', ['GLICEMIA', '  UREA  '], true);
+
+        $this->assertTrue($parrafo['lineas'], 'la solicitud de exámenes los quiere uno debajo del otro');
+        $this->assertSame(['GLICEMIA', 'UREA'], $parrafo['items']);
+        $this->assertSame('HEMATOLOGÍA:', $parrafo['etiqueta']);
+        $this->assertTrue($parrafo['aparte']);
+    }
+
+    public function test_una_lista_de_una_por_linea_ocupa_mas_alto_que_la_de_un_renglon(): void
+    {
+        $nombres = $this->examenes(30);
+
+        $enRenglon = (new DistribuidorDeDocumento())->distribuir($this->membrete(), $this->documento([
+            DocumentoImpreso::parrafoDeLista('LABORATORIO:', $nombres),
+        ]));
+        $unaPorLinea = (new DistribuidorDeDocumento())->distribuir($this->membrete(), $this->documento([
+            DocumentoImpreso::parrafoDeLista('LABORATORIO:', $nombres, true),
+        ]));
+
+        $this->assertGreaterThan(count($enRenglon['mitades']), count($unaPorLinea['mitades']), 'los exámenes dejan de ir amontonados');
+    }
+
+    public function test_una_lista_de_una_por_linea_se_corta_entre_examenes_y_la_continuacion_lo_sigue_siendo(): void
+    {
+        $nombres = $this->examenes(30);
+        $reparto = (new DistribuidorDeDocumento())->distribuir($this->membrete(), $this->documento([
+            DocumentoImpreso::parrafoDeLista('LABORATORIO:', $nombres, true),
+        ]));
+
+        $this->assertGreaterThan(1, count($reparto['mitades']));
+        $this->assertTrue(end($reparto['mitades'])['firma'], 'la firma va en la última');
+
+        // Todos los exámenes, una vez, completos y en orden; la continuación sigue siendo una lista de una por línea.
+        $impresos = [];
+        foreach ($reparto['mitades'] as $mitad) {
+            foreach ($mitad['parrafos'] as $parrafo) {
+                $this->assertTrue($parrafo['lineas']);
+                $impresos = array_merge($impresos, $parrafo['items']);
+            }
+        }
+        $this->assertSame($nombres, $impresos);
+        $this->assertSame('LABORATORIO:', $reparto['mitades'][0]['parrafos'][0]['etiqueta']);
+        $this->assertSame('LABORATORIO (cont.):', $reparto['mitades'][1]['parrafos'][0]['etiqueta']);
     }
 
     public function test_una_lista_corta_va_en_una_sola_mitad_con_la_firma(): void

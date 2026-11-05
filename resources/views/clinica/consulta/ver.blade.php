@@ -199,7 +199,7 @@
          récipe y el aviso de cambios sin guardar. Se inicializa sólo si la sección está en pantalla. --}}
     <script src="{{ asset('js/clinica/consulta-recipes.js') }}"></script>
     {{-- El diálogo «Imprimir récipe» de la sección (WEB-5.2): sólo se inicializa si hay un botón que lo abra. --}}
-    <script src="{{ asset('js/clinica/imprimir-recipe.js') }}"></script>
+    <script src="{{ asset('js/clinica/imprimir-recipe.js') }}?v={{ @filemtime(public_path('js/clinica/imprimir-recipe.js')) }}"></script>
     {{-- Las solicitudes de la consulta (WEB-5.3a): cambios sin guardar, plantillas, fechas del reposo y buscador de médicos. --}}
     <script src="{{ asset('js/clinica/consulta-solicitudes.js') }}"></script>
     {{-- Las órdenes de laboratorio y de estudios (WEB-5.4): la lista de la orden, el buscador del catálogo, las rutinas y el aviso de cambios sin guardar. --}}

@@ -71,8 +71,9 @@ use Throwable;
  *    cabecera: la de la consulta.
  *  - **Laboratorio** (`d_examen_laboratorio_rut.srd`, la hoja de las *rutinas*; la de exámenes sueltos, `d_examen_laboratorio.srd`, es la misma sin
  *    agrupar): *EXÁMENES DE LABORATORIO*, los exámenes **agrupados por tipo** (`group by tipos_examenes_tipo`) y el *Resumen clínico*
- *    (`examen_obs.observacion`). Acá el título es «SOLICITUD DE EXÁMENES DE LABORATORIO», el grupo es un párrafo de lista (los exámenes del tipo, uno
- *    tras otro, `DocumentoImpreso::parrafoDeLista`) y el resumen sale como *RESUMEN CLÍNICO:*. Fecha de la cabecera: la de la consulta.
+ *    (`examen_obs.observacion`). Acá el título es «SOLICITUD DE EXÁMENES DE LABORATORIO», el grupo es un párrafo de lista con los exámenes del
+ *    tipo **uno debajo del otro y con una línea en blanco entre uno y otro** (2026-11-05, como los medicamentos de un récipe;
+ *    `DocumentoImpreso::parrafoDeLista(..., unaPorLinea: true)`) y el resumen sale como *RESUMEN CLÍNICO:*. Fecha de la cabecera: la de la consulta.
  *  - **Estudios** (`d_estudio_imagenes.srd`, *SOLICITUD DE ESTUDIOS*): los estudios en el orden de `radiologia_paciente.orden`, numerados
  *    («Estudios solicitados:»), y el *Resumen clínico* (`radiologia_obs.observacion`). Fecha: la de la consulta.
  *  - **Resumen médico** (WEB-5.3c, `d_resumen_medico_gra`): la hoja que se **arma sola** con los datos de toda la consulta
@@ -861,7 +862,8 @@ final class SolicitudesParaImprimir
 
     /**
      * La orden de laboratorio: los exámenes agrupados por tipo (el orden de `filas`: por tipo y por nombre, los que no tienen tipo al final) y el
-     * resumen clínico. Cada grupo es un párrafo de lista, que sólo se corta entre exámenes.
+     * resumen clínico. Cada grupo es un párrafo de lista **con un examen por renglón y una línea en blanco entre uno y otro**
+     * (2026-11-05), que sólo se corta entre exámenes.
      *
      * @param  Collection<int,object>  $examenes
      */
@@ -870,7 +872,7 @@ final class SolicitudesParaImprimir
         $parrafos = [];
 
         foreach ($examenes->groupBy(fn (object $examen) => $examen->tipo ?? CatalogoParaPedirExamenes::SIN_TIPO) as $tipo => $delTipo) {
-            $parrafos[] = DocumentoImpreso::parrafoDeLista(mb_strtoupper((string) $tipo) . ':', $delTipo->pluck('nombre')->map(fn ($nombre) => (string) $nombre)->all());
+            $parrafos[] = DocumentoImpreso::parrafoDeLista(mb_strtoupper((string) $tipo) . ':', $delTipo->pluck('nombre')->map(fn ($nombre) => (string) $nombre)->all(), true);
         }
 
         return new DocumentoImpreso(
@@ -887,7 +889,7 @@ final class SolicitudesParaImprimir
 
     /**
      * La orden de laboratorio de la **pareja** (WEB-11.21): la hoja de laboratorio **a nombre de la pareja** (su nombre y su C.I., sin edad ni
-     * dirección: no son del paciente de la consulta), con los exámenes por tipo y su resumen clínico.
+     * dirección: no son del paciente de la consulta), con los exámenes por tipo —uno por renglón, como la orden de la paciente— y su resumen clínico.
      *
      * @param  array{cedula:?string, nombre:?string, observacion:?string}  $datos
      */
@@ -896,7 +898,7 @@ final class SolicitudesParaImprimir
         $parrafos = [];
 
         foreach ($examenes->groupBy(fn (object $examen) => $examen->tipo ?? CatalogoParaPedirExamenes::SIN_TIPO) as $tipo => $delTipo) {
-            $parrafos[] = DocumentoImpreso::parrafoDeLista(mb_strtoupper((string) $tipo) . ':', $delTipo->pluck('nombre')->map(fn ($nombre) => (string) $nombre)->all());
+            $parrafos[] = DocumentoImpreso::parrafoDeLista(mb_strtoupper((string) $tipo) . ':', $delTipo->pluck('nombre')->map(fn ($nombre) => (string) $nombre)->all(), true);
         }
 
         return new DocumentoImpreso(

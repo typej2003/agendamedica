@@ -183,6 +183,57 @@ body {
 .boton-impresion-secundario:hover, .dialogo-impresion .btn-outline-secondary:hover { background: #f5edf7; }
 .boton-impresion:focus-visible, .dialogo-impresion .btn:focus-visible, .dialogo-impresion input:focus-visible { outline: 3px solid #40b0d8; outline-offset: 2px; }
 
+/* El botón de la hoja (2026-11-05): el icono de la hoja con la parte que se imprime sombreada y, al lado, el engranaje de
+   configuración. Va al lado de «Imprimir» porque es lo que decide cómo sale. */
+.boton-hoja { display: inline-flex; align-items: center; gap: .35rem; padding: 0 .6rem; }
+.boton-hoja-icono { flex: none; width: 18px; height: 23px; }
+.boton-hoja-engranaje { flex: none; opacity: .85; }
+
+/* -------------------------------------------------------------------- Diálogo de la hoja del imprimible
+   Tres opciones, la actual marcada con «Ahora». Un clic guarda y recarga: no hay botón de guardar. */
+
+.dialogo-hoja { width: min(34rem, calc(100vw - 2rem)); }
+.dialogo-hoja-ayuda { margin: -.35rem 0 1rem; color: #55555f; font-size: .9rem; }
+
+.hojas-opciones { display: grid; gap: .5rem; }
+
+.opcion-hoja {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    width: 100%;
+    padding: .55rem .75rem;
+    border: 1px solid #8d8d99;
+    border-radius: 10px;
+    background: #fff;
+    color: #201048;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.opcion-hoja:hover { border-color: #783080; background: #f5edf7; }
+.opcion-hoja:focus-visible { outline: 3px solid #40b0d8; outline-offset: 2px; }
+.opcion-hoja-activa { border-color: #783080; background: #f5edf7; box-shadow: inset 0 0 0 1px #783080; }
+
+.opcion-hoja-icono { flex: none; width: 32px; height: 41px; color: #783080; }
+.opcion-hoja-texto { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
+.opcion-hoja-texto strong { font-weight: 700; }
+.opcion-hoja-texto small { color: #55555f; }
+
+.opcion-hoja-ahora {
+    flex: none;
+    align-self: flex-start;
+    margin-left: auto;
+    padding: .05rem .45rem;
+    border-radius: 99px;
+    background: #783080;
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+
 /* -------------------------------------------------------------------------------- Diálogo de las opciones
    Gemelo de los estilos de `.opciones-grupo` / `.opcion-de-impresion` de `doctorisimo-ui.css` (esa hoja no se
    carga acá). */
@@ -232,5 +283,5 @@ body {
 
 /* La vista previa dentro del diálogo «Visualizar» (WEB-11.24, `?incrustado=1`): sin título ni «Volver» ni «Imprimir» (los pone el diálogo);
    queda sólo lo que cambia lo impreso (la casilla «Incluir imágenes» y las opciones del récipe). */
-.es-incrustado .barra-impresion-texto, .es-incrustado .barra-impresion-volver, .es-incrustado [data-imprimir] { display: none; }
+.es-incrustado .barra-impresion-texto, .es-incrustado .barra-impresion-volver, .es-incrustado [data-imprimir], .es-incrustado [data-abrir-hoja] { display: none; }
 .es-incrustado .barra-impresion { position: static; justify-content: flex-end; padding: .4rem 1rem; }

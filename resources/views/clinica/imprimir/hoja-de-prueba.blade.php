@@ -5,7 +5,7 @@
 @section('estilos')
     {{-- La misma hoja que imprime el récipe (WEB-5.2): el mismo CSS y el mismo parcial de cada mitad. Lo único propio de esta
          página es el récipe de ejemplo y que, incrustada en la pantalla del formato, no lleva barra. --}}
-    <link rel="stylesheet" href="{{ asset('css/clinica-recipe.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/clinica-recipe.css') }}?v={{ @filemtime(public_path('css/clinica-recipe.css')) }}">
 @endsection
 
 @unless ($vm->incrustada())
@@ -40,5 +40,5 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ asset('js/clinica/imprimir-recipe.js') }}"></script>
+    <script src="{{ asset('js/clinica/imprimir-recipe.js') }}?v={{ @filemtime(public_path('js/clinica/imprimir-recipe.js')) }}"></script>
 @endsection
