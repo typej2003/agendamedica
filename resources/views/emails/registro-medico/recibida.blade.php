@@ -5,6 +5,7 @@
     <title>Recibimos tu solicitud</title>
 </head>
 <body style="font-family: Arial, Helvetica, sans-serif; color: #201048; font-size: 15px; line-height: 1.5;">
+    @include('emails._logo')
     <p>Hola {{ $solicitud->nombreCompleto() }}:</p>
 
     <p>
