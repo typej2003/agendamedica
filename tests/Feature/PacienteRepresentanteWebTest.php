@@ -560,6 +560,37 @@ class PacienteRepresentanteWebTest extends TestCase
         $this->assertNull(DB::table('representante')->where('reg_medico', $medico->reg_medico)->value('codeparentesco'));
     }
 
+    /**
+     * **El `<select>` de parentesco sale lleno sin los seeders** (O-61, 2026-11-05). En producción el
+     * despliegue sólo corre `migrate --force`, así que el catálogo lo siembra la migración de datos
+     * (`2026_11_05_140000_sembrar_el_catalogo_de_parentescos`), no `ParentescoSeeder`. Acá se borra la
+     * tabla —como quedó la de producción—, se corre la migración y se mira lo que recibe el navegador.
+     */
+    public function test_el_select_de_parentesco_sale_lleno_con_lo_que_siembra_la_migracion(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Marta', '1003');
+
+        DB::table('parentesco')->delete();
+
+        /** @var \Illuminate\Database\Migrations\Migration $migracion */
+        $migracion = require database_path('migrations/2026_11_05_140000_sembrar_el_catalogo_de_parentescos.php');
+        $migracion->up();
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.ver', $paciente));
+
+        $respuesta->assertOk();
+
+        // "Sin dato" primero —es un estado válido— y después los siete del catálogo, con el código por
+        // `value` y el nombre por texto.
+        $respuesta->assertSee('<option value="" selected>— Sin dato —</option>', false);
+
+        foreach (ParentescoSeeder::PARENTESCOS as $codigo => [$nombre]) {
+            $respuesta->assertSee('<option value="' . $codigo . '" >' . $nombre . '</option>', false);
+        }
+    }
+
     public function test_la_secretaria_tambien_puede_cargar_el_representante(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso('Secretaria');
