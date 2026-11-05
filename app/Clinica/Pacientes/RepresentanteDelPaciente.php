@@ -10,8 +10,9 @@ use Illuminate\Support\Facades\DB;
  *
  * **La tabla es del legado y se lee, no se reestructura.** `representante` tiene
  * `reg_medico`, `numhistoria`, `nombre`, `codeparentesco char(1)`, `direccion` y —desde WEB-3.4— las
- * columnas nullable `cedula`, `telefono` y `email`. El escritorio la sube por la lista blanca
- * (`config/sync_legado.php:49`); acá se lee del `reg_medico` del contexto, como todo lo demás.
+ * columnas nullable `cedula`, `telefono` y `email`, más `estado_civil` desde O-59 (2026-11-05, el estado
+ * civil del adulto, con la escala de `pacientes.codeestado`). El escritorio la sube por la lista blanca
+ * (`config/sync_legado.php:89`); acá se lee del `reg_medico` del contexto, como todo lo demás.
  *
  * **Una fila por historia, no una lista.** El esquema real del legado declara
  * `PRIMARY KEY (numhistoria)` en `representante` (los siete `esquemas-asa/*.sql`), así que el vínculo es
@@ -31,8 +32,8 @@ use Illuminate\Support\Facades\DB;
  */
 class RepresentanteDelPaciente
 {
-    /** Las columnas de la ficha: nombre, parentesco, documento y contacto. */
-    private const COLUMNAS = ['id', 'nombre', 'codeparentesco', 'cedula', 'telefono', 'email', 'direccion'];
+    /** Las columnas de la ficha: nombre, parentesco, documento, contacto y estado civil. */
+    private const COLUMNAS = ['id', 'nombre', 'codeparentesco', 'cedula', 'telefono', 'email', 'direccion', 'estado_civil'];
 
     /**
      * El representante de una historia, o `null` si todavía no se cargó (o si el paciente no tiene

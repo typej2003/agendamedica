@@ -24,6 +24,13 @@ use Illuminate\Support\Collection;
  * pacientes del consultorio que comparten su cédula (2026-10-19), resueltos por el controlador con
  * `RepresentantePorCedula::otrosPacientes()`.
  *
+ * El **estado civil es del adulto, no del niño** (O-59, 2026-11-05): el bloque lo muestra y el diálogo lo
+ * edita. Se guarda en `representante.estado_civil` (columna nullable nueva) con la misma escala que el
+ * estado civil del paciente (`FormularioDePacienteVista::ESTADOS_CIVILES`: `S`/`C`/`D`/`V`). **No** se
+ * completa con `familia_bebe.situacion_pareja`: es la situación de pareja de los padres, con otra escala
+ * (`E`/`S`/`V`/`D`, donde `S` es «Separados»), y mezclarlas sería afirmar una equivalencia que nadie
+ * verificó. Vacío se muestra vacío.
+ *
  * El ViewModel no consulta nada (guia-arquitectura-web.md): recibe el representante ya leído y el
  * catálogo de parentescos ya resuelto; las URLs las pone el controlador, porque el ViewModel se prueba sin
  * contenedor de Laravel.
@@ -157,6 +164,63 @@ final class RepresentanteDePacienteVista
     public function direccion(): ?string
     {
         return CamposDePaciente::texto($this->representante->direccion ?? null);
+    }
+
+    /**
+     * **El estado civil del representante, con su rótulo** (O-59, 2026-11-05). Es el mismo dato y la misma
+     * escala que declara el paciente adulto (`FormularioDePacienteVista::ESTADOS_CIVILES`): `S` soltero(a),
+     * `C` casado(a), `D` divorciado(a), `V` viudo(a). Un código que no esté en el catálogo se muestra tal
+     * cual —el catálogo decide el nombre, no lo que se puede guardar—, igual que el parentesco.
+     *
+     * Vacío **no** se completa con `familia_bebe.situacion_pareja`: esa es la situación de pareja de los
+     * padres y tiene otra escala (`S` ahí es «Separados»), así que mostrarla como estado civil sería
+     * afirmar una equivalencia que nadie verificó.
+     */
+    public function estadoCivil(): ?string
+    {
+        $codigo = $this->codigoEstadoCivil();
+
+        if ($codigo === null) {
+            return null;
+        }
+
+        return FormularioDePacienteVista::ESTADOS_CIVILES[$codigo] ?? $codigo;
+    }
+
+    /** El código guardado del estado civil, limpio (`null` si el representante no lo tiene). */
+    public function codigoEstadoCivil(): ?string
+    {
+        return CamposDePaciente::texto($this->representante->estado_civil ?? null);
+    }
+
+    /**
+     * Las opciones del `<select>` de estado civil, con la elegida marcada. La primera es «— Sin dato —»
+     * (`null`), que es un estado válido: el representante puede no haberlo declarado.
+     *
+     * La lista es la del alta del paciente —`FormularioDePacienteVista::ESTADOS_CIVILES`, la misma del
+     * `<select name="codeestado">`—, no una nueva: el estado civil es el mismo dato en las dos fichas.
+     *
+     * @return array<int, array{valor:?string, texto:string, elegido:bool}>
+     */
+    public function estadosCiviles(): array
+    {
+        $elegido = $this->valor('estado_civil');
+
+        $opciones = [[
+            'valor'   => null,
+            'texto'   => '— Sin dato —',
+            'elegido' => $elegido === null || $elegido === '',
+        ]];
+
+        foreach (FormularioDePacienteVista::ESTADOS_CIVILES as $codigo => $texto) {
+            $opciones[] = [
+                'valor'   => (string) $codigo,
+                'texto'   => $texto,
+                'elegido' => (string) $codigo === (string) $elegido,
+            ];
+        }
+
+        return $opciones;
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Clinica\Pacientes\CatalogoDeParentescos;
 use App\Clinica\Pacientes\PacientesDelConsultorio;
 use App\Clinica\Pacientes\RepresentanteDelPaciente;
 use App\Clinica\Pacientes\RepresentantePorCedula;
+use App\Clinica\Pacientes\Vistas\FormularioDePacienteVista;
 use App\Clinica\Pacientes\Vistas\RepresentanteDePacienteVista;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -126,11 +127,16 @@ class RepresentanteController extends Controller
             'telefono'       => ['nullable', 'string', 'max:20'],
             'email'          => ['nullable', 'email', 'max:100'],
             'direccion'      => ['nullable', 'string', 'max:60'],
+            // El estado civil del representante (O-59): la **misma regla y la misma escala** que el
+            // `codeestado` del alta del paciente (`PacienteController::validar`), porque es el mismo dato
+            // —el de una persona— y el catálogo lo arma `FormularioDePacienteVista::ESTADOS_CIVILES`.
+            'estado_civil'   => ['nullable', 'in:' . implode(',', array_keys(FormularioDePacienteVista::ESTADOS_CIVILES))],
         ], [
             'codeparentesco.max' => 'El parentesco es un solo carácter.',
             'cedula.regex'       => 'La cédula solo lleva números (hasta 10 dígitos).',
             'email.email'        => 'Revisa el correo: no tiene forma de correo.',
             'direccion.max'      => 'La dirección no puede pasar de 60 caracteres.',
+            'estado_civil.in'    => 'El estado civil elegido no es válido.',
         ]);
 
         // Un formulario sin nada escrito no es un representante: creaba una fila en blanco ("Representante

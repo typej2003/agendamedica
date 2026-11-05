@@ -21,8 +21,12 @@ use InvalidArgumentException;
  *    no tiene dónde guardarlo, y lo dice con `InvalidArgumentException` —la ficha, por eso, no le ofrece
  *    el formulario y le muestra el camino de WEB-3.3—.
  *  - **La tabla del legado no se reestructura.** Sólo se escriben columnas que existen: `nombre`,
- *    `codeparentesco`, `direccion` (las del legado) más `cedula`, `telefono` y `email` (las nullable
- *    nuevas). Nada de `id` ni de fechas a mano: las lleva el query builder.
+ *    `codeparentesco`, `direccion` (las del legado) más `cedula`, `telefono`, `email` y `estado_civil`
+ *    (las nullable nuevas). Nada de `id` ni de fechas a mano: las lleva el query builder.
+ *  - **El `estado_civil` sólo se escribe si viaja en los datos** (O-59, 2026-11-05). El diálogo de la
+ *    ficha lo manda siempre (incluso vacío, que es «no se dijo»), pero el alta del niño y el app no lo
+ *    conocen: sin esta condición, guardar el representante desde esos caminos borraría el estado civil
+ *    que ya había cargado la ficha.
  *  - **El `codeparentesco` se guarda tal cual y no se traduce.** El catálogo de parentescos es **de
  *    AppDDR** y los códigos que haya usado el legado son **desconocidos** (ver `ParentescoSeeder`), así
  *    que la web no puede decidir que un código heredado significa "Madre": lo escribe como vino. Un
@@ -34,7 +38,8 @@ use InvalidArgumentException;
 final class GuardarRepresentante
 {
     /**
-     * @param  array<string,mixed>  $datos  `nombre`, `codeparentesco`, `cedula`, `telefono`, `email`, `direccion`
+     * @param  array<string,mixed>  $datos  `nombre`, `codeparentesco`, `cedula`, `telefono`, `email`, `direccion` y,
+     *                                     opcionalmente, `estado_civil` (sólo el diálogo de la ficha lo manda)
      *
      * @throws InvalidArgumentException si el paciente no tiene número de historia
      */
@@ -57,6 +62,12 @@ final class GuardarRepresentante
             'direccion'      => CamposDePaciente::texto($datos['direccion'] ?? null),
             'updated_at'     => now(),
         ];
+
+        // El estado civil es de la ficha: los otros caminos (el alta del niño y el app) no lo mandan y no
+        // tienen por qué borrarlo. Un valor vacío sí lo deja en `null`: es "no se dijo".
+        if (array_key_exists('estado_civil', $datos)) {
+            $columnas['estado_civil'] = CamposDePaciente::texto($datos['estado_civil']);
+        }
 
         $existente = DB::table('representante')
             ->where('reg_medico', $regMedico)
