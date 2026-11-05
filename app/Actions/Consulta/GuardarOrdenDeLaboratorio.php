@@ -30,6 +30,8 @@ use InvalidArgumentException;
  *  - `guardarResumen($consulta, $observacion)`: escribe **sólo** el «Resumen clínico», que sigue siendo un formulario con su botón.
  *  - `guardarResultados($consulta, $resultados, $reportes)` (O-47, 2026-11-02): el **resultado** de cada examen y cuáles
  *    **salen en el informe** (`examen_paciente.resultado` y `.vinculante`), también con su botón y también sólo lo que cambió.
+ *    La casilla «Reporte» viene **marcada por defecto** (2026-11-05): lo que se destilda se guarda como `'N'` y lo que queda
+ *    marcado, como la `'S'` del escritorio.
  *
  * Las tres reusan la comprobación de catálogo (`CatalogoParaPedirExamenes::resolver`) y el rastro (`EscribeConRastro`).
  *
@@ -55,6 +57,13 @@ final class GuardarOrdenDeLaboratorio
 
     /** La letra con la que `examen_paciente.vinculante` dice que el examen **sale en el informe** (O-47). */
     public const REPORTE = 'S';
+
+    /**
+     * La letra con la que la casilla **destildada** dice que el examen **no sale en el informe** (2026-11-05). La casilla
+     * viene marcada por defecto, así que hay que poder guardar el «no»: `NULL` ya significa «nunca se marcó» y el
+     * escritorio sólo busca la `'S'`, así que `'N'` es inocuo para él.
+     */
+    public const NO_REPORTE = 'N';
 
     public function __construct(private LaboratorioDeLaConsulta $ordenes, private CatalogoParaPedirExamenes $catalogo)
     {
@@ -183,8 +192,10 @@ final class GuardarOrdenDeLaboratorio
 
                 [$escritas, $sinEscribir] = $this->corregirFila($fila, 'examen_paciente', [
                     'resultado' => $resultados[$codigo],
-                    // `'S'` o nada: el legado deja `NULL` para «no sale» y no se inventa un `'N'` que no estaba.
-                    'vinculante' => isset($marcados[$codigo]) ? self::REPORTE : null,
+                    // `'S'` o `'N'`: la casilla viene marcada por defecto (2026-11-05), así que destildarla se guarda
+                    // como `'N'`. El `NULL` queda para lo que nunca se tocó —el escritorio y las órdenes viejas—, que la
+                    // pantalla muestra marcado; el escritorio sólo busca la `'S'` y `NULL`/`'N'` le dan igual.
+                    'vinculante' => isset($marcados[$codigo]) ? self::REPORTE : self::NO_REPORTE,
                 ], $cuando, $origen);
 
                 $columnas = array_merge($columnas, $escritas);

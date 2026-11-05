@@ -24,7 +24,9 @@ namespace App\Clinica\Impresion;
  *     fuerza el corte y puede recortar; acá, si a 8 pt todavía no entra, el documento **sigue en una hoja más** (otro par de
  *     mitades, con la misma continuación) hasta que quepa todo.
  *  4 bis. **Una lista no se corta por palabra sino entre sus elementos** (WEB-5.4: los exámenes de un tipo van en un párrafo con `items`):
- *     un examen no queda partido en dos mitades, y la parte que sigue repite el rótulo del grupo con «(cont.)».
+ *     un examen no queda partido en dos mitades, y la parte que sigue repite el rótulo del grupo con «(cont.)». En la solicitud de
+ *     exámenes de laboratorio (2026-11-05) los elementos van **uno por renglón con una línea en blanco entre uno y otro**
+ *     (`lineas`: como los medicamentos de un récipe), y la cuenta de esta clase los mide así.
  *  5. Los **datos fijos** (los rótulos con su valor: `REPOSO DURANTE`, `REFERIDO A`…) no se parten: van en la primera mitad.
  *  6. Si todo el texto entra en la mitad sin firma pero no con ella, la firma **no queda sola** en la siguiente: pasa con ella
  *     el último párrafo (o, si hay uno solo, sus últimas palabras), como en el móvil.
@@ -257,9 +259,23 @@ final class DistribuidorDeDocumento
         return $alto;
     }
 
-    /** @param array{texto:string, etiqueta:?string, aparte:bool} $parrafo */
+    /** @param array{texto:string, etiqueta:?string, aparte:bool, items?:array<int,string>, lineas?:bool} $parrafo */
     private function altoDeUnParrafo(array $parrafo, int $puntos, float $linea): float
     {
+        // Un párrafo de lista con los elementos uno por línea (la solicitud de exámenes de laboratorio, 2026-11-05): el rótulo
+        // en su renglón y después cada examen en los suyos, con **una línea en blanco** entre uno y otro, como los medicamentos
+        // de un récipe. Su gemela en la hoja es `.documento-lista` de `clinica-documento.css` (1.25em = el alto de una línea).
+        if (isset($parrafo['items']) && ($parrafo['lineas'] ?? false)) {
+            $alto = $parrafo['etiqueta'] === null ? 0.0 : $linea + self::AIRE_DEL_ROTULO_MM;
+
+            foreach ($parrafo['items'] as $posicion => $item) {
+                $alto += ($posicion > 0 ? $linea : 0.0)
+                    + max($this->medidor->lineas($item, $this->medidas->anchoDelCuerpo(), $puntos), 1) * $linea;
+            }
+
+            return $alto;
+        }
+
         if ($parrafo['etiqueta'] === null) {
             return max($this->medidor->lineas($parrafo['texto'], $this->medidas->anchoDelCuerpo(), $puntos), 1) * $linea;
         }
@@ -276,7 +292,7 @@ final class DistribuidorDeDocumento
 
     // ----------------------------------------------------------------------------------------------- Palabras
 
-    /** @param array<int,array{texto:string, etiqueta:?string, aparte:bool, items?:array<int,string>}> $parrafos */
+    /** @param array<int,array{texto:string, etiqueta:?string, aparte:bool, items?:array<int,string>, lineas?:bool}> $parrafos */
     private function palabras(array $parrafos): int
     {
         return array_sum(array_map(fn (array $parrafo) => $this->unidadesDe($parrafo), $parrafos));
@@ -348,7 +364,14 @@ final class DistribuidorDeDocumento
      */
     private function listaCon(array $parrafo, array $items, ?string $etiqueta): array
     {
-        return ['texto' => implode(DocumentoImpreso::SEPARADOR_DE_ITEMS, $items), 'etiqueta' => $etiqueta, 'aparte' => $parrafo['aparte'], 'items' => array_values($items)];
+        $listado = ['texto' => implode(DocumentoImpreso::SEPARADOR_DE_ITEMS, $items), 'etiqueta' => $etiqueta, 'aparte' => $parrafo['aparte'], 'items' => array_values($items)];
+
+        // El párrafo de una lista de un elemento por línea (la solicitud de exámenes, 2026-11-05) sigue siéndolo en las dos partes.
+        if ($parrafo['lineas'] ?? false) {
+            $listado['lineas'] = true;
+        }
+
+        return $listado;
     }
 
     /** «TIPO:» → «TIPO (cont.):»; una continuación que se vuelve a partir no acumula «(cont.)». */

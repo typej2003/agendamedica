@@ -63,6 +63,15 @@
 
 .documento-parrafo { margin: 0 0 2.6mm; text-align: justify; }
 
+/* Un párrafo de lista **con un elemento por renglón** (la solicitud de exámenes de laboratorio, 2026-11-05): cada examen en su
+   línea y **una línea en blanco** entre uno y otro, como los medicamentos de un récipe. El `1.25em` es exactamente el alto de una
+   línea (el `line-height` del cuerpo) y su gemela en la cuenta es `DistribuidorDeDocumento::altoDeUnParrafo()` (un elemento por
+   línea, con `$linea` de aire entre uno y otro): si una cambia sola, el texto se desborda. */
+.documento-parrafo-lista { text-align: left; }
+.documento-lista { margin: 0; padding: 0; list-style: none; }
+.documento-lista li { break-inside: avoid; }
+.documento-lista li + li { margin-top: 1.25em; }
+
 /* ------------------------------------------------------------------------------- Las imágenes del informe
    El informe de la **colposcopía** y el de la **histeroscopía** llevan la imagen del examen en su misma página, debajo del
    texto (2026-10-18, Alexander): el escritorio las imprime así, en el subreporte de la banda *detail*. La casilla «Incluir
