@@ -323,14 +323,14 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
         $this->assertSame('12.5', $filas['001']->resultado, 'el texto se guarda recortado');
         $this->assertSame('S', trim((string) $filas['001']->vinculante), 'la casilla marcada es la S del escritorio');
         $this->assertNull($filas['003']->resultado, 'vaciar el campo lo deja sin resultado');
-        $this->assertNull($filas['003']->vinculante, 'sin marcar no se inventa una N');
+        $this->assertSame('N', trim((string) $filas['003']->vinculante), 'destildarla se guarda como la N explícita');
 
         $this->assertSame(1, $this->trazas('examen_paciente', 'updated', 'resultado'));
-        $this->assertSame(1, $this->trazas('examen_paciente', 'updated', 'vinculante'));
+        $this->assertSame(2, $this->trazas('examen_paciente', 'updated', 'vinculante'), 'la marcada y la destildada escriben su letra');
 
         $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'laboratorio'))
             ->assertOk()
-            ->assertSee('Escribe el resultado de cada examen y marca «Reporte»')
+            ->assertSee('Escribe el resultado de cada examen. «Reporte» viene marcado en todos')
             ->assertSee('name="resultados[001]"', false)
             ->assertSee('value="12.5"', false)
             ->assertSee('name="reportes[]"', false)
@@ -389,15 +389,28 @@ class LaboratorioEstudiosDeLaConsultaWebTest extends TestCase
 
         $this->assertSame('S', trim((string) $this->filasPorCodigo($medico)['001']->vinculante));
 
-        // El segundo envío llega sin la casilla: vuelve a «no sale», sin inventar una letra. Como en el resto de la
-        // pestaña, el last-write-wins del sync necesita que pase el segundo.
+        // El segundo envío llega sin la casilla: queda el «no sale» explícito. Como en el resto de la pestaña, el
+        // last-write-wins del sync necesita que pase el segundo.
         $this->travel(5)->seconds();
         $this->como($user, $medico, $gineco)->post($this->urlResultados($consulta), [
             'resultados' => ['001' => 'Normal'],
         ])->assertSessionHasNoErrors();
 
-        $this->assertNull($this->filasPorCodigo($medico)['001']->vinculante);
+        $this->assertSame('N', trim((string) $this->filasPorCodigo($medico)['001']->vinculante));
         $this->assertSame('Normal', $this->filasPorCodigo($medico)['001']->resultado, 'el texto sigue');
+    }
+
+    public function test_la_casilla_de_reporte_viene_marcada_por_defecto(): void
+    {
+        [$user, $medico, $gineco, $consulta] = $this->escenario();
+        // `NULL` es lo que deja el escritorio (y lo que dejaban las órdenes cargadas antes de esto): sale marcado.
+        $this->examen($medico, '001');
+        $this->examen($medico, '003', ['vinculante' => 'N']);
+
+        $html = $this->como($user, $medico, $gineco)->get($this->seccion($consulta, 'laboratorio'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/name="reportes\[\]" value="001"[^>]*\bchecked\b/', $html, 'sin valor guardado, por defecto sale');
+        $this->assertDoesNotMatchRegularExpression('/name="reportes\[\]" value="003"[^>]*\bchecked\b/', $html, 'la N guardada lo apaga');
     }
 
     public function test_un_codigo_que_no_esta_en_la_orden_no_se_escribe(): void
