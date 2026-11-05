@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\Pacientes\CorreoDeContacto;
+use App\Clinica\Pacientes\FamiliaDelPaciente;
 use App\Clinica\Pacientes\FiliacionPendiente;
 use App\Clinica\Pacientes\TelefonoDeContacto;
 use App\Cumpleanos\CumpleanosDeHoy;
@@ -112,5 +114,59 @@ class TelefonoDeContactoTest extends TestCase
         $this->assertCount(1, $cumpleanos);
         $this->assertSame('04140000007', $cumpleanos->first()->telefono());
         $this->assertTrue($cumpleanos->first()->tieneTelefono());
+    }
+
+    /**
+     * **O-66 (2026-11-05): la regla del aviso se invierte en pediatría.** Al niño no se lo contacta nunca
+     * directamente: aunque tenga teléfono propio (la excepción), el aviso va al representante o a la familia y, si
+     * el adulto no tiene, no hay destino. Fuera de pediatría manda el del paciente y el del adulto es el respaldo,
+     * como siempre.
+     */
+    public function test_el_telefono_del_aviso_es_el_del_adulto_en_pediatria_y_el_del_paciente_fuera(): void
+    {
+        $this->chamo(8, 80);
+        $this->familia(80, ['celu_madre' => '04140000008']);
+        $resolver = new TelefonoDeContacto();
+        $familias = new FamiliaDelPaciente();
+
+        $this->assertTrue($familias->esUnNino($this->reg, '8'));
+        $this->assertFalse($familias->esUnNino($this->reg, '999'));
+        $this->assertFalse($familias->esUnNino($this->reg, null));
+
+        // En pediatría el teléfono propio del niño no se usa: va al de la familia.
+        $this->assertSame('04140000008', $resolver->paraElAviso($this->reg, '8', '04147777777', true));
+
+        // Y el representante cargado a mano manda sobre la familia.
+        DB::table('representante')->insert([
+            'reg_medico' => $this->reg, 'numhistoria' => 8, 'nombre' => 'TÍA', 'telefono' => '04141112222',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $this->assertSame('04141112222', $resolver->paraElAviso($this->reg, '8', '04147777777', true));
+
+        // Fuera de pediatría manda el del paciente, y el del adulto es el respaldo de siempre.
+        $this->assertSame('04147777777', $resolver->paraElAviso($this->reg, '8', '04147777777', false));
+        $this->assertSame('04141112222', $resolver->paraElAviso($this->reg, '8', null, false));
+
+        // Un niño sin adulto con teléfono: nada, aunque tenga el suyo.
+        $this->chamo(9, 90);
+        $this->assertNull($resolver->paraElAviso($this->reg, '9', '04148888888', true));
+    }
+
+    /** El correo del aviso: el del representante en pediatría (`representante.email`), el del paciente fuera de ella. */
+    public function test_el_correo_del_aviso_es_el_del_representante_en_pediatria(): void
+    {
+        $this->chamo(10, 100);
+        $correos = new CorreoDeContacto();
+
+        $this->assertNull($correos->paraElAviso($this->reg, '10', 'nino@example.com', true));
+
+        DB::table('representante')->insert([
+            'reg_medico' => $this->reg, 'numhistoria' => 10, 'nombre' => 'MAMÁ', 'email' => 'mama@example.com',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $this->assertSame('mama@example.com', $correos->paraElAviso($this->reg, '10', 'nino@example.com', true));
+        $this->assertSame('nino@example.com', $correos->paraElAviso($this->reg, '10', 'nino@example.com', false));
+        $this->assertSame([10 => 'mama@example.com'], $correos->deLasHistorias($this->reg, ['10', '999']));
     }
 }

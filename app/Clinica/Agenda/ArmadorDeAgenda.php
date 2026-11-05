@@ -3,7 +3,9 @@
 namespace App\Clinica\Agenda;
 
 use App\Clinica\FechaDelConsultorio;
+use App\Clinica\Pacientes\CorreoDeContacto;
 use App\Clinica\Pacientes\DuenoDeLaHistoria;
+use App\Clinica\Pacientes\FamiliaDelPaciente;
 use App\Clinica\Pacientes\TelefonoDeContacto;
 use App\Models\Cola;
 use App\Models\Evolucion;
@@ -582,14 +584,19 @@ final class ArmadorDeAgenda
             ->get(['id', 'nombres', 'apellidos', 'cedula', 'telefono', 'email'])
             ->keyBy('id');
 
-        // Sin teléfono válido propio (un niño), el del representante o la familia (WEB-7.4.2c). Se pide
-        // sólo por las historias cuyo paciente elegido no tiene uno.
-        $sinTelefono = collect($duenios)
-            ->filter(fn (int $pacienteId) => ($filas[$pacienteId] ?? null) !== null
-                && Telefono::internacional($filas[$pacienteId]->telefono) === null)
+        // **El contacto que viaja con la cita** (O-66): en pediatría es el del representante y nunca el del niño, aunque el niño
+        // tenga teléfono o correo propios; fuera de pediatría, los del paciente y el del adulto sólo como respaldo del teléfono
+        // (WEB-7.4.2c). El envío del recordatorio (WEB-2.6) y la lista del envío del día muestran esto mismo.
+        $ninos = (new FamiliaDelPaciente())->ninos($regMedico, array_keys($duenios));
+
+        $necesitanContacto = collect($duenios)
+            ->filter(fn (int $pacienteId, $numhistoria) => isset($ninos[(int) $numhistoria])
+                || (($filas[$pacienteId] ?? null) !== null
+                    && Telefono::internacional($filas[$pacienteId]->telefono) === null))
             ->keys();
 
-        $contactos = (new TelefonoDeContacto())->deLasHistorias($regMedico, $sinTelefono);
+        $contactos = (new TelefonoDeContacto())->deLasHistorias($regMedico, $necesitanContacto);
+        $correos = (new CorreoDeContacto())->deLasHistorias($regMedico, $necesitanContacto);
 
         $salida = [];
         foreach ($duenios as $numhistoria => $pacienteId) {
@@ -599,13 +606,17 @@ final class ArmadorDeAgenda
                 continue;
             }
 
+            $esNino = isset($ninos[(int) $numhistoria]);
+
             $salida[(int) $numhistoria] = [
                 'id' => (int) $paciente->id,
                 'nombre' => $this->nombreDe($paciente),
-                'telefono' => Telefono::internacional($paciente->telefono) === null
-                    ? ($contactos[(int) $numhistoria] ?? $paciente->telefono)
-                    : $paciente->telefono,
-                'email' => $paciente->email,
+                'telefono' => match (true) {
+                    $esNino => $contactos[(int) $numhistoria] ?? null,
+                    Telefono::internacional($paciente->telefono) === null => $contactos[(int) $numhistoria] ?? $paciente->telefono,
+                    default => $paciente->telefono,
+                },
+                'email' => $esNino ? ($correos[(int) $numhistoria] ?? null) : $paciente->email,
                 'cedula' => $paciente->cedula,
             ];
         }

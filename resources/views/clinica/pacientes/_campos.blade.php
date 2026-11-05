@@ -84,15 +84,27 @@
                    value="{{ $vm->valor('direccion') }}">
         </x-ui.campo>
 
-        <x-ui.campo etiqueta="Celular" for="telefono" class="col-md-6">
-            <input type="text" name="telefono" id="telefono" class="form-control" maxlength="20"
-                   autocapitalize="off" value="{{ $vm->valor('telefono') }}">
-        </x-ui.campo>
+        {{-- O-66 (2026-11-05): en pediatría no se contacta al niño, así que su teléfono y su correo no se
+             piden: el aviso va al representante, que los carga en su bloque. El dato que el paciente ya
+             tuviera **no se borra**: el formulario no lo manda y la Action sólo escribe lo que recibe. --}}
+        @if ($vm->esPediatria())
+            <div class="col-12">
+                <p class="texto-tenue small mb-0">
+                    En pediatría se avisa al representante y nunca al niño: su teléfono y su correo se cargan en
+                    el bloque «Representante» de la ficha.
+                </p>
+            </div>
+        @else
+            <x-ui.campo etiqueta="Celular" for="telefono" class="col-md-6">
+                <input type="text" name="telefono" id="telefono" class="form-control" maxlength="20"
+                       autocapitalize="off" value="{{ $vm->valor('telefono') }}">
+            </x-ui.campo>
 
-        <x-ui.campo etiqueta="E-mail" for="email" class="col-md-6">
-            <input type="email" name="email" id="email" class="form-control" maxlength="100"
-                   autocapitalize="off" value="{{ $vm->valor('email') }}">
-        </x-ui.campo>
+            <x-ui.campo etiqueta="E-mail" for="email" class="col-md-6">
+                <input type="email" name="email" id="email" class="form-control" maxlength="100"
+                       autocapitalize="off" value="{{ $vm->valor('email') }}">
+            </x-ui.campo>
+        @endif
     </div>
 </x-ui.tarjeta>
 

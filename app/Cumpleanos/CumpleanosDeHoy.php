@@ -2,6 +2,9 @@
 
 namespace App\Cumpleanos;
 
+use App\Clinica\Pacientes\CamposDePaciente;
+use App\Clinica\Pacientes\CorreoDeContacto;
+use App\Clinica\Pacientes\FamiliaDelPaciente;
 use App\Clinica\Pacientes\TelefonoDeContacto;
 use App\Models\Paciente;
 use App\Notificaciones\Telefono;
@@ -49,14 +52,26 @@ class CumpleanosDeHoy
                 'medico_pacientes.numhistoria',
             ]);
 
-        // Sin teléfono válido propio (un niño), el del representante o la familia (WEB-7.4.2c).
-        $contactos = (new TelefonoDeContacto())->deLasHistorias(
-            $regMedico,
-            $filas->filter(fn ($fila) => Telefono::internacional($fila->telefono) === null)->pluck('numhistoria'),
-        );
+        // **El contacto es el del adulto** (O-66): en pediatría el saludo va al representante y nunca al niño, aunque el niño tenga
+        // teléfono o correo propios; fuera de pediatría, los del paciente y el del representante sólo como respaldo del teléfono
+        // (WEB-7.4.2c). Se resuelven por lote: la pantalla y el comando miran la misma lista y no hay una consulta por paciente.
+        $historias = $filas->pluck('numhistoria');
+        $ninos = (new FamiliaDelPaciente())->ninos($regMedico, $historias);
+        $telefonosDelAdulto = (new TelefonoDeContacto())->deLasHistorias($regMedico, $historias);
+        $correosDelAdulto = (new CorreoDeContacto())->deLasHistorias($regMedico, $historias);
+
         foreach ($filas as $fila) {
+            $historia = CamposDePaciente::historiaNumerica($fila->numhistoria);
+
+            if ($historia !== null && isset($ninos[$historia])) {
+                $fila->telefono = $telefonosDelAdulto[$historia] ?? null;
+                $fila->email = $correosDelAdulto[$historia] ?? null;
+
+                continue;
+            }
+
             if (Telefono::internacional($fila->telefono) === null) {
-                $fila->telefono = $contactos[(int) $fila->numhistoria] ?? $fila->telefono;
+                $fila->telefono = $telefonosDelAdulto[(int) $fila->numhistoria] ?? $fila->telefono;
             }
         }
 
@@ -65,6 +80,7 @@ class CumpleanosDeHoy
                 (new Paciente())->newFromBuilder((array) $fila),
                 $dia,
                 Cumpleanos::esElDiaExacto($fila->fnacimiento, $dia),
+                $fila->numhistoria === null ? null : (string) $fila->numhistoria,
             ))
             ->values();
     }

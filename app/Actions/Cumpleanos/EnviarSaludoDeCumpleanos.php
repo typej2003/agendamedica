@@ -2,6 +2,9 @@
 
 namespace App\Actions\Cumpleanos;
 
+use App\Clinica\Pacientes\CorreoDeContacto;
+use App\Clinica\Pacientes\FamiliaDelPaciente;
+use App\Clinica\Pacientes\TelefonoDeContacto;
 use App\Cumpleanos\Cumpleano;
 use App\Cumpleanos\MensajeDeCumpleanos;
 use App\Cumpleanos\RegistroDeCumpleanos;
@@ -121,7 +124,7 @@ final class EnviarSaludoDeCumpleanos
         $medico = $this->medicoDelRegistro($regMedico, $evolucion);
 
         $texto = $this->texto($mensaje, $evolucion?->plantilla_cumple, $cumpleano, $medico);
-        $destino = $this->destino($canal, $cumpleano);
+        $destino = $this->destino($canal, $cumpleano, $regMedico);
 
         $envio = $this->canales->enviar(
             $canal,
@@ -197,25 +200,45 @@ final class EnviarSaludoDeCumpleanos
         ]);
     }
 
-    /** A dónde va el saludo: el teléfono o el correo del paciente, según el canal. */
-    private function destino(string $canal, Cumpleano $cumpleano): string
+    /**
+     * A dónde va el saludo: el teléfono o el correo **de contacto**, según el canal.
+     *
+     * La regla es la de O-66, la misma del recordatorio: en pediatría el saludo va al representante y **nunca** al niño; si el
+     * representante no tiene el dato, no sale. Al niño lo distingue su fila de `paciente_chamo` (`FamiliaDelPaciente::esUnNino`),
+     * no la especialidad de la sesión: el comando automático no tiene sesión.
+     */
+    private function destino(string $canal, Cumpleano $cumpleano, string $regMedico): string
     {
+        $esNino = app(FamiliaDelPaciente::class)->esUnNino($regMedico, $cumpleano->numhistoria());
+
         if (Canal::usaCorreo($canal)) {
-            $correo = Correo::valido($cumpleano->correo());
+            $correo = Correo::valido(app(CorreoDeContacto::class)->paraElAviso($regMedico, $cumpleano->numhistoria(), $cumpleano->correo(), $esNino));
 
             if ($correo === null) {
-                throw new ExcepcionDeEnvio($cumpleano->mensajeDeDatoFaltante($canal));
+                throw new ExcepcionDeEnvio($this->datoQueFalta($cumpleano, $canal, $esNino));
             }
 
             return $correo;
         }
 
-        $telefono = Telefono::internacional($cumpleano->telefono());
+        $telefono = Telefono::internacional(app(TelefonoDeContacto::class)->paraElAviso($regMedico, $cumpleano->numhistoria(), $cumpleano->telefono(), $esNino));
 
         if ($telefono === null) {
-            throw new ExcepcionDeEnvio($cumpleano->mensajeDeDatoFaltante($canal));
+            throw new ExcepcionDeEnvio($this->datoQueFalta($cumpleano, $canal, $esNino));
         }
 
         return $telefono;
+    }
+
+    /** El aviso del dato que falta: el del paciente o, en pediatría, el de su representante (O-66). */
+    private function datoQueFalta(Cumpleano $cumpleano, string $canal, bool $esNino): string
+    {
+        if (! $esNino) {
+            return $cumpleano->mensajeDeDatoFaltante($canal);
+        }
+
+        return Canal::usaCorreo($canal)
+            ? 'El representante no tiene un correo válido registrado.'
+            : 'El representante no tiene un teléfono válido registrado.';
     }
 }
