@@ -8,9 +8,7 @@
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;">
         <tr>
             <td style="padding:28px 28px 8px;">
-                <p style="margin:0 0 4px;color:#783080;font-size:13px;letter-spacing:.04em;text-transform:uppercase;">
-                    {{ config('legal.app') }}
-                </p>
+                @include('emails._logo')
                 <h1 style="margin:0 0 16px;font-size:22px;">Confirma la baja de tu cuenta</h1>
             </td>
         </tr>

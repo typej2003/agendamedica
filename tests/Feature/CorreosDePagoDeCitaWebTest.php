@@ -353,7 +353,8 @@ class CorreosDePagoDeCitaWebTest extends TestCase
             $this->assertStringNotContainsString('@if', $html);
             $this->assertStringNotContainsString('@endif', $html);
             $this->assertStringNotContainsString('/pagar/', $html);
-            $this->assertStringNotContainsString('http', $html);
+            // El logo de la cabecera es la única URL permitida: ningún enlace.
+            $this->assertStringNotContainsString('http', preg_replace('/<img [^>]*>/', '', $html));
         }
     }
 }

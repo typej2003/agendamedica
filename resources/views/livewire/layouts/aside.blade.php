@@ -10,7 +10,7 @@
 
 <div id="sidebarMenu" class="app-sidebar {{ $isMinimized ? 'minimizado' : '' }}">
   <a class="app-sidebar-marca" href="{{ route('dashboard') }}">
-      <span class="app-marca-ficha" aria-hidden="true"><i class="bi bi-heart-pulse-fill"></i></span>
+      <span class="app-marca-ficha" aria-hidden="true"><x-marca-corazon /></span>
       <span class="app-marca-nombre"><strong>Doctorísimo</strong><small>Panel de administración</small></span>
   </a>
 

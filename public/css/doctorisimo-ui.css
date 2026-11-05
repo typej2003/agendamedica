@@ -702,6 +702,9 @@ input[type="datetime-local"]:disabled::-webkit-calendar-picker-indicator { curso
 .app-marca .app-marca-acento { color: var(--ds-violeta-700); }
 .app-marca .app-marca-icono { color: var(--ds-violeta-700); }
 
+/* El corazón de la marca (<x-marca-corazon>) mide como un ícono de Bootstrap: alto 1em, con el ancho del dibujo. */
+.marca-corazon { width: 1.096em; height: 1em; vertical-align: -.125em; flex: none; }
+
 /* --- Menú lateral: indigo del logo, de arriba abajo --- */
 .app-sidebar {
     background: var(--ds-barra);

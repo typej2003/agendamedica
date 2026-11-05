@@ -20,7 +20,7 @@
 
     <aside class="auth-marca" aria-label="Doctorísimo">
         <a href="{{ url('/') }}" class="auth-marca-logo">
-            <span class="app-marca-ficha" aria-hidden="true"><i class="bi bi-heart-pulse-fill"></i></span>
+            <span class="app-marca-ficha" aria-hidden="true"><x-marca-corazon /></span>
             <span class="auth-marca-nombre">Doctorísimo<span>.App</span></span>
         </a>
 
