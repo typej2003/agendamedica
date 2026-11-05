@@ -125,6 +125,9 @@ use App\Clinica\Embarazo\Vistas\PrenatalVista;
 use App\Clinica\Embarazo\Vistas\ReporteVista;
 use App\Clinica\Embarazo\Vistas\SeccionDeEmbarazoVista;
 use App\Clinica\Escaneo\LectorDeHojas;
+use App\Clinica\Pacientes\PacientesDelConsultorio;
+use App\Clinica\Vacunas\CalendarioDelNino;
+use App\Clinica\Vacunas\Vistas\CalendarioDeVacunasVista;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\MedicoQueFirma;
@@ -278,14 +281,6 @@ class ConsultaController extends Controller
         $seccion = SeccionesDeLaConsulta::deEntrada((string) $request->query('seccion', ''));
         $urlConsulta = route('clinica.consulta', $consulta->id);
 
-        // **Los ítems de la consulta pediátrica que abren otra pantalla** (2026-10-19). En el árbol de PediaReport
-        // son ítems propios, pero el dato ya vive en otra pantalla de la web y no se duplica: se redirige (302),
-        // como con `?seccion=examenes` (O-22). El menú sigue mostrando el ítem pediátrico.
-        $destino = $this->destinoDeLaSeccionPediatrica($seccion, $consulta, $paciente, $contexto);
-        if ($destino !== null) {
-            return $destino;
-        }
-
         // Los siete tipos de antecedente con el nombre de la especialidad del contexto: pediatría tiene los suyos
         // (Patológicos, C.A., Madre…) y ginecología los suyos (Personal, Familiar, H.P., Obst., Gine., A.S., Otros);
         // las demás no tienen nombres en la fuente y no se siembran. Es idempotente y nunca pisa el nombre que el
@@ -324,7 +319,10 @@ class ConsultaController extends Controller
         return view('clinica.consulta.ver', [
             // El id de la consulta: lo usan los borradores locales y el candado de «abierta en otro dispositivo» (`consulta-borradores.js`).
             'consultaId' => (int) $consulta->id,
-            'avisoVacunas' => $avisoVacunas === null ? null : $avisoVacunas + ['url' => route('clinica.pacientes.vacunas', $paciente->id)],
+            'avisoVacunas' => $avisoVacunas === null ? null : $avisoVacunas + ['url' => route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => SeccionesDeLaConsulta::SECCION_INMUNIZACIONES,
+            ])],
             'vm' => new ConsultaShellVista(
                 $paciente,
                 (int) $consulta->nroconsulta,
@@ -546,32 +544,31 @@ class ConsultaController extends Controller
     }
 
     /**
-     * **Las secciones de la consulta pediátrica que abren otra pantalla** (2026-10-19).
+     * **Inmunizaciones** (ítem 7 del árbol de pediatría): el calendario de vacunas del niño **dentro** de la consulta (O-63,
+     * Alexander: «que no se salga de la consulta para ver las vacunas»).
      *
-     * En el árbol de PediaReport son ítems propios, pero en la web el dato ya vive en una pantalla y no se
-     * duplica: *Inmunizaciones* es el carnet de vacunas del paciente y *Representante* la ficha del paciente.
-     * Devuelve `null` para cualquier otra sección (incluidas *Exámenes/Estudios* y *Alimentación*, que **dejaron de redirigir** el
-     * 2026-10-19: cada una tiene su propia sección, como en el escritorio).
+     * Hasta O-63 este ítem **redirigía** a la pantalla del módulo (`/clinica/pacientes/{paciente}/vacunas`) y el médico
+     * perdía la atención en curso. Ahora se arma acá el mismo calendario —con `CalendarioDelNino`, que es lo que usa
+     * también esa pantalla— y lo único que cambia son las URLs: el filtro vuelve a esta sección, el registro de la dosis
+     * vuelve acá (el `consulta` que viaja en el formulario) y el carnet sigue a mano. La pantalla del módulo no se toca.
      */
-    private function destinoDeLaSeccionPediatrica(string $seccion, Consulta $consulta, object $paciente, array $contexto)
+    private function inmunizaciones(Consulta $consulta, int $pacienteId, string $regMedico): CalendarioDeVacunasVista
     {
-        // Sólo si la sección **existe en el catálogo de esta especialidad**: en ginecología esas claves no están
-        // y tienen que caer en el estado vacío del shell, no redirigir a una pantalla que no es de su consulta.
-        if (! SeccionesDeLaConsulta::existeSeccion(
-            $seccion,
-            $contexto['specialty']?->slug,
-            $contexto['secciones_postgrados'] ?? [],
-        )) {
-            return null;
-        }
+        $ficha = app(PacientesDelConsultorio::class)->ficha($regMedico, $pacienteId);
+        abort_if($ficha === null, 404);
 
-        return match ($seccion) {
-            // *Exámenes/Estudios* y *Alimentación* **ya no redirigen** (2026-10-19): cada una tiene su sección, como en el
-            // escritorio, donde son ítems propios. Ver `seccion()`.
-            SeccionesDeLaConsulta::SECCION_INMUNIZACIONES => redirect()->route('clinica.pacientes.vacunas', $paciente->id),
-            SeccionesDeLaConsulta::SECCION_REPRESENTANTE => redirect()->route('clinica.pacientes.ver', $paciente->id),
-            default => null,
-        };
+        $seccion = SeccionesDeLaConsulta::SECCION_INMUNIZACIONES;
+
+        return app(CalendarioDelNino::class)->de(
+            $regMedico,
+            $ficha,
+            CalendarioDeVacunasVista::normalizarFiltro((string) request()->query('ver', '')),
+            fn (string $filtro) => route('clinica.consulta', [$consulta->id, 'seccion' => $seccion, 'ver' => $filtro]),
+            route('clinica.pacientes.ver', $pacienteId),
+            $ficha->numhistoria === null ? null : route('clinica.pacientes.vacunas.registrar', $pacienteId),
+            route('clinica.pacientes.vacunas.carnet', $pacienteId),
+            (int) $consulta->id,
+        );
     }
 
     /**
@@ -1527,6 +1524,12 @@ class ConsultaController extends Controller
                     $this->urlEscanear($consulta, $activa),
                 ),
             );
+        }
+
+        if ($seccion === ConsultaShellVista::SECCION_INMUNIZACIONES) {
+            // **Inmunizaciones** (ítem 7 del árbol de pediatría, O-63): el calendario de vacunas del niño, acá adentro. Antes
+            // el ítem redirigía al módulo del paciente y el médico salía de la consulta.
+            return $this->inmunizaciones($consulta, $pacienteId, $regMedico);
         }
 
         if ($seccion === ConsultaShellVista::SECCION_ALIMENTACION) {

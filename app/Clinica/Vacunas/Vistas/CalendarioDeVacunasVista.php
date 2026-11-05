@@ -51,7 +51,16 @@ final class CalendarioDeVacunasVista
         private ?string $hoy = null,
         // La hoja del carnet de vacunación (WEB-7.4.4c).
         private ?string $urlCarnet = null,
+        // La **consulta** desde la que se está mirando el calendario (O-63), o `null` si es la pantalla del módulo: es lo que
+        // hace que registrar una dosis vuelva a la sección «Inmunizaciones» y no al módulo del niño.
+        private ?int $consulta = null,
     ) {
+    }
+
+    /** La consulta abierta cuando el calendario es una **sección** de la consulta; `null` en la pantalla del módulo. */
+    public function consulta(): ?int
+    {
+        return $this->consulta;
     }
 
     public function urlCarnet(): ?string

@@ -4,12 +4,19 @@
     del escritorio (lote, vía y zona 20). Recibe `$vm` (CalendarioDeVacunasVista).
 --}}
 <x-ui.dialogo id="dialogo-registrar-dosis" titulo="Registrar una dosis" lateral>
-    <form method="POST" action="{{ $vm->urlRegistrar() }}">
+    {{-- `data-sin-borrador`: es una acción de un solo uso, no texto que haya que recuperar al volver (y sus campos son de
+         **esta** dosis: recuperarlos en otra sería peor que perderlos). --}}
+    <form method="POST" action="{{ $vm->urlRegistrar() }}" data-sin-borrador>
         @csrf
         <input type="hidden" name="codi_vacuna" data-dosis-campo="codigo">
         <input type="hidden" name="dosis_numero" data-dosis-campo="numero">
         <input type="hidden" name="rotulo" data-dosis-campo="rotulo">
         <input type="hidden" name="planeada" data-dosis-campo="planeada">
+        {{-- La consulta abierta (O-63): el registro vuelve a la sección «Inmunizaciones» en vez de al módulo del niño.
+             Sólo viaja cuando el calendario se está viendo **dentro** de una consulta. --}}
+        @if ($vm->consulta())
+            <input type="hidden" name="consulta" value="{{ $vm->consulta() }}">
+        @endif
 
         <div class="dialogo-cuerpo">
             <p class="mb-3"><strong data-dosis-titulo></strong></p>
