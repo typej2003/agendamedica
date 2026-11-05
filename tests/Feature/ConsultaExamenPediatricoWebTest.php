@@ -246,6 +246,10 @@ class ConsultaExamenPediatricoWebTest extends TestCase
      * «Datos personales» reusa la ficha, así que con la especialidad del contexto debe mostrar el nombre
      * completo en un solo campo y no marcar la cédula como obligatoria. Antes la sección construía el
      * ViewModel sin la especialidad y caía en el formulario de adultos.
+     *
+     * Y desde O-66 (2026-11-05) tampoco pide el teléfono ni el correo del niño: al niño no se lo contacta, el
+     * aviso va al representante (las dos entradas de esos campos son las del diálogo del representante, que es
+     * `representante-email`/`representante-telefono`).
      */
     public function test_los_datos_personales_en_pediatria_tienen_un_solo_nombre_y_la_cedula_no_es_obligatoria(): void
     {
@@ -264,7 +268,10 @@ class ConsultaExamenPediatricoWebTest extends TestCase
             ->assertOk()
             ->assertSee('Nombre completo')
             ->assertDontSee('name="apellidos"', false)
-            ->assertDontSee('Cédula <span aria-hidden="true">*</span>', false);
+            ->assertDontSee('Cédula <span aria-hidden="true">*</span>', false)
+            ->assertSee('En pediatría se avisa al representante')
+            ->assertDontSee('id="telefono"', false)
+            ->assertDontSee('id="email"', false);
     }
 
     public function test_los_datos_personales_en_pediatria_muestran_el_grupo_sanguineo_y_el_representante(): void

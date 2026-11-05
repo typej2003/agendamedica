@@ -27,6 +27,11 @@ final class Cumpleano
         private CarbonInterface $dia,
         /** `true` si hoy cae el día real de nacimiento; `false` cuando el 29/02 se adelanta al 28. */
         private bool $esElDiaExacto,
+        /**
+         * El número de historia del vínculo, para resolver al **representante** del niño (O-66). Lo trae `CumpleanosDeHoy`, que es
+         * el que lee el pivote; un `Cumpleano` armado a mano sin número (las pruebas unitarias) no tiene representante.
+         */
+        private ?string $numhistoria = null,
     ) {
     }
 
@@ -43,6 +48,12 @@ final class Cumpleano
     public function dia(): CarbonInterface
     {
         return $this->dia;
+    }
+
+    /** El número de historia del vínculo con el consultorio, o `null` si no lo tiene. */
+    public function numhistoria(): ?string
+    {
+        return $this->numhistoria;
     }
 
     /** La fecha que se guarda en el registro del envío (`notificaciones_cumple.fecha_cumple`). */
@@ -81,11 +92,16 @@ final class Cumpleano
         return $edad >= 0 ? $edad : null;
     }
 
+    /**
+     * El teléfono **de contacto** del saludo. En pediatría es el del representante: `CumpleanosDeHoy` ya reemplaza el del niño
+     * antes de armar esta fila (O-66), así que la pantalla y el envío no pueden decidir cosas distintas.
+     */
     public function telefono(): ?string
     {
         return $this->paciente->telefono ?: null;
     }
 
+    /** El correo **de contacto** del saludo: en pediatría, el del representante (misma regla que `telefono()`). */
     public function correo(): ?string
     {
         return $this->paciente->email ?: null;

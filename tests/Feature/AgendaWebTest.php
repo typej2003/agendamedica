@@ -2098,6 +2098,45 @@ class AgendaWebTest extends TestCase
         $this->assertSame(2, substr_count($respuesta->content(), 'name="citas[]"'));
     }
 
+    /**
+     * **O-66 (2026-11-05): la página del envío del día muestra el contacto del representante, no el del niño.** Es el
+     * destino que el médico ve antes de mandar el aviso; si mostrara el del niño, estaría ofreciendo el lugar
+     * prohibido. El envío en sí ya resuelve lo mismo (`EnviarRecordatorio`), así que la lista y el envío no pueden
+     * decir cosas distintas.
+     */
+    public function test_en_pediatria_el_envio_del_dia_muestra_el_contacto_del_representante(): void
+    {
+        [$user, $medico] = $this->medicoConAcceso();
+        [$pediatria] = $this->pediatria($medico);
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        // El niño **sí** tiene teléfono y correo propios (la excepción); aun así el contacto es el del adulto.
+        $this->pacienteConHistoria($medico, 4010, 'Luis', 'Niño', [
+            'telefono' => '0414-1111111',
+            'email'    => 'nino@example.com',
+        ]);
+        DB::table('paciente_chamo')->insert([
+            'reg_medico' => $medico->reg_medico, 'familia' => 4010, 'historia' => 4010,
+            'nombre' => 'LUIS NIÑO', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('representante')->insert([
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 4010, 'nombre' => 'MAMÁ',
+            'telefono' => '0414-2222222', 'email' => 'mama@example.com',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, ['numhistoria' => 4010]);
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->get('/clinica/agenda/envio?fecha=' . $this->lunes->toDateString() . '&sede=todas')
+            ->assertOk()
+            ->assertSee('0414-2222222')
+            ->assertSee('mama@example.com')
+            ->assertDontSee('0414-1111111')
+            ->assertDontSee('nino@example.com')
+            ->assertDontSee('Sin celular válido');
+    }
+
     public function test_el_envio_del_dia_manda_a_los_seleccionados_y_reporta_los_que_fallan(): void
     {
         config($this->twilio());

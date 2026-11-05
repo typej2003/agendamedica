@@ -15,6 +15,7 @@ use App\Services\SmsService;
 use Carbon\Carbon;
 use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -369,6 +370,126 @@ class CumpleanosWebTest extends TestCase
 
         $this->assertSame(0, NotificacionCumple::count());
         Mail::assertNothingSent();
+    }
+
+    // --------------------------------------------------------- Pediatría: el contacto es el del representante (O-66)
+
+    /** La fila de `paciente_chamo` es lo que dice que la historia es de un niño (el paciente de PediaReport). */
+    private function chamo(Medico $medico, int $numhistoria): void
+    {
+        DB::table('paciente_chamo')->insert([
+            'reg_medico' => $medico->reg_medico,
+            'familia'    => $numhistoria,
+            'historia'   => $numhistoria,
+            'nombre'     => 'NIÑO DE PRUEBA',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    private function representante(Medico $medico, int $numhistoria, array $datos = []): void
+    {
+        DB::table('representante')->insert(array_merge([
+            'reg_medico'  => $medico->reg_medico,
+            'numhistoria' => $numhistoria,
+            'nombre'      => 'MAMÁ DE PRUEBA',
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ], $datos));
+    }
+
+    /**
+     * **O-66 (2026-11-05): el saludo de cumpleaños de un niño va al representante**, aunque el niño tenga correo
+     * propio (la excepción). La pantalla muestra el contacto del adulto y el envío sale a ese mismo correo: las dos
+     * cosas leen la misma lista (`CumpleanosDeHoy`).
+     *
+     * El contexto es de ginecología a propósito: lo que decide es el **niño** (su fila de `paciente_chamo`), no la
+     * especialidad de la sesión, porque el envío automático del comando no tiene sesión.
+     */
+    public function test_en_pediatria_el_saludo_va_al_contacto_del_representante_y_no_al_del_nino(): void
+    {
+        Mail::fake();
+
+        [$user, $medico, $gineco] = $this->medico();
+        $this->configurar($medico, ['canal' => Canal::CORREO]);
+        $paciente = $this->paciente($medico, '2018-10-10', [
+            'nombres' => 'Luis', 'apellidos' => 'Niño',
+            'telefono' => '0414-1111111', 'email' => 'nino@example.com',
+        ]);
+
+        $numhistoria = (int) MedicoPaciente::where('paciente_id', $paciente->id)->value('numhistoria');
+        $this->chamo($medico, $numhistoria);
+        $this->representante($medico, $numhistoria, ['telefono' => '0414-2222222', 'email' => 'mama@example.com']);
+
+        $this->conContexto($user, $medico, $gineco)->get('/clinica/cumpleanos?fecha=' . self::HOY)
+            ->assertOk()
+            ->assertSee('mama@example.com')
+            ->assertDontSee('nino@example.com');
+
+        $this->conContexto($user, $medico, $gineco)
+            ->post('/clinica/cumpleanos', [
+                'paciente' => $paciente->id,
+                'fecha'    => self::HOY,
+                'canal'    => 'automatico',
+            ])
+            ->assertRedirect();
+
+        $notificacion = NotificacionCumple::where('paciente_id', $paciente->id)->firstOrFail();
+        $this->assertSame(NotificacionCumple::ESTADO_ENVIADA, $notificacion->estado);
+        $this->assertSame('mama@example.com', $notificacion->destino);
+        Mail::assertSent(\App\Mail\SaludoDeCumpleanos::class, fn ($correo) => $correo->hasTo('mama@example.com'));
+    }
+
+    /** Sin el dato del representante el saludo **no sale**: no se cae al del niño. */
+    public function test_en_pediatria_sin_correo_del_representante_el_saludo_no_sale_aunque_el_nino_lo_tenga(): void
+    {
+        Mail::fake();
+
+        [$user, $medico, $gineco] = $this->medico();
+        $this->configurar($medico, ['canal' => Canal::CORREO]);
+        $paciente = $this->paciente($medico, '2018-10-10', [
+            'nombres' => 'Luis', 'apellidos' => 'Niño',
+            'telefono' => '0414-1111111', 'email' => 'nino@example.com',
+        ]);
+
+        $this->chamo($medico, (int) MedicoPaciente::where('paciente_id', $paciente->id)->value('numhistoria'));
+
+        $this->conContexto($user, $medico, $gineco)
+            ->from('/clinica/cumpleanos')
+            ->post('/clinica/cumpleanos', [
+                'paciente' => $paciente->id,
+                'fecha'    => self::HOY,
+                'canal'    => 'automatico',
+            ])
+            ->assertRedirect('/clinica/cumpleanos')
+            ->assertSessionHas('error', 'El representante no tiene un correo válido registrado.');
+
+        $this->assertSame(0, NotificacionCumple::where('paciente_id', $paciente->id)->count());
+        Mail::assertNothingSent();
+    }
+
+    /** Fuera de pediatría no cambia nada: el saludo sigue yendo al correo del paciente. */
+    public function test_fuera_de_pediatria_el_saludo_sigue_yendo_al_correo_del_paciente(): void
+    {
+        Mail::fake();
+
+        [$user, $medico, $gineco] = $this->medico();
+        $this->configurar($medico, ['canal' => Canal::CORREO]);
+        $paciente = $this->paciente($medico, '1990-10-10');
+
+        // Un representante cargado (la tabla la comparten todas las especialidades) no cambia el destino.
+        $this->representante($medico, (int) MedicoPaciente::where('paciente_id', $paciente->id)->value('numhistoria'), ['email' => 'mama@example.com']);
+
+        $this->conContexto($user, $medico, $gineco)
+            ->post('/clinica/cumpleanos', [
+                'paciente' => $paciente->id,
+                'fecha'    => self::HOY,
+                'canal'    => 'automatico',
+            ])
+            ->assertRedirect();
+
+        $notificacion = NotificacionCumple::where('paciente_id', $paciente->id)->firstOrFail();
+        $this->assertSame('ana@example.com', $notificacion->destino);
     }
 
     // ------------------------------------------------------------------------------------ El comando
