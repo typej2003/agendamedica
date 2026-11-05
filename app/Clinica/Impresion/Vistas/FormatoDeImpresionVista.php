@@ -141,10 +141,12 @@ final class FormatoDeImpresionVista
     /**
      * ¿Se ofrece la sección «Hoja de los imprimibles»? Sólo en el formato del médico: la hoja es de cada doctor que firma,
      * no del centro (la de un centro no se imprime nunca). Tampoco se ofrece si no hay registro principal donde guardar.
+     *
+     * **Oculta desde el 2026-11-05** hasta que la elección sea por reporte: con la bandera apagada no se ofrece.
      */
     public function conHoja(): bool
     {
-        return ! $this->esCentro && ! $this->sinRegistro();
+        return ModoDeLaHoja::hojaUnicaHabilitada() && ! $this->esCentro && ! $this->sinRegistro();
     }
 
     /** La hoja guardada (`vertical`, `media-vertical`, `horizontal`, `recipe`) o `null` si el médico todavía no eligió. */

@@ -52,10 +52,17 @@ final class HojasImpresasVista
      * recuerda se elige en «Formato de impresión». Vacío si lo que se imprime no tiene ningún documento de texto (un récipe
      * solo, por ejemplo).
      *
+     * **Ocultas desde el 2026-11-05** hasta que la elección sea por reporte: con la bandera apagada devuelve `[]` y la barra
+     * de la vista previa no se dibuja.
+     *
      * @return array<int,array{texto:string, url:string, activa:bool}>
      */
     public function paginas(): array
     {
+        if (! ModoDeLaHoja::hojaUnicaHabilitada()) {
+            return [];
+        }
+
         $actual = null;
 
         foreach ($this->documentos as $documento) {

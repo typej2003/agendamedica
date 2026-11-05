@@ -155,9 +155,14 @@ class FormatoDeImpresionGuardarController extends Controller
      * **La hoja de los documentos de texto** (2026-11-04): vertical, media vertical, horizontal o estilo récipe. Es del
      * **doctor que firma**, como las opciones del récipe; la hoja de un centro no se imprime nunca (sus doctores usan la
      * suya), así que un centro no la configura. Vacío = «como está hoy».
+     *
+     * **Oculta desde el 2026-11-05** hasta que la elección sea por reporte: la ruta no existe (404) y la tarjeta no se
+     * ofrece, así que una pestaña vieja tampoco puede guardar una hoja que ya no se lee.
      */
     public function hoja(Request $request, GuardarFormatoDelRecipe $guardar)
     {
+        abort_unless(ModoDeLaHoja::hojaUnicaHabilitada(), 404);
+
         if ($this->esElFormatoDeUnCentro($request)) {
             return $this->aFormato($request, 'formato-hoja')->with('error', 'La hoja de los imprimibles es de cada doctor: el centro no la configura.');
         }
