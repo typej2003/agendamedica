@@ -81,6 +81,12 @@ encontró. El estado del código, los comandos y el mapa del repo están en
       revienta si se usa; el catálogo de seguros de la ficha de paciente (WEB-3.2) se lee con
       `App\Clinica\Pacientes\CatalogoDeSeguros` sobre el nombre real. Corregir el `$table` del modelo o
       borrarlo (no lo usa nadie) está anotado en `../ROADMAP.md` §3: **no** es de la tarea que lo encontró.
+      ✅ **Corregido por O-62 (2026-11-05)**: el ABM de seguros del consultorio
+      (`/clinica/catalogos/seguros`) necesita el modelo sobre la tabla real, así que `SegEmp` pasó a
+      `$table = 'seg_emp'` y a la clave `id` que puso el API (`codesegemp` **no** es único entre
+      consultorios) y suma `reg_medico` al `$fillable`. La lectura de la ficha sigue con
+      `CatalogoDeSeguros` (query builder) y `Paciente::segEmp()` sigue **sin acotar por `reg_medico`**:
+      no usarla para mostrar el nombre de un seguro.
       Y ojo con el modelo `Paciente`: su `$fillable` lista `numhistoria`, que **no** es columna de
       `pacientes` (vive en `medico_pacientes` y en `historias`). No rompe por sí solo —la lista blanca de
       `SyncAppDataRequest` tampoco deja pasar esa clave y el sync del móvil exige cédula para crear un
