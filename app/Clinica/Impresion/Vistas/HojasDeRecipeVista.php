@@ -65,6 +65,15 @@ final class HojasDeRecipeVista
         return $this->membrete;
     }
 
+    /**
+     * El récipe **no ofrece cambiar la hoja** (2026-11-05): siempre sale en media hoja horizontal, así que la barra no
+     * pinta el botón de configuración ni su diálogo.
+     */
+    public function hojaDelDocumento(): ?array
+    {
+        return null;
+    }
+
     public function dialogo(): OpcionesDeImpresionVista
     {
         return $this->dialogo;

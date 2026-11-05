@@ -70,19 +70,4 @@ return [
         'prefactura' => env('FACTURACION_PREFACTURA', false),
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Hoja de los imprimibles (oculta)
-    |--------------------------------------------------------------------------
-    |
-    | El médico elige **una sola** hoja para todos sus documentos de texto. Esa configuración está
-    | **oculta** hasta que cada reporte tenga la suya: con la bandera apagada —el default— no se
-    | ofrece en «Formato de impresión» ni en la vista previa, la preferencia guardada se ignora y
-    | cada documento sale como hasta hoy. Cuando la elección sea por reporte se enciende este valor
-    | o se reemplaza por la nueva configuración.
-    |
-    */
-
-    'hoja_de_los_imprimibles' => env('HOJA_DE_LOS_IMPRIMIBLES', false),
-
 ];

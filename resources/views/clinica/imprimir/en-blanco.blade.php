@@ -36,11 +36,11 @@
     <main class="recipe-hojas" id="recipe-hojas" data-recipe-hojas>
         @foreach ($vm->hojas() as $hoja)
             {{-- La hoja en blanco sale en el **mismo modo** que la hoja real de ese documento (O-26): media hoja horizontal
-                 para el récipe y, para los documentos de texto, la que eligió el médico (2026-11-04); hoja vertical para los
-                 ecos, el control de embarazo y los dos informes del examen (`ModoDeLaHoja::clasesDeLaHoja()`). --}}
+                 para el récipe y, para los documentos de texto, la que eligió el médico **para ese imprimible**
+                 (2026-11-05); hoja vertical para los ecos, el control de embarazo y los dos informes del examen
+                 (`ModoDeLaHoja::clasesDeLaHoja()`). --}}
             @php
                 $modo = $hoja['modo'] ?? \App\Clinica\Impresion\ModoDeLaHoja::MITAD;
-                $vertical = \App\Clinica\Impresion\ModoDeLaHoja::esVertical($modo);
             @endphp
             <article class="recipe-hoja{{ \App\Clinica\Impresion\ModoDeLaHoja::clasesDeLaHoja($modo) }} tamano-{{ $hoja['tamano'] }}">
                 @foreach ($hoja['mitades'] as $mitad)
@@ -51,7 +51,9 @@
                     @endif
                 @endforeach
 
-                @if (! $vertical && count($hoja['mitades']) === 1)
+                {{-- La otra mitad en blanco **sólo** en la hoja acostada compartida (`mitad`): la completa, la media
+                     vertical y la media horizontal ya miden lo que se imprime. --}}
+                @if ($modo === \App\Clinica\Impresion\ModoDeLaHoja::MITAD && count($hoja['mitades']) === 1)
                     <div class="recipe-mitad recipe-mitad-vacia" aria-hidden="true"></div>
                 @endif
             </article>

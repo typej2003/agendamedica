@@ -26,8 +26,8 @@ final class HojaEnBlancoVista
     /**
      * @param  string|null  $modoElegido  el `?modo=` de la página (uno de `RecipeFormato::MODOS_IMPRESION`); `null` usa el guardado
      * @param  array{volver:string, hoja:string}  $urls  adónde vuelve la barra y la dirección de esta misma hoja (para los enlaces del modo)
-     * @param  string|null  $preferido  la hoja que el médico eligió para sus documentos de texto, ya resuelta a un modo
-     *                                  (`ModoDeLaHoja::deLaPreferencia`); `null` usa la de siempre
+     * @param  string|null  $preferido  la hoja que el médico eligió para **ese imprimible**, ya resuelta a un modo
+     *                                  (`HojaDelImprimible::modoDe`); `null` usa la de siempre
      */
     public function __construct(
         private string $clave,

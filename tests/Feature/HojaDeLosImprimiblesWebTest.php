@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Clinica\Impresion\DocumentoImpreso;
+use App\Clinica\Impresion\HojaDelImprimible;
 use App\Clinica\Impresion\ModoDeLaHoja;
+use App\Models\Consulta;
 use App\Models\Medico;
 use App\Models\RecipeFormato;
 use App\Models\Specialty;
@@ -14,19 +16,18 @@ use Tests\Feature\Concerns\PreparaRecipesParaImprimir;
 use Tests\TestCase;
 
 /**
- * **La hoja de los imprimibles, elegida por el médico** (2026-11-04): vertical, media vertical, horizontal o estilo récipe.
+ * **La hoja de cada imprimible, elegida desde la vista previa** (2026-11-05): el botón de configuración que está al lado de
+ * «Imprimir» ofrece hoja completa, media hoja vertical y media hoja horizontal, con la hoja actual marcada, y la recuerda
+ * **por documento** en `recipe_formatos.hojas_de_los_imprimibles`.
  *
  * Lo que fijan estos casos:
  *
- *  - La pantalla «Formato de impresión» ofrece las cuatro hojas y **guarda** la elección en `recipe_formatos`, bajo el
- *    registro del médico; sin elección, los documentos siguen saliendo como hasta hoy.
- *  - La elección **se aplica** a los documentos de texto: la constancia (y las demás solicitudes) y su formato en blanco.
- *  - **Los récipes no cambian**: siempre media hoja horizontal, aunque la preferencia sea vertical.
- *  - El selector de la hoja de la vista previa (`?hoja=`) **no guarda**: es sólo una vista previa.
- *  - `horizontal` deja la mitad derecha en blanco; `recipe` mete dos documentos en la misma hoja acostada.
- *
- * **La feature está oculta por defecto** (2026-11-05) hasta que la elección sea por reporte: la clase enciende la bandera
- * en `setUp` para probar el código que queda listo, y el último caso la apaga y fija que no se ofrece ni se aplica.
+ *  - El botón y su diálogo aparecen cuando se imprime **un** documento configurable, con su hoja actual marcada.
+ *  - Guardar cambia **sólo ese imprimible**: la constancia en media vertical no toca el reposo.
+ *  - La media vertical usa la página de la mitad (`recipe-hoja-media-vertical`, A5 acostada) y no deja la mitad vacía.
+ *  - La media horizontal **nunca** usa la página completa; si el texto sigue, sigue en otra mitad izquierda.
+ *  - La hoja en blanco sale igual que la hoja real y el récipe no cambia (siempre media hoja horizontal).
+ *  - La secretaría cambia la hoja desde la cita y queda en la fila del doctor que firma.
  */
 class HojaDeLosImprimiblesWebTest extends TestCase
 {
@@ -36,8 +37,6 @@ class HojaDeLosImprimiblesWebTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        // La hoja única está apagada en producción (`config/clinica.php`); estos casos prueban la feature que queda lista.
-        config(['clinica.hoja_de_los_imprimibles' => true]);
         $this->fijarHoy();
     }
 
@@ -61,14 +60,6 @@ class HojaDeLosImprimiblesWebTest extends TestCase
         return $this->conContexto($user, $medico, $gineco)->actingAs($user);
     }
 
-    private function hoja(Medico $medico, string $hoja): void
-    {
-        RecipeFormato::updateOrCreate(
-            ['reg_medico' => $medico->reg_medico],
-            ['formato_imprimibles' => $hoja],
-        );
-    }
-
     private function constancia(Medico $medico): void
     {
         DB::table('constancia_obs')->insert([
@@ -86,240 +77,260 @@ class HojaDeLosImprimiblesWebTest extends TestCase
         ]);
     }
 
-    // ============================================================================== La pantalla
-
-    public function test_la_pantalla_ofrece_las_cuatro_hojas_y_guarda_la_eleccion(): void
+    private function informe(Medico $medico, string $texto = "Paciente en control.\nSin hallazgos."): void
     {
-        [$user, $medico, $gineco] = $this->escenario();
-
-        $pantalla = $this->como($user, $medico, $gineco)->get(route('clinica.formato'));
-
-        $pantalla->assertOk()
-            ->assertSee('Hoja de los imprimibles')
-            ->assertSee('Hoja vertical')
-            ->assertSee('Media hoja vertical')
-            ->assertSee('Horizontal')
-            ->assertSee('Estilo récipe')
-            ->assertSee('Los récipes no cambian')
-            // Las cuatro opciones, sin ninguna marcada todavía.
-            ->assertSee('name="formato_imprimibles"', false);
-
-        $this->assertSame(4, substr_count($pantalla->getContent(), 'name="formato_imprimibles"'));
-
-        // Guarda la elección bajo el registro del médico.
-        $this->como($user, $medico, $gineco)
-            ->post(route('clinica.formato.hoja'), ['formato_imprimibles' => ModoDeLaHoja::HOJA_HORIZONTAL])
-            ->assertRedirect(route('clinica.formato') . '#formato-hoja')
-            ->assertSessionHas('estado');
-
-        $this->assertSame(
-            ModoDeLaHoja::HOJA_HORIZONTAL,
-            DB::table('recipe_formatos')->where('reg_medico', $medico->reg_medico)->value('formato_imprimibles'),
-        );
-
-        // Y la deja marcada al volver.
-        $this->como($user, $medico, $gineco)->get(route('clinica.formato'))
-            ->assertOk()
-            ->assertSee('id="hoja-horizontal"', false)
-            ->assertSee('value="horizontal"', false);
-
-        // «Volver a como está hoy» borra la preferencia: no queda una hoja forzada.
-        $this->como($user, $medico, $gineco)
-            ->post(route('clinica.formato.hoja'), ['formato_imprimibles' => ''])
-            ->assertRedirect(route('clinica.formato') . '#formato-hoja');
-
-        $this->assertNull(
-            DB::table('recipe_formatos')->where('reg_medico', $medico->reg_medico)->value('formato_imprimibles'),
-        );
-    }
-
-    public function test_el_formato_de_un_centro_no_ofrece_la_hoja(): void
-    {
-        [$user, $medico, $gineco] = $this->escenario();
-
-        // Un centro se edita con `?reg_medico=<centro>` y por un Root. La pantalla no le ofrece la hoja: no tiene firma.
-        $centro = \App\Models\Medico::create([
-            'name' => 'Centro', 'lastname' => 'Médico', 'prefix' => 'Dr',
-            'email' => 'centro-' . substr(uniqid(), -6) . '@example.com',
-            'password' => bcrypt('secreto123'), 'reg_medico' => 'centro-formato-1', 'es_centro' => true,
+        DB::table('informe')->insert([
+            'reg_medico' => $medico->reg_medico, 'nrohistoria' => 1001, 'nroconsulta' => 1,
+            'para' => null, 'descripcion' => $texto, 'fe_cha' => '2026-10-06',
+            'created_at' => now(), 'updated_at' => now(),
         ]);
-
-        $user->assignRole('Root');
-
-        $this->como($user, $medico, $gineco)
-            ->get(route('clinica.formato', ['reg_medico' => $centro->reg_medico]))
-            ->assertOk()
-            ->assertDontSee('Hoja de los imprimibles');
     }
 
-    // ======================================================================== La hoja de la constancia
+    private function url(Consulta $consulta, string $documento): string
+    {
+        return route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => $documento]);
+    }
 
-    public function test_la_constancia_sale_en_la_hoja_elegida(): void
+    private function guardadas(Medico $medico): array
+    {
+        return RecipeFormato::where('reg_medico', $medico->reg_medico)->first()?->hojas_de_los_imprimibles ?? [];
+    }
+
+    // ======================================================================== El botón y su diálogo
+
+    public function test_la_vista_previa_ofrece_el_boton_con_la_hoja_actual_marcada(): void
     {
         [$user, $medico, $gineco] = $this->escenario();
         [, $consulta] = $this->pacienteYConsulta($medico, 1001, 1);
         $this->constancia($medico);
 
-        $url = route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::CONSTANCIA]);
+        $respuesta = $this->como($user, $medico, $gineco)->get($this->url($consulta, DocumentoImpreso::CONSTANCIA));
 
-        // Horizontal: una hoja acostada con la mitad izquierda y la derecha en blanco.
-        $this->hoja($medico, ModoDeLaHoja::HOJA_HORIZONTAL);
-        $html = $this->como($user, $medico, $gineco)->get($url)->assertOk()->getContent();
+        $respuesta->assertOk()
+            ->assertSee('data-abrir-hoja', false)
+            ->assertSee('id="dialogo-hoja"', false)
+            ->assertSee('Hoja completa')
+            ->assertSee('Media hoja vertical')
+            ->assertSee('Media hoja horizontal')
+            ->assertSee('Formato de la hoja: Hoja completa');
 
-        $this->assertSame(1, substr_count($html, 'recipe-mitad-documento'), 'el documento va en una mitad');
-        $this->assertSame(1, substr_count($html, 'recipe-mitad-vacia'), 'la otra mitad queda en blanco');
-        $this->assertSame(0, substr_count($html, 'recipe-hoja-completa'), 'no es una página vertical');
-
-        // Vertical completa.
-        $this->hoja($medico, ModoDeLaHoja::HOJA_VERTICAL);
-        $html = $this->como($user, $medico, $gineco)->get($url)->assertOk()->getContent();
-
-        $this->assertSame(1, substr_count($html, 'recipe-hoja-completa'), 'una página vertical por documento');
-        $this->assertSame(0, substr_count($html, 'recipe-mitad-vacia'));
-
-        // Media vertical: la mitad de arriba de un A4 vertical.
-        $this->hoja($medico, ModoDeLaHoja::HOJA_MEDIA_VERTICAL);
-        $html = $this->como($user, $medico, $gineco)->get($url)->assertOk()->getContent();
-
-        $this->assertSame(1, substr_count($html, 'recipe-hoja-mitad-superior'));
-        $this->assertSame(0, substr_count($html, 'recipe-mitad-vacia'));
-
-        // Estilo récipe: la misma media hoja, pero sin dejar la mitad vacía como documento suelto.
-        $this->hoja($medico, ModoDeLaHoja::HOJA_RECIPE);
-        $html = $this->como($user, $medico, $gineco)->get($url)->assertOk()->getContent();
-
-        $this->assertSame(1, substr_count($html, 'recipe-mitad-documento'));
-        $this->assertSame(1, substr_count($html, 'recipe-mitad-vacia'), 'un solo documento deja la otra mitad en blanco');
+        $html = $respuesta->getContent();
+        $this->assertSame(3, substr_count($html, 'name="hoja"'), 'la constancia ofrece las tres hojas');
+        $this->assertSame(1, substr_count($html, 'aria-current="true"'), 'sólo la hoja actual queda marcada');
+        // La constancia es una solicitud: por defecto, el A4 vertical completo.
+        $this->assertStringContainsString('recipe-hoja recipe-hoja-completa', $html);
     }
 
-    public function test_estilo_recipe_mete_dos_documentos_en_la_misma_hoja(): void
+    public function test_cambiar_la_hoja_guarda_solo_ese_imprimible(): void
     {
         [$user, $medico, $gineco] = $this->escenario();
         [, $consulta] = $this->pacienteYConsulta($medico, 1001, 1);
         $this->constancia($medico);
         $this->reposo($medico);
-        $this->hoja($medico, ModoDeLaHoja::HOJA_RECIPE);
 
-        $html = $this->como($user, $medico, $gineco)
-            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'todos']))
-            ->assertOk()
-            ->getContent();
+        $this->como($user, $medico, $gineco)
+            ->post(route('clinica.consulta.documentos.hoja', $consulta->id), [
+                'documento' => DocumentoImpreso::CONSTANCIA,
+                'hoja' => HojaDelImprimible::MEDIA_VERTICAL,
+            ])
+            ->assertRedirect($this->url($consulta, DocumentoImpreso::CONSTANCIA))
+            ->assertSessionHasNoErrors();
 
-        $this->assertSame(1, substr_count($html, 'class="recipe-hoja '), 'los dos documentos comparten una hoja');
-        $this->assertSame(2, substr_count($html, 'recipe-mitad-documento'));
-        $this->assertSame(0, substr_count($html, 'recipe-mitad-vacia'));
-        $this->assertSame(0, substr_count($html, 'recipe-hoja-completa'));
+        $this->assertSame(
+            [DocumentoImpreso::CONSTANCIA => HojaDelImprimible::MEDIA_VERTICAL],
+            $this->guardadas($medico),
+            'sólo se guarda el documento que se estaba imprimiendo',
+        );
+
+        // La constancia cambia de hoja y el diálogo marca la nueva.
+        $html = $this->como($user, $medico, $gineco)->get($this->url($consulta, DocumentoImpreso::CONSTANCIA))->getContent();
+        $this->assertStringContainsString('recipe-hoja recipe-hoja-media-vertical', $html);
+        $this->assertStringNotContainsString('recipe-hoja-completa', $html);
+        $this->assertStringContainsString('Formato de la hoja: Media hoja vertical', $html);
+
+        // El reposo, que no se tocó, sigue en la hoja completa de siempre.
+        $reposo = $this->como($user, $medico, $gineco)->get($this->url($consulta, DocumentoImpreso::REPOSO))->getContent();
+        $this->assertStringContainsString('recipe-hoja recipe-hoja-completa', $reposo);
+        $this->assertStringContainsString('Formato de la hoja: Hoja completa', $reposo);
     }
 
-    public function test_el_formato_en_blanco_sale_en_la_misma_hoja_que_el_documento(): void
+    public function test_con_varios_documentos_no_hay_una_sola_hoja_que_cambiar(): void
     {
         [$user, $medico, $gineco] = $this->escenario();
-        $this->hoja($medico, ModoDeLaHoja::HOJA_HORIZONTAL);
+        [, $consulta] = $this->pacienteYConsulta($medico, 1001, 1);
+        $this->constancia($medico);
+        $this->reposo($medico);
+
+        // La elección es por imprimible: en un lote de varios no hay una hoja sola que ofrecer.
+        $html = $this->como($user, $medico, $gineco)
+            ->get($this->url($consulta, 'todos'))
+            ->assertOk()
+            ->assertDontSee('data-abrir-hoja', false)
+            ->getContent();
+
+        $this->assertSame(2, substr_count($html, 'recipe-hoja-completa'), 'cada documento sale con su hoja');
+    }
+
+    public function test_un_post_inventado_no_guarda_nada(): void
+    {
+        [$user, $medico, $gineco] = $this->escenario();
+        [, $consulta] = $this->pacienteYConsulta($medico, 1001, 1);
+        $this->constancia($medico);
+
+        // Un documento que no admite la elección (el récipe) no se configura.
+        $this->como($user, $medico, $gineco)
+            ->post(route('clinica.consulta.documentos.hoja', $consulta->id), ['documento' => 'recipe', 'hoja' => HojaDelImprimible::COMPLETA])
+            ->assertNotFound();
+
+        // Una hoja que no es de las tres: no se guarda.
+        $this->como($user, $medico, $gineco)
+            ->post(route('clinica.consulta.documentos.hoja', $consulta->id), ['documento' => DocumentoImpreso::CONSTANCIA, 'hoja' => 'carta'])
+            ->assertSessionHasErrors('hoja');
+
+        $this->assertSame([], $this->guardadas($medico));
+    }
+
+    // ===================================================================== Las tres hojas
+
+    public function test_la_media_vertical_usa_la_pagina_de_la_mitad_y_no_deja_la_mitad_vacia(): void
+    {
+        [$user, $medico, $gineco] = $this->escenario();
+        [, $consulta] = $this->pacienteYConsulta($medico, 1001, 1);
+        $this->constancia($medico);
+
+        RecipeFormato::create([
+            'reg_medico' => $medico->reg_medico,
+            'hojas_de_los_imprimibles' => [DocumentoImpreso::CONSTANCIA => HojaDelImprimible::MEDIA_VERTICAL],
+        ]);
+
+        $html = $this->como($user, $medico, $gineco)->get($this->url($consulta, DocumentoImpreso::CONSTANCIA))->assertOk()->getContent();
+
+        $this->assertStringContainsString('recipe-hoja recipe-hoja-media-vertical', $html);
+        $this->assertStringNotContainsString('recipe-mitad-vacia', $html, 'la página mide la mitad: no hay nada vacío');
+        $this->assertStringNotContainsString('recipe-hoja-completa', $html);
+
+        // La página del PDF es la mitad de un A4 vertical (A5 acostada), no un A4 con la mitad de abajo en blanco.
+        $css = file_get_contents(public_path('css/clinica-documento.css'));
+        $this->assertStringContainsString('@page documento-media-vertical { size: 210mm 148.5mm; margin: 0; }', $css);
+    }
+
+    public function test_la_media_horizontal_nunca_usa_la_pagina_completa_y_la_siguiente_hoja_tambien_es_la_mitad(): void
+    {
+        [$user, $medico, $gineco] = $this->escenario();
+        [, $consulta] = $this->pacienteYConsulta($medico, 1001, 1);
+        $this->informe($medico, collect(range(1, 500))->map(fn ($n) => 'palabra' . $n)->implode(' '));
+
+        RecipeFormato::create([
+            'reg_medico' => $medico->reg_medico,
+            'hojas_de_los_imprimibles' => [DocumentoImpreso::INFORME => HojaDelImprimible::MEDIA_HORIZONTAL],
+        ]);
+
+        $html = $this->como($user, $medico, $gineco)->get($this->url($consulta, DocumentoImpreso::INFORME))->assertOk()->getContent();
+
+        $hojas = substr_count($html, 'class="recipe-hoja ');
+        $this->assertGreaterThan(1, $hojas, 'el texto largo sigue en otra hoja');
+        $this->assertSame($hojas, substr_count($html, 'recipe-hoja-horizontal'), 'todas las hojas son la mitad izquierda');
+        $this->assertStringNotContainsString('recipe-hoja-completa', $html, 'nunca sale la página completa');
+        $this->assertStringNotContainsString('recipe-mitad-vacia', $html);
+        $this->assertSame(1, substr_count($html, 'class="firmas"'), 'la firma va sólo en la última mitad');
+        $this->assertSame(1, substr_count($html, 'class="documento-continua"'));
+    }
+
+    public function test_la_hoja_en_blanco_sale_en_la_misma_hoja_que_el_documento(): void
+    {
+        [$user, $medico, $gineco] = $this->escenario();
+        RecipeFormato::create([
+            'reg_medico' => $medico->reg_medico,
+            'hojas_de_los_imprimibles' => [DocumentoImpreso::CONSTANCIA => HojaDelImprimible::MEDIA_VERTICAL],
+        ]);
 
         $html = $this->como($user, $medico, $gineco)
             ->get(route('clinica.formato.en-blanco', ['formato' => DocumentoImpreso::CONSTANCIA]))
             ->assertOk()
             ->getContent();
 
-        $this->assertSame(1, substr_count($html, 'recipe-mitad-documento'));
-        $this->assertSame(1, substr_count($html, 'recipe-mitad-vacia'));
+        $this->assertStringContainsString('recipe-hoja recipe-hoja-media-vertical', $html);
+        $this->assertStringNotContainsString('recipe-mitad-vacia', $html);
     }
 
-    // ============================================================================== Los récipes
-
-    public function test_el_recipe_sigue_en_media_hoja_horizontal_aunque_la_hoja_elegida_sea_vertical(): void
+    public function test_el_recipe_sigue_en_media_hoja_horizontal_y_sin_el_boton(): void
     {
         [$user, $medico, $gineco] = $this->escenario();
         $this->vademecum($medico);
         [, $consulta] = $this->pacienteYConsulta($medico, 1001, 1);
         $this->recipe($medico, 1001, 1, 1, ['0001'], '2026-10-06');
-        $this->hoja($medico, ModoDeLaHoja::HOJA_VERTICAL);
 
-        $html = $this->como($user, $medico, $gineco)
-            ->get($this->urlRecipe($consulta))
-            ->assertOk()
-            ->getContent();
+        RecipeFormato::create([
+            'reg_medico' => $medico->reg_medico,
+            'hojas_de_los_imprimibles' => [DocumentoImpreso::CONSTANCIA => HojaDelImprimible::MEDIA_VERTICAL],
+        ]);
 
-        $this->assertSame(1, substr_count($html, 'class="recipe-hoja '));
-        $this->assertSame(0, substr_count($html, 'recipe-hoja-completa'));
-        $this->assertSame(0, substr_count($html, 'recipe-hoja-mitad-superior'));
+        $html = $this->como($user, $medico, $gineco)->get($this->urlRecipe($consulta))->assertOk()->getContent();
+
+        $this->assertStringContainsString('class="recipe-hoja ', $html);
+        $this->assertStringNotContainsString('recipe-hoja-completa', $html);
+        $this->assertStringNotContainsString('recipe-hoja-media-vertical', $html);
+        $this->assertStringNotContainsString('data-abrir-hoja', $html, 'el récipe no ofrece cambiar la hoja');
     }
 
-    // ================================================================= La vista previa no guarda
+    // ==================================================================== Desde la cita (secretaría)
 
-    public function test_el_selector_de_la_vista_previa_cambia_la_hoja_sin_guardarla(): void
+    public function test_la_secretaria_cambia_la_hoja_desde_la_cita_y_queda_en_la_fila_del_doctor(): void
     {
         [$user, $medico, $gineco] = $this->escenario();
         [, $consulta] = $this->pacienteYConsulta($medico, 1001, 1);
         $this->constancia($medico);
-        $this->hoja($medico, ModoDeLaHoja::HOJA_VERTICAL);
+        $secretaria = $this->secretariaConAcceso($medico);
+        $cita = $this->cita($medico, 1001, $this->hoy->toDateString(), ['atendido' => 1]);
 
-        $respuesta = $this->como($user, $medico, $gineco)->get(
-            route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::CONSTANCIA, 'hoja' => 'horizontal']),
-        );
-
-        $respuesta->assertOk()
-            ->assertSee('Hoja', false)
-            ->assertSee('Media vertical')
-            ->assertSee('Estilo récipe');
-
-        $html = $respuesta->getContent();
-        $this->assertSame(1, substr_count($html, 'recipe-mitad-vacia'), 'la vista previa usa la hoja pedida');
+        $this->como($secretaria, $medico, $gineco)
+            ->post(route('clinica.agenda.documentos.hoja', $cita->id), [
+                'documento' => DocumentoImpreso::CONSTANCIA,
+                'hoja' => HojaDelImprimible::MEDIA_HORIZONTAL,
+            ])
+            ->assertRedirect(route('clinica.agenda.documentos.imprimir', [$cita->id, 'documento' => DocumentoImpreso::CONSTANCIA]));
 
         $this->assertSame(
-            ModoDeLaHoja::HOJA_VERTICAL,
-            DB::table('recipe_formatos')->where('reg_medico', $medico->reg_medico)->value('formato_imprimibles'),
-            'la vista previa no guarda la elección',
+            [DocumentoImpreso::CONSTANCIA => HojaDelImprimible::MEDIA_HORIZONTAL],
+            $this->guardadas($medico),
+            'la hoja se guarda en la fila del doctor que firma, aunque la cambie la secretaría',
         );
+
+        $html = $this->como($secretaria, $medico, $gineco)
+            ->get(route('clinica.agenda.documentos.imprimir', [$cita->id, 'documento' => DocumentoImpreso::CONSTANCIA]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('recipe-hoja recipe-hoja-horizontal', $html);
+        $this->assertStringNotContainsString('recipe-hoja-completa', $html);
     }
 
-    // ===================================================================== La feature oculta
+    // ===================================================================== El modo de la hoja
 
-    public function test_la_hoja_esta_oculta_y_todo_sale_como_hasta_hoy(): void
+    public function test_la_hoja_actual_es_la_de_siempre_si_el_medico_no_eligio(): void
     {
-        config(['clinica.hoja_de_los_imprimibles' => false]);
+        $this->assertSame(HojaDelImprimible::COMPLETA, HojaDelImprimible::actual(null, DocumentoImpreso::CONSTANCIA));
+        $this->assertSame(HojaDelImprimible::MEDIA_HORIZONTAL, HojaDelImprimible::actual(null, DocumentoImpreso::RESUMEN_MEDICO));
+        $this->assertSame(HojaDelImprimible::MEDIA_VERTICAL, HojaDelImprimible::actual(null, DocumentoImpreso::INFORME, 'pequena'));
+        $this->assertSame(
+            HojaDelImprimible::MEDIA_VERTICAL,
+            HojaDelImprimible::actual([DocumentoImpreso::CONSTANCIA => HojaDelImprimible::MEDIA_VERTICAL], DocumentoImpreso::CONSTANCIA),
+        );
+        // La página pequeña histórica manda sobre lo guardado.
+        $this->assertSame(
+            HojaDelImprimible::COMPLETA,
+            HojaDelImprimible::actual([DocumentoImpreso::CONSTANCIA => HojaDelImprimible::MEDIA_VERTICAL], DocumentoImpreso::CONSTANCIA, 'grande'),
+        );
+        // Y lo que no es de las tres se descarta.
+        $this->assertSame([], HojaDelImprimible::normalizar(['constancia' => 'carta', 'cosa' => 'completa']));
+    }
 
-        [$user, $medico, $gineco] = $this->escenario();
-        [, $consulta] = $this->pacienteYConsulta($medico, 1001, 1);
-        $this->constancia($medico);
-
-        // Aunque haya una preferencia guardada (la que dejó una prueba en QA), no se aplica.
-        $this->hoja($medico, ModoDeLaHoja::HOJA_HORIZONTAL);
-
-        $this->como($user, $medico, $gineco)->get(route('clinica.formato'))
-            ->assertOk()
-            ->assertDontSee('Hoja de los imprimibles')
-            ->assertDontSee('name="formato_imprimibles"', false);
-
-        // La ruta de guardado tampoco existe: una pestaña vieja no puede guardar una hoja que ya no se lee.
-        $this->como($user, $medico, $gineco)
-            ->post(route('clinica.formato.hoja'), ['formato_imprimibles' => ModoDeLaHoja::HOJA_HORIZONTAL])
-            ->assertNotFound();
-
-        $html = $this->como($user, $medico, $gineco)
-            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::CONSTANCIA]))
-            ->assertOk()
-            ->assertDontSee('barra-impresion-modos', false)
-            ->getContent();
-
-        // La constancia vuelve a su hoja de siempre: A4 vertical completo.
-        $this->assertSame(1, substr_count($html, 'recipe-hoja-completa'));
-        $this->assertSame(0, substr_count($html, 'recipe-mitad-vacia'));
-
-        // `?hoja=` tampoco cambia la hoja: la vista previa de las cuatro hojas está apagada.
-        $html = $this->como($user, $medico, $gineco)
-            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::CONSTANCIA, 'hoja' => 'horizontal']))
-            ->assertOk()
-            ->getContent();
-        $this->assertSame(1, substr_count($html, 'recipe-hoja-completa'));
-        $this->assertSame(0, substr_count($html, 'recipe-mitad-vacia'));
-
-        // El formato en blanco también sale como el documento real.
-        $html = $this->como($user, $medico, $gineco)
-            ->get(route('clinica.formato.en-blanco', ['formato' => DocumentoImpreso::CONSTANCIA]))
-            ->assertOk()
-            ->getContent();
-        $this->assertSame(1, substr_count($html, 'recipe-hoja-completa'));
-        $this->assertSame(0, substr_count($html, 'recipe-mitad-vacia'));
+    public function test_cada_hoja_elige_el_modo_del_motor(): void
+    {
+        $this->assertSame(ModoDeLaHoja::COMPLETA, HojaDelImprimible::modo(HojaDelImprimible::COMPLETA));
+        $this->assertSame(ModoDeLaHoja::MEDIA_VERTICAL, HojaDelImprimible::modo(HojaDelImprimible::MEDIA_VERTICAL));
+        $this->assertSame(ModoDeLaHoja::HORIZONTAL, HojaDelImprimible::modo(HojaDelImprimible::MEDIA_HORIZONTAL));
+        $this->assertNull(HojaDelImprimible::modoDe(null, DocumentoImpreso::ECO_PELVICO), 'un eco no acepta la elección');
+        $this->assertNull(HojaDelImprimible::modoDe(null, 'recipe'), 'un récipe tampoco');
     }
 }

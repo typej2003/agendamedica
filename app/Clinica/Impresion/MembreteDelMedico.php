@@ -80,19 +80,22 @@ final class MembreteDelMedico
     }
 
     /**
-     * **La hoja que este médico eligió para sus documentos de texto** (2026-11-04): `recipe_formatos.formato_imprimibles`
-     * traducida al modo del motor, o `null` si no eligió (cada documento sale como hasta hoy). Es del **doctor que firma**,
-     * igual que las opciones del récipe: la fila del centro no decide la hoja de sus doctores.
+     * **La hoja que este médico eligió para cada documento de texto** (2026-11-05): el mapa de
+     * `recipe_formatos.hojas_de_los_imprimibles` (`constancia => media-vertical`…), ya limpio con
+     * `HojaDelImprimible::normalizar()`. Vacío = no eligió nada: cada documento sale como siempre. Es del **doctor que
+     * firma**, igual que las opciones del récipe: la fila del centro no decide la hoja de sus doctores.
      *
      * Los récipes no la usan (siempre media hoja horizontal) y los ecos, el control de embarazo, la colposcopía, la
      * histeroscopía y el preoperatorio tampoco (tienen su hoja fija).
+     *
+     * @return array<string,string>
      */
-    public function hojaDeLosImprimibles(Medico $medico): ?string
+    public function hojasDeLosImprimibles(Medico $medico): array
     {
         $registro = $medico->registroDelFormato();
 
-        return ModoDeLaHoja::deLaPreferencia(
-            $registro === null ? null : RecipeFormato::where('reg_medico', $registro)->first()?->formato_imprimibles,
+        return HojaDelImprimible::normalizar(
+            $registro === null ? null : RecipeFormato::where('reg_medico', $registro)->first()?->hojas_de_los_imprimibles,
         );
     }
 

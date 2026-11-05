@@ -282,7 +282,7 @@ final class DocumentoImpreso
      * No se decide acá: el documento lo **declara** con su clave en `ModoDeLaHoja`, que es la única tabla de esa regla. Un
      * documento con `informe` (los ecos, WEB-11.13) va siempre a hoja completa, porque su informe es un formulario lleno y
      * ocupa una página entera. El **informe pre-operatorio** (O-47) también: son dos páginas fijas. `preferido` es la hoja
-     * que eligió el médico (`ModoDeLaHoja::deLaPreferencia`), ya resuelta; `null` es la de siempre.
+     * que eligió el médico **para este imprimible** (`HojaDelImprimible::modoDe`), ya resuelta; `null` es la de siempre.
      */
     public function modo(): string
     {
@@ -304,8 +304,8 @@ final class DocumentoImpreso
     }
 
     /**
-     * El mismo documento con la **hoja que eligió el médico** para sus documentos de texto, ya resuelta a un modo
-     * (`ModoDeLaHoja::deLaPreferencia`). Los documentos con hoja fija (ecos, colposcopía, preoperatorio) la ignoran.
+     * El mismo documento con la **hoja que eligió el médico para ese imprimible**, ya resuelta a un modo
+     * (`HojaDelImprimible::modoDe`). Los documentos con hoja fija (ecos, colposcopía, preoperatorio) la ignoran.
      */
     public function conPreferencia(?string $preferido): self
     {
