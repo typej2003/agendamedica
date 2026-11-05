@@ -246,9 +246,14 @@
 
                     <div class="col-sm-6 col-xl">
                         <label class="form-label" for="monto">Monto <span id="monto-obligatorio" @if (! $vm->montoObligatorio()) hidden @endif>*</span></label>
-                        <input type="number" step="0.01" min="0" name="monto" id="monto" class="form-control"
-                               value="{{ $vm->valor('monto') }}" placeholder="{{ $vm->montoObligatorio() ? 'Sin precio: escríbelo (0 si es gratis)' : $vm->precioDelMotivo() }}"
-                               @if ($vm->montoObligatorio()) required @endif>
+                        {{-- El monto va en dólares (2026-11-05): el «USD» del campo es el que le dice a quien agenda en qué
+                             moneda está cargando, como en los motivos de cita. --}}
+                        <div class="input-group">
+                            <input type="number" step="0.01" min="0" name="monto" id="monto" class="form-control"
+                                   value="{{ $vm->valor('monto') }}" placeholder="{{ $vm->montoObligatorio() ? 'Sin precio: escríbelo (0 si es gratis)' : $vm->precioDelMotivo() }}"
+                                   @if ($vm->montoObligatorio()) required @endif>
+                            <span class="input-group-text">USD</span>
+                        </div>
                         @error('monto') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                     </div>
                 </div>
