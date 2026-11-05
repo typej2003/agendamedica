@@ -40,6 +40,9 @@ final class ProximaCitaVista
      * @param  bool  $horaObligatoria  la sede elegida agenda por hora
      * @param  string  $url  a dónde postea el formulario (la ruta de alta de la agenda)
      * @param  string  $fechaMinima  `AAAA-MM-DD`: mañana del consultorio (la hoja imprime de mañana en adelante)
+     * @param  string|null  $volverRecipe  la pantalla de la sección en la que está el médico (`lista`, `nuevo`,
+     *         `pareja` o el número del récipe), para que la vuelta de la cita regrese ahí (O-65); `null` = a la
+     *         entrada de la sección, como siempre
      */
     public function __construct(
         private array $sedes,
@@ -51,6 +54,7 @@ final class ProximaCitaVista
         private int $pacienteId,
         private int $consultaId,
         private string $fechaMinima,
+        private ?string $volverRecipe = null,
     ) {
     }
 
@@ -73,6 +77,15 @@ final class ProximaCitaVista
     public function consultaId(): int
     {
         return $this->consultaId;
+    }
+
+    /**
+     * La pantalla de la sección de récipes a la que vuelve la cita (`lista`, `nuevo`, `pareja` o el número del
+     * récipe), o `null` para volver a la entrada de la sección (O-65). Viaja en el formulario como `volver_recipe`.
+     */
+    public function volverRecipe(): ?string
+    {
+        return $this->volverRecipe;
     }
 
     public function fechaMinima(): string
