@@ -83,5 +83,5 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ asset('js/clinica/imprimir-recipe.js') }}"></script>
+    <script src="{{ asset('js/clinica/imprimir-recipe.js') }}?v={{ @filemtime(public_path('js/clinica/imprimir-recipe.js')) }}"></script>
 @endsection
