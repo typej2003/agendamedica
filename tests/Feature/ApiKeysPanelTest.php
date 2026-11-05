@@ -87,6 +87,57 @@ class ApiKeysPanelTest extends TestCase
             ->assertSee('Generar API key');
     }
 
+    /**
+     * Un médico con varias sedes (varios `reg_medico`): la credencial se emite para **la que se elige**, no para
+     * la principal. Es el caso del doctor que atiende en tres instalaciones: cada PC sube a su consultorio.
+     */
+    public function test_emite_para_la_sede_elegida_cuando_el_medico_tiene_varios_registros(): void
+    {
+        $medico = $this->medico();
+        $sede = app(CuentaService::class)->crearCentro([
+            'name' => 'Sede', 'lastname' => 'Este', 'reg_medico' => 'test-sede-' . substr(uniqid(), -6),
+        ]);
+        app(CuentaService::class)->asignarRegistro($medico, $sede->reg_medico);
+        $this->actingAs($this->admin());
+
+        $panel = Livewire::test(ApiKeys::class)
+            ->set('search', $medico->reg_medico)
+            ->assertSee('consultorios')
+            ->call('abrirEmitir', $medico->id)
+            // Arranca en el consultorio propio, pero el desplegable permite la sede.
+            ->assertSet('registro', $medico->reg_medico)
+            ->assertSee($sede->reg_medico)
+            ->set('registro', $sede->reg_medico)
+            ->set('equipo', 'SEDE-ESTE')
+            ->call('emitir')
+            ->assertHasNoErrors();
+
+        $mostrada = $panel->get('tokenGenerado');
+        $this->assertSame($sede->reg_medico, $mostrada['reg_medico']);
+        $this->assertSame([SyncAuthService::OK, $sede->reg_medico], $this->autenticaComo($mostrada['token']));
+
+        // La credencial quedó en la sede elegida y no en el consultorio principal.
+        $this->assertSame(0, SyncCredential::where('reg_medico', $medico->reg_medico)->count());
+        $this->assertSame(1, SyncCredential::where('reg_medico', $sede->reg_medico)->count());
+    }
+
+    public function test_no_emite_para_un_registro_que_no_es_del_medico(): void
+    {
+        $medico = $this->medico();
+        $this->actingAs($this->admin());
+
+        Livewire::test(ApiKeys::class)
+            ->call('abrirEmitir', $medico->id)
+            ->set('registro', 'reg-de-otro-' . substr(uniqid(), -6))
+            ->set('equipo', 'COLADO')
+            ->call('emitir')
+            ->assertHasErrors(['registro'])
+            ->assertSet('modal', 'emitir')
+            ->assertSet('tokenGenerado', null);
+
+        $this->assertSame(0, SyncCredential::where('machine_label', 'COLADO')->count());
+    }
+
     public function test_generar_una_api_key_la_muestra_una_vez_y_autentica(): void
     {
         $medico = $this->medico();
@@ -166,6 +217,8 @@ class ApiKeysPanelTest extends TestCase
             ->call('verCredenciales', $medico->id)
             ->assertSet('modal', 'credenciales')
             ->assertSee('EQUIPO-VER')
+            // Sin el registro no se sabe cuál revocar cuando el médico tiene varias sedes.
+            ->assertSee($medico->reg_medico)
             ->assertSee('Activa')
             ->call('revocar', $a['credencial']->id)
             ->assertSee('Revocada');

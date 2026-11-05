@@ -38,6 +38,10 @@
                                 <td>
                                     <div class="fw-semibold">{{ trim($medico->name . ' ' . $medico->lastname) }}</div>
                                     <small class="text-muted">{{ $medico->reg_medico }}</small>
+                                    @if (count($r['regs']) > 1)
+                                        {{-- El médico de varias sedes: cada una es un reg_medico y su propia credencial. --}}
+                                        <small class="text-muted d-block">{{ count($r['regs']) }} consultorios</small>
+                                    @endif
                                 </td>
                                 <td class="fecha-celda">
                                     @if ($r['ultima_escritorio'])
@@ -131,6 +135,7 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Equipo</th>
+                                        <th>Consultorio</th>
                                         <th>Emitida</th>
                                         <th>Vence</th>
                                         <th>Último uso</th>
@@ -142,6 +147,8 @@
                                     @forelse ($credenciales as $c)
                                         <tr wire:key="cred-{{ $c->id }}">
                                             <td class="fw-semibold">{{ $c->machine_label }}</td>
+                                            {{-- Con varias sedes el mismo nombre de equipo se repite: sin el registro no se sabe cuál revocar. --}}
+                                            <td><code>{{ $c->reg_medico }}</code></td>
                                             <td class="fecha-celda">{{ \App\Support\HoraLocal::instante($c->created_at)?->format(\App\Support\Regionalizacion::formatoActual()) }}</td>
                                             <td class="fecha-celda">{{ $c->expires_at?->format(\App\Support\Regionalizacion::formatoActual()) }}</td>
                                             <td class="fecha-celda">{{ \App\Support\HoraLocal::fechaHora($c->last_used_at, 'Nunca') }}</td>
@@ -160,14 +167,14 @@
                                             <td class="text-end">
                                                 @if (! $c->estaRevocada())
                                                     <button wire:click="revocar({{ $c->id }})" class="btn btn-sm btn-outline-danger"
-                                                            onclick="return confirm('¿Revocar la API key del equipo {{ e($c->machine_label) }}? Ese equipo dejará de sincronizar.')">
+                                                            onclick="return confirm('¿Revocar la API key del equipo {{ e($c->machine_label) }} del consultorio {{ e($c->reg_medico) }}? Ese equipo dejará de sincronizar.')">
                                                         Revocar
                                                     </button>
                                                 @endif
                                             </td>
                                         </tr>
                                     @empty
-                                        <tr><td colspan="6" class="text-center text-muted py-4">Este médico todavía no tiene API keys.</td></tr>
+                                        <tr><td colspan="7" class="text-center text-muted py-4">Este médico todavía no tiene API keys.</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>

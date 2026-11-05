@@ -14,7 +14,9 @@
 
                     <dl class="row mb-3">
                         <dt class="col-sm-3">Médico</dt>
-                        <dd class="col-sm-9">{{ $tokenGenerado['medico'] }} <small class="text-muted">({{ $tokenGenerado['reg_medico'] }})</small></dd>
+                        <dd class="col-sm-9">{{ $tokenGenerado['medico'] }}</dd>
+                        <dt class="col-sm-3">Consultorio</dt>
+                        <dd class="col-sm-9">{{ $tokenGenerado['reg_medico'] }} <small class="text-muted">(el registro al que sube este equipo)</small></dd>
                         <dt class="col-sm-3">Equipo</dt>
                         <dd class="col-sm-9">{{ $tokenGenerado['equipo'] }}</dd>
                         <dt class="col-sm-3">Vence</dt>
