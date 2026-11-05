@@ -7,6 +7,7 @@ use App\Actions\Pacientes\SembrarTiposDeAntecedente;
 use App\Clinica\Agenda\ArmadorDeAgenda;
 use App\Clinica\Agenda\MotivosDeCita;
 use App\Clinica\Agenda\ParametrosDeAgenda;
+use App\Clinica\Agenda\VueltaDeLaCita;
 use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\CitaDeLaConsulta;
@@ -2115,10 +2116,19 @@ class ConsultaController extends Controller
         $proxima = $this->proximaCita->de((string) $consulta->reg_medico, (int) $consulta->numhistoria, $pacienteId);
         $firmante = $this->firma->deUnaConsulta($consulta, $medico) ?? $medico;
 
+        // «Hacer cita» lleva la pantalla de la sección en la que está el médico, igual que «Agendar aquí» (O-65): el
+        // formulario completo de la agenda la conserva y, al guardar, lo devuelve ahí y no a la entrada de la sección.
+        $aLaAgenda = ['paciente_id' => $pacienteId, 'volver_consulta' => $id];
+        $pantalla = $this->pantallaDeLosRecipes();
+
+        if ($pantalla !== null) {
+            $aLaAgenda['volver_recipe'] = $pantalla;
+        }
+
         return [
             'dialogo' => new OpcionesDeImpresionVista($this->membretes->opciones($firmante), route('clinica.recipes.opciones')),
             'proximaCita' => $proxima === null ? null : ProximaCitaDelRecipe::texto($proxima),
-            'hacerCita' => route('clinica.agenda.nueva', ['paciente_id' => $pacienteId, 'volver_consulta' => $id]),
+            'hacerCita' => route('clinica.agenda.nueva', $aLaAgenda),
             'imprimir' => fn (int $numero) => route('clinica.consulta.recipes.imprimir', [$id, $numero]),
             'imprimirPareja' => route('clinica.consulta.recipe-pareja.imprimir', $id),
         ];
@@ -2166,7 +2176,29 @@ class ConsultaController extends Controller
             // La hoja imprime la próxima cita de **mañana en adelante** (`ProximaCitaDelRecipe`): agendar hoy o antes
             // dejaría la hoja sin la línea, así que el formulario no lo ofrece y el request lo rechaza.
             fechaMinima: FechaDelConsultorio::hoy()->addDay()->toDateString(),
+            // O-65: la pantalla de la sección en la que está el médico —la lista o el editor de este récipe— para que
+            // la cita lo devuelva ahí y no a la entrada de la sección.
+            volverRecipe: $this->pantallaDeLosRecipes(),
         );
+    }
+
+    /**
+     * **La pantalla de la sección de récipes que se está viendo** (O-65), con las mismas claves que su URL: `lista`
+     * (`?lista=1`), `nuevo` (`?recipe=nuevo`), `pareja` (`?recipe=pareja`) o el número del récipe (`?recipe=2`), que
+     * `recipes()` resuelve igual. `null` cuando la URL no lo dice (la sección entra por su editor de siempre): la
+     * vuelta repite esa misma entrada y el médico aterriza donde estaba.
+     */
+    private function pantallaDeLosRecipes(): ?string
+    {
+        $recipe = VueltaDeLaCita::pantallaEnLaUrl(request()->query('recipe'));
+
+        if ($recipe !== null) {
+            return $recipe;
+        }
+
+        return filter_var(request()->query('lista', false), FILTER_VALIDATE_BOOLEAN)
+            ? VueltaDeLaCita::LA_LISTA
+            : null;
     }
 
     /**

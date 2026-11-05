@@ -100,6 +100,61 @@ class HacerCitaDesdeRecipesWebTest extends TestCase
             ->assertSee('Próxima cita: 14/10/2026  9:30 AM');
     }
 
+    /**
+     * **«Hacer cita» desde la lista de récipes** (O-65): el botón de la franja lleva al formulario completo de la
+     * agenda y, al guardar, devuelve al médico **a la lista** en la que estaba —el listado de medicamentos—, no a la
+     * entrada de la sección (el editor del primer récipe).
+     */
+    public function test_hacer_cita_desde_la_lista_de_recipes_vuelve_a_la_lista(): void
+    {
+        [$user, $medico, $gineco, $pacienteId, $consulta] = $this->escenario();
+        $sede = $this->sede($medico, 'hora_cita');
+        $lista = route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes', 'lista' => 1]);
+
+        // El enlace de la franja dice a qué pantalla de la sección hay que volver.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($lista)
+            ->assertOk()
+            ->assertSee('Hacer cita')
+            ->assertSee('volver_recipe=lista', false);
+
+        // El formulario de la agenda lo conserva en su campo oculto.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.agenda.nueva', [
+                'paciente_id' => $pacienteId, 'volver_consulta' => $consulta->id,
+                'volver_recipe' => 'lista', 'fecha' => '2026-10-14',
+            ]))
+            ->assertOk()
+            ->assertSee('name="volver_recipe" value="lista"', false);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.agenda.crear'), [
+                'sede' => $sede->id, 'fecha' => '2026-10-14', 'hora' => '09:30',
+                'paciente_id' => $pacienteId, 'volver_consulta' => $consulta->id, 'volver_recipe' => 'lista',
+            ])
+            ->assertRedirect($lista)
+            ->assertSessionHas('estado', 'Cita agendada.');
+    }
+
+    /** Y desde el editor de un récipe puntual vuelve **a ése** y no al primero de la consulta. */
+    public function test_hacer_cita_desde_un_recipe_vuelve_a_ese_recipe(): void
+    {
+        [$user, $medico, $gineco, $pacienteId, $consulta] = $this->escenario();
+        $sede = $this->sede($medico, 'hora_cita');
+        $this->recipe($medico, 1001, 1, 2, ['0002'], '2026-10-05');
+        $editor = route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes', 'recipe' => 2]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($editor)
+            ->assertOk()
+            ->assertSee('volver_recipe=2', false);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->post(route('clinica.agenda.crear'), [
+                'sede' => $sede->id, 'fecha' => '2026-10-14', 'hora' => '09:30',
+                'paciente_id' => $pacienteId, 'volver_consulta' => $consulta->id, 'volver_recipe' => '2',
+            ])
+            ->assertRedirect($editor);
+    }
+
     public function test_si_el_paciente_ya_tiene_cita_pendiente_la_pregunta_conserva_el_regreso(): void
     {
         [$user, $medico, $gineco, $pacienteId, $consulta] = $this->escenario();

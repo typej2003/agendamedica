@@ -23,6 +23,10 @@
         @if ($vm->volverConsulta())
             <input type="hidden" name="volver_consulta" value="{{ $vm->volverConsulta() }}">
         @endif
+        @if ($vm->volverRecipe() !== null)
+            {{-- La pantalla de los récipes a la que se vuelve (O-65): el paso 1 no la pierde al recargar. --}}
+            <input type="hidden" name="volver_recipe" value="{{ $vm->volverRecipe() }}">
+        @endif
 
         <x-ui.tarjeta class="mb-3">
             <h2 class="visually-hidden">Dónde y cuándo</h2>
@@ -105,6 +109,10 @@
             @if ($vm->volverConsulta())
                 {{-- "Hacer cita" desde los récipes de una consulta (WEB-5.2): al guardar vuelve a ellos. --}}
                 <input type="hidden" name="volver_consulta" value="{{ $vm->volverConsulta() }}">
+            @endif
+            @if ($vm->volverRecipe() !== null)
+                {{-- Y a la pantalla de los récipes en la que estaba (O-65): resolver la cita pendiente no la pierde. --}}
+                <input type="hidden" name="volver_recipe" value="{{ $vm->volverRecipe() }}">
             @endif
 
             {{-- La pregunta por la cita pendiente: no se escribió nada todavía, así que decide el usuario con

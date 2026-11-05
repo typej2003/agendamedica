@@ -70,7 +70,7 @@ class CitaController extends Controller
             'pacienteElegido' => $paciente ? $this->pacientes->ficha($paciente, $this->pacientes->numHistoriaDe($contexto, $paciente)) : null,
             'pendiente'       => null,
             // "Hacer cita" desde los récipes de una consulta (WEB-5.2): a dónde vuelve al guardar.
-            'volverA'         => $this->vueltaDe($request, $contexto, $request->query('volver_consulta')),
+            'volverA'         => $this->vueltaDe($request, $contexto, $request->query('volver_consulta'), $request->query('volver_recipe')),
             'puedeAdministrarMotivos' => (bool) $request->user()?->trabajaLaConsulta(),
         ])]);
     }
@@ -97,7 +97,7 @@ class CitaController extends Controller
             $valores,
             $this->registrosDelMedico($contexto['medico']),
         );
-        $volverA = $this->vueltaDe($request, $contexto, $valores['volver_consulta'] ?? null);
+        $volverA = $this->vueltaDe($request, $contexto, $valores['volver_consulta'] ?? null, $valores['volver_recipe'] ?? null);
 
         if ($resultado->esPregunta()) {
             return view('clinica.agenda.formulario', ['vm' => $this->formulario->armar($contexto, [
@@ -113,7 +113,8 @@ class CitaController extends Controller
             ])]);
         }
 
-        // Si se llegó desde los récipes de una consulta (WEB-5.2), se vuelve ahí; si no, a la agenda.
+        // Si se llegó desde los récipes de una consulta (WEB-5.2), se vuelve a la pantalla de esa sección en la que
+        // estaba el médico (la lista, el editor de su récipe o el de la pareja, O-65); si no, a la agenda.
         if ($volverA !== null) {
             return redirect($volverA['url'])->with('estado', $resultado->mensaje());
         }
@@ -248,14 +249,20 @@ class CitaController extends Controller
         return $destino->with('estado', $resultado->mensaje());
     }
 
-    /** A dónde vuelve el formulario si se llegó desde los récipes de una consulta (`VueltaDeLaCita`), o `null`. */
-    private function vueltaDe(Request $request, array $contexto, $consultaId): ?array
+    /**
+     * A dónde vuelve el formulario si se llegó desde los récipes de una consulta (`VueltaDeLaCita`), o `null`.
+     *
+     * `$recipe` es la pantalla de esa sección en la que estaba el médico (`O-65`): sólo se usa para volver a ella y,
+     * como `$consultaId`, la valida `VueltaDeLaCita`.
+     */
+    private function vueltaDe(Request $request, array $contexto, $consultaId, $recipe = null): ?array
     {
         return $this->vuelta->de(
             $contexto,
             $this->registrosDelMedico($contexto['medico']),
             (bool) $request->user()?->trabajaLaConsulta(),
             $consultaId,
+            $recipe,
         );
     }
 

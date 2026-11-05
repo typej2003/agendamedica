@@ -28,6 +28,11 @@
                         <input type="hidden" name="origen" value="proxima-cita">
                         <input type="hidden" name="paciente_id" value="{{ $agendar->pacienteId() }}">
                         <input type="hidden" name="volver_consulta" value="{{ $agendar->consultaId() }}">
+                        {{-- La pantalla de la sección en la que está el médico (O-65): la vuelta de la cita lo devuelve
+                             ahí —la lista de medicamentos, su récipe o el de la pareja— y no a la entrada. --}}
+                        @if ($agendar->volverRecipe() !== null)
+                            <input type="hidden" name="volver_recipe" value="{{ $agendar->volverRecipe() }}">
+                        @endif
 
                         {{-- Si la validación falló, el primer aviso se muestra acá: la consulta no pinta `$errors`
                              (los errores de sus secciones viajan por el `estado` del armazón). --}}

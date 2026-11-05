@@ -106,6 +106,10 @@ class GuardarCitaRequest extends FormRequest
             'decision'        => ['nullable', 'in:mover,cancelar'],
             // De qué consulta se vino con "Hacer cita" (WEB-5.2): sólo para volver a sus récipes al guardar.
             'volver_consulta' => ['nullable', 'integer'],
+            // Y a qué pantalla de esa sección se vuelve (O-65): la lista de récipes (`lista`), el editor de uno nuevo
+            // (`nuevo`), el de la pareja (`pareja`) o el de un récipe (su número). Las mismas claves de la URL de la
+            // sección; cualquiera otra se rechaza en lugar de inventar un destino.
+            'volver_recipe'   => ['nullable', 'string', 'regex:/^(lista|nuevo|pareja|[0-9]{1,4})$/'],
         ];
     }
 
@@ -174,6 +178,7 @@ class GuardarCitaRequest extends FormRequest
             'nuevo_foto.max'                   => 'La foto del paciente no puede pasar de 4 MB.',
             'decision.in'                   => 'Elige una de las opciones que se ofrecen.',
             'volver_consulta.integer'       => 'No se sabe a qué consulta volver: ábrela de nuevo desde su lista.',
+            'volver_recipe.regex'           => 'No se sabe a qué parte de los récipes volver: ábrela de nuevo desde la consulta.',
         ];
     }
 }
