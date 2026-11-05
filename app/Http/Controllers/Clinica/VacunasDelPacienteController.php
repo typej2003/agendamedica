@@ -3,16 +3,19 @@
 namespace App\Http\Controllers\Clinica;
 
 use App\Actions\Vacunas\RegistrarDosisDeVacuna;
+use App\Clinica\Consulta\SeccionesDeLaConsulta;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Clinica\Pacientes\PacientesDelConsultorio;
 use App\Clinica\Vacunas\CalendarioDeVacunas;
 use App\Clinica\Impresion\MembreteDelMedico;
 use App\Clinica\Pacientes\FamiliaDelPaciente;
+use App\Clinica\Vacunas\CalendarioDelNino;
 use App\Clinica\Vacunas\Vistas\CalendarioDeVacunasVista;
 use App\Clinica\Vacunas\Vistas\CarnetDeVacunacionVista;
 use App\Clinica\Vacunas\VacunasDelPaciente;
 use App\Http\Controllers\Controller;
+use App\Models\Consulta;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 
@@ -26,6 +29,7 @@ class VacunasDelPacienteController extends Controller
         private PacientesDelConsultorio $pacientes,
         private VacunasDelPaciente $lectura,
         private CalendarioDeVacunas $calendario,
+        private CalendarioDelNino $calendarioDelNino,
     ) {
     }
 
@@ -43,27 +47,17 @@ class VacunasDelPacienteController extends Controller
         $ficha = $this->pacientes->ficha($regMedico, $paciente);
         abort_unless($ficha !== null, 404);
 
-        $datos = $this->lectura->de($regMedico, CamposDePaciente::historiaNumerica($ficha->numhistoria));
-        $filtro = CalendarioDeVacunasVista::normalizarFiltro($request->query('ver'));
-
         return view('clinica.vacunas.ver', [
-            'vm' => new CalendarioDeVacunasVista(
+            // El calendario lo arma `CalendarioDelNino`, que es el mismo que usa la sección *Inmunizaciones* de la consulta (O-63):
+            // acá lo único distinto son las URLs (la vuelta a esta pantalla y a la ficha del niño).
+            'vm' => $this->calendarioDelNino->de(
+                $regMedico,
                 $ficha,
-                $this->calendario->armar(
-                    $ficha->fnacimiento ? (string) $ficha->fnacimiento : null,
-                    $ficha->sexo,
-                    FechaDelConsultorio::hoy()->toDateString(),
-                    $datos['vacunas'],
-                    $datos['dosis'],
-                    $datos['aplicadas'],
-                ),
-                count($datos['vacunas']),
-                $filtro,
+                CalendarioDeVacunasVista::normalizarFiltro($request->query('ver')),
                 fn (string $f) => route('clinica.pacientes.vacunas', [$paciente, 'ver' => $f]),
                 route('clinica.pacientes.ver', $paciente),
                 // Registrar una dosis (WEB-7.4.4b) exige la clave de la historia (`vacuna_paciente.historia`): sin número no se ofrece.
                 $ficha->numhistoria === null ? null : route('clinica.pacientes.vacunas.registrar', $paciente),
-                FechaDelConsultorio::hoy()->toDateString(),
                 route('clinica.pacientes.vacunas.carnet', $paciente),
             ),
         ]);
@@ -111,7 +105,7 @@ class VacunasDelPacienteController extends Controller
         abort_unless($ficha !== null, 404);
 
         $historia = CamposDePaciente::historiaNumerica($ficha->numhistoria);
-        $volver = route('clinica.pacientes.vacunas', $paciente);
+        $volver = $this->aDondeVuelve($request, $paciente, $regMedico, $historia);
 
         if ($historia === null) {
             return redirect($volver)->with('error', 'Las dosis se registran con el número de historia del niño. Asígnale el número y después se cargan.');
@@ -157,5 +151,30 @@ class VacunasDelPacienteController extends Controller
         }
 
         return redirect($volver)->with('estado', 'Dosis registrada: ' . ($datos['rotulo'] ?? 'dosis') . '.');
+    }
+
+    /**
+     * A dónde vuelve el registro de una dosis: **la sección «Inmunizaciones» de la consulta** cuando el formulario se abrió
+     * desde ella (O-63) y esa consulta es de este niño y de este consultorio; si no, la pantalla del módulo, como siempre.
+     *
+     * La consulta se resuelve acá y **no** se acepta una URL de vuelta: el formulario no elige el destino, sólo dice en qué
+     * consulta se está atendiendo. Una consulta de otro paciente o de otro `reg_medico` no existe (vuelve al módulo).
+     */
+    private function aDondeVuelve(Request $request, int $paciente, string $regMedico, ?int $historia): string
+    {
+        $consultaId = (int) $request->input('consulta', 0);
+
+        if ($consultaId > 0 && $historia !== null) {
+            $consulta = Consulta::where('reg_medico', $regMedico)->where('numhistoria', $historia)->find($consultaId);
+
+            if ($consulta !== null) {
+                return route('clinica.consulta', [
+                    'consulta' => (int) $consulta->id,
+                    'seccion' => SeccionesDeLaConsulta::SECCION_INMUNIZACIONES,
+                ]);
+            }
+        }
+
+        return route('clinica.pacientes.vacunas', $paciente);
     }
 }

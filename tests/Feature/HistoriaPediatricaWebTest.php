@@ -150,15 +150,19 @@ class HistoriaPediatricaWebTest extends TestCase
         $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.pacientes.vacunas', $otro))->assertOk()->assertDontSee('Volver a la consulta');
     }
 
-    public function test_inmunizaciones_desde_la_consulta_lleva_a_las_vacunas_con_el_regreso(): void
+    /** O-63: «Inmunizaciones» ya **no** saca de la consulta —el calendario de vacunas es su sección— y el módulo sigue igual. */
+    public function test_inmunizaciones_se_ve_dentro_de_la_consulta_y_el_modulo_sigue_ofreciendo_el_regreso(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
         [$id, $consulta] = $this->nino($medico);
 
+        // La sección se abre en la consulta, sin redirect: el médico no sale a la pantalla del módulo.
         $this->conContexto($medico, $pediatria)->actingAs($user)
             ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'inmunizaciones']))
-            ->assertRedirect(route('clinica.pacientes.vacunas', $id));
+            ->assertOk()
+            ->assertSee('id="consulta-inmunizaciones"', false);
 
+        // Y la pantalla del módulo sigue existiendo, con su regreso a la consulta abierta.
         $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.pacientes.vacunas', $id))
             ->assertOk()->assertSee('Volver a la consulta N.º 1');
     }
