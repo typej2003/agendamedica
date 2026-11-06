@@ -56,7 +56,11 @@
                                         <div class="fw-semibold">{{ trim($fila->name . ' ' . $fila->lastname) }}</div>
                                         <small class="text-muted">{{ $fila->reg_medico }}</small>
                                         @if ($fila->es_centro)
-                                            <span class="badge bg-primary" title="Es un centro médico: no inicia sesión ni atiende, es el tenant de sus doctores">Centro médico</span>
+                                            @if ($fila->esConsultorioHijo())
+                                                <span class="badge bg-primary" title="Un consultorio más del mismo médico: usa su plan, no tiene cuenta y no le suma un asiento">Consultorio</span>
+                                            @else
+                                                <span class="badge bg-primary" title="Es un centro médico: no inicia sesión ni atiende, es el tenant de sus doctores">Centro médico</span>
+                                            @endif
                                         @endif
                                         @php $extras = $fila->registros->where('reg_medico', '!=', $fila->reg_medico)->count(); @endphp
                                         @if ($extras > 0)
@@ -138,7 +142,7 @@
                                                     <li>
                                                         <button type="button" class="dropdown-item" wire:click="abrirRegistros({{ $m->id }})">
                                                             <i class="bi bi-database-lock me-2"></i>
-                                                            {{ $m->es_centro ? 'Doctores del centro' : 'Registros de datos' }}
+                                                            {{ $m->esConsultorioHijo() ? 'Doctores del consultorio' : ($m->es_centro ? 'Doctores del centro' : 'Registros de datos') }}
                                                         </button>
                                                     </li>
                                                     {{-- **El formato de impresión del centro** (Fase 5 del cambio de `reg_medico`): el
@@ -441,7 +445,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            {{ $medicoRegistros->es_centro ? 'Doctores del centro' : 'Registros de datos' }}
+                            {{ $medicoRegistros->esConsultorioHijo() ? 'Doctores del consultorio' : ($medicoRegistros->es_centro ? 'Doctores del centro' : 'Registros de datos') }}
                             · {{ trim($medicoRegistros->name . ' ' . $medicoRegistros->lastname) }}
                         </h5>
                         <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
@@ -537,6 +541,26 @@
                                     <span wire:loading wire:target="asignarRegistro">Asignando…</span>
                                 </button>
                             </form>
+
+                            {{-- **El segundo consultorio del médico** (2026-11-06): no es otra cuenta, es una ficha
+                                 que cuelga de la suya y usa su plan. La credencial de esa PC sale de API Keys. --}}
+                            <hr class="my-4">
+                            <h6>Agregar un consultorio</h6>
+                            <p class="text-muted small mb-2">
+                                El otro sitio donde atiende este médico, con su propio <code>reg_medico</code> (el de
+                                esa instalación). No crea una cuenta: el consultorio <strong>usa el plan de este médico</strong>
+                                y no le suma un asiento al equipo. Después se emite la credencial de esa PC en
+                                <strong>API Keys</strong>.
+                            </p>
+                            <form wire:submit.prevent="agregarConsultorio" class="d-flex gap-2">
+                                <input type="text" class="form-control" wire:model="regConsultorio" maxlength="20"
+                                       autocomplete="off" placeholder="reg_medico del consultorio" aria-label="reg_medico del consultorio nuevo">
+                                <button type="submit" class="btn btn-primary text-nowrap" wire:loading.attr="disabled">
+                                    <span wire:loading.remove wire:target="agregarConsultorio">Agregar consultorio</span>
+                                    <span wire:loading wire:target="agregarConsultorio">Agregando…</span>
+                                </button>
+                            </form>
+                            @error('reg_consultorio') <span class="text-danger small d-block mt-1">{{ $message }}</span> @enderror
                         @endif
                     </div>
                     <div class="modal-footer">

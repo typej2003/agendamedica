@@ -29,6 +29,10 @@ trait GestionaPlanes
 
     public function abrirRenovarPlan(ServicioService $servicios): void
     {
+        if ($this->esConsultorioHijo()) {
+            return;
+        }
+
         $this->resetErrorBag();
         $this->planAccion = 'renovar';
         $this->nota = '';
@@ -38,6 +42,10 @@ trait GestionaPlanes
 
     public function abrirReemplazarPlan(ServicioService $servicios): void
     {
+        if ($this->esConsultorioHijo()) {
+            return;
+        }
+
         $actual = $servicios->actual((string) $this->medico->reg_medico);
 
         if (! $actual) {
@@ -55,6 +63,10 @@ trait GestionaPlanes
 
     public function abrirQuitarPlan(ServicioService $servicios): void
     {
+        if ($this->esConsultorioHijo()) {
+            return;
+        }
+
         $this->resetErrorBag();
 
         if (! $servicios->actual((string) $this->medico->reg_medico)) {
@@ -85,6 +97,10 @@ trait GestionaPlanes
 
     public function renovarPlan(ServicioService $servicios): void
     {
+        if ($this->esConsultorioHijo()) {
+            return;
+        }
+
         $this->validate([
             'planElegido' => ['required', Rule::exists('planes', 'id')->where('activo', true)],
             'meses' => 'required|integer|min:1|max:60',
@@ -115,6 +131,10 @@ trait GestionaPlanes
 
     public function reemplazarPlan(ServicioService $servicios): void
     {
+        if ($this->esConsultorioHijo()) {
+            return;
+        }
+
         $this->validate([
             'planElegido' => ['required', Rule::exists('planes', 'id')->where('activo', true)],
             'meses' => 'required|integer|min:1|max:60',
@@ -151,6 +171,10 @@ trait GestionaPlanes
 
     public function quitarPlanDelMedico(ServicioService $servicios): void
     {
+        if ($this->esConsultorioHijo()) {
+            return;
+        }
+
         $this->validate(['motivo' => 'required|string|min:3|max:150'], [], ['motivo' => 'motivo']);
 
         $cancelados = $servicios->cancelarActivos((string) $this->medico->reg_medico, $this->motivo, auth()->user()->name);
@@ -164,12 +188,33 @@ trait GestionaPlanes
     /** Cancela un servicio del historial (sólo uno de este médico). */
     public function cancelarServicioDelMedico(int $servicioId, ServicioService $servicios): void
     {
+        if ($this->esConsultorioHijo()) {
+            return;
+        }
+
         $servicio = RegMedicoServicio::findOrFail($servicioId);
 
         abort_unless((string) $servicio->reg_medico === (string) $this->medico->reg_medico, 403);
 
         $servicios->cancelar($servicio);
         session()->flash('message', 'Servicio cancelado: ya no cuenta para el vencimiento.');
+    }
+
+    /**
+     * **El plan de un consultorio hijo es el del padre** (2026-11-06): desde su ficha no se renueva, no se
+     * reemplaza ni se quita. Deja el aviso, cierra el formulario y devuelve `true` para que el llamador corte.
+     */
+    private function esConsultorioHijo(): bool
+    {
+        if (! $this->medico->esConsultorioHijo()) {
+            return false;
+        }
+
+        session()->flash('error', 'Este consultorio usa el plan de ' . $this->medico->regMedicoDelPadre()
+            . ': el plan se renueva desde la ficha del consultorio principal.');
+        $this->cerrarPlan();
+
+        return true;
     }
 
     private function planSugerido(ServicioService $servicios): ?Plan
