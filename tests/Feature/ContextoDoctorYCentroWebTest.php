@@ -12,6 +12,7 @@ use App\Models\MedicoRegistro;
 use App\Models\Office;
 use App\Models\Specialty;
 use App\Models\User;
+use App\Services\CuentaService;
 use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
@@ -171,6 +172,29 @@ class ContextoDoctorYCentroWebTest extends TestCase
     }
 
     /**
+     * **El consultorio manda sobre el `reg_medico` del formulario** (2026-11-06): la pantalla junta
+     * consultorios de registros distintos (los del médico y los de los centros donde trabaja) y el navegador
+     * no puede mandar el `reg_medico` del consultorio clickeado junto con su `office_id`. El servidor lo
+     * resuelve del consultorio, así que el contexto es el del lugar donde se atiende.
+     */
+    public function test_el_consultorio_fija_su_registro_aunque_el_formulario_mande_otro(): void
+    {
+        ['user' => $user, 'doctor' => $doctor, 'centros' => $centros, 'gineco' => $gineco] = $this->doctorConDosCentros();
+        $delCentro = $this->consultorio($centros[0]->reg_medico, $centros[0]->id, 'C1');
+
+        // El formulario manda el registro del doctor; el consultorio es del centro.
+        $this->actingAs($user)->post('/clinica/contexto', [
+            'reg_medico'   => $doctor->reg_medico,
+            'specialty_id' => $gineco->id,
+            'office_id'    => $delCentro->id,
+        ])->assertRedirect(route('clinica.inicio'));
+
+        $contexto = app(ContextoTrabajo::class)->actual($user);
+        $this->assertSame($centros[0]->reg_medico, $contexto['reg_medico']);
+        $this->assertSame($delCentro->id, $contexto['office']->id);
+    }
+
+    /**
      * Los consultorios del contexto son **los del tenant** (Fase 2): `Office::vigentesDe` ya no se filtra
      * por el `medico_id` del doctor, así que el doctor ve el consultorio que creó el centro y los que creó
      * otro doctor del mismo centro.
@@ -226,6 +250,81 @@ class ContextoDoctorYCentroWebTest extends TestCase
         $this->assertTrue($tarjetas[0]['elegirConsultorio']);
         $this->assertTrue($vista->hayAlgoQueElegir());
         $this->assertNull(app(ContextoAutomatico::class)->de($user), 'Con dos consultorios hay algo que elegir.');
+    }
+
+    /**
+     * **El consultorio del registro hijo va en «Mis consultorios»** (corrección del usuario, 2026-11-06): el
+     * segundo consultorio del mismo doctor es una ficha que cuelga de la suya (`medicos.medico_padre_id`) y
+     * lleva el nombre del doctor. Agrupando por el dueño del `reg_medico`, el menú lo mostraba con ese nombre,
+     * como si fuera otro médico; se agrupa con el consultorio principal, que es de quien cuelga.
+     */
+    public function test_el_consultorio_del_registro_hijo_va_en_mis_consultorios(): void
+    {
+        ['user' => $user, 'doctor' => $doctor] = $this->doctorConDosCentros();
+
+        $personal = $this->consultorio($doctor->reg_medico, $doctor->id, 'P1');
+        $hijo = app(CuentaService::class)->agregarConsultorio($doctor, 'hijo-' . substr(uniqid(), -6));
+        $delHijo = $this->consultorio($hijo->reg_medico, $doctor->id, 'H1');
+
+        $vista = new ContextoVista(app(ContextoTrabajo::class)->disponibles($user));
+        $tarjetas = $vista->medicos();
+
+        $this->assertCount(1, $tarjetas, 'El consultorio hijo no crea otra tarjeta: es el mismo doctor.');
+        $sedes = collect($tarjetas[0]['sedes'])->keyBy('valor');
+        $this->assertCount(2, $sedes);
+        // Elegir el consultorio del hijo fija el contexto de su registro, que es su tenant.
+        $this->assertSame($hijo->reg_medico, $sedes[$delHijo->id]['regMedico']);
+        $this->assertNull($sedes[$personal->id]['centro'], 'El consultorio principal va en «Mis consultorios».');
+        $this->assertNull($sedes[$delHijo->id]['centro'], 'El consultorio del registro hijo va en el mismo grupo.');
+
+        // Los dos consultorios caen en **un solo** grupo: «Mis consultorios».
+        $grupos = $tarjetas[0]['grupos'];
+        $this->assertCount(1, $grupos);
+        $this->assertSame(ContextoVista::PROPIOS, $grupos[0]['etiqueta']);
+        $this->assertEqualsCanonicalizing([$personal->id, $delHijo->id], collect($grupos[0]['sedes'])->pluck('valor')->all());
+
+        // Y la pantalla lista las dos tarjetas, sin un grupo con el nombre del doctor.
+        $respuesta = $this->actingAs($user)->get('/clinica/contexto');
+        $respuesta->assertOk();
+        $respuesta->assertSee('name="office_id" value="' . $personal->id . '"', false);
+        $respuesta->assertSee('name="office_id" value="' . $delHijo->id . '"', false);
+        $respuesta->assertDontSee('<h3 class="contexto-grupo-titulo">' . $doctor->nombreMostrar . '</h3>', false);
+    }
+
+    /**
+     * **El consultorio de un registro hijo de otro doctor se agrupa con su padre**: la ficha hija repite el
+     * nombre del doctor, así que mostrarla con su propio nombre era un grupo de más. El grupo es el del
+     * `reg_medico` del padre (corrección del usuario, 2026-11-06).
+     */
+    public function test_el_consultorio_hijo_de_otro_medico_se_agrupa_con_su_padre(): void
+    {
+        ['user' => $user, 'doctor' => $doctor] = $this->doctorConDosCentros();
+
+        $this->consultorio($doctor->reg_medico, $doctor->id, 'P1');
+        $ajeno = $this->ficha('Dr. Ajeno', 'ajeno-' . substr(uniqid(), -6));
+        $hijoAjeno = app(CuentaService::class)->agregarConsultorio($ajeno, 'ajeno-hijo-' . substr(uniqid(), -6));
+        MedicoRegistro::create(['medico_id' => $doctor->id, 'reg_medico' => $hijoAjeno->reg_medico]);
+        $delAjeno = $this->consultorio($hijoAjeno->reg_medico, $ajeno->id, 'A1');
+
+        $vista = new ContextoVista(app(ContextoTrabajo::class)->disponibles($user));
+        $tarjeta = $vista->medicos()[0];
+        $sedes = collect($tarjeta['sedes'])->keyBy('valor');
+
+        $this->assertSame(
+            $ajeno->nombreMostrar,
+            $sedes[$delAjeno->id]['centro'],
+            'El consultorio del hijo ajeno se agrupa con el nombre del padre.',
+        );
+
+        // La ficha hija copia el nombre del doctor, así que el grupo del padre es el que se pinta (una sola
+        // vez): la pantalla junta el consultorio personal con el del hijo ajeno en dos grupos, no en tres.
+        $this->assertCount(2, $tarjeta['grupos']);
+        $this->assertSame([ContextoVista::PROPIOS, $ajeno->nombreMostrar], collect($tarjeta['grupos'])->pluck('etiqueta')->all());
+
+        $respuesta = $this->actingAs($user)->get('/clinica/contexto');
+        $respuesta->assertOk();
+        $respuesta->assertSee('<h3 class="contexto-grupo-titulo">' . $ajeno->nombreMostrar . '</h3>', false);
+        $this->assertSame(2, substr_count($respuesta->getContent(), 'class="contexto-grupo"'));
     }
 
     // ------------------------------------------------------------------------------------ La secretaría

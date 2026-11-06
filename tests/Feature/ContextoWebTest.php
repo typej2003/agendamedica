@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Clinica\ContextoAutomatico;
 use App\Clinica\ContextoTrabajo;
+use App\Clinica\Vistas\ContextoVista;
 use App\Models\City;
 use App\Models\MedicalCenter;
 use App\Models\Medico;
@@ -198,9 +199,14 @@ class ContextoWebTest extends TestCase
 
         $secretaria = $this->secretariaDe([$medicoUno->reg_medico, $medicoDos->reg_medico]);
 
-        $this->actingAs($secretaria)->get('/clinica/contexto')
-            ->assertOk()
-            ->assertSee('¿Con qué consultorio vas a trabajar?');
+        $respuesta = $this->actingAs($secretaria)->get('/clinica/contexto');
+        $respuesta->assertOk();
+        $respuesta->assertSee('¿Con qué consultorio vas a trabajar?');
+
+        // Es el **primer paso**: se elige con quién se trabaja antes que la especialidad y el consultorio.
+        $respuesta->assertSee('data-paso-medico', false);
+        $respuesta->assertSee('data-elegir-medico="' . $medicoUno->id . '"', false);
+        $respuesta->assertSee('data-elegir-medico="' . $medicoDos->id . '"', false);
 
         $this->assertNull(app(ContextoAutomatico::class)->de($secretaria));
         $this->assertNotSame($uno->id, $dos->id);
@@ -250,12 +256,19 @@ class ContextoWebTest extends TestCase
         $respuesta = $this->actingAs($user)->get('/clinica/contexto');
 
         $respuesta->assertOk();
-        $respuesta->assertSee('<select name="specialty_id"', false);
-        $respuesta->assertSee('<select name="office_id"', false);
+        // La especialidad es una tarjeta que se elige con un click (un radio), no un desplegable.
+        $respuesta->assertSee('data-paso="especialidad"', false);
+        $respuesta->assertSee('<input type="radio" name="specialty_id"', false);
+        $respuesta->assertSee('name="specialty_id" value="' . $medico->specialties->first()->id . '"', false);
+        // Y el consultorio, una tarjeta que confirma al clickearla (un submit del formulario): ya no hay
+        // `select` ni botón «Trabajar aquí».
+        $respuesta->assertSee('data-paso="consultorio"', false);
+        $respuesta->assertSee('<button type="submit" name="office_id" value="' . $primero->id . '"', false);
+        $respuesta->assertSee('<button type="submit" name="office_id" value="' . $segundo->id . '"', false);
+        $respuesta->assertDontSee('<select name="office_id"', false);
+        $respuesta->assertDontSee('Trabajar aquí');
         // Los dos consultorios son de la misma sede: «Todas las sedes» no se ofrece.
         $respuesta->assertDontSee('Todas las sedes de mis consultorios');
-        $respuesta->assertSee('value="' . $primero->id . '"', false);
-        $respuesta->assertSee('value="' . $segundo->id . '"', false);
         $respuesta->assertDontSee('type="hidden" name="specialty_id"', false);
         $respuesta->assertDontSee('type="hidden" name="office_id"', false);
         // Acá sí hay algo que elegir: el encabezado vuelve a preguntar.
@@ -273,23 +286,26 @@ class ContextoWebTest extends TestCase
         $this->actingAs($user)->get('/clinica')->assertOk()->assertSee('Cambiar consultorio');
     }
 
-    public function test_con_una_especialidad_y_dos_consultorios_solo_se_pregunta_el_consultorio(): void
+    public function test_con_una_especialidad_solo_se_pregunta_el_consultorio(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
         $sede = $this->sede();
-        $this->consultorio($medico, $sede, '901');
-        $this->consultorio($medico, $sede, '902');
+        $primero = $this->consultorio($medico, $sede, '901');
+        $segundo = $this->consultorio($medico, $sede, '902');
 
         $respuesta = $this->actingAs($user)->get('/clinica/contexto');
 
         $respuesta->assertOk();
-        $respuesta->assertSee('<select name="office_id"', false);
-        $respuesta->assertDontSee('<select name="specialty_id"', false);
+        // Con una sola especialidad no hay paso que elegir: viaja fija y se muestra cuál es.
+        $respuesta->assertDontSee('<input type="radio" name="specialty_id"', false);
         $respuesta->assertSee('type="hidden" name="specialty_id" value="' . $gineco->id . '"', false);
+        // Los consultorios siguen siendo tarjetas que se confirman con un click.
+        $respuesta->assertSee('<button type="submit" name="office_id" value="' . $primero->id . '"', false);
+        $respuesta->assertSee('<button type="submit" name="office_id" value="' . $segundo->id . '"', false);
         $respuesta->assertDontSee('type="hidden" name="office_id"', false);
     }
 
-    public function test_con_dos_especialidades_y_un_consultorio_solo_se_pregunta_la_especialidad(): void
+    public function test_con_dos_especialidades_y_un_consultorio_la_especialidad_es_el_unico_paso(): void
     {
         [$user, $medico] = $this->medicoConAcceso(2);
         $consultorio = $this->consultorio($medico, $this->sede(), '951');
@@ -297,9 +313,39 @@ class ContextoWebTest extends TestCase
         $respuesta = $this->actingAs($user)->get('/clinica/contexto');
 
         $respuesta->assertOk();
-        $respuesta->assertSee('<select name="specialty_id"', false);
-        $respuesta->assertDontSee('<select name="office_id"', false);
-        $respuesta->assertSee('type="hidden" name="office_id" value="' . $consultorio->id . '"', false);
+        $respuesta->assertSee('<input type="radio" name="specialty_id"', false);
         $respuesta->assertDontSee('type="hidden" name="specialty_id"', false);
+        // El único consultorio también es una tarjeta: se entra con un click, sin botón de por medio.
+        $respuesta->assertSee('<button type="submit" name="office_id" value="' . $consultorio->id . '"', false);
+        $respuesta->assertDontSee('type="hidden" name="office_id"', false);
+        $respuesta->assertDontSee('Trabajar aquí');
+    }
+
+    /**
+     * Al volver a «Cambiar consultorio» la pantalla no arranca de cero: los pasos ya elegidos vienen
+     * colapsados con su dato y «Cambiar», y el consultorio actual queda marcado (2026-11-06).
+     */
+    public function test_con_contexto_vigente_los_pasos_ya_elegidos_vienen_colapsados(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso(2);
+        $primero = $this->consultorio($medico, $this->sede(), '961');
+        $this->consultorio($medico, $this->sede(), '962');
+
+        $this->withSession(['clinica.contexto' => [
+            'reg_medico'   => $medico->reg_medico,
+            'specialty_id' => $gineco->id,
+            'office_id'    => $primero->id,
+        ]]);
+
+        $respuesta = $this->actingAs($user)->get('/clinica/contexto');
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('data-elegido="1"', false);
+        $respuesta->assertSee('aria-current="true"', false);
+
+        // Y el dato del paso colapsado es el del contexto vigente, no el primero de la lista.
+        $contexto = app(ContextoTrabajo::class);
+        $tarjeta = (new ContextoVista($contexto->disponibles($user), $contexto->actual($user)))->medicos()[0];
+        $this->assertSame($gineco->id, $tarjeta['elegida']['valor']);
     }
 }
