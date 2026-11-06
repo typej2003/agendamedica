@@ -114,20 +114,27 @@
 
                             @if ($modo === 'existente')
                                 <div class="mb-3">
+                                    @if ($sedesExistentes->isEmpty())
+                                        <div class="alert alert-warning d-flex align-items-center gap-2 py-2" role="status">
+                                            <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+                                            <span>{{ $nombre }} todavía no tiene sedes cargadas: regístrala como «Sede nueva».</span>
+                                        </div>
+                                    @endif
                                     <label class="form-label" for="sede-existente">Sede <span class="text-danger">*</span></label>
                                     <select id="sede-existente" class="form-select @error('sede_existente_id') is-invalid @enderror" wire:model="sede_existente_id">
                                         <option value="">Elige…</option>
-                                        @foreach ($catalogo as $opcion)
+                                        @foreach ($sedesExistentes as $opcion)
                                             <option value="{{ $opcion->id }}">{{ $opcion->name }}{{ $opcion->city ? ' · ' . $opcion->city->name : '' }}</option>
                                         @endforeach
                                     </select>
+                                    <div class="form-text">Sólo las sedes de {{ $nombre }}.</div>
                                     @error('sede_existente_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             @else
                                 @include('livewire.admin.sedes._campos-sede')
                             @endif
 
-                            <h6 class="mt-2">Primer consultorio en esa sede</h6>
+                            <h6 class="mt-2">Consultorio en esa sede</h6>
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label class="form-label" for="alta-numero">Consultorio <span class="text-danger">*</span></label>

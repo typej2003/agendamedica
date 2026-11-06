@@ -9,6 +9,7 @@ use App\Models\Medico;
 use App\Models\Office;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Lectura del panel **«Sedes del médico»** (`/admin/medicos/{medico}/sedes` y sus niveles): dónde atiende un
@@ -16,10 +17,12 @@ use Illuminate\Support\Collection;
  *
  * **De quién es cada cosa** (lo único delicado de la pantalla):
  *
- *  - La **sede** (`medical_centers`) tiene dueño desde el 2026-10-26 (`medico_id`), pero «las sedes de un
- *    médico» en esta pantalla siguen siendo las sedes donde **su tenant tiene consultorios**: el panel administra
- *    consultorios, no la ficha de la sede. Una sede se le puede **asignar** a otro médico (Root puede hacerlo)
- *    aunque sea de uno; por eso la lectura de acá no se filtra por dueño.
+ *  - La **sede** (`medical_centers`) es de un médico desde el 2026-10-26 (`medico_id`) y **cada médico carga las
+ *    suyas**: desde el 2026-11-06 «Agregar sede» no ofrece el catálogo de toda la plataforma, sólo las sedes **del
+ *    médico de la ficha** (`sedesDelMedico()`), la misma unión que ve en `/clinica/sedes` (`SedesDeLaClinica`): las
+ *    que le pertenecen, las asignadas en `medico_medical_center` y donde su tenant ya tiene consultorio. El listado
+ *    de la pantalla sigue mostrando las que **tienen consultorio del médico**, que es lo que se administra acá; una
+ *    sede suya sin consultorio se carga desde «Agregar sede».
  *  - El **consultorio** (`offices`) es del tenant `reg_medico` (el del médico, o el del centro si la ficha es un
  *    centro). Acá el criterio es **estricto**: `reg_medico` del médico, y por `medico_id` sólo las filas viejas
  *    que todavía no tienen registro. **No** se usa `Office::scopeDelMedico` tal cual porque su `orWhere
@@ -119,9 +122,36 @@ class SedesDelMedico
             ->count();
     }
 
-    /** @return Collection<int,MedicalCenter> las sedes activas del catálogo, para «Agregar sede» */
-    public function sedesDelCatalogo(): Collection
+    /**
+     * Las **sedes del médico** para «Agregar sede»: las suyas —donde es dueño, las asignadas en
+     * `medico_medical_center` y donde ya tiene un consultorio—, activas y ordenadas. **Nunca el catálogo completo**:
+     * cada médico carga sus sedes y el panel no ofrece las de otros (2026-11-06).
+     *
+     * @return Collection<int,MedicalCenter>
+     */
+    public function sedesDelMedico(Medico $medico): Collection
     {
-        return MedicalCenter::activos()->with('city')->orderBy('name')->get();
+        return $this->sedesDelMedicoQuery($medico)->with('city')->orderBy('name')->get();
+    }
+
+    /** Una sede del médico por id; `null` si no es suya o está desactivada. */
+    public function sedeDelMedico(Medico $medico, int $id): ?MedicalCenter
+    {
+        return $this->sedesDelMedicoQuery($medico)->whereKey($id)->first();
+    }
+
+    /** La unión de «sus sedes», igual que `SedesDeLaClinica`; sólo las activas (no se cuelga un consultorio de una cerrada). */
+    private function sedesDelMedicoQuery(Medico $medico): Builder
+    {
+        return MedicalCenter::query()
+            ->where('activo', true)
+            ->where(function (Builder $sedes) use ($medico) {
+                $sedes->where('medico_id', $medico->id)
+                    ->orWhereIn('id', DB::table('medico_medical_center')
+                        ->select('medical_center_id')
+                        ->where('medico_id', $medico->id)
+                        ->whereNotNull('medical_center_id'))
+                    ->orWhereIn('id', $this->consultorios($medico)->select('medical_center_id'));
+            });
     }
 }
