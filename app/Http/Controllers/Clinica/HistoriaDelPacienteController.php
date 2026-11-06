@@ -52,12 +52,16 @@ class HistoriaDelPacienteController extends Controller
 
         $ficha = $this->ficha($registros, $elegido, $paciente);
         $consultas = $this->historia->consultas($elegido, $ficha->numhistoria);
+        // La especialidad del **contexto** —la misma con la que se atiende y la que usa la impresión de más
+        // abajo— decide qué documentos no se listan: fuera de ginecología no se listan los de ginecología
+        // (O-72). Sin especialidad el alcance es el del modo medicina general, así que tampoco se listan.
+        $alcance = AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null);
 
         $vista = new HistoriaDePacienteVista(
             $ficha,
             $consultas,
             $this->historia->antecedentes($elegido, $ficha->numhistoria),
-            $this->historia->documentos($elegido, $ficha->numhistoria, $consultas),
+            $this->historia->documentos($elegido, $ficha->numhistoria, $consultas, $alcance),
             // Las URLs las resuelve el controlador: el ViewModel se prueba sin contenedor.
             route('clinica.pacientes.ver', $paciente),
             route('clinica.pacientes.historia.imprimir', array_filter([

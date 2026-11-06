@@ -204,6 +204,46 @@ class HistoriaPediatricaWebTest extends TestCase
         $this->conContexto($otro, $otraEsp)->actingAs($otroUser)->get($url)->assertNotFound();
     }
 
+    /**
+     * **En pediatría la historia no lista los documentos de ginecología** (O-72). Alexander: «es de ginecología,
+     * hay que invisibilizar»: en la ficha de un niño, la sección *Documentos* de su historia mostraba la
+     * histeroscopía —cuyo texto vive en `consultas.cuello`— y los informes de los ecos, y la hoja se podía
+     * imprimir. Con el texto y una fila del eco cargados, la lista no los muestra; lo que no es de ginecología
+     * sigue en la lista, y no se borra ningún dato (la hoja por URL directa no se toca en esta tarea).
+     */
+    public function test_la_historia_del_nino_no_lista_los_documentos_de_ginecologia(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        [$id, $consulta] = $this->nino($medico);
+        $reg = $medico->reg_medico;
+
+        // El texto de la histeroscopía, donde lo guarda el escritorio, y una fila del eco pélvico.
+        DB::table('consultas')->where('id', $consulta->id)->update(['cuello' => 'Canal cervical permeable, cavidad normal.']);
+        DB::table('eco_pelvico')->insert([
+            'reg_medico' => $reg, 'numhistoria' => 9401, 'nroconsulta' => 1,
+            'fecha' => '2026-10-17', 'observacion' => 'Anexos libres.',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        // Un documento de la consulta que no es de ginecología: la lista no queda vacía por el filtro.
+        DB::table('constancia_obs')->insert([
+            'reg_medico' => $reg, 'numhistoria' => 9401, 'numconsulta' => 1, 'observacion01' => 'Asistió a su control',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $respuesta = $this->conContexto($medico, $pediatria)->actingAs($user)
+            ->get(route('clinica.pacientes.historia', $id));
+
+        $respuesta->assertOk();
+        // Ni la solapa de texto con hoja ni el eco se listan.
+        $respuesta->assertDontSee('Histeroscopía');
+        $respuesta->assertDontSee('Informe de histeroscopía');
+        $respuesta->assertDontSee('Eco pélvico');
+        $respuesta->assertDontSee('Informe del eco pélvico');
+        // Y lo que no es de ginecología sigue en la lista.
+        $respuesta->assertSee('Constancia');
+        $respuesta->assertSee('Asistió a su control');
+    }
+
     // ------------------------------------------------------------------------------------------ Resumen médico
 
     public function test_el_resumen_medico_de_pediatria_lleva_mediciones_examen_y_cuestionario(): void

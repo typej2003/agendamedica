@@ -328,6 +328,52 @@ class HistoriaDelPacienteWebTest extends TestCase
         $respuesta->assertDontSee('Sin documentos');
     }
 
+    /**
+     * **En ginecología la historia sigue listando lo suyo** (O-72): la histeroscopía —el texto de
+     * `consultas.cuello`—, el informe del eco pélvico y los documentos que no son de ginecología, con la hoja
+     * de cada uno. Es la otra mitad del arreglo: esconder los documentos de ginecología fuera de la
+     * especialidad no se puede comer el caso bueno.
+     */
+    public function test_la_historia_de_ginecologia_si_lista_la_histeroscopia_y_los_ecos(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Marta');
+        // El texto de la histeroscopía vive en `consultas.cuello` y el eco, en su propia tabla.
+        $this->consulta($medico, '1001', 1, ['cuello' => 'Canal cervical permeable, cavidad normal.']);
+        $consulta = DB::table('consultas')->where('reg_medico', $medico->reg_medico)->where('numhistoria', 1001)->first();
+
+        DB::table('eco_pelvico')->insert([
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 1001, 'nroconsulta' => 1,
+            'fecha' => '2026-03-11', 'observacion' => 'Anexos libres.',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        // Y un documento que no es de ginecología: la lista no queda vacía por el filtro.
+        DB::table('reposo_paciente')->insert([
+            'reg_medico' => $medico->reg_medico, 'nrohistoria' => 1001, 'nroconsulta' => 1,
+            'numdias' => 2, 'fdesde' => '2026-03-12', 'obser_reposo' => 'Reposo relativo',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.historia', $paciente));
+
+        $respuesta->assertOk();
+        // La solapa de texto con hoja —la histeroscopía, con su informe— se sigue listando.
+        $respuesta->assertSee('Histeroscopía');
+        $respuesta->assertSee('Informe de histeroscopía');
+        // Y los ecos.
+        $respuesta->assertSee('Eco pélvico');
+        $respuesta->assertSee('Informe del eco pélvico');
+        // Lo que no es de ginecología no se toca.
+        $respuesta->assertSee('Reposo');
+        $respuesta->assertSee('2 días — Reposo relativo');
+        // Y la hoja de la histeroscopía se ofrece desde su fila (el «Imprimir» de la historia).
+        $respuesta->assertSee(
+            route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => 'histeroscopia']),
+            false,
+        );
+    }
+
     public function test_un_paciente_sin_historia_muestra_el_estado_vacio_y_el_camino(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
