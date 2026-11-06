@@ -1188,6 +1188,15 @@ con aprobación** y el de la suscripción son las fases siguientes. Lo nuevo se 
   la primera sin avisar— y la lista de credenciales muestra el registro de cada una, que es lo que permite revocar
   la correcta. Tests: `ApiKeysPanelTest`; verificación en Chrome:
   `../.agent-tools/verificar-api-keys-registro-web.js` con `../.agent-tools/api-keys-registro-preparar.php`.
+  **El segundo consultorio del doctor** (2026-11-06): desde «Registros de datos» del médico, «Agregar un
+  consultorio» crea la ficha nueva (`es_centro` sin cuenta, con `medicos.medico_padre_id`) y el vínculo, sin
+  plan propio: `ServicioService::actual()` resuelve el del **padre** (el hijo no recibe prueba ni año de
+  cortesía y `otorgar` se lo impide), `CupoDelPlan` cuenta la **familia** —el mismo doctor no ocupa dos
+  asientos— y un consultorio hijo no se trata como centro en la agenda (`MedicosDeLaCita::centro()`). La
+  ficha muestra las sedes por consultorio y marca el plan heredado. Sin migración de datos: la columna es
+  nullable y lo existente queda independiente. Tests: `ConsultorioHijoDelMedicoTest`, `RegistrosDeMedicoTest`,
+  `DetalleDelMedicoGestionTest`; verificación en Chrome:
+  `../.agent-tools/verificar-consultorio-hijo-web.js` con `../.agent-tools/consultorio-hijo-preparar.php`.
   **Última actividad web** (2026-10-20): `users.ultima_actividad_web_at`. El middleware `RegistrarActividadWeb` (grupo
   `web`, sin el latido `clinica.sesion`) **no escribe en la base**: dispara `ActividadWebRegistrada` como mucho una vez
   cada 5 min por cuenta (`Cache::add`) y el listener `GuardarUltimaActividadWeb` (`ShouldQueue`) hace un `UPDATE` que

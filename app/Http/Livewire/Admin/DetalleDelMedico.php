@@ -280,7 +280,7 @@ class DetalleDelMedico extends Component
     {
         return match ($pestana) {
             'datos' => $this->datos($registros),
-            'sedes' => ['sedes' => app(\App\Services\Admin\SedesDelMedico::class)->sedes($this->medico, true)],
+            'sedes' => ['sedesPorConsultorio' => $this->sedesPorConsultorio($registros)],
             'horarios' => $this->horarios(),
             'roles' => ['roles' => $this->medico->user?->roles->pluck('name')->sort()->values() ?? collect()],
             'api-keys' => ['sync' => $this->sync()],
@@ -328,6 +328,37 @@ class DetalleDelMedico extends Component
         return app(SyncResumenService::class)->resumir(collect([$this->medico]))[$this->medico->id] ?? [];
     }
 
+    /**
+     * **Las sedes de cada consultorio del médico** (2026-11-06): el suyo y los que cuelgan de él (o los que le
+     * asignaron). Cada grupo trae la ficha con la que se administra su tenant —la del doctor o la del
+     * consultorio—, así «Administrar sedes» abre el consultorio que se está mirando y no siempre el principal.
+     *
+     * @param  array<int,string>  $registros
+     * @return array<int,array{registro:string, ficha:Medico, principal:bool, sedes:\Illuminate\Support\Collection}>
+     */
+    private function sedesPorConsultorio(array $registros): array
+    {
+        $sedes = app(\App\Services\Admin\SedesDelMedico::class);
+        $grupos = [];
+
+        foreach ($registros as $registro) {
+            $ficha = Medico::where('reg_medico', $registro)->orderBy('id')->first();
+
+            if ($ficha === null) {
+                continue;
+            }
+
+            $grupos[] = [
+                'registro' => $registro,
+                'ficha' => $ficha,
+                'principal' => $registro === (string) $this->medico->reg_medico,
+                'sedes' => $sedes->sedes($ficha, true),
+            ];
+        }
+
+        return $grupos;
+    }
+
     /** @return array<string,mixed> */
     private function planes(array $registros): array
     {
@@ -359,7 +390,14 @@ class DetalleDelMedico extends Component
             : null;
 
         return [
-            'estados' => collect($registros)->map(fn ($reg) => $servicios->estado($reg))->all(),
+            // El consultorio hijo no tiene plan: muestra el del padre y de quién es.
+            'estados' => collect($registros)->map(function ($reg) use ($servicios) {
+                $estado = $servicios->estado($reg);
+                $delPlan = $servicios->registroDelPlan($reg);
+                $estado['heredado_de'] = $delPlan !== null && $delPlan !== (string) $reg ? $delPlan : null;
+
+                return $estado;
+            })->all(),
             'historial' => $registros === [] ? collect() : RegMedicoServicio::whereIn('reg_medico', $registros)->orderByDesc('vence_el')->orderByDesc('id')->limit(10)->get(),
             'actual' => $actual,
             'planesActivos' => $planesActivos,

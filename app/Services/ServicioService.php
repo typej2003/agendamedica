@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Medico;
 use App\Models\Plan;
 use App\Models\RegMedicoServicio;
 use Carbon\Carbon;
@@ -29,14 +30,71 @@ class ServicioService
     public const VENCIDO = 'vencido';
     public const SIN_SERVICIO = 'sin_servicio';
 
-    /** El servicio activo de mayor vencimiento; null si no tiene ninguno. */
+    /** Los que se están resolviendo ahora: corta un círculo padre/hijo si alguna fila quedó mal. */
+    private array $resolviendo = [];
+
+    /**
+     * El servicio activo de mayor vencimiento; null si no tiene ninguno.
+     *
+     * **El consultorio hijo usa el plan de su padre** (2026-11-06): si la ficha cuelga de otra
+     * (`medicos.medico_padre_id`) y **no tiene servicio propio**, se resuelve el del padre. Es el único punto
+     * donde se resuelve el plan, así que con esto heredan el estado, el vencimiento, la impresión, el bloqueo
+     * de la sincronización y los cupos (`CupoDelPlan`). Un consultorio hijo nunca tiene filas propias (el alta
+     * no crea plan, no da prueba ni cortesía y `otorgar` se lo impide), así que en la práctica siempre hereda.
+     *
+     * **Se consulta primero lo propio**: el caso normal (un consultorio con su plan) cuesta las mismas
+     * consultas que antes; el vínculo con el padre sólo se busca cuando no hay servicio.
+     *
+     * **Sin memo a propósito**: el API y el panel cambian el servicio y vuelven a preguntar dentro de la misma
+     * petición (la prueba al médico sin servicio, la renovación desde el panel); una caché devolvería lo de
+     * antes y dejaría el estado viejo.
+     */
     public function actual(string $regMedico): ?RegMedicoServicio
+    {
+        $regMedico = trim($regMedico);
+
+        if ($regMedico === '') {
+            return null;
+        }
+
+        $propio = $this->propio($regMedico);
+        if ($propio !== null) {
+            return $propio;
+        }
+
+        if (isset($this->resolviendo[$regMedico])) {
+            return null; // círculo padre/hijo: no se hereda nada en vez de colgarse
+        }
+
+        $this->resolviendo[$regMedico] = true;
+
+        try {
+            $padre = Medico::regMedicoDelPadreDe($regMedico);
+            $servicio = $padre !== null ? $this->actual($padre) : null;
+        } finally {
+            unset($this->resolviendo[$regMedico]);
+        }
+
+        return $servicio;
+    }
+
+    /** Las filas del `reg_medico`, sin mirar a nadie más: el servicio propio del consultorio. */
+    private function propio(string $regMedico): ?RegMedicoServicio
     {
         return RegMedicoServicio::where('reg_medico', $regMedico)
             ->where('estado', RegMedicoServicio::ACTIVO)
             ->orderByDesc('vence_el')
             ->orderByDesc('id')
             ->first();
+    }
+
+    /**
+     * De quién es el plan que este `reg_medico` está usando: el suyo, o el del padre si es un consultorio hijo
+     * sin plan propio. `null` = no tiene servicio. Lo usa el panel para marcar «usa el plan de X».
+     */
+    public function registroDelPlan(string $regMedico): ?string
+    {
+        return $this->actual(trim($regMedico))?->reg_medico;
     }
 
     /**
@@ -265,7 +323,10 @@ class ServicioService
     public function otorgarPrueba(string $regMedico): ?RegMedicoServicio
     {
         $regMedico = trim($regMedico);
-        if ($regMedico === '' || RegMedicoServicio::where('reg_medico', $regMedico)->exists()) {
+        if ($regMedico === '' || Medico::regMedicoDelPadreDe($regMedico) !== null) {
+            return null; // un consultorio hijo no tiene plan propio: usa el de su padre
+        }
+        if (RegMedicoServicio::where('reg_medico', $regMedico)->exists()) {
             return null;
         }
         $plan = Plan::porDefecto();
@@ -286,8 +347,10 @@ class ServicioService
     public function otorgarPowerBuilder(string $regMedico): ?RegMedicoServicio
     {
         $regMedico = trim($regMedico);
-        if ($regMedico === ''
-            || RegMedicoServicio::where('reg_medico', $regMedico)->where('origen', RegMedicoServicio::ORIGEN_POWERBUILDER)->exists()) {
+        if ($regMedico === '' || Medico::regMedicoDelPadreDe($regMedico) !== null) {
+            return null; // el consultorio hijo no recibe año de cortesía: hereda el plan del padre
+        }
+        if (RegMedicoServicio::where('reg_medico', $regMedico)->where('origen', RegMedicoServicio::ORIGEN_POWERBUILDER)->exists()) {
             return null;
         }
         $plan = Plan::porCodigo((string) config('servicios.plan_powerbuilder'));
@@ -385,6 +448,11 @@ class ServicioService
         $regMedico = trim($regMedico);
         if ($regMedico === '') {
             throw new DomainException('Falta el reg_medico.');
+        }
+        // Un consultorio hijo no contrata plan propio: el suyo es el del padre (2026-11-06).
+        $padre = Medico::regMedicoDelPadreDe($regMedico);
+        if ($padre !== null) {
+            throw new DomainException("El consultorio {$regMedico} usa el plan de {$padre}: no se le contrata uno propio.");
         }
         $meses = $meses ?? $plan->meses();
         if ($meses < 1) {

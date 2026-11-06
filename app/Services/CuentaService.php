@@ -226,6 +226,14 @@ class CuentaService
     {
         $formato = $this->vacioANull($formato);
 
+        // Un consultorio hijo no se convierte en ficha de médico: pasaría a contar como médico del plan y
+        // perdería su vínculo (2026-11-06). Para separarlo hay que quitarle el padre, no cambiarle la marca.
+        if ($medico->esConsultorioHijo() && ! $esCentro) {
+            throw ValidationException::withMessages([
+                'es_centro' => 'Este consultorio cuelga de un médico: no se puede convertir en una ficha de médico.',
+            ]);
+        }
+
         if ($formato !== null && ! in_array($formato, self::FORMATOS_DE_REPORTE, true)) {
             throw ValidationException::withMessages([
                 'formato_reportes' => 'El formato de los reportes es «centro» o «medico».',
@@ -638,10 +646,78 @@ class CuentaService
         }
 
         // El plan del consultorio que recibe al médico manda: si no queda cupo, se pide mejorar el plan.
-        $this->cupos->exigirCupoMedico($regMedico);
+        // El mismo doctor ya contado en la familia (el consultorio hijo) no suma un asiento.
+        $this->cupos->exigirCupoMedico($regMedico, $medico);
 
         DB::transaction(function () use ($medico, $regMedico) {
             MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $regMedico]);
+        });
+    }
+
+    /**
+     * **El segundo consultorio de un médico** (2026-11-06): crea la ficha que cuelga de la suya y lo vincula.
+     *
+     * El `reg_medico` es un tenant y existe porque una ficha de `medicos` lo tiene; por eso «agregar un
+     * registro» es crear esa ficha, **no** otra cuenta: va sin `user_id` y sin plan (`es_centro = 1` para que no
+     * cuente como médico, más `medico_padre_id`), y el consultorio usa el plan del padre (`ServicioService`) sin
+     * sumarle un asiento al equipo (`CupoDelPlan`). La ficha lleva el nombre del doctor y el formato de reportes
+     * del médico (no el de un centro).
+     *
+     * **Sin código, se genera** (`med_00001`, `med_00002`…): es el mismo `SiguienteRegMedico` del alta de
+     * médicos y centros, y se calcula **dentro** de la transacción (con bloqueo) para que dos altas a la vez no
+     * se lleven el mismo número.
+     *
+     * Todo en una transacción: o quedan la ficha y el vínculo, o ninguna de las dos.
+     */
+    public function agregarConsultorio(Medico $medico, string $regMedico): Medico
+    {
+        $regMedico = trim($regMedico);
+
+        if ($medico->esConsultorioHijo()) {
+            throw ValidationException::withMessages([
+                'reg_consultorio' => 'Este consultorio ya cuelga del principal: agrega el nuevo desde el consultorio principal del médico.',
+            ]);
+        }
+
+        if ($medico->es_centro) {
+            throw ValidationException::withMessages([
+                'reg_consultorio' => 'Un centro médico no tiene consultorios propios: atienden sus doctores.',
+            ]);
+        }
+
+        if ($regMedico !== '') {
+            if (mb_strlen($regMedico) > 20) {
+                throw ValidationException::withMessages(['reg_consultorio' => 'El reg_medico tiene 20 caracteres como máximo.']);
+            }
+
+            if ($regMedico === (string) $medico->reg_medico) {
+                throw ValidationException::withMessages(['reg_consultorio' => 'Ese es el reg_medico del consultorio principal.']);
+            }
+
+            if (Medico::where('reg_medico', $regMedico)->exists() || MedicoRegistro::where('reg_medico', $regMedico)->exists()) {
+                throw ValidationException::withMessages(['reg_consultorio' => 'Ya existe un consultorio con ese reg_medico.']);
+            }
+        }
+
+        return DB::transaction(function () use ($medico, $regMedico) {
+            // Vacío: se genera `med_NNNNN` dentro de esta transacción (con bloqueo), como el alta de médicos.
+            $regMedico = $regMedico !== '' ? $regMedico : app(SiguienteRegMedico::class)->ejecutar();
+
+            $ficha = Medico::create([
+                'user_id'          => null,
+                'name'             => $medico->name,
+                'lastname'         => $medico->lastname,
+                'prefix'           => null,
+                'reg_medico'       => $regMedico,
+                'is_active'        => true,
+                'es_centro'        => true,
+                'formato_reportes' => Medico::FORMATO_DEL_MEDICO,
+                'medico_padre_id'  => $medico->id,
+            ]);
+
+            MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $regMedico]);
+
+            return $ficha;
         });
     }
 

@@ -93,6 +93,44 @@ class DetalleDelMedicoGestionTest extends TestCase
             ->assertSee('CONSULTORIO-DETALLE');
     }
 
+    public function test_el_consultorio_hijo_se_ve_en_sus_sedes_y_con_el_plan_heredado(): void
+    {
+        $hijo = app(CuentaService::class)->agregarConsultorio($this->medico, 'hijo-' . substr(uniqid(), -6));
+
+        $this->detalle()
+            ->call('irA', 'sedes')
+            ->assertSee($hijo->reg_medico)
+            ->assertSee('consultorio del médico')
+            ->assertSee('Administrar las sedes de ' . $hijo->reg_medico)
+            ->assertSee(route('admin.medicos.sedes', $hijo), false);
+
+        $this->detalle()
+            ->call('irA', 'planes')
+            ->assertSee($hijo->reg_medico)
+            ->assertSee('usa el plan de ' . $this->medico->reg_medico);
+    }
+
+    public function test_el_consultorio_hijo_no_renueva_el_plan_desde_su_ficha(): void
+    {
+        $hijo = app(CuentaService::class)->agregarConsultorio($this->medico, 'hijo-' . substr(uniqid(), -6));
+
+        Livewire::test(DetalleDelMedico::class, ['medico' => $hijo])
+            ->call('irA', 'planes')
+            ->assertSee('el plan se renueva desde la ficha del consultorio principal')
+            ->assertDontSee('Quitar plan')
+            ->call('abrirRenovarPlan')
+            ->assertSet('planAccion', null)
+            ->call('abrirQuitarPlan')
+            ->assertSet('planAccion', null);
+
+        // El plan es del padre: no se crea ninguna fila de servicio para el consultorio hijo.
+        $this->assertSame(0, RegMedicoServicio::where('reg_medico', $hijo->reg_medico)->count());
+        $this->assertTrue(
+            RegMedicoServicio::where('reg_medico', $this->medico->reg_medico)->where('estado', RegMedicoServicio::ACTIVO)->exists(),
+            'El plan del principal sigue siendo el que se usa.',
+        );
+    }
+
     public function test_las_especialidades_se_asignan_desde_la_ficha(): void
     {
         $pediatria = Specialty::where('slug', 'pediatria')->firstOrFail();

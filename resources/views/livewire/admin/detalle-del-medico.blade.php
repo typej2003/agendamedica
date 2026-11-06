@@ -146,25 +146,42 @@
 
             {{-- ============================ Sedes ============================ --}}
             @elseif ($pestana === 'sedes')
-                @forelse ($datos['sedes'] as $sede)
-                    @if ($loop->first)
-                        <div class="table-responsive"><table class="table align-middle mb-0">
-                            <thead class="table-light"><tr><th>Sede</th><th>Ciudad</th><th class="text-end">Consultorios</th></tr></thead><tbody>
+                {{-- Un grupo por **consultorio del médico** (`reg_medico`): el principal y los que cuelgan de él
+                     (2026-11-06). Cada uno administra sus propias sedes con su ficha. --}}
+                @forelse ($datos['sedesPorConsultorio'] as $grupo)
+                    @if (count($datos['sedesPorConsultorio']) > 1)
+                        <h3 class="h6 d-flex align-items-center gap-2 {{ $loop->first ? '' : 'mt-4' }}">
+                            <code>{{ $grupo['registro'] }}</code>
+                            @if ($grupo['principal'])
+                                <span class="badge bg-secondary">principal</span>
+                            @elseif ($grupo['ficha']->esConsultorioHijo())
+                                <span class="badge bg-primary">consultorio del médico</span>
+                            @endif
+                        </h3>
                     @endif
-                    <tr wire:key="sede-{{ $sede->id }}">
-                        <td>{{ $sede->name }}<small class="text-muted d-block">{{ $sede->address }}</small></td>
-                        <td>{{ $sede->city->name ?? '—' }}</td>
-                        <td class="text-end">{{ $sede->consultorios_activos }}@if ($sede->consultorios_total > $sede->consultorios_activos) <small class="text-muted">(+{{ $sede->consultorios_total - $sede->consultorios_activos }} de baja)</small>@endif</td>
-                    </tr>
-                    @if ($loop->last) </tbody></table></div> @endif
+                    @forelse ($grupo['sedes'] as $sede)
+                        @if ($loop->first)
+                            <div class="table-responsive"><table class="table align-middle mb-0">
+                                <thead class="table-light"><tr><th>Sede</th><th>Ciudad</th><th class="text-end">Consultorios</th></tr></thead><tbody>
+                        @endif
+                        <tr wire:key="sede-{{ $grupo['registro'] }}-{{ $sede->id }}">
+                            <td>{{ $sede->name }}<small class="text-muted d-block">{{ $sede->address }}</small></td>
+                            <td>{{ $sede->city->name ?? '—' }}</td>
+                            <td class="text-end">{{ $sede->consultorios_activos }}@if ($sede->consultorios_total > $sede->consultorios_activos) <small class="text-muted">(+{{ $sede->consultorios_total - $sede->consultorios_activos }} de baja)</small>@endif</td>
+                        </tr>
+                        @if ($loop->last) </tbody></table></div> @endif
+                    @empty
+                        <x-ui.vacio icono="bi-geo-alt" titulo="Sin sedes">Este consultorio no tiene sedes registradas.</x-ui.vacio>
+                    @endforelse
+                    <div class="mt-3 d-flex flex-wrap gap-2">
+                        <a href="{{ route('admin.medicos.sedes', $grupo['ficha']) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>
+                            {{ count($datos['sedesPorConsultorio']) > 1 ? 'Administrar las sedes de ' . $grupo['registro'] : 'Administrar sedes y consultorios' }}
+                        </a>
+                    </div>
                 @empty
-                    <x-ui.vacio icono="bi-geo-alt" titulo="Sin sedes">No tiene consultorios registrados.</x-ui.vacio>
+                    <x-ui.vacio icono="bi-geo-alt" titulo="Sin registros de datos">Sin <code>reg_medico</code> no hay sedes que administrar.</x-ui.vacio>
                 @endforelse
-                <div class="mt-3 d-flex flex-wrap gap-2">
-                    <a href="{{ route('admin.medicos.sedes', $medico) }}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-geo-alt me-1" aria-hidden="true"></i> Administrar sedes y consultorios
-                    </a>
-                </div>
 
             {{-- ============================ Horarios ============================ --}}
             @elseif ($pestana === 'horarios')
@@ -394,7 +411,13 @@
             @elseif ($pestana === 'planes')
                 @forelse ($datos['estados'] as $estado)
                     <dl class="datos-rejilla mb-3" wire:key="plan-{{ $estado['reg_medico'] }}">
-                        <x-ui.dato etiqueta="Registro" :valor="$estado['reg_medico']" />
+                        <x-ui.dato etiqueta="Registro">
+                            <code>{{ $estado['reg_medico'] }}</code>
+                            @if ($estado['heredado_de'] ?? null)
+                                {{-- El consultorio hijo no tiene plan propio: muestra el del padre (2026-11-06). --}}
+                                <span class="badge bg-light text-dark border ms-1">usa el plan de {{ $estado['heredado_de'] }}</span>
+                            @endif
+                        </x-ui.dato>
                         <x-ui.dato etiqueta="Plan" :valor="$estado['plan'] ?? 'Sin servicio'" />
                         <x-ui.dato etiqueta="Estado">
                             @php
@@ -410,7 +433,13 @@
                     <x-ui.vacio icono="bi-card-checklist" titulo="Sin registros de datos">Sin <code>reg_medico</code> no hay plan.</x-ui.vacio>
                 @endforelse
 
-                @if ($datos['estados'] !== [])
+                @if ($medico->esConsultorioHijo())
+                    {{-- El consultorio hijo no tiene plan propio: el del padre se renueva desde su ficha (2026-11-06). --}}
+                    <p class="text-muted small mb-0">
+                        Este consultorio usa el plan de <code>{{ $medico->regMedicoDelPadre() }}</code>:
+                        el plan se renueva desde la ficha del consultorio principal.
+                    </p>
+                @elseif ($datos['estados'] !== [])
                     <div class="d-flex flex-wrap gap-2 mb-3">
                         <button type="button" class="btn btn-sm btn-outline-primary" wire:click="abrirRenovarPlan">
                             <i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i> Renovar

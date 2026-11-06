@@ -39,10 +39,106 @@ final class CupoDelPlan
     /** @return array{medicos:int, secretarias:int} */
     public function conteo(string $regMedico): array
     {
+        $familia = $this->familia($regMedico);
+
         return [
-            'medicos' => $this->medicosDelEquipo($regMedico)->count(),
-            'secretarias' => $this->secretariasDelEquipo($regMedico)->count(),
+            'medicos' => $this->medicosDeLaFamilia($familia)->count(),
+            'secretarias' => $this->secretariasDeLaFamilia($familia)->count(),
         ];
+    }
+
+    /**
+     * **El `reg_medico` con los consultorios que cuelgan de él** (2026-11-06): el padre manda. Un consultorio
+     * hijo usa el plan del padre, así que los cupos se cuentan sobre la familia entera y el mismo doctor —que
+     * está en los dos— ocupa **un** asiento, no dos.
+     *
+     * @return array<int,string>
+     */
+    public function familia(string $regMedico): array
+    {
+        $regMedico = trim($regMedico);
+        if ($regMedico === '') {
+            return [];
+        }
+
+        $ficha = Medico::where('reg_medico', $regMedico)->orderBy('id')->first();
+        if ($ficha === null) {
+            return [$regMedico];
+        }
+
+        $raiz = $ficha->esConsultorioHijo() ? $ficha->padre : $ficha;
+        if ($raiz === null) {
+            return [$regMedico];
+        }
+
+        $registros = array_merge(
+            [$raiz->reg_medico],
+            $raiz->hijos()->pluck('reg_medico')->all(),
+        );
+
+        return array_values(array_unique(array_filter(
+            array_map(fn ($registro) => trim((string) $registro), $registros),
+            fn (string $registro) => $registro !== '',
+        )));
+    }
+
+    /**
+     * @param  array<int,string>  $familia
+     * @return Collection<int,Medico>
+     */
+    private function medicosDeLaFamilia(array $familia): Collection
+    {
+        if ($familia === []) {
+            return collect();
+        }
+
+        $ids = MedicoRegistro::whereIn('reg_medico', $familia)
+            ->whereNotNull('medico_id')
+            ->pluck('medico_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        return Medico::where('es_centro', false)
+            ->where(function ($consulta) use ($familia, $ids) {
+                $consulta->whereIn('reg_medico', $familia);
+                if ($ids !== []) {
+                    $consulta->orWhereIn('id', $ids);
+                }
+            })
+            ->get()
+            ->unique('id')
+            ->values();
+    }
+
+    /**
+     * @param  array<int,string>  $familia
+     * @return Collection<int,User>
+     */
+    private function secretariasDeLaFamilia(array $familia): Collection
+    {
+        if ($familia === []) {
+            return collect();
+        }
+
+        $ids = MedicoRegistro::whereIn('reg_medico', $familia)
+            ->whereNotNull('user_id')
+            ->pluck('user_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($ids === []) {
+            return collect();
+        }
+
+        return User::whereIn('id', $ids)
+            ->whereHas('roles', fn ($consulta) => $consulta->where('name', 'Secretaria'))
+            ->whereDoesntHave('roles', fn ($consulta) => $consulta->where('name', '!=', 'Secretaria'))
+            ->whereDoesntHave('medico')
+            ->get();
     }
 
     /**
@@ -141,8 +237,14 @@ final class CupoDelPlan
     }
 
     /** El mensaje de “mejora el plan” si no queda cupo de médico; si queda, no hace nada. */
-    public function exigirCupoMedico(string $regMedico): void
+    public function exigirCupoMedico(string $regMedico, ?Medico $medico = null): void
     {
+        // El mismo doctor que ya está en la familia no suma un asiento: es el caso del consultorio hijo,
+        // donde se lo vincula al tenant nuevo sin que el plan del padre cuente dos veces (2026-11-06).
+        if ($medico !== null && $this->yaEstaEnLaFamilia($regMedico, $medico)) {
+            return;
+        }
+
         if ($this->puedeAgregarMedico($regMedico)) {
             return;
         }
@@ -153,6 +255,13 @@ final class CupoDelPlan
         throw ValidationException::withMessages([
             'regNuevo' => $this->mensajeDeCupo(self::MEDICO, $maximo, $sugerido),
         ]);
+    }
+
+    /** ¿Este médico ya cuenta en los cupos de la familia de ese `reg_medico`? */
+    private function yaEstaEnLaFamilia(string $regMedico, Medico $medico): bool
+    {
+        return $this->medicosDeLaFamilia($this->familia($regMedico))
+            ->contains(fn (Medico $miembro) => (int) $miembro->id === (int) $medico->id);
     }
 
     /** El mensaje de “mejora el plan” si no queda cupo de secretaría; si queda, no hace nada. */

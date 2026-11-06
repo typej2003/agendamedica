@@ -39,6 +39,12 @@
                         @else
                             <p class="mb-3 small text-muted">
                                 Registro: <code>{{ $registros[0] ?? '—' }}</code>
+                                @if ($registros !== [])
+                                    <span class="d-block mt-1">
+                                        ¿Este médico atiende en otro consultorio? Agrégalo en <strong>Usuarios → ⋯ → Registros
+                                        de datos</strong> («Agregar un consultorio») y volvé acá para emitir la credencial de esa PC.
+                                    </span>
+                                @endif
                             </p>
                         @endif
 
