@@ -12,6 +12,7 @@ use App\Models\MedicoRegistro;
 use App\Models\Office;
 use App\Models\Specialty;
 use App\Models\User;
+use App\Services\CuentaService;
 use Database\Seeders\EspecialidadesYModulosSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
@@ -226,6 +227,69 @@ class ContextoDoctorYCentroWebTest extends TestCase
         $this->assertTrue($tarjetas[0]['elegirConsultorio']);
         $this->assertTrue($vista->hayAlgoQueElegir());
         $this->assertNull(app(ContextoAutomatico::class)->de($user), 'Con dos consultorios hay algo que elegir.');
+    }
+
+    /**
+     * **El consultorio del registro hijo va en «Mis consultorios»** (corrección del usuario, 2026-11-06): el
+     * segundo consultorio del mismo doctor es una ficha que cuelga de la suya (`medicos.medico_padre_id`) y
+     * lleva el nombre del doctor. Agrupando por el dueño del `reg_medico`, el menú lo mostraba con ese nombre,
+     * como si fuera otro médico; se agrupa con el consultorio principal, que es de quien cuelga.
+     */
+    public function test_el_consultorio_del_registro_hijo_va_en_mis_consultorios(): void
+    {
+        ['user' => $user, 'doctor' => $doctor] = $this->doctorConDosCentros();
+
+        $personal = $this->consultorio($doctor->reg_medico, $doctor->id, 'P1');
+        $hijo = app(CuentaService::class)->agregarConsultorio($doctor, 'hijo-' . substr(uniqid(), -6));
+        $delHijo = $this->consultorio($hijo->reg_medico, $doctor->id, 'H1');
+
+        $vista = new ContextoVista(app(ContextoTrabajo::class)->disponibles($user));
+        $tarjetas = $vista->medicos();
+
+        $this->assertCount(1, $tarjetas, 'El consultorio hijo no crea otra tarjeta: es el mismo doctor.');
+        $sedes = collect($tarjetas[0]['sedes'])->keyBy('valor');
+        $this->assertCount(2, $sedes);
+        // Elegir el consultorio del hijo fija el contexto de su registro, que es su tenant.
+        $this->assertSame($hijo->reg_medico, $sedes[$delHijo->id]['regMedico']);
+        $this->assertNull($sedes[$personal->id]['centro'], 'El consultorio principal va en «Mis consultorios».');
+        $this->assertNull($sedes[$delHijo->id]['centro'], 'El consultorio del registro hijo va en el mismo grupo.');
+
+        $respuesta = $this->actingAs($user)->get('/clinica/contexto');
+        $respuesta->assertOk();
+        $respuesta->assertSee('<optgroup label="Mis consultorios">', false);
+        $respuesta->assertDontSee('<optgroup label="' . $doctor->nombreMostrar . '"', false);
+    }
+
+    /**
+     * **El consultorio de un registro hijo de otro doctor se agrupa con su padre**: la ficha hija repite el
+     * nombre del doctor, así que mostrarla con su propio nombre era un grupo de más. El grupo es el del
+     * `reg_medico` del padre (corrección del usuario, 2026-11-06).
+     */
+    public function test_el_consultorio_hijo_de_otro_medico_se_agrupa_con_su_padre(): void
+    {
+        ['user' => $user, 'doctor' => $doctor] = $this->doctorConDosCentros();
+
+        $this->consultorio($doctor->reg_medico, $doctor->id, 'P1');
+        $ajeno = $this->ficha('Dr. Ajeno', 'ajeno-' . substr(uniqid(), -6));
+        $hijoAjeno = app(CuentaService::class)->agregarConsultorio($ajeno, 'ajeno-hijo-' . substr(uniqid(), -6));
+        MedicoRegistro::create(['medico_id' => $doctor->id, 'reg_medico' => $hijoAjeno->reg_medico]);
+        $delAjeno = $this->consultorio($hijoAjeno->reg_medico, $ajeno->id, 'A1');
+
+        $vista = new ContextoVista(app(ContextoTrabajo::class)->disponibles($user));
+        $sedes = collect($vista->medicos()[0]['sedes'])->keyBy('valor');
+
+        $this->assertSame(
+            $ajeno->nombreMostrar,
+            $sedes[$delAjeno->id]['centro'],
+            'El consultorio del hijo ajeno se agrupa con el nombre del padre.',
+        );
+
+        // La ficha hija copia el nombre del doctor, así que el grupo del padre es el que se pinta (una sola
+        // vez): el menú junta el consultorio personal con el del hijo ajeno en dos grupos, no en tres.
+        $respuesta = $this->actingAs($user)->get('/clinica/contexto');
+        $respuesta->assertOk();
+        $respuesta->assertSee('<optgroup label="' . $ajeno->nombreMostrar . '">', false);
+        $this->assertSame(2, substr_count($respuesta->getContent(), '<optgroup'));
     }
 
     // ------------------------------------------------------------------------------------ La secretaría

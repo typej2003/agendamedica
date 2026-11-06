@@ -84,8 +84,12 @@
                                     @foreach ($gruposDeConsultorios as $etiqueta => $sedes)
                                         <optgroup label="{{ $etiqueta }}">
                                             {{-- «Todas las sedes» sólo tiene sentido con más de una sede: con una sola es lo mismo
-                                                 que elegir sus consultorios (2026-10-20). --}}
-                                            @if ($sedes->pluck('sedeId')->unique()->count() > 1)
+                                                 que elegir sus consultorios (2026-10-20). Y el grupo tiene que ser de **un
+                                                 solo** `reg_medico`: el vacío deja el contexto en «todos los consultorios de
+                                                 ese registro», así que no sirve cuando «Mis consultorios» junta el principal
+                                                 con el consultorio hijo del mismo doctor (2026-11-06). --}}
+                                            @if ($sedes->pluck('sedeId')->unique()->count() > 1
+                                                && $sedes->pluck('regMedico')->unique()->count() === 1)
                                                 <option value="" data-reg-medico="{{ $sedes->first()['regMedico'] }}">
                                                     Todas las sedes de {{ $etiqueta === 'Mis consultorios' ? 'mis consultorios' : $etiqueta }}
                                                 </option>

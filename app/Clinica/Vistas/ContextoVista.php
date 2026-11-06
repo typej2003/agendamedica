@@ -2,6 +2,8 @@
 
 namespace App\Clinica\Vistas;
 
+use App\Models\Medico;
+
 /**
  * La pantalla de **elegir consultorio** (`/clinica/contexto`): con qué médico, especialidad y **consultorio**
  * se opera. **Una tarjeta por médico**.
@@ -59,6 +61,8 @@ final class ContextoVista
             $medico = $acceso['medico'];
             $id = $medico->id;
             $centro = $acceso['centro'] ?? null;
+            // Con qué nombre se agrupa en el menú cada consultorio de este registro (ver `etiquetaDelMenu()`).
+            $etiquetaDelMenu = $this->etiquetaDelMenu($centro, $medico);
 
             $grupo = $grupos[$id] ?? [
                 'medico'         => $medico,
@@ -84,11 +88,9 @@ final class ContextoVista
                     'regMedico' => (string) $regMedico,
                     // La sede (`medical_centers`) del consultorio: «Todas las sedes» sólo se ofrece si el menú junta más de una.
                     'sedeId'    => (int) $sede->medical_center_id,
-                    // El nombre del centro dueño del consultorio, para agrupar el menú: `null` = los
+                    // El nombre del médico dueño del registro, para agrupar el menú: `null` = los
                     // consultorios personales del médico ("Mis consultorios").
-                    'centro'    => $centro !== null && (int) $centro->id !== (int) $medico->id
-                        ? trim(($centro->prefix ?? '') . ' ' . $centro->name . ' ' . $centro->lastname)
-                        : null,
+                    'centro'    => $etiquetaDelMenu,
                 ];
             }
 
@@ -130,6 +132,33 @@ final class ContextoVista
         }
 
         return $medicos;
+    }
+
+    /**
+     * La etiqueta con la que el menú de consultorios agrupa las sedes de un registro: `null` = «Mis
+     * consultorios».
+     *
+     * El menú agrupa por el **dueño del `reg_medico`**. Un consultorio puede vivir en una **ficha hija**
+     * (`medicos.medico_padre_id`): el segundo consultorio del mismo doctor, que se crea sin cuenta y con el
+     * nombre del doctor. Ahí manda el **padre** —si es el médico del contexto, el consultorio va en «Mis
+     * consultorios»; si es de otro doctor, va con el nombre de ese padre—, porque la ficha hija repite el
+     * nombre del doctor y parecía otro médico con sus propios consultorios (2026-11-06).
+     */
+    private function etiquetaDelMenu(?Medico $duenio, Medico $medico): ?string
+    {
+        if ($duenio === null) {
+            return null;
+        }
+
+        // El consultorio hijo se agrupa donde se agrupa su consultorio principal.
+        $duenio = $duenio->padre ?? $duenio;
+
+        $propias = array_filter([(int) $medico->id, (int) $medico->medico_padre_id]);
+        if (in_array((int) $duenio->id, $propias, true)) {
+            return null;
+        }
+
+        return trim(($duenio->prefix ?? '') . ' ' . $duenio->name . ' ' . $duenio->lastname);
     }
 
     /**
