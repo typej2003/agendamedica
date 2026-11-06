@@ -5,6 +5,7 @@ namespace App\Clinica\Consulta;
 use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
+use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\FormatosEnBlanco;
 
 /**
@@ -29,8 +30,9 @@ use App\Clinica\Impresion\FormatosEnBlanco;
  * Lo oculto sólo se deja de **ofrecer**: la URL directa sigue abriendo, como el eco abdominal en ginecología (WEB-11.14).
  *
  * **Fuera de la consulta** el alcance también dice qué no se ofrece en las pantallas que mezclan especialidades: los
- * **tipos de plantilla de texto** —las plantillas de los exámenes y de los ecos que la especialidad no tiene— y los
- * **formatos en blanco** de esos ecos. El **listado de embarazos y partos** no se decide acá: es un reporte que declara su
+ * **tipos de plantilla de texto** —las plantillas de los exámenes y de los ecos que la especialidad no tiene—, los
+ * **formatos en blanco** de esos ecos y los **documentos de la historia del paciente** que son de ginecología (O-72).
+ * El **listado de embarazos y partos** no se decide acá: es un reporte que declara su
  * especialidad en `ListadosDisponibles`, junto a los demás.
  *
  * Es pura (sin base de datos): recibe el `slug` de la especialidad (`pediatria`, `ginecologia-y-obstetricia`…).
@@ -325,5 +327,48 @@ final class AlcanceDeLaEspecialidad
         }
 
         return $ocultos;
+    }
+
+    /**
+     * **Los documentos de la historia del paciente que no se listan** en esta especialidad: los de ginecología
+     * (O-72). Es el hermano de `formatosEnBlancoOcultos()`, pero para la lista de *Documentos* de la ficha del
+     * paciente: el informe de un eco y el de una solapa de texto del examen ginecológico.
+     *
+     * Alexander, 2026-11-06: «es de ginecología, hay que invisibilizar». En la ficha de un niño de pediatría la
+     * sección *Documentos* de su historia listaba «Histeroscopía» —y su hoja se podía imprimir—, y con ella los
+     * informes de los ecos. La decisión fue esconder **todos** los documentos de ginecología, y alcanza con que
+     * **no se listen**: la hoja por URL directa sigue abriendo, como todo lo que el alcance esconde (2026-10-22),
+     * y no se borra ningún dato —el texto sigue guardado en `consultas.cuello`; sólo deja de mostrarse—.
+     *
+     * La lista **no se escribe acá**: sale de lo que el alcance ya esconde. De los **estudios**, los que
+     * `tiposDeEstudioOcultos()` no ofrece, cada uno con su hoja (`DocumentoImpreso::ESTUDIOS_DE_LA_HOJA`); de las
+     * **solapas del examen**, las de texto que `pestanasDelExamenOcultas()` deja afuera y que tienen hoja
+     * (`TextosDelExamen::documento()`: la colposcopía, la citología y la histeroscopía; *Resultado de exámenes* no
+     * tiene). Un estudio o una solapa nuevos entran solos.
+     *
+     * **En ginecología no se oculta ninguno**, y por eso la respuesta es vacía antes de mirar las listas: el eco
+     * abdominal, que en la consulta no se ofrece (WEB-11.14), es un documento que la historia sigue listando como
+     * siempre —esconderlo es otra decisión—. **Sin especialidad tampoco se listan** (2026-10-30: sin especialidad
+     * no es ginecología), porque el alcance es el del modo medicina general.
+     *
+     * @return array<int,string> claves de `DocumentoImpreso`
+     */
+    public function documentosDeLaHistoriaOcultos(): array
+    {
+        if ($this->esGinecologia()) {
+            return [];
+        }
+
+        $ocultos = [];
+
+        foreach ($this->tiposDeEstudioOcultos() as $estudio) {
+            $ocultos[] = DocumentoImpreso::documentoDelEstudio($estudio);
+        }
+
+        foreach ($this->pestanasDelExamenOcultas() as $pestana) {
+            $ocultos[] = TextosDelExamen::existe($pestana) ? TextosDelExamen::documento($pestana) : null;
+        }
+
+        return array_values(array_unique(array_filter($ocultos)));
     }
 }

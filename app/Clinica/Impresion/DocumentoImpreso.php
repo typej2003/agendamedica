@@ -2,6 +2,8 @@
 
 namespace App\Clinica\Impresion;
 
+use App\Clinica\Consulta\Vistas\TiposDeEstudio;
+
 /**
  * **Un documento de la consulta listo para imprimir en media hoja** (WEB-5.3a, WEB-5.3b, WEB-5.4): constancia, reposo, referencia,
  * informe, orden de hospitalización, dieta / recomendaciones, orden de laboratorio o solicitud de estudios. Lo arma `SolicitudesParaImprimir` y lo reparte en mitades `DistribuidorDeDocumento`.
@@ -237,6 +239,32 @@ final class DocumentoImpreso
         self::ECO_OBSTETRICO_TERCERO => ' · TERCER TRIMESTRE',
     ];
 
+    /**
+     * **El estudio del que es la hoja**, por clave del documento y con el tipo de `TiposDeEstudio`: los ocho
+     * informes de ecografía del ítem 5 del panel del legado (el pélvico, los tres obstétricos, el Doppler
+     * perinatal, el ecocardiograma fetal, el mamario y el abdominal).
+     *
+     * Vive acá por la misma razón que el mapa de `FormatosEnBlanco::porEstudio()`: la relación entre una hoja y
+     * su estudio es un dato del documento, no de la especialidad. Lo lee
+     * `AlcanceDeLaEspecialidad::documentosDeLaHistoriaOcultos()` para no repetir una lista de hojas: el informe
+     * de un estudio que la especialidad no tiene no se lista en la historia del paciente (O-72).
+     *
+     * ⚠️ **No es `FormatosEnBlanco::porEstudio()`**, que es más corta a propósito: ésos son los formatos en
+     * blanco que el escritorio tiene, y no todos los ecos lo tienen.
+     *
+     * @var array<string,string>
+     */
+    public const ESTUDIOS_DE_LA_HOJA = [
+        self::ECO_PELVICO => TiposDeEstudio::GINECOLOGICO,
+        self::ECO_OBSTETRICO => TiposDeEstudio::OBSTETRICO,
+        self::ECO_OBSTETRICO_SEGUNDO => TiposDeEstudio::SEGUNDO,
+        self::ECO_OBSTETRICO_TERCERO => TiposDeEstudio::TERCERO,
+        self::ECO_DOPPLER => TiposDeEstudio::DOPPLER,
+        self::ECO_CARDIOGRAMA_FETAL => TiposDeEstudio::FETAL,
+        self::ECO_MAMARIO => TiposDeEstudio::MAMARIO,
+        self::ECO_ABDOMINAL => TiposDeEstudio::ABDOMINAL,
+    ];
+
     /** Lo que separa los elementos de un párrafo de lista (los exámenes de un tipo). */
     public const SEPARADOR_DE_ITEMS = ' · ';
 
@@ -244,6 +272,17 @@ final class DocumentoImpreso
     public static function tituloConSufijo(string $clave): string
     {
         return self::TITULOS[$clave][0] . (self::SUFIJOS[$clave] ?? '');
+    }
+
+    /**
+     * La clave de la hoja que informa ese estudio, o `null` si el estudio no tiene hoja (hoy ninguno): es el
+     * camino inverso de `ESTUDIOS_DE_LA_HOJA`.
+     */
+    public static function documentoDelEstudio(string $estudio): ?string
+    {
+        $documento = array_search($estudio, self::ESTUDIOS_DE_LA_HOJA, true);
+
+        return $documento === false ? null : $documento;
     }
 
     /**
