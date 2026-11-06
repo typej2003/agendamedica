@@ -33,7 +33,10 @@
         {{-- Una línea: la identidad y el aviso de «sin historia» —que es estado y se queda— en la misma fila
              (pauta de Alexander). El médico de la cita va en la misma línea, como pastilla discreta: sólo
              aparece cuando el consultorio tiene más de un doctor. --}}
-        <span class="d-flex align-items-center gap-2 min-w-0">
+        {{-- El nombre completo, para cuando la fila lo recorta con puntos suspensivos (modo tarjeta), va en el
+             `title` de la identidad: es el único lugar donde el nombre no tiene otro camino para verse entero. --}}
+        <span class="d-flex align-items-center gap-2 min-w-0"
+              title="{{ $fila->paciente() }}{{ $fila->detalle() ? ' · ' . $fila->detalle() : '' }}">
             <x-ui.identidad :nombre="$fila->paciente()" :detalle="$fila->detalle()" :href="$fila->urlPaciente()" tamano="sm" />
             @unless ($fila->historia())
                 <x-ui.estado tono="aviso" icono="bi-exclamation-triangle">Sin historia</x-ui.estado>
@@ -74,6 +77,7 @@
                 // opción está prohibido). Si queda una sola —hoy pasa con «Citas del paciente» en una cita atendida
                 // que ya no tiene nada más que hacer— va como botón directo, al lado de las demás.
                 $secundarias = array_filter([
+                    'imprimir' => (bool) $imprimirDocumentos,
                     'recordatorio' => (bool) $recordatorio,
                     'cobrarLaCita' => (bool) $cobrarLaCita,
                     'link' => (bool) $linkDePago,
@@ -121,16 +125,11 @@
                     </form>
                 @endif
 
-                {{-- Imprimir los documentos de la cita ya atendida (WEB-5.2, ampliado en WEB-5.3a): la secretaría entrega
-                     los papeles sin entrar a la consulta, que es sólo del médico. Sólo aparece si la consulta tiene
-                     algo que imprimir (récipes, constancia, reposo, referencias o informe). --}}
-                @if ($imprimirDocumentos)
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ $imprimirDocumentos['url'] }}"
-                       title="Imprimir los documentos de la cita" aria-label="Imprimir los documentos de la cita de {{ $fila->paciente() }}">
-                        <i class="bi bi-printer" aria-hidden="true"></i> <span class="accion-texto">Imprimir documentos</span>
-                    </a>
-                @endif
-
+                {{-- Imprimir los documentos de la cita ya atendida (WEB-5.2, ampliado en WEB-5.3a): la secretaría
+                     entrega los papeles sin entrar a la consulta, que es sólo del médico. Va **en el menú** y no como
+                     botón directo: con «Editar consulta» + «Imprimir documentos» + «Cobrar» la fila pedía 1081 px y
+                     entre 1024 y 1340 px (la barra lateral desplegada) se salía de la tarjeta. La pauta de la guía es
+                     hasta dos acciones directas y el resto en el menú (§9.1). --}}
                 @if ($cobro)
                     <button type="button" class="btn btn-sm btn-outline-dark" data-dialogo="cobro"
                             title="Cobrar la cita" aria-label="Cobrar la cita de {{ $fila->paciente() }}"
@@ -173,8 +172,14 @@
                      colgando) y una con pago registrado no se borra: la regla la aplica `EliminarCita`;
                      acá solo no se ofrece. El menú se muestra aunque no haya ninguna de esas acciones
                      cuando el paciente tiene ficha: "Citas del paciente" siempre está. --}}
-                @if (! $soloCitasDelPaciente && ($recordatorio || $cobrarLaCita || $linkDePago || $compartirCita || $quitar || ($confirmar && $atender) || $fila->urlEditar() || $fila->urlEliminar() || $fila->pacienteId()))
+                @if (! $soloCitasDelPaciente && ($imprimirDocumentos || $recordatorio || $cobrarLaCita || $linkDePago || $compartirCita || $quitar || ($confirmar && $atender) || $fila->urlEditar() || $fila->urlEliminar() || $fila->pacienteId()))
                     <x-ui.menu>
+                        @if ($imprimirDocumentos)
+                            <a class="menu-item" href="{{ $imprimirDocumentos['url'] }}">
+                                <i class="bi bi-printer" aria-hidden="true"></i> Imprimir documentos
+                            </a>
+                        @endif
+
                         @if ($recordatorio)
                             <button type="button" class="menu-item" data-dialogo="recordatorio"
                                     data-url="{{ $recordatorio['url'] }}"

@@ -5,8 +5,7 @@
         Esta historia todavía no tiene valores para comparar. Se cargan en Signos vitales y en Plan de diagnóstico → Laboratorio.
     </p>
 @else
-    <div class="table-responsive">
-        <table class="table table-sm align-middle tabla-evolucion" id="analisis-tabla">
+    <x-ui.tabla class="table table-sm align-middle tabla-evolucion" id="analisis-tabla">
             <thead>
                 <tr>
                     <th scope="col">Valor</th>
@@ -26,7 +25,7 @@
                         @foreach ($serie['celdas'] as $celda)
                             <td class="text-end">{{ $celda }}</td>
                         @endforeach
-                        <td>
+                        <td data-etiqueta="Evolución">
                             <svg class="grafica-evolucion" viewBox="{{ $seccion->viewBox() }}" role="img"
                                  aria-label="Evolución de {{ $serie['etiqueta'] }}: último valor {{ $serie['ultimo'] }}">
                                 @if (count($serie['marcas']) > 1)
@@ -40,6 +39,5 @@
                     </tr>
                 @endforeach
             </tbody>
-        </table>
-    </div>
+    </x-ui.tabla>
 @endif

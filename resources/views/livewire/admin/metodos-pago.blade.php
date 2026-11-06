@@ -21,8 +21,7 @@
                 </button>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                <x-ui.tabla class="mb-0">
                         <thead class="table-dark">
                             <tr>
                                 <th>Método</th>
@@ -35,17 +34,17 @@
                         <tbody>
                             @forelse ($metodos as $metodo)
                                 <tr wire:key="metodo-{{ $metodo->id }}" class="{{ $metodo->activo ? '' : 'text-muted' }}">
-                                    <td>
+                                    <td class="celda-principal" data-etiqueta="Método">
                                         <div class="fw-semibold">{{ $metodo->etiqueta() }}</div>
                                     </td>
-                                    <td>
+                                    <td data-etiqueta="Cuenta que recibe">
                                         @if ($metodo->cuentaBancaria)
                                             <span title="{{ $metodo->cuentaBancaria->descripcion() }} · {{ $metodo->cuentaBancaria->titular }}">Banco {{ $metodo->cuentaBancaria->banco_codigo }}</span>
                                         @else
                                             <span class="text-danger">Sin cuenta</span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td data-etiqueta="Estado">
                                         @if ($metodo->activo)
                                             <span class="badge bg-success">Activo</span>
                                         @else
@@ -55,7 +54,7 @@
                                             <div><small class="text-danger">Falta configurar</small></div>
                                         @endunless
                                     </td>
-                                    <td>
+                                    <td data-etiqueta="Verificación">
                                         @if ($metodo->verificado_el)
                                             <span class="badge bg-success">Probado</span>
                                             <div><small class="text-muted">{{ \App\Support\HoraLocal::fechaHora($metodo->verificado_el) }}</small></div>
@@ -66,7 +65,7 @@
                                             <span class="badge bg-light text-dark">Sin probar</span>
                                         @endif
                                     </td>
-                                    <td class="text-end text-nowrap">
+                                    <td class="text-end text-nowrap celda-acciones">
                                         <button wire:click="editarMetodo({{ $metodo->id }})" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-pencil"></i> Editar
                                         </button>
@@ -92,8 +91,7 @@
                                 </tr>
                             @endforelse
                         </tbody>
-                    </table>
-                </div>
+                </x-ui.tabla>
             </div>
         </div>
 
@@ -104,22 +102,22 @@
                     <span class="text-muted small ms-2">Los que tienen OTP sirven para débito inmediato; los activos, para pago móvil.</span>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive" style="max-height: 18rem; overflow-y: auto;">
-                        <table class="table table-sm align-middle mb-0">
+                    <div style="max-height: 18rem; overflow-y: auto;">
+                        <x-ui.tabla class="table-sm mb-0">
                             <thead class="table-light">
                                 <tr><th>Código</th><th>Banco</th><th>Activo</th><th>Débito con OTP</th></tr>
                             </thead>
                             <tbody>
                                 @foreach ($bancos as $banco)
                                     <tr wire:key="banco-{{ $banco['codigo'] }}">
-                                        <td><code>{{ $banco['codigo'] }}</code></td>
-                                        <td>{{ $banco['nombre'] }}</td>
-                                        <td>{{ $banco['activo'] ? 'Sí' : 'No' }}</td>
-                                        <td>{{ $banco['debito_otp'] ? 'Sí' : 'No' }}</td>
+                                        <td data-etiqueta="Código"><code>{{ $banco['codigo'] }}</code></td>
+                                        <td class="celda-principal" data-etiqueta="Banco">{{ $banco['nombre'] }}</td>
+                                        <td data-etiqueta="Activo">{{ $banco['activo'] ? 'Sí' : 'No' }}</td>
+                                        <td data-etiqueta="Débito con OTP">{{ $banco['debito_otp'] ? 'Sí' : 'No' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-ui.tabla>
                     </div>
                 </div>
             </div>
@@ -208,25 +206,23 @@
                 <span class="text-muted small ms-2">La tasa que se aplica es la última con fecha de vigencia. Se muestran las 7 más recientes.</span>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
+                <x-ui.tabla class="table-sm mb-0">
                         <thead class="table-light">
                             <tr><th>VES por USD</th><th>Origen</th><th>Vigente desde</th><th>Cargada</th></tr>
                         </thead>
                         <tbody>
                             @forelse ($historialTasas as $fila)
                                 <tr wire:key="tasa-{{ $fila->id }}">
-                                    <td class="fw-semibold">{{ $fila->aTexto() }}</td>
-                                    <td>{{ \App\Models\TasaDeCambio::ORIGENES[$fila->origen] ?? $fila->origen }}</td>
-                                    <td>{{ \App\Support\HoraLocal::fechaHora($fila->vigente_desde) }}</td>
-                                    <td><small class="text-muted">{{ \App\Support\HoraLocal::fechaHora($fila->created_at) }}</small></td>
+                                    <td class="fw-semibold celda-principal" data-etiqueta="VES por USD">{{ $fila->aTexto() }}</td>
+                                    <td data-etiqueta="Origen">{{ \App\Models\TasaDeCambio::ORIGENES[$fila->origen] ?? $fila->origen }}</td>
+                                    <td data-etiqueta="Vigente desde">{{ \App\Support\HoraLocal::fechaHora($fila->vigente_desde) }}</td>
+                                    <td data-etiqueta="Cargada"><small class="text-muted">{{ \App\Support\HoraLocal::fechaHora($fila->created_at) }}</small></td>
                                 </tr>
                             @empty
                                 <tr><td colspan="4" class="text-center text-muted py-4">Sin tasas cargadas.</td></tr>
                             @endforelse
                         </tbody>
-                    </table>
-                </div>
+                </x-ui.tabla>
             </div>
         </div>
 

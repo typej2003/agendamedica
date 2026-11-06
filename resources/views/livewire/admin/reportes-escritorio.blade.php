@@ -74,9 +74,8 @@
     @endif
 
     <div class="card">
-        <div class="table-responsive">
-            <table class="table table-sm table-hover align-middle mb-0">
-                <thead>
+        <x-ui.tabla class="table-sm mb-0">
+            <thead>
                     <tr>
                         <th>Fecha</th>
                         <th>Origen</th>
@@ -90,13 +89,13 @@
                 <tbody>
                     @forelse ($reportes as $reporte)
                         <tr class="{{ (int) $seleccionado === $reporte->id ? 'table-active' : '' }}">
-                            <td class="text-nowrap">{{ \App\Support\HoraLocal::fechaHora($reporte->created_at) }}</td>
-                            <td><span class="badge bg-secondary">{{ $reporte->etiquetaDelTipo() }}</span></td>
-                            <td>{{ $reporte->reg_medico ?: '—' }}</td>
-                            <td>{{ $reporte->equipo ?: '—' }}</td>
-                            <td>{{ $reporte->aplicacion ?: '—' }}</td>
-                            <td>{{ \Illuminate\Support\Str::limit($reporte->mensaje, 90) }}</td>
-                            <td class="text-end text-nowrap">
+                            <td class="text-nowrap" data-etiqueta="Fecha">{{ \App\Support\HoraLocal::fechaHora($reporte->created_at) }}</td>
+                            <td data-etiqueta="Origen"><span class="badge bg-secondary">{{ $reporte->etiquetaDelTipo() }}</span></td>
+                            <td class="celda-principal" data-etiqueta="Médico">{{ $reporte->reg_medico ?: '—' }}</td>
+                            <td data-etiqueta="Equipo">{{ $reporte->equipo ?: '—' }}</td>
+                            <td data-etiqueta="Aplicación">{{ $reporte->aplicacion ?: '—' }}</td>
+                            <td data-etiqueta="Mensaje">{{ \Illuminate\Support\Str::limit($reporte->mensaje, 90) }}</td>
+                            <td class="text-end text-nowrap celda-acciones">
                                 <button type="button" class="btn btn-sm btn-outline-primary" wire:click="ver({{ $reporte->id }})">Ver</button>
 
                                 @if ($porBorrar === $reporte->id)
@@ -113,8 +112,7 @@
                         </tr>
                     @endforelse
                 </tbody>
-            </table>
-        </div>
+        </x-ui.tabla>
 
         @if ($reportes->hasPages())
             <div class="card-footer">

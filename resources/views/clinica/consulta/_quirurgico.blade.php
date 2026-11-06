@@ -18,18 +18,18 @@
         @elseif ($seccion->esPestana('intervenciones'))
             {{-- Las intervenciones: una fila por intervención (`interven_consulta`). --}}
             @if ($seccion->tieneIntervenciones())
-                <div class="table-responsive mb-3">
-                    <table class="table table-sm align-middle">
+                <div class="mb-3">
+                    <x-ui.tabla class="table table-sm align-middle">
                         <thead>
                             <tr><th>Código</th><th>Descripción</th><th>Detalle</th><th></th></tr>
                         </thead>
                         <tbody>
                             @foreach ($seccion->intervenciones() as $intervencion)
                                 <tr>
-                                    <td><code>{{ $intervencion['codigo'] }}</code></td>
-                                    <td>{{ $intervencion['descripcion'] }}</td>
-                                    <td class="texto-tenue">{{ $intervencion['detalle'] }}</td>
-                                    <td class="text-end">
+                                    <td data-etiqueta="Código"><code>{{ $intervencion['codigo'] }}</code></td>
+                                    <td class="celda-principal" data-etiqueta="Descripción">{{ $intervencion['descripcion'] }}</td>
+                                    <td class="texto-tenue" data-etiqueta="Detalle">{{ $intervencion['detalle'] }}</td>
+                                    <td class="text-end celda-acciones">
                                         <form method="POST" action="{{ $intervencion['urlQuitar'] }}"
                                               onsubmit="return confirm('¿Quitar esta intervención?')">
                                             @csrf
@@ -42,7 +42,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-ui.tabla>
                 </div>
             @else
                 <p class="text-muted">Esta consulta todavía no tiene intervenciones cargadas.</p>

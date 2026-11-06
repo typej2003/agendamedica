@@ -23,8 +23,8 @@
                         </div>
 
                         <!-- Tabla de Registros -->
-                        <div class="table-responsive p-0">
-                            <table class="table align-items-center mb-0">
+                        <div class="p-0">
+                            <x-ui.tabla class="table align-items-center mb-0">
                                 <thead>
                                     <tr>
                                         <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">#</th>
@@ -38,30 +38,30 @@
                                 <tbody>
                                     @forelse ($relaciones as $item)
                                         <tr>
-                                            <td class="ps-4">
+                                            <td class="ps-4" data-etiqueta="#">
                                                 <p class="text-xs font-weight-bold mb-0 text-dark">{{ $item->id }}</p>
                                             </td>
-                                            <td>
+                                            <td class="celda-principal" data-etiqueta="Médico">
                                                 <p class="text-xs font-weight-bold mb-0 text-dark">
                                                     {{ $item->medico_name }} {{ $item->medico_lastname }}
                                                 </p>
                                             </td>
-                                            <td>
+                                            <td data-etiqueta="N° Licencia">
                                                 <span class="text-xs font-weight-bold text-dark">
                                                     {{ $item->medico_license ?? 'S/L' }}
                                                 </span>
                                             </td>
-                                            <td>
+                                            <td data-etiqueta="Centro Médico">
                                                 <p class="text-xs font-weight-bold mb-0 text-dark">
                                                     {{ $item->center_name ?? 'N/A' }}
                                                 </p>
                                             </td>
-                                            <td>
+                                            <td data-etiqueta="Reg. Médico">
                                                 <p class="text-xs font-weight-bold mb-0 text-dark">
                                                     {{ $item->reg_medico_val ?? 'Sin Registro' }}
                                                 </p>
                                             </td>
-                                            <td class="align-middle text-center">
+                                            <td class="align-middle text-center celda-acciones" data-etiqueta="Acciones">
                                                 <button wire:click="edit({{ $item->id }})" class="btn btn-link text-dark px-2 mb-0" title="Editar">
                                                     <i class="fas fa-pencil-alt text-dark me-2"></i>Editar
                                                 </button>
@@ -78,7 +78,7 @@
                                         </tr>
                                     @endforelse
                                 </tbody>
-                            </table>
+                            </x-ui.tabla>
                         </div>
 
                         <!-- Paginación -->

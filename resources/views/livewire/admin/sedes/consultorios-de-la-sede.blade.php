@@ -40,8 +40,7 @@
     <div class="card">
         <x-ui.cargando cubre wire:loading.delay.flex />
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="table table-hover align-middle mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Consultorio</th>
@@ -54,16 +53,16 @@
                     <tbody>
                         @forelse ($consultorios as $consultorio)
                             <tr wire:key="consultorio-{{ $consultorio->id }}" class="{{ $consultorio->activo ? '' : 'text-muted' }}">
-                                <td>
+                                <td class="celda-principal" data-etiqueta="Consultorio">
                                     <div class="fw-semibold">{{ $consultorio->office_number }}</div>
                                     @if ($consultorio->phone)<small class="text-muted">{{ $consultorio->phone }}</small>@endif
                                     @unless ($consultorio->activo)
                                         <span class="badge bg-secondary">De baja</span>
                                     @endunless
                                 </td>
-                                <td>{{ $modalidades[$consultorio->modalidad] ?? '—' }}</td>
-                                <td class="text-end">{{ $consultorio->duracion_cita ? $consultorio->duracion_cita . ' min' : '—' }}</td>
-                                <td>
+                                <td data-etiqueta="Modalidad">{{ $modalidades[$consultorio->modalidad] ?? '—' }}</td>
+                                <td class="text-end" data-etiqueta="Duración">{{ $consultorio->duracion_cita ? $consultorio->duracion_cita . ' min' : '—' }}</td>
+                                <td data-etiqueta="Horarios">
                                     @forelse ($consultorio->schedules as $bloque)
                                         <span class="badge bg-light text-dark border me-1 mb-1">
                                             {{ mb_substr($bloque->nombreDelDia(), 0, 3) }} {{ $bloque->rango() }}@if ($bloque->cupo) · {{ $bloque->cupo }}@endif
@@ -72,7 +71,7 @@
                                         <small class="text-muted">Sin horarios: la jornada no tiene tope.</small>
                                     @endforelse
                                 </td>
-                                <td class="text-end text-nowrap">
+                                <td class="text-end text-nowrap celda-acciones" data-etiqueta="Acciones">
                                     <a href="{{ route('admin.medicos.sedes.consultorios.horarios', [$medico, $sede, $consultorio]) }}" class="btn btn-sm btn-primary">
                                         <i class="bi bi-clock me-1" aria-hidden="true"></i> Horarios y cupos
                                     </a>
@@ -96,8 +95,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
     </div>
 

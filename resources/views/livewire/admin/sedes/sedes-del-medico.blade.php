@@ -34,8 +34,7 @@
         <div class="card">
             <x-ui.cargando cubre wire:loading.delay.flex />
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                <x-ui.tabla class="table table-hover align-middle mb-0">
                         <thead class="table-dark">
                             <tr>
                                 <th>Sede</th>
@@ -47,7 +46,7 @@
                         <tbody>
                             @forelse ($sedes as $sede)
                                 <tr wire:key="sede-{{ $sede->id }}">
-                                    <td>
+                                    <td class="celda-principal" data-etiqueta="Sede">
                                         <div class="fw-semibold">{{ $sede->name }}</div>
                                         @unless ($sede->activo)
                                             <span class="badge bg-warning text-dark" title="La sede está desactivada en el catálogo: no se ofrece al agendar">Sede desactivada</span>
@@ -56,17 +55,17 @@
                                             <span class="badge bg-secondary">Quitada</span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td data-etiqueta="Dirección">
                                         <div>{{ $sede->address ?: '—' }}</div>
                                         <small class="text-muted">{{ $sede->city->name ?? '—' }}@if ($sede->phone) · {{ $sede->phone }}@endif</small>
                                     </td>
-                                    <td class="text-end">
+                                    <td class="text-end" data-etiqueta="Consultorios">
                                         {{ $sede->consultorios_activos }}
                                         @if ($sede->consultorios_total > $sede->consultorios_activos)
                                             <small class="text-muted d-block">+{{ $sede->consultorios_total - $sede->consultorios_activos }} de baja</small>
                                         @endif
                                     </td>
-                                    <td class="text-end text-nowrap">
+                                    <td class="text-end text-nowrap celda-acciones" data-etiqueta="Acciones">
                                         <a href="{{ route('admin.medicos.sedes.consultorios', [$medico, $sede]) }}" class="btn btn-sm btn-primary">
                                             <i class="bi bi-door-open me-1" aria-hidden="true"></i> Ver consultorios
                                         </a>
@@ -88,8 +87,7 @@
                                 </tr>
                             @endforelse
                         </tbody>
-                    </table>
-                </div>
+                </x-ui.tabla>
             </div>
         </div>
     @endif

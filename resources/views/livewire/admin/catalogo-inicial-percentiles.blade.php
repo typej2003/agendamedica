@@ -30,8 +30,7 @@
         @endif
 
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Edad</th>
@@ -45,11 +44,11 @@
                     <tbody>
                         @forelse ($filas as $fila)
                             <tr wire:key="pct-{{ $sexo }}-{{ $fila->id }}">
-                                <td class="fw-semibold">{{ $fila->edad_texto }}</td>
-                                <td class="text-nowrap">{{ $fila->edad_ini_dia }} – {{ $fila->edad_fin_dia }}</td>
+                                <td class="fw-semibold celda-principal" data-etiqueta="Edad">{{ $fila->edad_texto }}</td>
+                                <td class="text-nowrap" data-etiqueta="Días">{{ $fila->edad_ini_dia }} – {{ $fila->edad_fin_dia }}</td>
                                 @foreach ($medidas as $clave => $nombre)
                                     @php $v = [$fila->{$clave . '_b'}, $fila->{$clave . '_m'}, $fila->{$clave . '_a'}]; @endphp
-                                    <td class="text-nowrap">
+                                    <td class="text-nowrap" data-etiqueta="{{ $nombre }} (bajo · medio · alto)">
                                         @if ($v[0] === null && $v[1] === null && $v[2] === null)
                                             <span class="text-muted">—</span>
                                         @else
@@ -57,7 +56,7 @@
                                         @endif
                                     </td>
                                 @endforeach
-                                <td class="text-end text-nowrap">
+                                <td class="text-end text-nowrap celda-acciones">
                                     <button type="button" class="btn btn-sm btn-outline-secondary" wire:click="abrir({{ $fila->id }})" aria-label="Editar {{ $fila->edad_texto }}">
                                         <i class="bi bi-pencil" aria-hidden="true"></i>
                                     </button>
@@ -74,8 +73,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
     </div>
 

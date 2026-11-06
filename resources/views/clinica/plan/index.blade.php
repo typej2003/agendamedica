@@ -119,8 +119,8 @@
             </div>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            {{-- Sin scroll horizontal: cuando el contenedor no da, cada plan es una tarjeta (regla del 2026-11-06). --}}
+            <x-ui.tabla>
                     <thead class="table-dark">
                         <tr>
                             <th>Plan</th>
@@ -132,7 +132,7 @@
                     <tbody>
                         @forelse ($vm->planes as $plan)
                             <tr>
-                                <td>
+                                <td class="celda-principal">
                                     <div class="fw-semibold">
                                         {{ $plan->nombre }}
                                         @if ($vm->esElPlanActual($plan))
@@ -152,14 +152,14 @@
                                         </div>
                                     @endif
                                 </td>
-                                <td>
+                                <td data-etiqueta="Incluye" class="celda-apilada">
                                     <ul class="list-unstyled small mb-0">
                                         @foreach ($vm->incluye($plan) as $item)
                                             <li><i class="bi bi-check2 text-success" aria-hidden="true"></i> {{ $item }}</li>
                                         @endforeach
                                     </ul>
                                 </td>
-                                <td class="text-end">
+                                <td class="text-end celda-apilada" data-etiqueta="Precio">
                                     @if (! $plan->ofreceMensual() && ! $plan->ofreceAnual())
                                         <span class="fw-semibold">Gratis</span>
                                     @else
@@ -180,7 +180,7 @@
                                         @endif
                                     @endif
                                 </td>
-                                <td class="text-end">
+                                <td class="text-end celda-acciones">
                                     @if ($vm->puedeContratar($plan))
                                         <a href="{{ $vm->urlComoPagar($plan) }}" class="btn btn-primary btn-sm text-nowrap">
                                             <i class="bi bi-credit-card me-1" aria-hidden="true"></i>
@@ -202,8 +202,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
     </div>
 @endsection

@@ -42,8 +42,7 @@
         </div>
 
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Médico</th>
@@ -55,14 +54,14 @@
                         @forelse ($filas as $medico)
                             @php $activas = $medico->specialties->where('activo', true)->count(); @endphp
                             <tr wire:key="medico-{{ $medico->id }}">
-                                <td>
+                                <td class="celda-principal">
                                     <div class="fw-semibold">{{ trim($medico->name . ' ' . $medico->lastname) }}</div>
                                     <small class="text-muted">{{ $medico->reg_medico }}</small>
                                     @if ($medico->user_id === null)
                                         <span class="badge bg-secondary ms-1" title="Ficha de médico sin cuenta de acceso">Sin acceso</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td data-etiqueta="Especialidades">
                                     @forelse ($medico->specialties->sortBy('name') as $especialidad)
                                         <span class="badge {{ $especialidad->activo ? 'bg-light text-dark border' : 'bg-warning text-dark' }} me-1 mb-1"
                                               @unless ($especialidad->activo) title="Inactiva: no le da módulos en el consultorio" @endunless>
@@ -77,7 +76,7 @@
                                         <small class="text-danger d-block">Ninguna activa: su consultorio no muestra módulos.</small>
                                     @endif
                                 </td>
-                                <td class="text-end text-nowrap">
+                                <td class="text-end text-nowrap celda-acciones">
                                     <button wire:click="abrirAsignar({{ $medico->id }})" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-heart-pulse-fill me-1"></i> Especialidades
                                     </button>
@@ -89,8 +88,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
 
         @if ($filas->hasPages())

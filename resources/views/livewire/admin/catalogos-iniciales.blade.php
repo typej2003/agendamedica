@@ -46,8 +46,7 @@
         @endif
 
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="mb-0">
                     <thead class="table-dark">
                         <tr>@if ($catalogo === 'medicamentos')<th style="width:2.5rem"><span class="visually-hidden">Marcar</span></th>@endif<th>Código</th><th>{{ ucfirst($def['singular']) }}</th><th>Detalle</th><th>Especialidades</th><th class="text-end">Acciones</th></tr>
                     </thead>
@@ -57,17 +56,17 @@
                                 @if ($catalogo === 'medicamentos')
                                     <td><input type="checkbox" class="form-check-input" value="{{ $fila->id }}" wire:model="seleccion" aria-label="Marcar {{ trim((string) $fila->{$def['etiqueta']}) }} para combinar"></td>
                                 @endif
-                                <td><code>{{ trim((string) $fila->{$def['codigo']}) }}</code></td>
-                                <td class="fw-semibold">{{ trim((string) $fila->{$def['etiqueta']}) }}</td>
-                                <td class="text-muted small">{{ $detalles[$fila->id] ?: '—' }}</td>
-                                <td>
+                                <td data-etiqueta="Código"><code>{{ trim((string) $fila->{$def['codigo']}) }}</code></td>
+                                <td class="fw-semibold celda-principal" data-etiqueta="{{ ucfirst($def['singular']) }}">{{ trim((string) $fila->{$def['etiqueta']}) }}</td>
+                                <td class="text-muted small" data-etiqueta="Detalle">{{ $detalles[$fila->id] ?: '—' }}</td>
+                                <td data-etiqueta="Especialidades">
                                     @forelse ($marcas[$fila->id] ?? [] as $especialidadId)
                                         <span class="badge bg-light text-dark border">{{ $especialidades[$especialidadId] ?? '¿?' }}</span>
                                     @empty
                                         <span class="badge bg-secondary">General</span>
                                     @endforelse
                                 </td>
-                                <td class="text-end text-nowrap">
+                                <td class="text-end text-nowrap celda-acciones">
                                     @if ($catalogo === 'tratamientos')
                                         <button type="button" class="btn btn-sm btn-outline-primary" wire:click="abrirLineas({{ $fila->id }})">
                                             <i class="bi bi-list-ul me-1" aria-hidden="true"></i> Medicamentos
@@ -89,8 +88,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
 
         @if ($filas->hasPages())
@@ -269,17 +267,17 @@
                     </div>
                     <div class="modal-body">
                         <x-ui.avisos />
-                        <div class="table-responsive mb-3">
-                            <table class="table table-sm align-middle mb-0">
+                        <div class="mb-3">
+                            <x-ui.tabla class="table-sm mb-0">
                                 <thead><tr><th>Medicamento</th><th>Cant.</th><th>Indicaciones</th><th class="text-end">Acciones</th></tr></thead>
                                 <tbody>
                                     @forelse ($lineas as $linea)
                                         @php $m = $medicamentos->firstWhere('codemedicina', $linea->codemedicina); @endphp
                                         <tr wire:key="lin-{{ $linea->id }}">
-                                            <td>{{ $m ? trim($m->nombrecomercial . ' ' . $m->presentacion) : $linea->codemedicina }}</td>
-                                            <td>{{ $linea->cantidad }}</td>
-                                            <td class="small text-muted">{{ \Illuminate\Support\Str::limit((string) $linea->indicaciones, 70) }}</td>
-                                            <td class="text-end text-nowrap">
+                                            <td class="celda-principal" data-etiqueta="Medicamento">{{ $m ? trim($m->nombrecomercial . ' ' . $m->presentacion) : $linea->codemedicina }}</td>
+                                            <td data-etiqueta="Cant.">{{ $linea->cantidad }}</td>
+                                            <td class="small text-muted" data-etiqueta="Indicaciones">{{ \Illuminate\Support\Str::limit((string) $linea->indicaciones, 70) }}</td>
+                                            <td class="text-end text-nowrap celda-acciones">
                                                 <button type="button" class="btn btn-sm btn-outline-secondary" wire:click="editarLinea({{ $linea->id }})" aria-label="Editar la línea"><i class="bi bi-pencil" aria-hidden="true"></i></button>
                                                 <button type="button" class="btn btn-sm btn-outline-danger" wire:click="quitarLinea({{ $linea->id }})" aria-label="Quitar la línea"><i class="bi bi-trash" aria-hidden="true"></i></button>
                                             </td>
@@ -288,7 +286,7 @@
                                         <tr><td colspan="4" class="text-center text-muted py-3">Este tratamiento todavía no tiene medicamentos.</td></tr>
                                     @endforelse
                                 </tbody>
-                            </table>
+                            </x-ui.tabla>
                         </div>
 
                         <form wire:submit.prevent="guardarLinea" class="border rounded p-3">

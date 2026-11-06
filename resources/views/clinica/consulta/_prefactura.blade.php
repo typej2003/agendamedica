@@ -14,8 +14,8 @@
         <x-ui.errores />
 
         @if ($seccion->tieneItems())
-            <div class="table-responsive mb-3">
-                <table class="table table-sm align-middle" id="prefactura-items">
+            <div class="mb-3">
+                <x-ui.tabla class="table table-sm align-middle" id="prefactura-items">
                     <thead>
                         <tr>
                             <th>Código</th>
@@ -29,8 +29,8 @@
                     <tbody>
                         @foreach ($seccion->items() as $item)
                             <tr>
-                                <td><code>{{ $item['codigo'] }}</code></td>
-                                <td>{{ $item['descripcion'] }}</td>
+                                <td data-etiqueta="Código"><code>{{ $item['codigo'] }}</code></td>
+                                <td class="celda-principal" data-etiqueta="Concepto">{{ $item['descripcion'] }}</td>
                                 <td colspan="2">
                                     <form method="POST" action="{{ $seccion->urlGuardar() }}"
                                           class="d-flex justify-content-end gap-2" aria-label="Corregir {{ $item['descripcion'] }}">
@@ -46,8 +46,8 @@
                                         </button>
                                     </form>
                                 </td>
-                                <td class="text-end">{{ $item['subtotal'] }}</td>
-                                <td class="text-end">
+                                <td class="text-end" data-etiqueta="Subtotal">{{ $item['subtotal'] }}</td>
+                                <td class="text-end celda-acciones">
                                     <form method="POST" action="{{ $seccion->urlQuitar() }}" data-confirmar="¿Quitar este concepto de la pre-factura?">
                                         @csrf
                                         @method('DELETE')
@@ -67,7 +67,7 @@
                             <th></th>
                         </tr>
                     </tfoot>
-                </table>
+                </x-ui.tabla>
             </div>
         @else
             <x-ui.vacio icono="bi-receipt" titulo="Todavía no hay conceptos en la pre-factura"></x-ui.vacio>

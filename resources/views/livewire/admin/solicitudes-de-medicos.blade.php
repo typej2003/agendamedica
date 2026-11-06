@@ -269,17 +269,16 @@
         <x-ui.cargando cubre wire:loading.delay.flex />
 
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-sm table-hover align-middle mb-0">
+            <x-ui.tabla class="table-sm mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th title="Número de solicitud"><span class="visually-hidden">Solicitud </span>#</th>
                             <th>Médico</th>
                             <th>Cédula</th>
-                            <th>MPPS</th>
+                            <th class="columna-secundaria">MPPS</th>
                             <th>Especialidad</th>
                             <th>Correo</th>
-                            <th>Referido</th>
+                            <th class="columna-secundaria">Referido</th>
                             <th>Recibida</th>
                             <th>Estado</th>
                             <th class="text-end">Acciones</th>
@@ -289,13 +288,13 @@
                         @forelse ($solicitudes as $solicitud)
                             <tr wire:key="solicitud-{{ $solicitud->id }}"
                                 @class(['table-active' => $seleccionada && $seleccionada->id === $solicitud->id])>
-                                <td class="text-muted">#{{ $solicitud->id }}</td>
-                                <td class="fw-semibold">{{ $solicitud->nombreCompleto() }}</td>
-                                <td>{{ $solicitud->cedula }}</td>
-                                <td>{{ $solicitud->mpps }}</td>
-                                <td>{{ $solicitud->especialidad?->name ?? '—' }}</td>
-                                <td>{{ $solicitud->email }}</td>
-                                <td>
+                                <td class="text-muted" data-etiqueta="#">#{{ $solicitud->id }}</td>
+                                <td class="fw-semibold celda-principal" data-etiqueta="Médico">{{ $solicitud->nombreCompleto() }}</td>
+                                <td data-etiqueta="Cédula">{{ $solicitud->cedula }}</td>
+                                <td class="columna-secundaria" data-etiqueta="MPPS">{{ $solicitud->mpps }}</td>
+                                <td data-etiqueta="Especialidad">{{ $solicitud->especialidad?->name ?? '—' }}</td>
+                                <td data-etiqueta="Correo">{{ $solicitud->email }}</td>
+                                <td class="columna-secundaria" data-etiqueta="Referido">
                                     @if ($solicitud->referente_reg_medico)
                                         @php($referente = $solicitud->referente)
                                         <div class="fw-semibold">
@@ -309,11 +308,11 @@
                                         <span class="text-muted">—</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td data-etiqueta="Recibida">
                                     <div>{{ \App\Support\HoraLocal::instante($solicitud->created_at)?->format(\App\Support\Regionalizacion::formatoActual()) }}</div>
                                     <small class="text-muted">{{ $solicitud->created_at?->diffForHumans() }}</small>
                                 </td>
-                                <td>
+                                <td data-etiqueta="Estado">
                                     @if ($solicitud->estado === 'aprobada')
                                         <x-ui.estado tono="exito">Aprobada</x-ui.estado>
                                         @if ($solicitud->aprobada_automaticamente)
@@ -325,7 +324,7 @@
                                         <x-ui.estado tono="aviso">Pendiente</x-ui.estado>
                                     @endif
                                 </td>
-                                <td class="text-end">
+                                <td class="text-end celda-acciones">
                                     <button type="button" class="btn btn-sm btn-outline-primary"
                                             wire:click="abrir({{ $solicitud->id }})">
                                         {{ $solicitud->estaPendiente() ? 'Revisar' : 'Ver' }}
@@ -340,8 +339,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
 
         @if ($solicitudes->hasPages())
