@@ -21,11 +21,11 @@ use Livewire\Component;
  *
  * Desde el 2026-10-26 la sede **tiene dueño** (`medical_centers.medico_id`): la que se registra desde acá queda con
  * dueño = el médico de la ficha y **el nombre es único por médico** (dos médicos pueden tener cada uno su «CEMOC»).
- * La sede que ya existía en el catálogo se sigue pudiendo **asignar** al médico con su primer consultorio, aunque
- * sea de otro: eso es lo que hace Root desde el panel.
+ * Desde el 2026-11-06 «Agregar sede › Sede existente» ofrece **sólo las sedes de este médico** —cada médico carga
+ * las suyas— y no el catálogo de toda la plataforma.
  *
- *  - **Agregar** es elegir una sede del catálogo (o registrar una nueva con `GuardarSede`) **y su primer
- *    consultorio** (`GuardarConsultorio`): sin consultorio la sede no es «del médico».
+ *  - **Agregar** es elegir una sede **suya** (o registrar una nueva con `GuardarSede`) **y su consultorio**
+ *    (`GuardarConsultorio`): sin consultorio la sede no es «del médico».
  *  - **Editar** cambia la ficha de la sede (se avisa cuántos otros médicos la usan); **no la cambia de dueño**.
  *  - **Quitar** da de baja **los consultorios del médico** en esa sede (`activo = false`, la regla de
  *    `GuardarConsultorio`: nunca se borran) y no toca la sede, que puede ser de otros.
@@ -40,7 +40,7 @@ class SedesDelMedico extends Component
     public $modal = null;
     public $sedeId = null;
 
-    /** Agregar: `existente` (del catálogo) o `nueva`. */
+    /** Agregar: `existente` (una sede del médico) o `nueva`. */
     public $modo = 'existente';
     public $sede_existente_id = '';
 
@@ -68,21 +68,21 @@ class SedesDelMedico extends Component
         $seleccionada = $this->sedeId ? MedicalCenter::with('city')->find($this->sedeId) : null;
 
         return view('livewire.admin.sedes.sedes-del-medico', [
-            'tenant'       => $tenant,
-            'nombre'       => $this->nombreDelMedico(),
-            'sedes'        => $tenant ? $this->lector()->sedes($this->medico, (bool) $this->verInactivas) : collect(),
-            'catalogo'     => $this->modal === 'agregar' ? $this->lector()->sedesDelCatalogo() : collect(),
-            'ciudadElegida' => $this->etiquetaDeLaCiudad(),
-            'estados'      => in_array($this->modal, ['agregar', 'editar'], true)
+            'tenant'          => $tenant,
+            'nombre'          => $this->nombreDelMedico(),
+            'sedes'           => $tenant ? $this->lector()->sedes($this->medico, (bool) $this->verInactivas) : collect(),
+            'sedesExistentes' => $this->modal === 'agregar' ? $this->lector()->sedesDelMedico($this->medico) : collect(),
+            'ciudadElegida'   => $this->etiquetaDeLaCiudad(),
+            'estados'         => in_array($this->modal, ['agregar', 'editar'], true)
                 ? Estado::orderBy('name')->get(['id', 'name'])->map(fn ($e) => ['value' => $e->id, 'label' => $e->name])->all()
                 : [],
-            'modalidades'  => Office::modalidades(),
-            'seleccionada' => $seleccionada,
-            'otros'        => $seleccionada ? $this->lector()->otrosMedicosEnLaSede($this->medico, $seleccionada) : 0,
-            'aQuitar'      => $this->modal === 'quitar' && $seleccionada
+            'modalidades'     => Office::modalidades(),
+            'seleccionada'    => $seleccionada,
+            'otros'           => $seleccionada ? $this->lector()->otrosMedicosEnLaSede($this->medico, $seleccionada) : 0,
+            'aQuitar'         => $this->modal === 'quitar' && $seleccionada
                 ? $this->lector()->consultoriosEn($this->medico, $seleccionada, false)
                 : collect(),
-            'citas'        => $this->modal === 'quitar' && $seleccionada
+            'citas'           => $this->modal === 'quitar' && $seleccionada
                 ? $this->lector()->citasDesdeHoy($this->medico, $seleccionada)
                 : 0,
         ]);
@@ -94,6 +94,8 @@ class SedesDelMedico extends Component
     {
         $this->tenantOFallar();
         $this->limpiar();
+        // Sin sedes suyas no hay nada que elegir: abre en «Sede nueva».
+        $this->modo = $this->lector()->sedesDelMedico($this->medico)->isEmpty() ? 'nueva' : 'existente';
         $this->modal = 'agregar';
     }
 
@@ -105,17 +107,20 @@ class SedesDelMedico extends Component
         if ($this->modo === 'nueva') {
             $reglas += $this->reglasDeLaSede(null);
         } else {
-            $reglas['sede_existente_id'] = ['required', 'integer', Rule::exists('medical_centers', 'id')->where('activo', true)];
+            // Sólo las sedes **de este médico**: el catálogo de la plataforma no se ofrece (2026-11-06).
+            $reglas['sede_existente_id'] = ['required', 'integer', Rule::in($this->idsDeSusSedes())];
         }
 
         $this->validate($reglas, $this->mensajes());
 
         try {
             $sede = DB::transaction(function () use ($guardarSede, $guardarConsultorio, $tenant) {
-                // La sede nueva queda **a nombre de este médico** (el de la ficha); la existente no cambia de dueño.
+                // La sede nueva queda **a nombre de este médico** (el de la ficha); la existente ya es suya.
                 $sede = $this->modo === 'nueva'
                     ? $guardarSede->ejecutar($this->datosDeLaSede(true), null, (int) $this->medico->id)
-                    : MedicalCenter::activos()->findOrFail((int) $this->sede_existente_id);
+                    : $this->lector()->sedeDelMedico($this->medico, (int) $this->sede_existente_id);
+
+                abort_if($sede === null, 404);
 
                 $guardarConsultorio->ejecutar([
                     'medical_center_id' => $sede->id,
@@ -220,6 +225,15 @@ class SedesDelMedico extends Component
         return MedicalCenter::findOrFail($sedeId);
     }
 
+    /** Los ids de las sedes que puede elegir en «Sede existente»: sólo las suyas (ver `SedesDelMedico::sedesDelMedico`). */
+    private function idsDeSusSedes(): array
+    {
+        return $this->lector()->sedesDelMedico($this->medico)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
     /** «Maracaibo — Zulia» para la ciudad ya elegida (al editar o tras un error de validación); '' si no hay. */
     private function etiquetaDeLaCiudad(): string
     {
@@ -295,7 +309,7 @@ class SedesDelMedico extends Component
             'address.required'           => 'La dirección es obligatoria: es lo que identifica al lugar.',
             'city_id.required'           => 'Elige la ciudad.',
             'sede_existente_id.required' => 'Elige la sede.',
-            'sede_existente_id.exists'   => 'Esa sede no existe o está desactivada.',
+            'sede_existente_id.in'       => 'Esa sede no es de este médico: elige una de las suyas o regístrala como nueva.',
             'office_number.required'     => 'Pon el número o el nombre del consultorio.',
             'duracion_cita.min'          => 'La duración tiene que ser de al menos 5 minutos.',
         ];
