@@ -663,6 +663,10 @@ class CuentaService
      * sumarle un asiento al equipo (`CupoDelPlan`). La ficha lleva el nombre del doctor y el formato de reportes
      * del médico (no el de un centro).
      *
+     * **Sin código, se genera** (`med_00001`, `med_00002`…): es el mismo `SiguienteRegMedico` del alta de
+     * médicos y centros, y se calcula **dentro** de la transacción (con bloqueo) para que dos altas a la vez no
+     * se lleven el mismo número.
+     *
      * Todo en una transacción: o quedan la ficha y el vínculo, o ninguna de las dos.
      */
     public function agregarConsultorio(Medico $medico, string $regMedico): Medico
@@ -681,23 +685,24 @@ class CuentaService
             ]);
         }
 
-        if ($regMedico === '') {
-            throw ValidationException::withMessages(['reg_consultorio' => 'Escribe el reg_medico de ese consultorio.']);
-        }
+        if ($regMedico !== '') {
+            if (mb_strlen($regMedico) > 20) {
+                throw ValidationException::withMessages(['reg_consultorio' => 'El reg_medico tiene 20 caracteres como máximo.']);
+            }
 
-        if (mb_strlen($regMedico) > 20) {
-            throw ValidationException::withMessages(['reg_consultorio' => 'El reg_medico tiene 20 caracteres como máximo.']);
-        }
+            if ($regMedico === (string) $medico->reg_medico) {
+                throw ValidationException::withMessages(['reg_consultorio' => 'Ese es el reg_medico del consultorio principal.']);
+            }
 
-        if ($regMedico === (string) $medico->reg_medico) {
-            throw ValidationException::withMessages(['reg_consultorio' => 'Ese es el reg_medico del consultorio principal.']);
-        }
-
-        if (Medico::where('reg_medico', $regMedico)->exists() || MedicoRegistro::where('reg_medico', $regMedico)->exists()) {
-            throw ValidationException::withMessages(['reg_consultorio' => 'Ya existe un consultorio con ese reg_medico.']);
+            if (Medico::where('reg_medico', $regMedico)->exists() || MedicoRegistro::where('reg_medico', $regMedico)->exists()) {
+                throw ValidationException::withMessages(['reg_consultorio' => 'Ya existe un consultorio con ese reg_medico.']);
+            }
         }
 
         return DB::transaction(function () use ($medico, $regMedico) {
+            // Vacío: se genera `med_NNNNN` dentro de esta transacción (con bloqueo), como el alta de médicos.
+            $regMedico = $regMedico !== '' ? $regMedico : app(SiguienteRegMedico::class)->ejecutar();
+
             $ficha = Medico::create([
                 'user_id'          => null,
                 'name'             => $medico->name,

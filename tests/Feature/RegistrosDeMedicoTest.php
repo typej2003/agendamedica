@@ -214,7 +214,6 @@ class RegistrosDeMedicoTest extends TestCase
             fn () => $this->cuentas->agregarConsultorio($real['medico'], 'hijo-err-2'),                  // ya existe
             fn () => $this->cuentas->agregarConsultorio($real['medico'], $otro['medico']->reg_medico),   // de otro médico
             fn () => $this->cuentas->agregarConsultorio($real['medico'], $real['medico']->reg_medico),   // el principal
-            fn () => $this->cuentas->agregarConsultorio($real['medico'], ''),
             fn () => $this->cuentas->agregarConsultorio($real['medico'], str_repeat('x', 21)),
             fn () => $this->cuentas->agregarConsultorio($hijo, 'hijo-nieto'),                            // un hijo no tiene hijos
             fn () => $this->cuentas->agregarConsultorio($centro, 'hijo-centro-2'),                       // un centro no tiene consultorios propios
@@ -226,6 +225,24 @@ class RegistrosDeMedicoTest extends TestCase
                 $this->assertArrayHasKey('reg_consultorio', $e->errors());
             }
         }
+    }
+
+    public function test_sin_reg_medico_se_genera_uno(): void
+    {
+        $real = $this->medico('hijo-gen');
+
+        // En blanco (o con espacios): se genera `med_NNNNN`, el mismo del alta de médicos y centros.
+        $ficha = $this->cuentas->agregarConsultorio($real['medico'], '   ');
+
+        $this->assertMatchesRegularExpression('/^med_\d{5,}$/', $ficha->reg_medico);
+        $this->assertSame($real['medico']->id, (int) $ficha->medico_padre_id);
+        $this->assertContains($ficha->reg_medico, $real['medico']->fresh()->registrosDeTrabajo());
+        $this->assertTrue(MedicoRegistro::where('medico_id', $real['medico']->id)->where('reg_medico', $ficha->reg_medico)->exists());
+        $this->assertSame(0, RegMedicoServicio::where('reg_medico', $ficha->reg_medico)->count(), 'Sin plan propio: usa el del padre.');
+
+        // Dos altas en blanco no se llevan el mismo número.
+        $otra = $this->cuentas->agregarConsultorio($real['medico'], '');
+        $this->assertNotSame($ficha->reg_medico, $otra->reg_medico);
     }
 
     public function test_la_ventana_de_registros_agrega_el_consultorio(): void
@@ -246,6 +263,19 @@ class RegistrosDeMedicoTest extends TestCase
 
         $this->assertSame(1, Medico::where('reg_medico', 'hijo-ui-2')->count());
         $this->assertTrue(MedicoRegistro::where('medico_id', $real['medico']->id)->where('reg_medico', 'hijo-ui-2')->exists());
+
+        // En blanco: se genera el código y el aviso lo muestra.
+        Livewire::test(Cuentas::class)
+            ->call('abrirRegistros', $real['medico']->id)
+            ->set('regConsultorio', '')
+            ->call('agregarConsultorio')
+            ->assertHasNoErrors()
+            ->assertSee('med_');
+
+        $this->assertNotNull(
+            Medico::where('medico_padre_id', $real['medico']->id)->where('reg_medico', 'like', 'med_%')->first(),
+            'Sin código, el consultorio nuevo se genera solo.',
+        );
     }
 
     public function test_la_accion_se_comprueba_en_cada_peticion(): void
