@@ -548,13 +548,14 @@
                             <h6>Agregar un consultorio</h6>
                             <p class="text-muted small mb-2">
                                 El otro sitio donde atiende este médico, con su propio <code>reg_medico</code> (el de
-                                esa instalación). No crea una cuenta: el consultorio <strong>usa el plan de este médico</strong>
-                                y no le suma un asiento al equipo. Después se emite la credencial de esa PC en
-                                <strong>API Keys</strong>.
+                                esa instalación; si lo dejas vacío se genera uno). No crea una cuenta: el consultorio
+                                <strong>usa el plan de este médico</strong> y no le suma un asiento al equipo. Después se
+                                emite la credencial de esa PC en <strong>API Keys</strong>.
                             </p>
                             <form wire:submit.prevent="agregarConsultorio" class="d-flex gap-2">
                                 <input type="text" class="form-control" wire:model="regConsultorio" maxlength="20"
-                                       autocomplete="off" placeholder="reg_medico del consultorio" aria-label="reg_medico del consultorio nuevo">
+                                       autocomplete="off" placeholder="reg_medico (vacío = se genera)"
+                                       aria-label="reg_medico del consultorio nuevo">
                                 <button type="submit" class="btn btn-primary text-nowrap" wire:loading.attr="disabled">
                                     <span wire:loading.remove wire:target="agregarConsultorio">Agregar consultorio</span>
                                     <span wire:loading wire:target="agregarConsultorio">Agregando…</span>
