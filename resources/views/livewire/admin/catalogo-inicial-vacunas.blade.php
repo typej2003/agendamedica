@@ -25,8 +25,7 @@
         </div>
 
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Código</th>
@@ -41,8 +40,8 @@
                         @forelse ($vacunas as $v)
                             @php $dosisDeEsta = $dosisPorVacuna[$v->codi_vacuna] ?? collect(); @endphp
                             <tr wire:key="vacuna-{{ $v->id }}">
-                                <td><code>{{ $v->codi_vacuna }}</code></td>
-                                <td>
+                                <td data-etiqueta="Código"><code>{{ $v->codi_vacuna }}</code></td>
+                                <td class="celda-principal" data-etiqueta="Vacuna">
                                     <div class="fw-semibold">{{ $v->vacuna }}</div>
                                     @if ($v->cobertura)
                                         <small class="text-muted">{{ $v->cobertura }}</small>
@@ -51,11 +50,11 @@
                                         <span class="badge bg-light text-dark border ms-1">{{ \App\Clinica\Vacunas\ConvencionDeVacunas::sexo($v->sexo) }}</span>
                                     @endif
                                 </td>
-                                <td>{{ $v->edad_inicial_meses === null ? '—' : $v->edad_inicial_meses . ' ' . ($v->edad_inicial_meses === 1 ? 'mes' : 'meses') }}</td>
-                                <td>
+                                <td data-etiqueta="Edad inicial">{{ $v->edad_inicial_meses === null ? '—' : $v->edad_inicial_meses . ' ' . ($v->edad_inicial_meses === 1 ? 'mes' : 'meses') }}</td>
+                                <td data-etiqueta="Tipo">
                                     <span class="badge {{ $v->fija === 'O' ? 'bg-primary' : 'bg-secondary' }}">{{ \App\Clinica\Vacunas\ConvencionDeVacunas::fija($v->fija) }}</span>
                                 </td>
-                                <td>
+                                <td data-etiqueta="Dosis">
                                     @forelse ($dosisDeEsta as $d)
                                         <span class="badge bg-light text-dark border me-1 mb-1">
                                             {{ $d->dosis_descri ?: $d->dosis . 'ª dosis' }}@if ($d->meses !== null) · {{ rtrim(rtrim(number_format((float) $d->meses, 2, '.', ''), '0'), '.') }} m @endif
@@ -64,7 +63,7 @@
                                         <small class="text-muted">Sin dosis: se usa la edad inicial como única dosis.</small>
                                     @endforelse
                                 </td>
-                                <td class="text-end text-nowrap">
+                                <td class="text-end text-nowrap celda-acciones">
                                     <button type="button" class="btn btn-sm btn-outline-primary" wire:click="abrirDosis({{ $v->id }})">
                                         <i class="bi bi-list-ol me-1" aria-hidden="true"></i> Dosis
                                     </button>
@@ -84,8 +83,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
 
         @if ($vacunas->hasPages())
@@ -175,18 +173,18 @@
                             Sin dosis, la pantalla del médico usa la edad inicial de la vacuna como única dosis.
                         </p>
 
-                        <div class="table-responsive mb-3">
-                            <table class="table table-sm align-middle mb-0">
+                        <div class="mb-3">
+                            <x-ui.tabla class="table-sm mb-0">
                                 <thead>
                                     <tr><th>N.º</th><th>Rótulo</th><th>Edad (meses)</th><th class="text-end">Acciones</th></tr>
                                 </thead>
                                 <tbody>
                                     @forelse ($dosisDeLaSeleccionada as $d)
                                         <tr wire:key="dosis-{{ $d->id }}">
-                                            <td>{{ $d->dosis }}</td>
-                                            <td>{{ $d->dosis_descri ?: '—' }}</td>
-                                            <td>{{ $d->meses === null ? '—' : rtrim(rtrim(number_format((float) $d->meses, 2, '.', ''), '0'), '.') }}</td>
-                                            <td class="text-end text-nowrap">
+                                            <td data-etiqueta="N.º">{{ $d->dosis }}</td>
+                                            <td class="celda-principal" data-etiqueta="Rótulo">{{ $d->dosis_descri ?: '—' }}</td>
+                                            <td data-etiqueta="Edad (meses)">{{ $d->meses === null ? '—' : rtrim(rtrim(number_format((float) $d->meses, 2, '.', ''), '0'), '.') }}</td>
+                                            <td class="text-end text-nowrap celda-acciones">
                                                 <button type="button" class="btn btn-sm btn-outline-secondary" wire:click="editarDosis({{ $d->id }})" aria-label="Editar la dosis {{ $d->dosis }}">
                                                     <i class="bi bi-pencil" aria-hidden="true"></i>
                                                 </button>
@@ -199,7 +197,7 @@
                                         <tr><td colspan="4" class="text-center text-muted py-3">Esta vacuna todavía no tiene dosis.</td></tr>
                                     @endforelse
                                 </tbody>
-                            </table>
+                            </x-ui.tabla>
                         </div>
 
                         <form wire:submit.prevent="guardarDosis" class="border rounded p-3">

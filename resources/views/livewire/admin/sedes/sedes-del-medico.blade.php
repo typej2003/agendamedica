@@ -34,8 +34,7 @@
         <div class="card">
             <x-ui.cargando cubre wire:loading.delay.flex />
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                <x-ui.tabla class="table table-hover align-middle mb-0">
                         <thead class="table-dark">
                             <tr>
                                 <th>Sede</th>
@@ -47,7 +46,7 @@
                         <tbody>
                             @forelse ($sedes as $sede)
                                 <tr wire:key="sede-{{ $sede->id }}">
-                                    <td>
+                                    <td class="celda-principal" data-etiqueta="Sede">
                                         <div class="fw-semibold">{{ $sede->name }}</div>
                                         @unless ($sede->activo)
                                             <span class="badge bg-warning text-dark" title="La sede está desactivada en el catálogo: no se ofrece al agendar">Sede desactivada</span>
@@ -56,17 +55,17 @@
                                             <span class="badge bg-secondary">Quitada</span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td data-etiqueta="Dirección">
                                         <div>{{ $sede->address ?: '—' }}</div>
                                         <small class="text-muted">{{ $sede->city->name ?? '—' }}@if ($sede->phone) · {{ $sede->phone }}@endif</small>
                                     </td>
-                                    <td class="text-end">
+                                    <td class="text-end" data-etiqueta="Consultorios">
                                         {{ $sede->consultorios_activos }}
                                         @if ($sede->consultorios_total > $sede->consultorios_activos)
                                             <small class="text-muted d-block">+{{ $sede->consultorios_total - $sede->consultorios_activos }} de baja</small>
                                         @endif
                                     </td>
-                                    <td class="text-end text-nowrap">
+                                    <td class="text-end text-nowrap celda-acciones" data-etiqueta="Acciones">
                                         <a href="{{ route('admin.medicos.sedes.consultorios', [$medico, $sede]) }}" class="btn btn-sm btn-primary">
                                             <i class="bi bi-door-open me-1" aria-hidden="true"></i> Ver consultorios
                                         </a>
@@ -88,8 +87,7 @@
                                 </tr>
                             @endforelse
                         </tbody>
-                    </table>
-                </div>
+                </x-ui.tabla>
             </div>
         </div>
     @endif
@@ -114,20 +112,27 @@
 
                             @if ($modo === 'existente')
                                 <div class="mb-3">
+                                    @if ($sedesExistentes->isEmpty())
+                                        <div class="alert alert-warning d-flex align-items-center gap-2 py-2" role="status">
+                                            <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+                                            <span>{{ $nombre }} todavía no tiene sedes cargadas: regístrala como «Sede nueva».</span>
+                                        </div>
+                                    @endif
                                     <label class="form-label" for="sede-existente">Sede <span class="text-danger">*</span></label>
                                     <select id="sede-existente" class="form-select @error('sede_existente_id') is-invalid @enderror" wire:model="sede_existente_id">
                                         <option value="">Elige…</option>
-                                        @foreach ($catalogo as $opcion)
+                                        @foreach ($sedesExistentes as $opcion)
                                             <option value="{{ $opcion->id }}">{{ $opcion->name }}{{ $opcion->city ? ' · ' . $opcion->city->name : '' }}</option>
                                         @endforeach
                                     </select>
+                                    <div class="form-text">Sólo las sedes de {{ $nombre }}.</div>
                                     @error('sede_existente_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             @else
                                 @include('livewire.admin.sedes._campos-sede')
                             @endif
 
-                            <h6 class="mt-2">Primer consultorio en esa sede</h6>
+                            <h6 class="mt-2">Consultorio en esa sede</h6>
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label class="form-label" for="alta-numero">Consultorio <span class="text-danger">*</span></label>

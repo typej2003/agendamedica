@@ -66,8 +66,7 @@
                 <span class="fw-semibold"><i class="bi bi-wallet2 me-1" aria-hidden="true"></i> Pendiente de cobro por médico</span>
                 <span class="badge bg-warning text-dark">{{ \App\Pagos\Centavos::formatear($totalPendienteUsdE2, 'USD') }}</span>
             </div>
-            <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
+            <x-ui.tabla class="table-sm mb-0">
                     <thead>
                         <tr>
                             <th scope="col">Médico</th>
@@ -80,14 +79,14 @@
                     <tbody>
                         @foreach ($pendientes as $fila)
                             <tr wire:key="pendiente-{{ $fila['reg_medico'] }}">
-                                <td>
+                                <td class="celda-principal" data-etiqueta="Médico">
                                     {{ $fila['medico'] ? trim($fila['medico']->name . ' ' . $fila['medico']->lastname) : '—' }}
                                     <div><small class="text-muted">{{ $fila['reg_medico'] }}</small></div>
                                 </td>
-                                <td class="text-end">{{ $fila['cantidad'] }}</td>
-                                <td class="text-end fw-semibold">{{ \App\Pagos\Centavos::formatear($fila['pendiente_usd_e2'], 'USD') }}</td>
-                                <td class="text-end">{{ \App\Pagos\Centavos::formatear($fila['pendiente_ves_e2'], 'VES') }}</td>
-                                <td class="text-end">
+                                <td class="text-end" data-etiqueta="Pagos">{{ $fila['cantidad'] }}</td>
+                                <td class="text-end fw-semibold" data-etiqueta="Pendiente (USD)">{{ \App\Pagos\Centavos::formatear($fila['pendiente_usd_e2'], 'USD') }}</td>
+                                <td class="text-end" data-etiqueta="Pendiente (VES)">{{ \App\Pagos\Centavos::formatear($fila['pendiente_ves_e2'], 'VES') }}</td>
+                                <td class="text-end celda-acciones">
                                     <button type="button" class="btn btn-sm btn-outline-secondary"
                                             wire:click="$set('search', '{{ $fila['reg_medico'] }}')">
                                         Ver sus pagos
@@ -96,8 +95,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
             <div class="card-footer bg-white text-muted small">
                 Los planes no entran acá: se aprueban contra la pasarela, no se le pagan a un médico.
             </div>
@@ -138,8 +136,7 @@
             </div>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Fecha</th>
@@ -155,21 +152,21 @@
                         @forelse ($pagos as $pago)
                             @php $medico = $nombres[$pago->reg_medico] ?? null; @endphp
                             <tr wire:key="pago-{{ $pago->id }}">
-                                <td class="text-nowrap">
+                                <td class="text-nowrap" data-etiqueta="Fecha">
                                     <div>{{ \App\Support\HoraLocal::instante($pago->created_at)?->format(\App\Support\Regionalizacion::formatoActual()) }}</div>
                                     <small class="text-muted">{{ \App\Support\HoraLocal::hora($pago->created_at) }}</small>
                                 </td>
-                                <td>
+                                <td class="celda-principal" data-etiqueta="Médico">
                                     <div class="fw-semibold">
                                         {{ $medico ? trim($medico->name . ' ' . $medico->lastname) : ($pago->reg_medico ?: '—') }}
                                     </div>
                                     <small class="text-muted">{{ $pago->reg_medico ?: '—' }}</small>
                                 </td>
-                                <td>
+                                <td data-etiqueta="Concepto">
                                     <div>{{ $pago->concepto }}</div>
                                     <small class="text-muted">{{ $canales[$pago->canal] ?? $pago->canal }}</small>
                                 </td>
-                                <td class="text-end text-nowrap">
+                                <td class="text-end text-nowrap" data-etiqueta="Monto">
                                     <div class="fw-semibold">{{ $pago->montoUsdTexto() }}</div>
                                     <small class="text-muted">{{ $pago->cubiertoConLatidos() ? 'Sin cobro' : $pago->montoTexto() }}</small>
                                     @if ($pago->usaLatidos())
@@ -178,11 +175,11 @@
                                         </small>
                                     @endif
                                 </td>
-                                <td>
+                                <td data-etiqueta="Estado">
                                     <span class="badge bg-{{ $this->estadoTono($pago->estado) }}">{{ $this->estadoLegible($pago->estado) }}</span>
                                 </td>
-                                <td>{{ $pago->metodoPago?->etiqueta() ?? '—' }}</td>
-                                <td class="text-end text-nowrap">
+                                <td data-etiqueta="Método">{{ $pago->metodoPago?->etiqueta() ?? '—' }}</td>
+                                <td class="text-end text-nowrap celda-acciones">
                                     <button wire:click="abrir({{ $pago->id }})" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye"></i> Detalle
                                     </button>
@@ -200,8 +197,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
 
         @if ($pagos->hasPages())
@@ -294,8 +290,7 @@
                         @if (! empty($seleccionado->datos_pagador))
                             <hr>
                             <p class="fw-semibold mb-2">Datos del pagador</p>
-                            <div class="table-responsive">
-                                <table class="table table-sm mb-0">
+                            <x-ui.tabla class="table-sm mb-0">
                                     <tbody>
                                         @foreach ($seleccionado->datos_pagador as $campo => $valor)
                                             <tr>
@@ -304,15 +299,13 @@
                                             </tr>
                                         @endforeach
                                     </tbody>
-                                </table>
-                            </div>
+                            </x-ui.tabla>
                         @endif
 
                         @if ($seleccionado->comisiones->isNotEmpty())
                             <hr>
                             <p class="fw-semibold mb-2">Comisiones</p>
-                            <div class="table-responsive">
-                                <table class="table table-sm mb-0">
+                            <x-ui.tabla class="table-sm mb-0">
                                     <thead class="table-light">
                                         <tr>
                                             <th>#</th>
@@ -326,23 +319,22 @@
                                     <tbody>
                                         @foreach ($seleccionado->comisiones as $comision)
                                             <tr>
-                                                <td>{{ $comision->secuencia }}</td>
-                                                <td>{{ $comision->tipo }}</td>
-                                                <td class="text-end">{{ \App\Pagos\Centavos::formatear((int) $comision->base_usd_e2, 'USD') }}</td>
-                                                <td class="text-end">{{ \App\Pagos\Porcentaje::aTexto((int) $comision->porcentaje_bp) }}</td>
-                                                <td class="text-end">{{ \App\Pagos\Centavos::formatear((int) $comision->monto_usd_e2, 'USD') }}</td>
-                                                <td class="text-end">{{ \App\Pagos\Centavos::formatear((int) $comision->monto_ves_e2, 'VES') }}</td>
+                                                <td data-etiqueta="#">{{ $comision->secuencia }}</td>
+                                                <td class="celda-principal" data-etiqueta="Tipo">{{ $comision->tipo }}</td>
+                                                <td class="text-end" data-etiqueta="Base USD">{{ \App\Pagos\Centavos::formatear((int) $comision->base_usd_e2, 'USD') }}</td>
+                                                <td class="text-end" data-etiqueta="%">{{ \App\Pagos\Porcentaje::aTexto((int) $comision->porcentaje_bp) }}</td>
+                                                <td class="text-end" data-etiqueta="Comisión USD">{{ \App\Pagos\Centavos::formatear((int) $comision->monto_usd_e2, 'USD') }}</td>
+                                                <td class="text-end" data-etiqueta="Comisión VES">{{ \App\Pagos\Centavos::formatear((int) $comision->monto_ves_e2, 'VES') }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
-                                </table>
-                            </div>
+                            </x-ui.tabla>
                         @endif
 
                         <hr>
                         <p class="fw-semibold mb-2">Bitácora</p>
-                        <div class="table-responsive" style="max-height: 18rem; overflow-y: auto;">
-                            <table class="table table-sm align-middle mb-0">
+                        <div style="max-height: 18rem; overflow-y: auto;">
+                            <x-ui.tabla class="table-sm mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Cuándo</th>
@@ -355,11 +347,11 @@
                                 <tbody>
                                     @forelse ($eventos as $fila)
                                         <tr wire:key="evento-{{ $fila['evento']->id }}">
-                                            <td class="text-nowrap">{{ \App\Support\HoraLocal::fechaHoraConSegundos($fila['evento']->created_at) }}</td>
-                                            <td>{{ $fila['evento']->origen }}</td>
-                                            <td>{{ $fila['evento']->evento }}</td>
-                                            <td class="text-nowrap">{{ $fila['evento']->estado_anterior ?? '—' }} → {{ $fila['evento']->estado_nuevo ?? '—' }}</td>
-                                            <td>
+                                            <td class="text-nowrap" data-etiqueta="Cuándo">{{ \App\Support\HoraLocal::fechaHoraConSegundos($fila['evento']->created_at) }}</td>
+                                            <td data-etiqueta="Origen">{{ $fila['evento']->origen }}</td>
+                                            <td class="celda-principal" data-etiqueta="Evento">{{ $fila['evento']->evento }}</td>
+                                            <td class="text-nowrap" data-etiqueta="Estado">{{ $fila['evento']->estado_anterior ?? '—' }} → {{ $fila['evento']->estado_nuevo ?? '—' }}</td>
+                                            <td data-etiqueta="Payload">
                                                 @if (! empty($fila['payload']))
                                                     <details>
                                                         <summary class="small">Ver</summary>
@@ -374,7 +366,7 @@
                                         <tr><td colspan="5" class="text-center text-muted py-3">Sin eventos.</td></tr>
                                     @endforelse
                                 </tbody>
-                            </table>
+                            </x-ui.tabla>
                         </div>
 
                         @if (! empty($respuestaSegura))

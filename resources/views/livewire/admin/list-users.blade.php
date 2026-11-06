@@ -20,8 +20,7 @@
             </div>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>ID</th>
@@ -35,15 +34,15 @@
                     <tbody>
                         @forelse($users as $user)
                             <tr>
-                                <td>{{ $user->id }}</td>
-                                <td>{{ $user->name }}</td>
-                                <td>{{ $user->email }}</td>
-                                <td>
+                                <td data-etiqueta="ID" class="celda-secundaria">{{ $user->id }}</td>
+                                <td class="celda-principal">{{ $user->name }}</td>
+                                <td data-etiqueta="Correo Electrónico">{{ $user->email }}</td>
+                                <td data-etiqueta="Rol">
                                     @foreach($user->roles as $r)
                                         <span class="badge bg-info text-dark">{{ $r->name }}</span>
                                     @endforeach
                                 </td>
-                                <td>
+                                <td data-etiqueta="Permisos">
                                     {{-- getAllPermissions() obtiene permisos directos y via roles --}}
                                     @forelse($user->getAllPermissions() as $permission)
                                         <span class="badge bg-secondary">{{ $permission->name }}</span>
@@ -51,7 +50,7 @@
                                         <span class="text-muted small">Sin permisos</span>
                                     @endforelse
                                  </td>
-                                <td class="text-end">
+                                <td class="text-end celda-acciones">
                                     <button wire:click="edit({{ $user->id }})" class="btn btn-sm btn-outline-warning me-1">
                                         Editar
                                     </button>
@@ -66,8 +65,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
         <div class="card-footer bg-white py-3">
             {{ $users->links() }}

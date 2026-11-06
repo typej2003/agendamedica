@@ -31,10 +31,7 @@
         </div>
 
         <div class="card-body p-0 tabla-cuentas">
-            {{-- En pantallas medianas y grandes la tabla no hace scroll: si no, el menú de 3 puntos queda cortado. --}}
-            <style>@media (min-width: 768px) { .tabla-cuentas .table-responsive { overflow: visible; } }</style>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>{{ $pestana === 'medicos' ? 'Médico' : 'Nombre' }}</th>
@@ -51,7 +48,7 @@
                                 $m = $pestana === 'medicos' ? $fila : $fila->medico;
                             @endphp
                             <tr wire:key="{{ $pestana }}-{{ $fila->id }}">
-                                <td>
+                                <td class="celda-principal">
                                     @if ($pestana === 'medicos')
                                         <div class="fw-semibold">{{ trim($fila->name . ' ' . $fila->lastname) }}</div>
                                         <small class="text-muted">{{ $fila->reg_medico }}</small>
@@ -73,15 +70,15 @@
                                         @endif
                                     @endif
                                 </td>
-                                <td>{{ $u?->email ?? $fila->email }}</td>
-                                <td>
+                                <td data-etiqueta="Correo">{{ $u?->email ?? $fila->email }}</td>
+                                <td data-etiqueta="Roles">
                                     @if ($u)
                                         @foreach ($u->roles as $rol)
                                             <span class="badge bg-info text-dark">{{ $rol->name }}</span>
                                         @endforeach
                                     @endif
                                 </td>
-                                <td>
+                                <td data-etiqueta="Estado">
                                     @if (! $u)
                                         <span class="badge bg-secondary">Sin acceso</span>
                                     @elseif ($u->is_active === false)
@@ -93,17 +90,11 @@
                                         <span class="badge bg-warning text-dark" title="Debe cambiar su clave temporal en el próximo inicio de sesión">Clave temporal</span>
                                     @endif
                                 </td>
-                                <td class="text-end text-nowrap">
+                                <td class="text-end text-nowrap celda-acciones">
                                     @if (! $u && ! $fila->es_centro)
                                         <button wire:click="abrirAcceso({{ $fila->id }})" class="btn btn-sm btn-primary">
                                             <i class="bi bi-key me-1"></i> Crear acceso
                                         </button>
-                                    @endif
-
-                                    @if ($pestana === 'medicos')
-                                        <a href="{{ route('admin.cuentas.medico', $fila) }}" class="btn btn-sm btn-outline-secondary">
-                                            <i class="bi bi-eye me-1" aria-hidden="true"></i> Ver
-                                        </a>
                                     @endif
 
                                     <button wire:click="abrirEditar('{{ $pestana === 'medicos' ? 'medico' : 'administrador' }}', {{ $fila->id }})"
@@ -111,20 +102,32 @@
                                         <i class="bi bi-pencil-square me-1"></i> Editar
                                     </button>
 
-                                    {{-- Dónde atiende: sedes → consultorios → horarios y cupos (`admin.medicos.sedes`). --}}
-                                    @if ($pestana === 'medicos')
-                                        <a href="{{ route('admin.medicos.sedes', $fila) }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-geo-alt me-1" aria-hidden="true"></i> Ver sedes
-                                        </a>
-                                    @endif
-
-                                    @if ($u || $m)
+                                    {{-- «Ver» y «Ver sedes» van **en el menú «…»**, no como botones directos: con
+                                         «Crear acceso» + «Ver» + «Editar» + «Ver sedes» + el menú la fila medía 1004 px y
+                                         a 1280 px se salía de su tarjeta. La pauta es hasta dos acciones directas y el
+                                         resto en el menú (guía de UI §9.1). --}}
+                                    @if ($u || $m || $pestana === 'medicos')
                                         <div class="dropdown d-inline-block">
                                             <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown"
                                                     aria-expanded="false" title="Más acciones" aria-label="Más acciones">
                                                 <i class="bi bi-three-dots-vertical"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                @if ($pestana === 'medicos')
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ route('admin.cuentas.medico', $fila) }}">
+                                                            <i class="bi bi-eye me-2" aria-hidden="true"></i> Ver
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ route('admin.medicos.sedes', $fila) }}">
+                                                            <i class="bi bi-geo-alt me-2" aria-hidden="true"></i> Ver sedes
+                                                        </a>
+                                                    </li>
+                                                    @if ($u || $m)
+                                                        <li><hr class="dropdown-divider"></li>
+                                                    @endif
+                                                @endif
                                                 @if ($u)
                                                     <li>
                                                         <button type="button" class="dropdown-item" wire:click="abrirRoles({{ $u->id }})">
@@ -192,8 +195,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
 
         @if ($filas->hasPages())

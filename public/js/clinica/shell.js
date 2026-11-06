@@ -231,11 +231,12 @@
         if (evento.key === 'Escape') cerrarMenus(null);
     });
 
-    // ---- Tablas con desplazamiento horizontal (`<x-ui.tabla>`, A-16).
-    // La tabla que no entra se desliza dentro de su tarjeta en vez de arrastrar la página (el `overflow-x` vive en
-    // `.tabla-envoltura`, en doctorisimo-ui.css). Un contenedor que scrollea tiene que poder recorrerse con el
-    // teclado y anunciarse: el `tabindex`, el `role` y el `aria-label` se ponen **sólo cuando hay desborde**, para
-    // no dejar una parada de tabulación de más en las tablas que entran.
+    // ---- Tablas con desplazamiento horizontal (`<x-ui.tabla>`).
+    // Ya **no** se desliza ninguna tabla de datos: si no entra, la fila pasa a tarjeta (regla del 2026-11-06). La
+    // única que se recorre es el **calendario** (semana y mes, `sin-tarjetas`), donde el `overflow-x` vive en
+    // `.tabla-envoltura-desplazable`. Un contenedor que scrollea tiene que poder recorrerse con el teclado y
+    // anunciarse: el `tabindex`, el `role` y el `aria-label` se ponen **sólo cuando hay desborde**, para no dejar una
+    // parada de tabulación de más en las tablas que entran.
     const envolturas = Array.prototype.slice.call(document.querySelectorAll('.tabla-envoltura, .table-responsive'));
 
     const marcarEnvoltura = function (envoltura) {

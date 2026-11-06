@@ -100,8 +100,8 @@
             </div>
 
             <!-- 2. VISTA ESCRITORIO (Tabla) -->
-            <div class="table-responsive d-none d-md-block">
-                <table class="table table-hover align-middle border-top mb-0">
+            <div class="d-none d-md-block">
+                <x-ui.tabla class="table table-hover align-middle border-top mb-0">
                     <thead class="table-light">
                         <tr>
                             <th scope="col" style="width: 140px;">N° Historia</th>
@@ -116,31 +116,31 @@
                     <tbody>
                         @forelse($pacientes as $paciente)
                             <tr>
-                                <td>
+                                <td data-etiqueta="N° Historia">
                                     <!-- numhistoria proveniente de la relación MedicoPaciente / Pivot -->
                                     <span class="badge bg-secondary font-monospace fs-6">
                                         {{ $paciente->numhistoria ?? ($paciente->pivot->numhistoria ?? 'Sin N°') }}
                                     </span>
                                 </td>
-                                <td class="fw-bold text-nowrap">
+                                <td class="fw-bold text-nowrap" data-etiqueta="Cédula">
                                     {{ $paciente->nac ?? 'V' }}-{{ $paciente->cedula }}
                                 </td>
-                                <td class="fw-semibold">
+                                <td class="fw-semibold celda-principal" data-etiqueta="Paciente">
                                     {{ $paciente->nombres }} {{ $paciente->apellidos }}
                                 </td>
-                                <td>
+                                <td data-etiqueta="Centro Médico">
                                     <!-- Centro de salud obtenido mediante la relación de Historia -->
                                     <span class="badge bg-light text-dark border">
                                         {{ $paciente->historia->medicalCenter->name ?? ($paciente->medicalCenter->name ?? 'N/A') }}
                                     </span>
                                 </td>
-                                <td class="small">
+                                <td class="small" data-etiqueta="Teléfono">
                                     {{ $paciente->telefono ?? 'N/A' }}
                                 </td>
-                                <td class="small">
+                                <td class="small" data-etiqueta="Email">
                                     {{ $paciente->email ?? 'N/A' }}
                                 </td>
-                                <td class="text-center">
+                                <td class="text-center celda-acciones" data-etiqueta="Acciones">
                                     <div class="btn-group btn-group-sm" role="group">
                                         <button class="btn btn-outline-warning" wire:click="edit({{ $paciente->id }})" title="Editar">
                                             <i class="bi bi-pencil-square"></i>
@@ -160,7 +160,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                </x-ui.tabla>
             </div>
 
             <!-- Paginación -->

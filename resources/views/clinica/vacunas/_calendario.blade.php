@@ -32,8 +32,7 @@
         </x-ui.tarjeta>
     @else
         <x-ui.tarjeta id="vacunas-calendario" titulo="Calendario" icono="bi-calendar-check" class="mb-3">
-            <div class="table-responsive">
-                <table class="table align-middle mb-0 vacunas-tabla">
+            <x-ui.tabla class="table align-middle mb-0 vacunas-tabla">
                     <thead>
                         <tr>
                             <th scope="col">Vacuna</th>
@@ -59,15 +58,15 @@
                                             <span class="d-block small texto-tenue fw-normal">{{ $vacuna['tipo'] }}@if ($vacuna['cobertura']) · {{ $vacuna['cobertura'] }}@endif</span>
                                         </th>
                                     @endif
-                                    <td>{{ $d['rotulo'] }}</td>
-                                    <td>{{ $d['planeada'] ?? '—' }}</td>
-                                    <td>
+                                    <td data-etiqueta="Dosis">{{ $d['rotulo'] }}</td>
+                                    <td data-etiqueta="Le toca">{{ $d['planeada'] ?? '—' }}</td>
+                                    <td data-etiqueta="Aplicada">
                                         {{ $d['aplicada'] ?? '—' }}
                                         @if ($d['lote'])
                                             <span class="d-block small texto-tenue">Lote {{ $d['lote'] }}</span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td data-etiqueta="Estado">
                                         <x-ui.estado :tono="$d['tono']" :icono="$d['icono']">{{ $d['estado'] }}</x-ui.estado>
                                         @if ($d['registrable'])
                                             <button type="button" class="btn btn-sm btn-outline-primary ms-1" data-registrar-dosis
@@ -82,8 +81,7 @@
                             @endforeach
                         @endforeach
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </x-ui.tarjeta>
 
         @if ($vm->otras() !== [])

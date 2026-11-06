@@ -6,6 +6,7 @@ use App\Clinica\ContextoAutomatico;
 use App\Clinica\ContextoTrabajo;
 use App\Clinica\Vistas\ContextoVista;
 use App\Http\Controllers\Controller;
+use App\Models\Office;
 use Illuminate\Http\Request;
 
 /**
@@ -46,7 +47,11 @@ class ContextoController extends Controller
         }
 
         return view('clinica.contexto', [
-            'vm' => new ContextoVista($this->contexto->disponibles($request->user())),
+            // El contexto vigente, si hay: la pantalla arranca con esos pasos ya elegidos y «Cambiar».
+            'vm' => new ContextoVista(
+                $this->contexto->disponibles($request->user()),
+                $this->contexto->actual($request->user())
+            ),
         ]);
     }
 
@@ -58,9 +63,21 @@ class ContextoController extends Controller
             'office_id'    => ['nullable', 'integer'],
         ]);
 
+        // **El consultorio manda** (2026-11-06): el menú junta consultorios de varios registros (los del
+        // médico y los de los centros donde trabaja) y un formulario no puede mandar el `reg_medico` de la
+        // opción clickeada junto con su `office_id`. Se resuelve en el servidor, que además no depende de que
+        // el navegador mande un campo que puede venir de otro registro.
+        $regMedico = $datos['reg_medico'];
+        if (! empty($datos['office_id'])) {
+            $regDelConsultorio = Office::whereKey($datos['office_id'])->value('reg_medico');
+            if ($regDelConsultorio !== null) {
+                $regMedico = (string) $regDelConsultorio;
+            }
+        }
+
         $this->contexto->fijar(
             $request->user(),
-            $datos['reg_medico'],
+            $regMedico,
             $datos['specialty_id'] ?? null,
             $datos['office_id'] ?? null
         );

@@ -64,8 +64,7 @@
     <div class="card mb-4">
         <div class="card-header bg-white py-3"><strong>Médicos del equipo</strong></div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="table table-hover align-middle mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Médico</th>
@@ -76,7 +75,7 @@
                     <tbody>
                         @foreach ($vm->filasMedicos() as $fila)
                             <tr>
-                                <td>
+                                <td class="celda-principal" data-etiqueta="Médico">
                                     <div class="fw-semibold">
                                         {{ $fila['nombre'] }}
                                         @if ($fila['esDuenio'])<span class="badge bg-primary ms-1">Dueño</span>@endif
@@ -84,8 +83,8 @@
                                     </div>
                                     <small class="text-muted">{{ $fila['correo'] }}</small>
                                 </td>
-                                <td><small class="text-muted">{{ $fila['registro'] }}</small></td>
-                                <td class="text-end">
+                                <td data-etiqueta="Registro"><small class="text-muted">{{ $fila['registro'] }}</small></td>
+                                <td class="text-end celda-acciones">
                                     @if ($fila['puedeQuitar'])
                                         <form method="POST" action="{{ route('clinica.equipo.quitar', $fila['id']) }}"
                                               data-confirmar="¿Quitar a {{ $fila['nombre'] }} del equipo? No se borra su ficha ni sus pacientes; sólo pierde el acceso a este consultorio.">
@@ -100,8 +99,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
     </div>
 
@@ -111,8 +109,7 @@
             @if (empty($vm->filasInvitaciones()))
                 <p class="text-muted p-3 mb-0">No hay invitaciones pendientes.</p>
             @else
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                <x-ui.tabla class="table table-hover align-middle mb-0">
                         <thead class="table-dark">
                             <tr>
                                 <th>Correo</th>
@@ -124,10 +121,10 @@
                         <tbody>
                             @foreach ($vm->filasInvitaciones() as $fila)
                                 <tr>
-                                    <td>{{ $fila['email'] }}</td>
-                                    <td><small class="text-muted">{{ $fila['enviada'] }}</small></td>
-                                    <td><small class="text-muted">{{ $fila['expira'] }}</small></td>
-                                    <td class="text-end text-nowrap">
+                                    <td class="celda-principal" data-etiqueta="Correo">{{ $fila['email'] }}</td>
+                                    <td data-etiqueta="Enviada"><small class="text-muted">{{ $fila['enviada'] }}</small></td>
+                                    <td data-etiqueta="Vence"><small class="text-muted">{{ $fila['expira'] }}</small></td>
+                                    <td class="text-end text-nowrap celda-acciones">
                                         <code id="enlace-invitacion-{{ $fila['id'] }}" class="d-none">{{ $fila['url'] }}</code>
                                         <button type="button" class="btn btn-sm btn-outline-secondary" data-copiar="enlace-invitacion-{{ $fila['id'] }}">
                                             <i class="bi bi-clipboard" aria-hidden="true"></i> Copiar enlace
@@ -143,8 +140,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
-                </div>
+                </x-ui.tabla>
             @endif
         </div>
     </div>

@@ -110,8 +110,7 @@
         <x-ui.cargando cubre wire:loading.delay.flex />
 
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Quién</th>
@@ -128,18 +127,18 @@
                     <tbody>
                         @forelse ($comentarios as $comentario)
                             <tr wire:key="comentario-{{ $comentario->id }}">
-                                <td>
+                                <td class="celda-principal" data-etiqueta="Quién">
                                     <div class="fw-semibold">{{ $comentario->usuario?->name ?? 'Cuenta borrada' }}</div>
                                     <small class="text-muted">
                                         {{ $comentario->rol ?? '—' }}
                                         @if ($comentario->medico) · {{ $comentario->reg_medico }} @endif
                                     </small>
                                 </td>
-                                <td>
+                                <td data-etiqueta="Desde">
                                     <x-ui.estado tono="neutro" icono="{{ $comentario->iconoDeLaPlataforma() }}">{{ $comentario->origenLegible() }}</x-ui.estado>
                                 </td>
-                                <td>{{ $comentario->tipoLegible() }}</td>
-                                <td>
+                                <td data-etiqueta="Tipo">{{ $comentario->tipoLegible() }}</td>
+                                <td data-etiqueta="Comentario">
                                     <div>{{ \Illuminate\Support\Str::limit($comentario->mensaje, 90) }}</div>
                                     {{-- Miniaturas de lo que adjuntó (O-25): la captura es la mitad del reporte, así
                                          que se ve en la propia fila sin abrir el comentario. --}}
@@ -158,11 +157,11 @@
                                         </ul>
                                     @endif
                                 </td>
-                                <td class="fecha-celda">
+                                <td class="fecha-celda" data-etiqueta="Cuándo">
                                     <div>{{ \App\Support\HoraLocal::instante($comentario->created_at)?->format(\App\Support\Regionalizacion::formatoActual()) }}</div>
                                     <small class="text-muted">{{ $comentario->created_at?->diffForHumans() }}</small>
                                 </td>
-                                <td>
+                                <td data-etiqueta="Estado">
                                     @if ($comentario->fueRespondido())
                                         <x-ui.estado tono="exito">Respondido</x-ui.estado>
                                     @elseif ($comentario->fueDescartado())
@@ -171,7 +170,7 @@
                                         <x-ui.estado tono="aviso">Nuevo</x-ui.estado>
                                     @endif
                                 </td>
-                                <td class="text-end">
+                                <td class="text-end celda-acciones">
                                     <button type="button" class="btn btn-sm btn-outline-primary"
                                             wire:click="abrir({{ $comentario->id }})">
                                         {{ $comentario->estaNuevo() ? 'Responder' : 'Ver' }}
@@ -192,8 +191,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
 
         @if ($comentarios->hasPages())

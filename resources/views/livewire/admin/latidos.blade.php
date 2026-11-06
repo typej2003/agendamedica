@@ -37,8 +37,7 @@
                    placeholder="Buscar por consultorio (reg_medico)...">
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Médico</th>
@@ -56,20 +55,20 @@
                                 $retenido = (int) ($retenidoPorLatido[$latido->id] ?? 0);
                             @endphp
                             <tr wire:key="latido-{{ $latido->id }}">
-                                <td>
+                                <td class="celda-principal">
                                     <div class="fw-semibold">
                                         {{ $medico ? trim($medico->name . ' ' . $medico->lastname) : '—' }}
                                     </div>
                                     <small class="text-muted">{{ $latido->reg_medico }}</small>
                                 </td>
-                                <td>{{ $latido->reg_medico }}</td>
-                                <td class="text-end text-nowrap fw-semibold">
+                                <td data-etiqueta="Consultorio">{{ $latido->reg_medico }}</td>
+                                <td class="text-end text-nowrap fw-semibold" data-etiqueta="Disponibles">
                                     {{ \App\Latidos\Conversion::formatear((int) $latido->disponibles) }}
                                 </td>
-                                <td class="text-end text-nowrap {{ $retenido > 0 ? 'text-warning' : 'text-muted' }}">
+                                <td class="text-end text-nowrap {{ $retenido > 0 ? 'text-warning' : 'text-muted' }}" data-etiqueta="Retenidos">
                                     {{ \App\Latidos\Conversion::formatear($retenido) }}
                                 </td>
-                                <td>
+                                <td data-etiqueta="Renovación automática">
                                     @if ($latido->renovacion_automatica)
                                         <span class="badge bg-success">Sí</span>
                                         @if ($latido->plan)
@@ -79,7 +78,7 @@
                                         <span class="badge bg-secondary">No</span>
                                     @endif
                                 </td>
-                                <td class="text-end text-nowrap">
+                                <td class="text-end text-nowrap celda-acciones">
                                     <button wire:click="abrir({{ $latido->id }})" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye"></i> Detalle
                                     </button>
@@ -93,8 +92,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
         @if ($latidos->hasPages())
             <div class="card-footer bg-white">
@@ -194,8 +192,7 @@
                 @endif
 
                 <h3 class="h6">Últimos movimientos</h3>
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle">
+                <x-ui.tabla>
                         <thead>
                             <tr>
                                 <th>Fecha</th>
@@ -210,26 +207,24 @@
                         <tbody>
                             @forelse ($seleccionado->movimientos as $movimiento)
                                 <tr wire:key="movimiento-{{ $movimiento->id }}">
-                                    <td class="text-nowrap small">{{ $movimiento->created_at?->format('d/m/Y H:i') }}</td>
-                                    <td><span class="badge bg-light text-dark">{{ $movimiento->tipo }}</span></td>
-                                    <td class="text-end text-nowrap fw-semibold {{ (int) $movimiento->latidos < 0 ? 'text-danger' : 'text-success' }}">
+                                    <td class="text-nowrap small" data-etiqueta="Fecha">{{ $movimiento->created_at?->format('d/m/Y H:i') }}</td>
+                                    <td data-etiqueta="Tipo"><span class="badge bg-light text-dark">{{ $movimiento->tipo }}</span></td>
+                                    <td class="text-end text-nowrap fw-semibold {{ (int) $movimiento->latidos < 0 ? 'text-danger' : 'text-success' }}" data-etiqueta="Latidos">
                                         {{ \App\Latidos\Conversion::formatear((int) $movimiento->latidos) }}
                                     </td>
-                                    <td class="text-end text-nowrap">{{ \App\Latidos\Conversion::formatear((int) $movimiento->disponibles_antes) }}</td>
-                                    <td class="text-end text-nowrap">{{ \App\Latidos\Conversion::formatear((int) $movimiento->disponibles_despues) }}</td>
-                                    <td>{{ $movimiento->concepto }}</td>
-                                    <td class="small text-muted">{{ $movimiento->nota ?: '—' }}</td>
+                                    <td class="text-end text-nowrap" data-etiqueta="Antes">{{ \App\Latidos\Conversion::formatear((int) $movimiento->disponibles_antes) }}</td>
+                                    <td class="text-end text-nowrap" data-etiqueta="Después">{{ \App\Latidos\Conversion::formatear((int) $movimiento->disponibles_despues) }}</td>
+                                    <td class="celda-principal">{{ $movimiento->concepto }}</td>
+                                    <td class="small text-muted" data-etiqueta="Nota">{{ $movimiento->nota ?: '—' }}</td>
                                 </tr>
                             @empty
                                 <tr><td colspan="7" class="text-center text-muted py-3">Sin movimientos.</td></tr>
                             @endforelse
                         </tbody>
-                    </table>
-                </div>
+                </x-ui.tabla>
 
                 <h3 class="h6 mt-4">Retenciones</h3>
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
+                <x-ui.tabla class="mb-0">
                         <thead>
                             <tr>
                                 <th>Pago</th>
@@ -241,17 +236,16 @@
                         <tbody>
                             @forelse ($seleccionado->retenciones as $retencion)
                                 <tr wire:key="retencion-{{ $retencion->id }}">
-                                    <td>#{{ $retencion->pago_id }}</td>
-                                    <td class="text-end text-nowrap">{{ \App\Latidos\Conversion::formatear((int) $retencion->latidos) }}</td>
-                                    <td><span class="badge bg-{{ $retencion->estado === 'activa' ? 'warning text-dark' : 'secondary' }}">{{ $retencion->estado }}</span></td>
-                                    <td class="text-nowrap small">{{ $retencion->expira_el?->format('d/m/Y H:i') ?: '—' }}</td>
+                                    <td class="celda-principal">#{{ $retencion->pago_id }}</td>
+                                    <td class="text-end text-nowrap" data-etiqueta="Latidos">{{ \App\Latidos\Conversion::formatear((int) $retencion->latidos) }}</td>
+                                    <td data-etiqueta="Estado"><span class="badge bg-{{ $retencion->estado === 'activa' ? 'warning text-dark' : 'secondary' }}">{{ $retencion->estado }}</span></td>
+                                    <td class="text-nowrap small" data-etiqueta="Vence">{{ $retencion->expira_el?->format('d/m/Y H:i') ?: '—' }}</td>
                                 </tr>
                             @empty
                                 <tr><td colspan="4" class="text-center text-muted py-3">Sin retenciones.</td></tr>
                             @endforelse
                         </tbody>
-                    </table>
-                </div>
+                </x-ui.tabla>
             </div>
         </div>
     @endif

@@ -38,8 +38,7 @@
     <div class="card">
         <x-ui.cargando cubre wire:loading.delay.flex />
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="table table-hover align-middle mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Día</th>
@@ -51,10 +50,10 @@
                     <tbody>
                         @forelse ($bloques as $bloque)
                             <tr wire:key="bloque-{{ $bloque->id }}">
-                                <td class="fw-semibold">{{ $bloque->nombreDelDia() }}</td>
-                                <td>{{ $bloque->rango() }}</td>
-                                <td class="text-end">{{ $bloque->cupo ? $bloque->cupo . ' pacientes' : 'Sin tope' }}</td>
-                                <td class="text-end text-nowrap">
+                                <td class="fw-semibold celda-principal" data-etiqueta="Día">{{ $bloque->nombreDelDia() }}</td>
+                                <td data-etiqueta="Horario">{{ $bloque->rango() }}</td>
+                                <td class="text-end" data-etiqueta="Cupo">{{ $bloque->cupo ? $bloque->cupo . ' pacientes' : 'Sin tope' }}</td>
+                                <td class="text-end text-nowrap celda-acciones" data-etiqueta="Acciones">
                                     <button type="button" wire:click="abrirEditar({{ $bloque->id }})" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil-square me-1" aria-hidden="true"></i> Editar
                                     </button>
@@ -69,8 +68,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
     </div>
 

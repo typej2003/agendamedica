@@ -1165,8 +1165,9 @@ con aprobación** y el de la suscripción son las fases siguientes. Lo nuevo se 
   **estricto** (`reg_medico` y, por `medico_id`, sólo las filas sin registro): `Office::scopeDelMedico` también trae
   los consultorios **de un centro** que creó ese doctor, y editarlos desde su ficha los habría mudado de tenant
   (`GuardarConsultorio` reescribe `reg_medico`). Una ficha sin `reg_medico` no ofrece nada (404 en las acciones).
-  Qué hace cada nivel: **Sedes** (la sede es del catálogo de la clínica): «Agregar» elige una sede existente o
-  registra una nueva **y** su primer consultorio (sin consultorio la sede no es «del médico»), en transacción;
+  Qué hace cada nivel: **Sedes** (cada médico carga las suyas): «Agregar» elige **una sede del médico** —las
+  propias, las asignadas y donde ya tiene consultorio; nunca el catálogo de toda la plataforma, 2026-11-06— o
+  registra una nueva **y** su consultorio (sin consultorio la sede no es «del médico»), en transacción;
   «Editar» cambia la ficha para todos y avisa cuántos otros médicos atienden ahí (le pasa a `GuardarSede` el
   `activo` actual: sin él, la Action reactiva); «Quitar» **da de baja los consultorios del médico** en esa sede
   (`activo = false`), dice cuántas citas tiene ahí desde hoy y no toca la sede. **Consultorios**: alta y edición
@@ -1175,9 +1176,10 @@ con aprobación** y el de la suscripción son las fases siguientes. Lo nuevo se 
   **Horarios**: alta de uno o varios días (todo o nada), edición y «Quitar» que **borra** el bloque como en
   `/clinica` (el modelo deja el rastro en `sync_changes`, con el usuario). No hay bitácora propia del panel:
   `offices` y `medical_centers` no dejan rastro (tampoco desde `/clinica`). Nada se borra en cascada. Tests:
-  `tests/Feature/SedesDelMedicoAdminTest.php` (17); verificación en Chrome:
-  `../.agent-tools/verificar-sedes-admin-web.js` (crea una sede y dos consultorios en el primer médico del
-  listado, y no los borra). **Sin migraciones.**
+  `tests/Feature/SedesDelMedicoAdminTest.php` (19); verificación en Chrome:
+  `../.agent-tools/verificar-sedes-admin-web.js` (con `../.agent-tools/sedes-del-medico-admin-preparar.php`
+  comprueba que «Sede existente» sólo traiga las del médico; crea una sede y dos consultorios en el primer médico
+  del listado, y no los borra). **Sin migraciones.**
 - **Sección "API Keys"** (`/admin/api-keys`, `Admin\ApiKeys`, misma ruta-archivo `routes/web/cuentas.php`): genera y
   revoca la credencial de sync por médico (`SyncCredencialService`, el mismo que usa `php artisan sync:credencial`)
   y muestra por médico la última sincronización del escritorio y del app, la carga inicial, las API keys activas y
