@@ -16,7 +16,8 @@ use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /**
- * **El carnet de vacunación imprimible** (WEB-7.4.4c): la hoja con el membrete del médico, las dosis aplicadas y las que faltan, y su vista previa.
+ * **El carnet de vacunación imprimible** (WEB-7.4.4c): la hoja con el membrete del médico y **las dosis aplicadas** —cada una con su «Próxima dosis»—,
+ * **sin el bloque de las que faltan** (O-70), y su vista previa.
  */
 class CarnetDeVacunacionWebTest extends TestCase
 {
@@ -83,7 +84,11 @@ class CarnetDeVacunacionWebTest extends TestCase
         }
     }
 
-    public function test_la_hoja_trae_el_membrete_los_datos_las_aplicadas_y_las_que_faltan(): void
+    /**
+     * O-70 (Alexander, 2026-11-06): la hoja se lleva **sólo lo aplicado**; el bloque «DOSIS POR APLICAR» ya no se imprime. Este niño **sí** tiene dosis
+     * pendientes en el esquema —la polio, atrasada, y la triple viral, pendiente—, así que la prueba tiene sentido: antes salían en la hoja y ahora no.
+     */
+    public function test_la_hoja_trae_las_aplicadas_con_su_proxima_dosis_y_no_el_bloque_de_pendientes(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
         $this->catalogo($medico);
@@ -102,10 +107,14 @@ class CarnetDeVacunacionWebTest extends TestCase
             ->assertSee('VACUNAS APLICADAS')
             ->assertSeeInOrder(['Paciente:', 'Carnet, Mateo', 'Historia:', 'H. 9801', 'Nacimiento:', '17/06/2026', 'Edad:', '4 meses', 'Padres:', 'ROSA PEREZ y LUIS GOMEZ'])
             ->assertSee('id="carnet-aplicadas"', false)
+            ->assertSeeInOrder(['Vía / zona', 'Próxima dosis'])
             ->assertSeeInOrder(['18/06/2026', 'BCG', 'Única', 'L-5', 'Intradérmica · Brazo derecho', '01/12/2026'])
-            ->assertSee('DOSIS POR APLICAR')
-            ->assertSeeInOrder(['Polio', 'Dosis única', '17/08/2026', 'Atrasada'])
-            ->assertSeeInOrder(['Triple viral', '17/06/2027', 'Pendiente'])
+            // Ni el bloque ni la tabla de pendientes: el paciente se lleva sólo lo que se le aplicó, y el cuándo le toca lo dice «Próxima dosis».
+            ->assertDontSee('DOSIS POR APLICAR')
+            ->assertDontSee('id="carnet-pendientes"', false)
+            ->assertDontSee('Atrasada')
+            ->assertDontSee('Polio')
+            ->assertDontSee('Triple viral')
             ->assertSee('data-imprimir', false);
     }
 
@@ -116,7 +125,8 @@ class CarnetDeVacunacionWebTest extends TestCase
         $id = $this->nino($medico);
 
         $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.pacientes.vacunas.carnet', $id))
-            ->assertOk()->assertSee('Todavía no se le registró ninguna dosis')->assertSee('barra-impresion-titulo', false);
+            ->assertOk()->assertSee('Todavía no se le registró ninguna dosis')->assertSee('barra-impresion-titulo', false)
+            ->assertDontSee('DOSIS POR APLICAR');
 
         $this->conContexto($medico, $pediatria)->actingAs($user)->get(route('clinica.pacientes.vacunas.carnet', [$id, 'incrustado' => 1]))
             ->assertOk()->assertDontSee('barra-impresion-titulo', false);
