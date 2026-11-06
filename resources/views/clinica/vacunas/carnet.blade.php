@@ -3,7 +3,7 @@
 @section('titulo', $vm->titulo() . ' · ' . $vm->nombre())
 
 @section('estilos')
-    {{-- El carnet de vacunación (WEB-7.4.4c): hoja A4 vertical con el membrete del médico; lo imprime el navegador. Usa el membrete, la firma y el
+    {{-- El carnet de vacunación (WEB-7.4.4c): hoja Carta vertical con el membrete del médico; lo imprime el navegador. Usa el membrete, la firma y el
          pie de `clinica-impresion.css` (los mismos de los récipes) y sólo agrega su propia hoja de estilos. --}}
     <link rel="stylesheet" href="{{ asset('css/clinica-carnet.css') }}">
 @endsection

@@ -12,7 +12,7 @@ use App\Support\FechaClinica;
  * **Las hojas de un documento de la consulta** (WEB-5.3a): constancia, reposo, referencia o informe tal como los imprime el
  * navegador, ya repartidos en mitades y con todos los textos formateados.
  *
- * Una hoja es una página A4 horizontal con dos mitades. Un documento es **media hoja**: va en la mitad izquierda y la derecha
+ * Una hoja es una página Carta horizontal con dos mitades. Un documento es **media hoja**: va en la mitad izquierda y la derecha
  * queda en blanco. Si el texto no entra, **sigue en la otra mitad** (`DistribuidorDeDocumento`): la primera lleva «Continúa →»
  * y la segunda es la continuación, con la firma. Si ni así entra, sigue en una hoja más.
  *

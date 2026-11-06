@@ -285,12 +285,12 @@ class ImpresionDeRecipeWebTest extends TestCase
 
     // ------------------------------------------------------------------------------------ La segunda hoja
 
-    public function test_doce_medicamentos_salen_en_dos_hojas_y_cada_hoja_repite_el_membrete_y_la_firma(): void
+    public function test_veinte_medicamentos_salen_en_dos_hojas_y_cada_hoja_repite_el_membrete_y_la_firma(): void
     {
         [$user, $medico, $gineco, , $consulta] = $this->escenario();
 
         $codigos = [];
-        for ($i = 1; $i <= 12; $i++) {
+        for ($i = 1; $i <= 20; $i++) {
             $codigo = sprintf('9%03d', $i);
             $this->medicamento($medico, $codigo, 'MEDICAMENTO ' . $i, 'GENERICO ' . $i, 'Tabletas', 'Una tableta cada ' . $i . ' horas.');
             $codigos[] = [$codigo, $i, 'Una tableta cada ' . $i . ' horas.'];
@@ -303,9 +303,9 @@ class ImpresionDeRecipeWebTest extends TestCase
         $this->assertSame(2, $this->hojasDe($respuesta->getContent()));
         $respuesta->assertSee('Hoja 1 de 2');
         $respuesta->assertSee('Hoja 2 de 2');
-        $respuesta->assertSee('Un récipe · 12 medicamentos · 2 hojas');
-        // Cada medicamento una sola vez en cada mitad, y ninguno partido: los 12 están.
-        for ($i = 1; $i <= 12; $i++) {
+        $respuesta->assertSee('Un récipe · 20 medicamentos · 2 hojas');
+        // Cada medicamento una sola vez en cada mitad, y ninguno partido: los 20 están.
+        for ($i = 1; $i <= 20; $i++) {
             $this->assertSame(2, substr_count($respuesta->getContent(), 'MEDICAMENTO ' . $i . ' / TABLETAS'), "El medicamento $i");
         }
         // Cuatro mitades con membrete, firma y pie: dos hojas de dos mitades.

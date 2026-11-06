@@ -1,12 +1,15 @@
-/* La hoja del récipe que imprime el navegador (WEB-5.2, PLAN-WEB.md R6 y decisión 17): un A4 horizontal partido
+/* La hoja del récipe que imprime el navegador (WEB-5.2, PLAN-WEB.md R6 y decisión 17): una Carta horizontal partida
    en dos mitades con su línea de corte. Cada mitad es un récipe completo (membrete, datos del paciente, cuerpo,
    próxima cita, firma con sello y pie). Pantalla aparte: se usa junto con `clinica-impresion.css`.
 
    Las medidas tienen su gemela en `App\Clinica\Impresion\MedidasDeLaMitad` y `DistribuidorDeRecipe` (quien decide
-   cuántos medicamentos entran en la hoja): el cuerpo mide lo que sobra de los 193 mm útiles, y si algo de acá
-   cambia hay que cambiarlo allá. */
+   cuántos medicamentos entran en la hoja): el cuerpo mide lo que sobra de los 198,9 mm útiles, y si algo de acá
+   cambia hay que cambiarlo allá.
 
-@page { size: A4 landscape; margin: 0; }
+   2026-11-05: la hoja pasa de A4 a Carta (279,4 × 215,9 mm). Todos los consultorios imprimen en Carta y el trabajo
+   en A4 salía cortado: el papel es 17,6 mm más angosto y el recorte se comía el borde izquierdo del récipe. */
+
+@page { size: letter landscape; margin: 0; }
 
 .recipe-hojas {
     display: flex;
@@ -15,18 +18,18 @@
     gap: 8mm;
     padding: 6mm 0 12mm;
     /* En pantalla `imprimir-recipe.js` lo achica para que la hoja entre en el ancho disponible (en el celular
-       no hay 297 mm); al imprimir vuelve a 1. */
+       no hay 279,4 mm); al imprimir vuelve a 1. */
     zoom: var(--escala, 1);
 }
 
 /* ---------------------------------------------------------------------------------------------- La hoja */
 
-/* 209,5 y no 210: con la altura exacta de la página, un redondeo del navegador empuja una hoja en blanco. */
+/* 215,4 y no 215,9: con la altura exacta de la página, un redondeo del navegador empuja una hoja en blanco. */
 .recipe-hoja {
     position: relative;
     display: flex;
-    width: 297mm;
-    height: 209.5mm;
+    width: 279.4mm;
+    height: 215.4mm;
     flex: none;
     background: #fff;
     box-shadow: 0 2px 12px rgba(32, 16, 72, .18);
@@ -44,12 +47,12 @@
     border-left: .2mm dashed #9e9ea8;
 }
 
-/* Una mitad: 148,5 × 210 mm con 9 mm arriba, 8 abajo y 10 a los lados (193 × 128,5 mm útiles). */
+/* Una mitad: 139,7 × 215,9 mm con 9 mm arriba, 8 abajo y 10 a los lados (198,9 × 119,7 mm útiles). */
 .recipe-mitad {
     display: flex;
     flex-direction: column;
     flex: none;
-    width: 148.5mm;
+    width: 139.7mm;
     height: 100%;
     padding: 9mm 10mm 8mm;
     overflow-wrap: anywhere;

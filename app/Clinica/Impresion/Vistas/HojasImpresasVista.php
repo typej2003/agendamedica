@@ -13,7 +13,7 @@ use App\Clinica\Impresion\OpcionesDeRecipe;
  * otra en el orden pedido.
  *
  * Cada documento trae **su modo de hoja** (O-26: `DocumentoImpreso::modo()`, que lo declara `ModoDeLaHoja`): media hoja
- * horizontal para los récipes y las solicitudes, A4 vertical completa para los informes de los ecos y el del control de
+ * horizontal para los récipes y las solicitudes, Carta vertical completa para los informes de los ecos y el del control de
  * embarazo. Esta vista los pone en orden y les agrega la barra; el reparto de cada uno lo hace su propia clase
  * (`HojasDeRecipeVista`, `HojasDeDocumentoVista`, y el formulario de una eco). Tiene los mismos métodos que `HojasDeRecipeVista`,
  * que sigue siendo la vista de la página cuando se imprime un solo récipe.

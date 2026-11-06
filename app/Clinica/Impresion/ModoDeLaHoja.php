@@ -4,9 +4,9 @@ namespace App\Clinica\Impresion;
 
 /**
  * **El modo de la hoja de cada documento** (O-26): la **única** regla que dice cómo se imprime un documento —en **media hoja
- * horizontal** (dos por A4), en **hoja completa vertical** (una por A4), en la **mitad superior de un A4 vertical** (una por
+ * horizontal** (dos por Carta), en **hoja completa vertical** (una por Carta), en la **mitad superior de una Carta vertical** (una por
  * página, con la mitad de abajo en blanco), en la **media hoja horizontal sola** (una por página, con la mitad derecha en
- * blanco) o en la **media hoja vertical** (la página es la mitad de un A4 vertical y el contenido la ocupa entera)—.
+ * blanco) o en la **media hoja vertical** (la página es la mitad de una Carta vertical y el contenido la ocupa entera)—.
  *
  * Vive acá, al lado de las medidas (`MedidasDeLaMitad`), porque el motor de documentos no repite la decisión por documento: un
  * documento **declara** su modo —en los mapas de abajo, con su clave— y `HojasDeDocumentoVista` le pide a esta clase las
@@ -18,18 +18,18 @@ namespace App\Clinica\Impresion;
  *  - **Hoja completa vertical** (decisión del usuario, 2026-10-17): el informe del **control de embarazo** y los informes de
  *    **los siete ecos** (pélvico, obstétrico del 1.º, del 2.º y del 3.er trimestre, Doppler, mamario, abdominal y cardiograma
  *    fetal).
- *  - **Mitad superior de un A4 vertical** (2026-10-18, Alexander): los informes de **colposcopía y histeroscopía**. La página
- *    es un A4 vertical y el contenido va en la mitad de arriba, como el escritorio, con la imagen del examen **en la misma
+ *  - **Mitad superior de una Carta vertical** (2026-10-18, Alexander): los informes de **colposcopía y histeroscopía**. La página
+ *    es una Carta vertical y el contenido va en la mitad de arriba, como el escritorio, con la imagen del examen **en la misma
  *    página** (el subreporte de la banda *detail* de `d_colposcopia_1` y `d_histeroscopia`). La mitad de abajo queda en
  *    blanco a propósito.
- *  - **A4 vertical, completa o media vertical a elección** (2026-10-21, como el «Página: Grande / Pequeña» del escritorio):
+ *  - **Carta vertical, completa o media vertical a elección** (2026-10-21, como el «Página: Grande / Pequeña» del escritorio):
  *    las solicitudes —informe médico, reposo, constancia, referencia, hospitalización, dieta, laboratorio (también el de la
  *    pareja) y estudios—. Por defecto, la completa.
  *  - **Media hoja horizontal**: todo lo demás — los récipes y el resumen médico—.
- *  - **Media hoja horizontal sola**: la misma mitad izquierda del A4 horizontal que `MITAD`, pero un documento por página (la
+ *  - **Media hoja horizontal sola**: la misma mitad izquierda de la Carta horizontal que `MITAD`, pero un documento por página (la
  *    mitad derecha queda en blanco). Es una de las tres hojas que el médico elige por imprimible.
- *  - **Media hoja vertical** (2026-11-05): la mitad de arriba de un A4 vertical, pero **la página del PDF mide la mitad**
- *    (A5 acostada, 210 × 148,5 mm) y el contenido la ocupa entera, así que no queda el espacio de abajo. También es una de
+ *  - **Media hoja vertical** (2026-11-05): la mitad de arriba de una Carta vertical, pero **la página del PDF mide la mitad**
+ *    (215,9 × 139,7 mm) y el contenido la ocupa entera, así que no queda el espacio de abajo. También es una de
  *    las tres que elige el médico.
  *
  * ## La hoja que elige el médico, por imprimible
@@ -47,7 +47,7 @@ namespace App\Clinica\Impresion;
  * ## La página de cada hoja
  *
  * La completa y la mitad superior usan la **página vertical**; la media hoja compartida y la media horizontal sola usan el
- * **A4 acostado**, y la media vertical, una página del tamaño de la mitad. Las páginas con nombre están en
+ * **Carta acostada**, y la media vertical, una página del tamaño de la mitad. Las páginas con nombre están en
  * `public/css/clinica-documento.css` (`@page documento-completo`, `documento-media-vertical`, `documento-media-horizontal`)
  * y se eligen con la propiedad `page` del `<article>`: así un lote mixto —un récipe, una constancia en media vertical y un
  * eco— sale cada hoja en su tamaño.
@@ -63,38 +63,38 @@ namespace App\Clinica\Impresion;
  */
 final class ModoDeLaHoja
 {
-    /** Media hoja: la mitad izquierda de un A4 horizontal (dos documentos por página). */
+    /** Media hoja: la mitad izquierda de una Carta horizontal (dos documentos por página). */
     public const MITAD = 'mitad';
 
-    /** Hoja completa: un A4 vertical entero (un documento por página). */
+    /** Hoja completa: una Carta vertical entera (un documento por página). */
     public const COMPLETA = 'completa';
 
-    /** La mitad superior de un A4 vertical: el documento usa 148,25 mm de una página vertical y el resto queda en blanco. */
+    /** La mitad superior de una Carta vertical: el documento usa 139,7 mm de una página vertical y el resto queda en blanco. */
     public const MITAD_SUPERIOR = 'mitad-superior';
 
     /**
-     * Media hoja horizontal **sola**: la misma mitad izquierda del A4 horizontal que `MITAD`, pero un documento por página
+     * Media hoja horizontal **sola**: la misma mitad izquierda de la Carta horizontal que `MITAD`, pero un documento por página
      * (la mitad derecha queda en blanco). Es una de las tres hojas que el médico puede elegir para sus documentos de texto.
      */
     public const HORIZONTAL = 'horizontal';
 
     /**
-     * Media hoja vertical (2026-11-05): la mitad de arriba de un A4 vertical, pero la **página del PDF mide la mitad**
-     * (A5 acostada, 210 × 148,5 mm) y el contenido la ocupa entera. Es una de las tres hojas que elige el médico.
+     * Media hoja vertical (2026-11-05): la mitad de arriba de una Carta vertical, pero la **página del PDF mide la mitad**
+     * (215,9 × 139,7 mm) y el contenido la ocupa entera. Es una de las tres hojas que elige el médico.
      */
     public const MEDIA_VERTICAL = 'media-vertical';
 
     /** Los modos de hoja que puede devolver `de()`; se usa para no aceptar cualquier texto guardado. @var array<int,string> */
     private const MODOS = [self::MITAD, self::COMPLETA, self::MITAD_SUPERIOR, self::HORIZONTAL, self::MEDIA_VERTICAL];
 
-    /** «Página grande» del escritorio: el A4 vertical completo. Es la que sale si no se elige. */
+    /** «Página grande» del escritorio: la Carta vertical completa. Es la que sale si no se elige. */
     public const PAGINA_GRANDE = 'grande';
 
     /** «Página pequeña» del escritorio: la media hoja vertical. */
     public const PAGINA_PEQUENA = 'pequena';
 
     /**
-     * Los documentos que se imprimen en A4 vertical con la **página a elegir** (grande o pequeña).
+     * Los documentos que se imprimen en Carta vertical con la **página a elegir** (grande o pequeña).
      *
      * @var array<int,string>
      */
@@ -128,7 +128,7 @@ final class ModoDeLaHoja
     ];
 
     /**
-     * Los documentos que declaran la **mitad superior de un A4 vertical** (su informe lleva la imagen del examen en la misma
+     * Los documentos que declaran la **mitad superior de una Carta vertical** (su informe lleva la imagen del examen en la misma
      * página, y el escritorio imprime esos dos informes en media hoja).
      *
      * @var array<int,string>
@@ -205,7 +205,7 @@ final class ModoDeLaHoja
     }
 
     /**
-     * Las medidas con las que se mide y se reparte ese modo: la media hoja de siempre, el A4 vertical completo o su mitad
+     * Las medidas con las que se mide y se reparte ese modo: la media hoja de siempre, la Carta vertical completa o su mitad
      * superior. La media hoja sola (`HORIZONTAL`) y la media vertical (`MEDIA_VERTICAL`) miden lo mismo que `MITAD` y
      * `MITAD_SUPERIOR`: lo único que cambia es el tamaño de la página y cuántos entran por página.
      *

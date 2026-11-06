@@ -1,4 +1,4 @@
-{{-- La **hoja aparte de las imágenes** de un informe de eco (WEB-11.13). A4 vertical, una hoja por documento, y se oculta con
+{{-- La **hoja aparte de las imágenes** de un informe de eco (WEB-11.13). Carta vertical, una hoja por documento, y se oculta con
      «Incluir imágenes» (el `data-hoja-imagenes` lo resuelve `imprimir-recipe.js`).
 
      ⚠️ Es sólo para los **ecos**. La colposcopía y la histeroscopía **no** usan esta hoja: su imagen sale en la misma página

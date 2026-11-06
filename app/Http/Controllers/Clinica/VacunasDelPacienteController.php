@@ -64,7 +64,7 @@ class VacunasDelPacienteController extends Controller
     }
 
     /**
-     * **El carnet de vacunación** (WEB-7.4.4c): la hoja A4 con el membrete del médico, las dosis aplicadas y las que faltan. La imprime el
+     * **El carnet de vacunación** (WEB-7.4.4c): la hoja Carta con el membrete del médico, las dosis aplicadas y las que faltan. La imprime el
      * navegador; con `?incrustado=1` va sin barra, para la vista previa («Visualizar»).
      */
     public function carnet(Request $request, int $paciente, MembreteDelMedico $membretes, FamiliaDelPaciente $familias)

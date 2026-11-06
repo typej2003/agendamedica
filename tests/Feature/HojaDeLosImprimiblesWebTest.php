@@ -209,9 +209,9 @@ class HojaDeLosImprimiblesWebTest extends TestCase
         $this->assertStringNotContainsString('recipe-mitad-vacia', $html, 'la página mide la mitad: no hay nada vacío');
         $this->assertStringNotContainsString('recipe-hoja-completa', $html);
 
-        // La página del PDF es la mitad de un A4 vertical (A5 acostada), no un A4 con la mitad de abajo en blanco.
+        // La página del PDF es la mitad de una Carta vertical, no una hoja con la mitad de abajo en blanco.
         $css = file_get_contents(public_path('css/clinica-documento.css'));
-        $this->assertStringContainsString('@page documento-media-vertical { size: 210mm 148.5mm; margin: 0; }', $css);
+        $this->assertStringContainsString('@page documento-media-vertical { size: 215.9mm 139.7mm; margin: 0; }', $css);
     }
 
     public function test_la_media_horizontal_nunca_usa_la_pagina_completa_y_la_siguiente_hoja_tambien_es_la_mitad(): void

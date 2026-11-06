@@ -9,7 +9,7 @@ namespace App\Clinica\Impresion;
  * Es la regla del móvil (`DoctorisimoMobile/lib/features/reportes/pdf/reporte_pdf.dart`, decisión del usuario del
  * 2026-09-27) llevada a la web, con las medidas de la hoja del récipe (`MedidasDeLaMitad`, `MedidorDeTexto`):
  *
- *  1. Un documento es **media hoja**: la mitad izquierda del A4 horizontal. La derecha queda en blanco. (Desde O-26 un documento
+ *  1. Un documento es **media hoja**: la mitad izquierda de la Carta horizontal. La derecha queda en blanco. (Desde O-26 un documento
  *     también puede ser de **hoja completa vertical**: `ModoDeLaHoja` decide cuál y le pasa a esta clase las medidas,
  *     `MedidasDeLaMitad::deLaHojaCompleta()`. La cuenta es la misma —cambian los milímetros— y las «mitades» del reparto son, en
  *     ese modo, **páginas enteras**.)
