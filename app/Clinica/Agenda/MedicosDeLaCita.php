@@ -31,11 +31,16 @@ final class MedicosDeLaCita
     /**
      * La ficha del **centro** dueña de ese `reg_medico`, o `null` si el consultorio es personal (el
      * registro de un doctor). Es lo que distingue los dos casos de `deUnaCitaNueva()`.
+     *
+     * **Un consultorio hijo no es un centro** (2026-11-06): la ficha cuelga del médico (`medico_padre_id`)
+     * aunque esté marcada `es_centro` —así no cuenta como médico ni tiene cuenta—, pero el doctor atiende ahí
+     * como en su consultorio: las citas nacen con su `medico_id`, no como citas del centro.
      */
     public function centro(string $regMedico): ?Medico
     {
         return Medico::where('reg_medico', $regMedico)
             ->where('es_centro', true)
+            ->whereNull('medico_padre_id')
             ->orderBy('id')
             ->first();
     }

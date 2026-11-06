@@ -46,6 +46,9 @@ class Medico extends Model
         // siguientes (el contexto doctor/centro y el formato configurable).
         'es_centro',
         'formato_reportes',
+        // El consultorio del que cuelga esta ficha (2026-11-06): el segundo consultorio del mismo doctor usa
+        // el plan del principal. Nulo = independiente, como todas las fichas anteriores a esta columna.
+        'medico_padre_id',
     ];
 
     protected $casts = [
@@ -97,6 +100,58 @@ class Medico extends Model
     public function registro(): HasOne
     {
         return $this->hasOne(MedicoRegistro::class, 'medico_id', 'id');
+    }
+
+    /**
+     * **El consultorio del que cuelga esta ficha** (2026-11-06): el principal del mismo doctor.
+     *
+     * Un consultorio hijo existe porque el doctor atiende en dos sitios con dos `reg_medico`. No tiene cuenta ni
+     * plan: usa el del padre (`ServicioService::actual()`), y el mismo doctor no ocupa dos asientos
+     * (`CupoDelPlan`). Un solo nivel: el padre de un consultorio nunca es otro consultorio.
+     */
+    public function padre(): BelongsTo
+    {
+        return $this->belongsTo(Medico::class, 'medico_padre_id');
+    }
+
+    /** Los consultorios que cuelgan de esta ficha. */
+    public function hijos(): HasMany
+    {
+        return $this->hasMany(Medico::class, 'medico_padre_id')->orderBy('id');
+    }
+
+    /** ¿Es el segundo (o tercer) consultorio de un doctor? */
+    public function esConsultorioHijo(): bool
+    {
+        return $this->medico_padre_id !== null;
+    }
+
+    /**
+     * El `reg_medico` del consultorio padre de este, o `null` si es independiente.
+     *
+     * Se usa cuando sólo se tiene el código (`ServicioService::actual()`, que es el único que resuelve el plan).
+     */
+    public function regMedicoDelPadre(): ?string
+    {
+        $padre = $this->padre;
+        $registro = trim((string) $padre?->reg_medico);
+
+        return $registro === '' ? null : $registro;
+    }
+
+    /** Lo mismo que `regMedicoDelPadre()`, buscando la ficha por su `reg_medico`. */
+    public static function regMedicoDelPadreDe(string $regMedico): ?string
+    {
+        $registro = trim($regMedico);
+        if ($registro === '') {
+            return null;
+        }
+
+        return static::where('reg_medico', $registro)
+            ->whereNotNull('medico_padre_id')
+            ->with('padre')
+            ->first()
+            ?->regMedicoDelPadre();
     }
 
     /**
