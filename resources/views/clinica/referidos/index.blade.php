@@ -119,8 +119,8 @@
         <div class="card mb-3">
             <div class="card-header bg-white py-3"><strong>Invitaciones enviadas</strong></div>
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
+                {{-- Sin scroll horizontal: cuando no entra, cada invitación es una tarjeta (regla del 2026-11-06). --}}
+                <x-ui.tabla>
                         <thead class="table-dark">
                             <tr>
                                 <th>Correo</th>
@@ -132,19 +132,18 @@
                         <tbody>
                             @foreach ($invitaciones as $invitacion)
                                 <tr>
-                                    <td class="small">{{ $invitacion->email }}</td>
-                                    <td class="small text-nowrap">
+                                    <td class="small celda-principal">{{ $invitacion->email }}</td>
+                                    <td class="small text-nowrap" data-etiqueta="Última vez">
                                         {{ $invitacion->ultima_vez?->format('d/m/Y H:i') ?? '—' }}
                                     </td>
-                                    <td class="text-end small">{{ (int) $invitacion->veces }}</td>
-                                    <td class="small">
+                                    <td class="text-end small" data-etiqueta="Envíos">{{ (int) $invitacion->veces }}</td>
+                                    <td class="small" data-etiqueta="Registrado">
                                         {{ $invitacion->registrada_el ? 'Sí' : 'Todavía no' }}
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
-                </div>
+                </x-ui.tabla>
             </div>
         </div>
     @endif
@@ -152,8 +151,7 @@
     <div class="card">
         <div class="card-header bg-white py-3"><strong>Colegas que invitaste</strong></div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <x-ui.tabla>
                     <thead class="table-dark">
                         <tr>
                             <th>Colega</th>
@@ -167,14 +165,14 @@
                         @forelse ($referidos as $referido)
                             @php $colega = $referido->referido; @endphp
                             <tr>
-                                <td>
+                                <td class="celda-principal">
                                     <div class="fw-semibold">
                                         {{ $colega ? trim($colega->name . ' ' . $colega->lastname) : '—' }}
                                     </div>
                                 </td>
-                                <td><small class="text-muted">{{ $referido->referido_reg_medico }}</small></td>
-                                <td class="text-nowrap small">{{ $referido->created_at?->format('d/m/Y') }}</td>
-                                <td>
+                                <td data-etiqueta="Consultorio"><small class="text-muted">{{ $referido->referido_reg_medico }}</small></td>
+                                <td class="text-nowrap small" data-etiqueta="Fecha">{{ $referido->created_at?->format('d/m/Y') }}</td>
+                                <td data-etiqueta="Estado">
                                     @php
                                         $tono = match ($referido->estado) {
                                             \App\Models\Referido::ACREDITADO => 'success',
@@ -192,7 +190,7 @@
                                         <small class="text-muted d-block">{{ $referido->motivo }}</small>
                                     @endif
                                 </td>
-                                <td class="text-end text-nowrap">
+                                <td class="text-end text-nowrap" data-etiqueta="Latidos para ti">
                                     {{ \App\Latidos\Conversion::formatear((int) $referido->latidos_referente) }}
                                 </td>
                             </tr>
@@ -204,8 +202,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+                </x-ui.tabla>
         </div>
     </div>
 @endsection

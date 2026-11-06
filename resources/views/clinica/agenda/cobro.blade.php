@@ -161,8 +161,7 @@
 
     <x-ui.tarjeta titulo="Los pagos de esta cita" icono="bi-receipt" class="mt-3">
         @if ($vm->hayPagos())
-            <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
+            <x-ui.tabla class="table table-sm align-middle mb-0">
                     <thead>
                         <tr>
                             <th scope="col">Fecha</th>
@@ -175,16 +174,15 @@
                     <tbody>
                         @foreach ($pagos as $pago)
                             <tr>
-                                <td>{{ $pago['fecha'] }}</td>
-                                <td>{{ $pago['monto'] }}</td>
-                                <td>{{ $pago['medio'] }}</td>
-                                <td>{{ $pago['canal'] }}</td>
-                                <td><x-ui.estado :tono="$pago['tono']">{{ $pago['estado'] }}</x-ui.estado></td>
+                                <td class="celda-principal" data-etiqueta="Fecha">{{ $pago['fecha'] }}</td>
+                                <td data-etiqueta="Monto">{{ $pago['monto'] }}</td>
+                                <td data-etiqueta="Medio">{{ $pago['medio'] }}</td>
+                                <td data-etiqueta="Canal">{{ $pago['canal'] }}</td>
+                                <td data-etiqueta="Estado"><x-ui.estado :tono="$pago['tono']">{{ $pago['estado'] }}</x-ui.estado></td>
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         @else
             <x-ui.vacio icono="bi-receipt" titulo="Todavía no hay pagos de esta cita.">Cuando se cobre, aparecerá acá con su medio y su estado.</x-ui.vacio>
         @endif

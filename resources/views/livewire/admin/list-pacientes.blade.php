@@ -13,8 +13,7 @@
         <input type="text" class="form-control" placeholder="Buscar por cédula, nombre o apellido..." wire:model.live="search">
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped align-middle">
+    <x-ui.tabla class="table-bordered table-striped">
             <thead class="table-dark">
                 <tr>
                     <th>ID</th>
@@ -28,12 +27,12 @@
             <tbody>
                 @forelse($pacientes as $paciente)
                     <tr>
-                        <td>{{ $paciente->id }}</td>
-                        <td><span class="badge bg-secondary">{{ $paciente->nac }}-{{ $paciente->cedula }}</span></td>
-                        <td class="fw-bold">{{ $paciente->nombres }} {{ $paciente->apellidos }}</td>
-                        <td>{{ $paciente->telefono ?? 'N/A' }}</td>
-                        <td>{{ $paciente->email ?? 'N/A' }}</td>
-                        <td class="text-center">
+                        <td data-etiqueta="ID" class="celda-secundaria">{{ $paciente->id }}</td>
+                        <td data-etiqueta="Cédula"><span class="badge bg-secondary">{{ $paciente->nac }}-{{ $paciente->cedula }}</span></td>
+                        <td class="fw-bold celda-principal">{{ $paciente->nombres }} {{ $paciente->apellidos }}</td>
+                        <td data-etiqueta="Teléfono">{{ $paciente->telefono ?? 'N/A' }}</td>
+                        <td data-etiqueta="Email">{{ $paciente->email ?? 'N/A' }}</td>
+                        <td class="text-center celda-acciones">
                             <button class="btn btn-sm btn-outline-primary me-1" wire:click="edit({{ $paciente->id }})">
                                 Editar
                             </button>
@@ -48,8 +47,7 @@
                     </tr>
                 @endforelse
             </tbody>
-        </table>
-    </div>
+    </x-ui.tabla>
 
     <div class="mt-3">
         {{ $pacientes->links() }}

@@ -23,8 +23,7 @@
         </div>
 
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Paciente</th>
@@ -46,31 +45,31 @@
                                 $bloqueado = $fila->is_active === false;
                             @endphp
                             <tr wire:key="paciente-{{ $fila->id }}">
-                                <td class="fw-semibold">{{ $ficha ? trim($ficha->nombres . ' ' . $ficha->apellidos) : $fila->name }}</td>
-                                <td>{{ $ficha?->cedula ?: '—' }}</td>
-                                <td>
+                                <td class="fw-semibold celda-principal">{{ $ficha ? trim($ficha->nombres . ' ' . $ficha->apellidos) : $fila->name }}</td>
+                                <td data-etiqueta="Cédula">{{ $ficha?->cedula ?: '—' }}</td>
+                                <td data-etiqueta="Contacto">
                                     <div>{{ $fila->email }}</div>
                                     @if ($ficha?->telefono)
                                         <small class="text-muted">{{ $ficha->telefono }}</small>
                                     @endif
                                 </td>
-                                <td>
+                                <td data-etiqueta="Identidad">
                                     @php $nivel = $niveles[$fila->id] ?? 0; @endphp
                                     <span class="badge {{ $nivel === 2 ? 'bg-primary' : ($nivel === 1 ? 'bg-info text-dark' : 'bg-secondary') }}">
                                         {{ $nivel === 2 ? 'Nivel 2 · Cédula confirmada' : ($nivel === 1 ? 'Nivel 1 · Teléfono validado' : 'Nivel 0 · Sin validar') }}
                                     </span>
                                 </td>
-                                <td>
+                                <td data-etiqueta="Estado">
                                     @if ($bloqueado)
                                         <span class="badge bg-danger" @if ($fila->blocked_reason) title="{{ $fila->blocked_reason }}" @endif>Bloqueado</span>
                                     @else
                                         <span class="badge bg-success">Activo</span>
                                     @endif
                                 </td>
-                                <td class="text-nowrap">{{ $fila->created_at?->format(\App\Support\Regionalizacion::formatoActual()) ?? '—' }}</td>
-                                <td class="text-end">{{ $resumen['total'] ?? 0 }}</td>
-                                <td class="text-nowrap">{{ ! empty($resumen['ultima']) ? \Illuminate\Support\Carbon::parse($resumen['ultima'])->format(\App\Support\Regionalizacion::formatoActual()) : '—' }}</td>
-                                <td class="text-end text-nowrap">
+                                <td class="text-nowrap" data-etiqueta="Alta">{{ $fila->created_at?->format(\App\Support\Regionalizacion::formatoActual()) ?? '—' }}</td>
+                                <td class="text-end" data-etiqueta="Citas">{{ $resumen['total'] ?? 0 }}</td>
+                                <td class="text-nowrap" data-etiqueta="Última cita">{{ ! empty($resumen['ultima']) ? \Illuminate\Support\Carbon::parse($resumen['ultima'])->format(\App\Support\Regionalizacion::formatoActual()) : '—' }}</td>
+                                <td class="text-end text-nowrap celda-acciones">
                                     @if ($bloqueado)
                                         <button type="button" wire:click="abrir('desbloquear', {{ $fila->id }})" class="btn btn-sm btn-outline-success">
                                             <i class="bi bi-unlock me-1" aria-hidden="true"></i> Desbloquear
@@ -92,8 +91,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
 
         @if ($filas->hasPages())

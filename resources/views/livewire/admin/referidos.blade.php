@@ -89,8 +89,7 @@
     <div class="card">
         <div class="card-header bg-white py-3"><strong>Referidos</strong></div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Referente</th>
@@ -113,20 +112,20 @@
                                 };
                             @endphp
                             <tr wire:key="referido-{{ $referido->id }}">
-                                <td>
+                                <td class="celda-principal" data-etiqueta="Referente">
                                     <div class="fw-semibold">
                                         {{ $referente ? trim($referente->name . ' ' . $referente->lastname) : '—' }}
                                     </div>
                                     <small class="text-muted">{{ $referido->referente_reg_medico }}</small>
                                 </td>
-                                <td>
+                                <td data-etiqueta="Referido">
                                     <div class="fw-semibold">
                                         {{ $colega ? trim($colega->name . ' ' . $colega->lastname) : '—' }}
                                     </div>
                                     <small class="text-muted">{{ $referido->referido_reg_medico }}</small>
                                 </td>
-                                <td class="text-nowrap small">{{ $referido->created_at?->format('d/m/Y H:i') }}</td>
-                                <td>
+                                <td class="text-nowrap small" data-etiqueta="Fecha">{{ $referido->created_at?->format('d/m/Y H:i') }}</td>
+                                <td data-etiqueta="Estado">
                                     <span class="badge bg-{{ $tono }}">{{ ucfirst($referido->estado) }}</span>
                                     @if ($referido->revisar)
                                         <span class="badge bg-danger">Revisar</span>
@@ -135,11 +134,11 @@
                                         <small class="text-muted d-block">{{ $referido->motivo }}</small>
                                     @endif
                                 </td>
-                                <td class="text-end text-nowrap">
+                                <td class="text-end text-nowrap" data-etiqueta="Latidos">
                                     <div>{{ \App\Latidos\Conversion::formatear((int) $referido->latidos_referente) }}</div>
                                     <small class="text-muted">al referido: {{ \App\Latidos\Conversion::formatear((int) $referido->latidos_referido) }}</small>
                                 </td>
-                                <td class="text-end">
+                                <td class="text-end celda-acciones">
                                     @if ($referido->estaAcreditado())
                                         <button type="button" wire:click="abrir({{ $referido->id }})"
                                                 class="btn btn-sm btn-outline-danger">Anular</button>
@@ -152,8 +151,7 @@
                             <tr><td colspan="6" class="text-center text-muted py-4">Todavía no hay referidos.</td></tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
         @if ($referidos->hasPages())
             <div class="card-footer bg-white">{{ $referidos->links() }}</div>

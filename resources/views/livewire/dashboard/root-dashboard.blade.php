@@ -105,8 +105,7 @@
             <i class="bi bi-broadcast" style="color: var(--ds-exito);"></i>
             <span>Usuarios activos en este momento</span>
         </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
+        <x-ui.tabla>
                 <thead class="table-light">
                     <tr>
                         <th>Estado</th>
@@ -118,14 +117,15 @@
                 <tbody>
                     @forelse($listaUsuariosConectados as $user)
                         <tr>
-                            <td>
+                            <td data-etiqueta="Estado">
                                 <span class="badge bg-success">
                                     <i class="bi bi-circle-fill me-1" style="font-size: .5rem;"></i> En línea
                                 </span>
                             </td>
-                            <td class="fw-semibold">{{ $user->name }}</td>
-                            <td class="text-muted">{{ $user->email }}</td>
-                            <td><code>#{{ $user->id }}</code></td>
+                            <td class="fw-semibold celda-principal">{{ $user->name }}</td>
+                            <td class="text-muted" data-etiqueta="Correo">{{ $user->email }}</td>
+                            {{-- El id es un código interno: en la tarjeta del celular no se muestra (§5, prioridad 5). --}}
+                            <td data-etiqueta="ID" class="celda-secundaria"><code>#{{ $user->id }}</code></td>
                         </tr>
                     @empty
                         <tr>
@@ -138,7 +138,6 @@
                         </tr>
                     @endforelse
                 </tbody>
-            </table>
-        </div>
+        </x-ui.tabla>
     </div>
 </div>

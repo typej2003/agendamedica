@@ -37,8 +37,7 @@
             </div>
 
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                <x-ui.tabla class="mb-0">
                         <thead class="table-dark">
                             <tr>
                                 <th>Médico</th>
@@ -52,19 +51,19 @@
                             @forelse ($medicos as $medico)
                                 @php $e = $filas[$medico->id]; @endphp
                                 <tr wire:key="medico-{{ $medico->id }}">
-                                    <td>
+                                    <td class="celda-principal" data-etiqueta="Médico">
                                         <div class="fw-semibold">{{ trim($medico->name . ' ' . $medico->lastname) }}</div>
                                         <small class="text-muted">{{ $medico->reg_medico }}</small>
                                     </td>
-                                    <td>{{ $e['plan'] ?? '—' }}</td>
-                                    <td>
+                                    <td data-etiqueta="Plan">{{ $e['plan'] ?? '—' }}</td>
+                                    <td data-etiqueta="Vence">
                                         @if ($e['vence_el'])
                                             {{ \Carbon\Carbon::parse($e['vence_el'])->format(\App\Support\Regionalizacion::formatoActual()) }}
                                         @else
                                             <span class="text-muted">—</span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td data-etiqueta="Estado">
                                         @if ($e['estado'] === 'vigente')
                                             <span class="badge bg-success">Vigente</span>
                                             @if ($e['dias_restantes'] <= \App\Http\Livewire\Admin\Servicios::POR_VENCER_DIAS)
@@ -80,7 +79,7 @@
                                             <span class="badge bg-secondary">Sin servicio</span>
                                         @endif
                                     </td>
-                                    <td class="text-end text-nowrap">
+                                    <td class="text-end text-nowrap celda-acciones">
                                         @php $conServicio = $e['estado'] !== 'sin_servicio'; @endphp
                                         <div class="dropdown d-inline-block">
                                             <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -118,8 +117,7 @@
                                 </tr>
                             @endforelse
                         </tbody>
-                    </table>
-                </div>
+                </x-ui.tabla>
             </div>
 
             @if ($medicos->hasPages())
@@ -143,8 +141,7 @@
                 </button>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                <x-ui.tabla class="mb-0">
                         <thead class="table-dark">
                             <tr>
                                 <th>Plan</th>
@@ -161,11 +158,11 @@
                         <tbody>
                             @foreach ($planes as $plan)
                                 <tr wire:key="plan-{{ $plan->id }}" class="{{ $plan->activo ? '' : 'text-muted' }}">
-                                    <td>
+                                    <td class="celda-principal" data-etiqueta="Plan">
                                         <div class="fw-semibold">{{ $plan->nombre }}</div>
                                         <small class="text-muted">{{ $plan->codigo }}</small>
                                     </td>
-                                    <td>
+                                    <td data-etiqueta="Incluye">
                                         <small class="d-block text-muted">
                                             {{ $plan->restricciones->maxMedicos() === null ? 'Médicos sin límite' : $plan->restricciones->maxMedicos() . ' méd.' }}
                                             · {{ $plan->restricciones->maxSecretarias() === null ? 'Secretarías sin límite' : $plan->restricciones->maxSecretarias() . ' secr.' }}
@@ -180,7 +177,7 @@
                                             </small>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td data-etiqueta="Cobro">
                                         @if (! $plan->ofreceMensual() && ! $plan->ofreceAnual())
                                             Gratis
                                         @elseif ($plan->ofreceMensual() && $plan->ofreceAnual())
@@ -191,7 +188,7 @@
                                             Mensual
                                         @endif
                                     </td>
-                                    <td class="text-end">
+                                    <td class="text-end" data-etiqueta="Precios (USD)">
                                         @php
                                             $precioMensualVista = $plan->cobraPorAsiento()
                                                 ? (float) $plan->caracteristicas->precioAsientoUsd() * max(1, $plan->caracteristicas->minimoAsientos())
@@ -211,22 +208,22 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="text-end">
+                                    <td class="text-end" data-etiqueta="Tachado">
                                         @if (! $plan->cobraPorAsiento() && $plan->precio_tachado_usd !== null)
                                             <del>{{ number_format((float) $plan->precio_tachado_usd, 2, ',', '.') }}</del>
                                         @else
                                             —
                                         @endif
                                     </td>
-                                    <td class="text-end">
+                                    <td class="text-end" data-etiqueta="Ahorro">
                                         @if (! $plan->cobraPorAsiento() && $plan->ahorroUsd() > 0)
                                             <span class="text-success">{{ number_format($plan->ahorroUsd(), 2, ',', '.') }}</span>
                                         @else
                                             —
                                         @endif
                                     </td>
-                                    <td class="text-center">{{ $contratos[$plan->id] ?? 0 }}</td>
-                                    <td>
+                                    <td class="text-center" data-etiqueta="Contratos">{{ $contratos[$plan->id] ?? 0 }}</td>
+                                    <td data-etiqueta="Estado">
                                         @if ($plan->es_default)
                                             <span class="badge bg-primary">Predeterminado</span>
                                         @endif
@@ -235,7 +232,7 @@
                                             <span class="badge bg-light text-dark border">Oculto</span>
                                         @endunless
                                     </td>
-                                    <td class="text-end text-nowrap">
+                                    <td class="text-end text-nowrap celda-acciones">
                                         <button wire:click="editarPlan({{ $plan->id }})" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-pencil me-1"></i> Editar
                                         </button>
@@ -248,8 +245,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
-                </div>
+                </x-ui.tabla>
             </div>
         </div>
     @endif
@@ -456,8 +452,7 @@
                         <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body p-0">
-                        <div class="table-responsive">
-                            <table class="table align-middle mb-0">
+                        <x-ui.tabla class="mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Plan</th>
@@ -476,16 +471,16 @@
                                     @endphp
                                     @forelse ($historial as $s)
                                         <tr wire:key="serv-{{ $s->id }}" class="{{ $s->estado === 'cancelado' ? 'text-muted' : '' }}">
-                                            <td class="fw-semibold">{{ $s->plan_nombre }}</td>
-                                            <td>{{ $origenes[$s->origen] ?? $s->origen }}</td>
-                                            <td class="fecha-celda">{{ $s->inicia_el->format(\App\Support\Regionalizacion::formatoActual()) }}</td>
-                                            <td class="fecha-celda">{{ $s->vence_el->format(\App\Support\Regionalizacion::formatoActual()) }}</td>
-                                            <td class="text-end">{{ number_format((float) $s->monto_usd, 2, ',', '.') }}</td>
-                                            <td><small>{{ $s->nota }}</small></td>
-                                            <td>
+                                            <td class="fw-semibold celda-principal" data-etiqueta="Plan">{{ $s->plan_nombre }}</td>
+                                            <td data-etiqueta="Origen">{{ $origenes[$s->origen] ?? $s->origen }}</td>
+                                            <td class="fecha-celda" data-etiqueta="Desde">{{ $s->inicia_el->format(\App\Support\Regionalizacion::formatoActual()) }}</td>
+                                            <td class="fecha-celda" data-etiqueta="Hasta">{{ $s->vence_el->format(\App\Support\Regionalizacion::formatoActual()) }}</td>
+                                            <td class="text-end" data-etiqueta="USD">{{ number_format((float) $s->monto_usd, 2, ',', '.') }}</td>
+                                            <td data-etiqueta="Nota"><small>{{ $s->nota }}</small></td>
+                                            <td data-etiqueta="Estado">
                                                 <span class="badge {{ $s->estado === 'activo' ? 'bg-success' : 'bg-secondary' }}">{{ $s->estado === 'activo' ? 'Activo' : 'Cancelado' }}</span>
                                             </td>
-                                            <td class="text-end">
+                                            <td class="text-end celda-acciones">
                                                 @if ($s->estado === 'activo')
                                                     <button wire:click="cancelarServicio({{ $s->id }})" class="btn btn-sm btn-outline-danger"
                                                             onclick="return confirm('¿Cancelar este período? Deja de contar para el vencimiento.')">
@@ -498,8 +493,7 @@
                                         <tr><td colspan="8" class="text-center text-muted py-4">Este médico todavía no tiene servicios.</td></tr>
                                     @endforelse
                                 </tbody>
-                            </table>
-                        </div>
+                        </x-ui.tabla>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" wire:click="cerrarModal">Cerrar</button>

@@ -50,8 +50,7 @@
         </form>
 
         @if ($vm->hayPagos())
-            <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
+            <x-ui.tabla class="table table-sm align-middle mb-0">
                     <thead>
                         <tr>
                             <th scope="col">Fecha</th>
@@ -66,18 +65,17 @@
                     <tbody>
                         @foreach ($vm->filas() as $fila)
                             <tr data-pago="{{ $fila['id'] }}">
-                                <td>{{ $fila['fecha'] }}</td>
-                                <td>{{ $fila['concepto'] }}</td>
-                                <td>{{ $fila['paciente'] ?: '—' }}</td>
-                                <td>{{ $fila['monto'] }}</td>
-                                <td>{{ $fila['medio'] }}</td>
-                                <td>{{ $fila['canal'] }}</td>
-                                <td><x-ui.estado :tono="$fila['tono']">{{ $fila['estado'] }}</x-ui.estado></td>
+                                <td data-etiqueta="Fecha">{{ $fila['fecha'] }}</td>
+                                <td data-etiqueta="Cita">{{ $fila['concepto'] }}</td>
+                                <td class="celda-principal" data-etiqueta="Paciente">{{ $fila['paciente'] ?: '—' }}</td>
+                                <td data-etiqueta="Monto">{{ $fila['monto'] }}</td>
+                                <td data-etiqueta="Medio">{{ $fila['medio'] }}</td>
+                                <td data-etiqueta="Canal">{{ $fila['canal'] }}</td>
+                                <td data-etiqueta="Estado"><x-ui.estado :tono="$fila['tono']">{{ $fila['estado'] }}</x-ui.estado></td>
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         @else
             <x-ui.vacio icono="bi-receipt" titulo="No hay pagos de citas en este período">
                 No hay pagos de citas en este período. Cuando cobres una cita —en el mostrador o con el link de

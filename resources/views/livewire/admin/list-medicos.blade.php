@@ -13,8 +13,7 @@
         <input type="text" class="form-control" placeholder="Buscar por nombre, apellido o registro médico..." wire:model.live="search">
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped align-middle">
+    <x-ui.tabla class="table-bordered table-striped">
             <thead class="table-dark">
                 <tr>
                     <th>ID</th>
@@ -29,20 +28,27 @@
             <tbody>
                 @forelse($medicos as $medico)
                     <tr>
-                        <td>{{ $medico->id }}</td>
-                        <td class="fw-bold">{{ $medico->name }} {{ $medico->lastname }}</td>
-                        <td><span class="badge bg-info text-dark">{{ $medico->{'reg-medico'} }}</span></td>
-                        <td>{{ $medico->license_number ?? 'N/A' }}</td>
-                        <td>
+                        {{-- El id es un código interno: en la tarjeta del celular no se muestra (§5, prioridad 5). --}}
+                        <td data-etiqueta="ID" class="celda-secundaria">{{ $medico->id }}</td>
+                        <td class="fw-bold celda-principal">{{ $medico->name }} {{ $medico->lastname }}</td>
+                        <td data-etiqueta="Reg. Médico">
+                            @if ($medico->{'reg-medico'})
+                                <span class="badge bg-info text-dark">{{ $medico->{'reg-medico'} }}</span>
+                            @else
+                                <span class="texto-tenue">—</span>
+                            @endif
+                        </td>
+                        <td data-etiqueta="Nº Licencia">{{ $medico->license_number ?? 'N/A' }}</td>
+                        <td data-etiqueta="Teléfono / Email">
                             <small class="d-block"><strong>Tel:</strong> {{ $medico->phone ?? 'N/A' }}</small>
                             <small class="d-block"><strong>Email:</strong> {{ $medico->email ?? 'N/A' }}</small>
                         </td>
-                        <td>
+                        <td data-etiqueta="Estado">
                             <span class="badge {{ $medico->is_active ? 'bg-success' : 'bg-danger' }}">
                                 {{ $medico->is_active ? 'Activo' : 'Inactivo' }}
                             </span>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center celda-acciones">
                             <button class="btn btn-sm btn-outline-primary me-1" wire:click="edit({{ $medico->id }})">
                                 Editar
                             </button>
@@ -57,8 +63,7 @@
                     </tr>
                 @endforelse
             </tbody>
-        </table>
-    </div>
+    </x-ui.tabla>
 
     <div class="mt-3">
         {{ $medicos->links() }}
