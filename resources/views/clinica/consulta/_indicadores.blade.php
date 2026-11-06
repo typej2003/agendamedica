@@ -17,12 +17,7 @@
                          :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>
 
-        <nav class="pestanas-en-fila mb-3" aria-label="Indicadores">
-            @foreach ($seccion->pestanas() as $pestana)
-                <a class="pestana {{ $pestana['activa'] ? 'activa' : '' }}" href="{{ $pestana['url'] }}"
-                   @if ($pestana['activa']) aria-current="page" @endif>{{ $pestana['texto'] }}</a>
-            @endforeach
-        </nav>
+        <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()" etiqueta="Indicadores" />
 
         @if ($seccion->esEcoRenal())
             @include('clinica.consulta._eco-renal', ['vm' => $seccion->ecoRenal()])

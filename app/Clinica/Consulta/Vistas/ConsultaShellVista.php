@@ -47,6 +47,12 @@ final class ConsultaShellVista
     public const SECCION_EXAMENES_ESTUDIOS = SeccionesDeLaConsulta::SECCION_EXAMENES_ESTUDIOS;
 
     /**
+     * La clave de la sección **Inmunizaciones** en `?seccion=` (ítem 7 de la consulta pediátrica, O-63): el calendario de
+     * vacunas del niño dentro de la consulta, el mismo de la pantalla del módulo.
+     */
+    public const SECCION_INMUNIZACIONES = SeccionesDeLaConsulta::SECCION_INMUNIZACIONES;
+
+    /**
      * La clave de la sección **Alimentación** en `?seccion=` (ítem 9 de la consulta pediátrica, 2026-10-19): la dieta y
      * las recomendaciones, que en ginecología y las demás especialidades vive como pestaña de *Solicitudes*.
      */

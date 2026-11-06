@@ -5,6 +5,7 @@
     <title>Nueva solicitud de médico</title>
 </head>
 <body style="font-family: Arial, Helvetica, sans-serif; color: #201048; font-size: 15px; line-height: 1.5;">
+    @include('emails._logo')
     <p>Llegó una solicitud de registro de médico para revisar:</p>
 
     <table cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-size: 14px;">

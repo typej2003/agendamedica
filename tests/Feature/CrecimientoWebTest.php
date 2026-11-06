@@ -127,7 +127,7 @@ class CrecimientoWebTest extends TestCase
             ->assertSee('id="crecimiento-vacio"', false)
             ->assertSee('Todavía no hay mediciones')
             ->assertSee('Evaluación física → Mediciones')
-            ->assertDontSee('<svg', false);
+            ->assertDontSee('<svg class="grafica-svg"', false);
     }
 
     public function test_con_mediciones_y_sin_referencia_dibuja_los_puntos_y_avisa(): void

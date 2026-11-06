@@ -3,7 +3,7 @@
 @section('titulo', $vm->titulo() . ' · ' . $vm->nombre())
 
 @section('estilos')
-    {{-- La historia pediátrica (WEB-12.5): hoja A4 vertical con el membrete del médico; la imprime el navegador. Comparte la hoja del carnet de vacunación. --}}
+    {{-- La historia pediátrica (WEB-12.5): hoja Carta vertical con el membrete del médico; la imprime el navegador. Comparte la hoja del carnet de vacunación. --}}
     <link rel="stylesheet" href="{{ asset('css/clinica-carnet.css') }}">
 @endsection
 

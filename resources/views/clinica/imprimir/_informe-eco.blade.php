@@ -1,4 +1,4 @@
-{{-- Una hoja del informe de una eco, A4 vertical completa (WEB-11.13). Recibe `$hoja` (HojasImpresasVista::hojas(): `documento` e `imagenes`)
+{{-- Una hoja del informe de una eco, Carta vertical completa (WEB-11.13). Recibe `$hoja` (HojasImpresasVista::hojas(): `documento` e `imagenes`)
      y `$membrete`. Si `imagenes` es verdadero es la hoja aparte con las imágenes del estudio; si no, el formulario lleno:
      membrete, datos de la paciente, título del estudio, la ficha (gesta, FUR, FPP, EG) y los bloques con **todas las opciones y la
      elegida marcada**, con la firma y el pie al final. --}}

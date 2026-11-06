@@ -16,7 +16,7 @@
             @endauth
 
             <a class="app-marca navbar-brand fs-4 m-0" href="{{ $enPanel ? url('/dashboard') : url('/') }}">
-                <i class="bi bi-heart-pulse-fill app-marca-icono me-2"></i>Doctorísimo<span class="app-marca-acento">.App</span>
+                <x-marca-corazon class="app-marca-icono me-2" />Doctorísimo<span class="app-marca-acento">.App</span>
             </a>
         </div>
 

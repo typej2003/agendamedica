@@ -279,7 +279,7 @@ final class DocumentoImpreso
     }
 
     /**
-     * **El modo de la hoja de este documento** (O-26): media hoja horizontal o A4 vertical completa.
+     * **El modo de la hoja de este documento** (O-26): media hoja horizontal o Carta vertical completa.
      *
      * No se decide acá: el documento lo **declara** con su clave en `ModoDeLaHoja`, que es la única tabla de esa regla. Un
      * documento con `informe` (los ecos, WEB-11.13) va siempre a hoja completa, porque su informe es un formulario lleno y
@@ -293,7 +293,7 @@ final class DocumentoImpreso
             : ModoDeLaHoja::de($this->tipo, $this->pagina, $this->preferido);
     }
 
-    /** ¿Se imprime en hoja completa vertical (una por A4) y no en media hoja? */
+    /** ¿Se imprime en hoja completa vertical (una por Carta) y no en media hoja? */
     public function enHojaCompleta(): bool
     {
         return $this->modo() === ModoDeLaHoja::COMPLETA;

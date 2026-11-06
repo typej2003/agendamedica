@@ -3,16 +3,16 @@
 @section('titulo', $vm->titulo())
 
 @section('estilos')
-    {{-- El @page de la hoja: A4 horizontal, sin márgenes (los pone cada mitad). `clinica-recipe.css` trae la hoja, la mitad y
+    {{-- El @page de la hoja: Carta horizontal, sin márgenes (los pone cada mitad). `clinica-recipe.css` trae la hoja, la mitad y
          los datos del paciente (de los récipes y de los documentos); `clinica-documento.css` suma el cuerpo de un documento
          de la consulta (constancia, reposo, referencia, informe: WEB-5.3a). --}}
     {{-- El `?v=` con la fecha del archivo: sin él el navegador sirve la hoja y el JS viejos tras un despliegue, y un
          botón nuevo parece no hacer nada (2026-11-05). --}}
     <link rel="stylesheet" href="{{ asset('css/clinica-recipe.css') }}?v={{ @filemtime(public_path('css/clinica-recipe.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/clinica-documento.css') }}?v={{ @filemtime(public_path('css/clinica-documento.css')) }}">
-    {{-- El informe de una eco a hoja completa, A4 vertical (WEB-11.13). --}}
+    {{-- El informe de una eco a hoja completa, Carta vertical (WEB-11.13). --}}
     <link rel="stylesheet" href="{{ asset('css/clinica-informe-eco.css') }}?v={{ @filemtime(public_path('css/clinica-informe-eco.css')) }}">
-    {{-- El informe pre-operatorio, también A4 vertical, en dos páginas (O-47). --}}
+    {{-- El informe pre-operatorio, también Carta vertical, en dos páginas (O-47). --}}
     <link rel="stylesheet" href="{{ asset('css/clinica-informe-preoperatorio.css') }}?v={{ @filemtime(public_path('css/clinica-informe-preoperatorio.css')) }}">
 @endsection
 
@@ -71,7 +71,7 @@
                 @continue
             @endif
 
-            {{-- Una hoja = una página A4 con dos mitades (horizontal) **o una página A4 vertical** cuando el documento declara
+            {{-- Una hoja = una página Carta con dos mitades (horizontal) **o una página Carta vertical** cuando el documento declara
                  hoja vertical (O-26: el control de embarazo y los ecos, con la página entera; 2026-10-18: la colposcopía y la
                  histeroscopía, que usan sólo la mitad de arriba y dejan el resto en blanco —`ModoDeLaHoja::clasesDeLaHoja()`).
                  En "solo indicaciones" de un récipe, y en cualquier documento de una sola mitad, la mitad derecha queda en

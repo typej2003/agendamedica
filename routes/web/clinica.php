@@ -11,6 +11,7 @@ use App\Http\Controllers\Clinica\DiagnosticoCatalogoController;
 use App\Http\Controllers\Clinica\DoctorCatalogoController;
 use App\Http\Controllers\Clinica\ExamenCatalogoController;
 use App\Http\Controllers\Clinica\MotivoFacturaCatalogoController;
+use App\Http\Controllers\Clinica\SeguroCatalogoController;
 use App\Http\Controllers\Clinica\FormatoDeImpresionController;
 use App\Http\Controllers\Clinica\FormatosEnBlancoController;
 use App\Http\Controllers\Clinica\FormatoDeImpresionGuardarController;
@@ -563,7 +564,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
                 Route::post('/consulta/{consulta}/recipe-pareja', [ConsultaRecipeParejaController::class, 'guardar'])->name('consulta.recipe-pareja.guardar');
                 Route::delete('/consulta/{consulta}/recipe-pareja', [ConsultaRecipeParejaController::class, 'eliminar'])->name('consulta.recipe-pareja.eliminar');
 
-                // **Imprimir el récipe desde la consulta** (WEB-5.2): la vista previa de la hoja A4 horizontal que
+                // **Imprimir el récipe desde la consulta** (WEB-5.2): la vista previa de la hoja Carta horizontal que
                 // imprime el navegador, la de un récipe del paciente (por su número) y la de la pareja. Es la
                 // **misma hoja** que imprime la secretaría desde la agenda (más abajo): acá sólo cambia por dónde
                 // se entra, y como la consulta es del médico estas dos van en su grupo.
@@ -684,6 +685,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
                 Route::get('/catalogos/motivos-factura', [MotivoFacturaCatalogoController::class, 'index'])->name('catalogos.motivos-factura');
                 Route::post('/catalogos/motivos-factura', [MotivoFacturaCatalogoController::class, 'guardar'])->name('catalogos.motivos-factura.guardar');
                 Route::delete('/catalogos/motivos-factura/{id}', [MotivoFacturaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.motivos-factura.quitar');
+                // **Seguros / empresas del consultorio** (O-62): `seg_emp` con el nombre obligatorio y el RIF, el teléfono y la
+                // dirección opcionales. Es el catálogo del que sale el desplegable «Seguro / empresa» del alta del paciente;
+                // un seguro que ya tiene un paciente de ese consultorio no se borra (y el aviso dice cuáles).
+                Route::get('/catalogos/seguros', [SeguroCatalogoController::class, 'index'])->name('catalogos.seguros');
+                Route::post('/catalogos/seguros', [SeguroCatalogoController::class, 'guardar'])->name('catalogos.seguros.guardar');
+                Route::delete('/catalogos/seguros/{id}', [SeguroCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.seguros.quitar');
                 Route::get('/catalogos/examenes', [ExamenCatalogoController::class, 'index'])->name('catalogos.examenes');
                 Route::post('/catalogos/examenes', [ExamenCatalogoController::class, 'guardar'])->name('catalogos.examenes.guardar');
                 Route::delete('/catalogos/examenes/{id}', [ExamenCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.examenes.quitar');

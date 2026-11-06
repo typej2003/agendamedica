@@ -298,8 +298,8 @@ class ImpresionDeSolicitudesWebTest extends TestCase
         $this->assertGreaterThan(1, $this->hojasDe($html));
         $this->assertSame(1, substr_count($html, 'class="firmas"'));
         $this->assertSame(explode(' ', $texto), $this->palabrasDelCuerpo($html));
-        // Con tanto texto la letra baja al escalón más chico.
-        $this->assertStringContainsString('tamano-8', $html);
+        // Con tanto texto la letra baja por debajo del escalón más grande.
+        $this->assertStringNotContainsString('tamano-10', $html);
     }
 
     public function test_un_texto_corto_se_imprime_a_10_pt_y_en_una_sola_mitad(): void

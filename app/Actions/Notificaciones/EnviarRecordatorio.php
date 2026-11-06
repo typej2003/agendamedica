@@ -2,6 +2,9 @@
 
 namespace App\Actions\Notificaciones;
 
+use App\Clinica\Pacientes\CorreoDeContacto;
+use App\Clinica\Pacientes\FamiliaDelPaciente;
+use App\Clinica\Pacientes\TelefonoDeContacto;
 use App\Mail\RecordatorioDeCita;
 use App\Models\Cola;
 use App\Models\Evolucion;
@@ -221,31 +224,50 @@ final class EnviarRecordatorio
         ]);
     }
 
-    /** A dónde va el mensaje: el teléfono o el correo del paciente, según el canal. */
+    /**
+     * A dónde va el mensaje: el teléfono o el correo **de contacto**, según el canal.
+     *
+     * El contacto lo resuelve la regla de O-66 (`TelefonoDeContacto::paraElAviso` / `CorreoDeContacto::paraElAviso`): fuera de
+     * pediatría es el del paciente y en pediatría el del representante, **nunca** el del niño. Al niño lo distingue su fila de
+     * `paciente_chamo` (`FamiliaDelPaciente::esUnNino`), no la especialidad de la sesión: el comando, el móvil y la agenda también
+     * llegan acá.
+     */
     private function destino(string $canal, Paciente $paciente, Cola $cita): string
     {
+        $regMedico = $cita->reg_medico !== null ? (string) $cita->reg_medico : null;
+        $historia = $cita->numhistoria === null ? null : (string) $cita->numhistoria;
+        $esNino = $regMedico !== null && app(FamiliaDelPaciente::class)->esUnNino($regMedico, $historia);
+
         if (Canal::usaCorreo($canal)) {
-            $correo = Correo::valido($paciente->email);
+            $correo = Correo::valido($regMedico === null
+                ? $paciente->email
+                : app(CorreoDeContacto::class)->paraElAviso($regMedico, $historia, $paciente->email, $esNino));
 
             if ($correo === null) {
-                throw new ExcepcionDeEnvio('El paciente no tiene un correo válido registrado.');
+                throw new ExcepcionDeEnvio($this->datoQueFalta('correo', $esNino));
             }
 
             return $correo;
         }
 
-        $telefono = Telefono::internacional($paciente->telefono);
-
-        // Un niño casi nunca tiene celular propio: sin uno válido se escribe al de su representante o su familia (WEB-7.4.2c).
-        if ($telefono === null && $cita->reg_medico !== null) {
-            $telefono = Telefono::internacional(app(\App\Clinica\Pacientes\TelefonoDeContacto::class)->de((string) $cita->reg_medico, $cita->numhistoria === null ? null : (string) $cita->numhistoria));
-        }
+        // Un niño casi nunca tiene celular propio y, aunque lo tenga, **no se lo contacta** (O-66).
+        $telefono = Telefono::internacional($regMedico === null
+            ? $paciente->telefono
+            : app(TelefonoDeContacto::class)->paraElAviso($regMedico, $historia, $paciente->telefono, $esNino));
 
         if ($telefono === null) {
-            throw new ExcepcionDeEnvio('El paciente no tiene un teléfono válido registrado.');
+            throw new ExcepcionDeEnvio($this->datoQueFalta('teléfono', $esNino));
         }
 
         return $telefono;
+    }
+
+    /** El aviso del dato que falta, con el nombre de quien lo tiene que tener: el paciente o, en pediatría, su representante. */
+    private function datoQueFalta(string $dato, bool $esNino): string
+    {
+        return $esNino
+            ? "El representante no tiene un {$dato} válido registrado."
+            : "El paciente no tiene un {$dato} válido registrado.";
     }
 
     private function nombreDelPaciente(Paciente $paciente): string

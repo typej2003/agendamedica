@@ -245,6 +245,15 @@ final class FormularioDeCitaVista
         return $this->volverA['consulta'] ?? null;
     }
 
+    /**
+     * La pantalla de la sección de récipes a la que se vuelve (O-65) —la lista, el editor de ese récipe o el de la
+     * pareja—, o `null`: viaja en un campo oculto para que la pregunta por la cita pendiente no la pierda.
+     */
+    public function volverRecipe(): ?string
+    {
+        return $this->volverA['recipe'] ?? null;
+    }
+
     public function urlBuscarPacientes(): string
     {
         return route('clinica.pacientes.buscar');

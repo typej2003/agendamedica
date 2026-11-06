@@ -20,20 +20,26 @@ use InvalidArgumentException;
  *  - **Sólo algunos catálogos** (`$catalogos`, 2026-10-28): el relleno de los médicos que ya tienen cuenta (`catalogos:cargar-a-medicos`) pide motivos de consulta y
  *    antecedentes, y no las vacunas. Con `null` se copian todos, como al asignar una especialidad.
  *  - **Simular** (`$simular`) hace todo el trabajo dentro de una transacción y la revierte: los números que devuelve son los que se habrían copiado, y no se escribe nada.
+ *  - **El consultorio estrena el seguro «Personal»** (O-60, 2026-11-05): si no tenía ninguna fila en `seg_emp`, se le deja la de PERSONAL y no se toca el que ya tiene seguros
+ *    (`AsegurarElSeguroPersonal`). No depende de `$catalogos`: el seguro inicial es uno y es fijo, así que también lo deja `catalogos:cargar-a-medicos`. Al del escritorio no se le
+ *    toca nada —su carga inicial trae sus propios `seg_emp`— por la misma guarda que salta la copia.
  */
 final class CargarCatalogosInicialesAlMedico
 {
-    public function __construct(private CopiarCatalogoInicial $copiar, private CopiarVacunasIniciales $vacunas)
-    {
+    public function __construct(
+        private CopiarCatalogoInicial $copiar,
+        private CopiarVacunasIniciales $vacunas,
+        private AsegurarElSeguroPersonal $seguros,
+    ) {
     }
 
     /**
      * @param  array<int,string>|null  $catalogos  slugs de `CatalogosIniciales` a copiar (`null` = todos, con las vacunas de los pediatras)
-     * @return array{saltado: string|null, filas: int, catalogos: array<string,int>, ya_tenia: array<int,string>}
+     * @return array{saltado: string|null, filas: int, catalogos: array<string,int>, ya_tenia: array<int,string>, seguro: int}
      */
     public function ejecutar(Medico $medico, ?array $catalogos = null, bool $simular = false): array
     {
-        $resultado = ['saltado' => null, 'filas' => 0, 'catalogos' => [], 'ya_tenia' => []];
+        $resultado = ['saltado' => null, 'filas' => 0, 'catalogos' => [], 'ya_tenia' => [], 'seguro' => 0];
 
         $pedidos = $catalogos === null ? null : array_values(array_unique($catalogos));
         foreach ($pedidos ?? [] as $slug) {
@@ -60,6 +66,9 @@ final class CargarCatalogosInicialesAlMedico
         DB::beginTransaction();
 
         try {
+            // **El seguro «Personal»** (O-60): va dentro de la transacción para que `--simular` tampoco lo escriba.
+            $resultado['seguro'] = $this->seguros->paraElMedico($medico);
+
             foreach (CatalogosIniciales::todos() as $slug => $def) {
                 if ($pedidos !== null && ! in_array($slug, $pedidos, true)) {
                     continue;

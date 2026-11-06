@@ -3,10 +3,12 @@
 namespace App\Clinica\Agenda;
 
 use App\Actions\Pacientes\IdentidadDePaciente;
+use App\Clinica\Pacientes\CamposDePaciente;
 use App\Clinica\Pacientes\DuenoDeLaHistoria;
 use App\Models\Cola;
 use App\Models\MedicoPaciente;
 use App\Models\Paciente;
+use App\Models\PacienteChamo;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -44,6 +46,10 @@ class PacientesDeCita
      *
      * Es la misma regla que la agenda y la consulta: con dos pacientes en el mismo número, el formulario
      * de la cita no puede abrir la ficha de uno y la consulta la del otro.
+     *
+     * ⚠️ **El orden no es el de la agenda**: esto prefiere el ancla `paciente_sinhistoria_id`, que una cita
+     * numerada puede arrastrar de otro paciente. El nombre que se muestra en la agenda y en «Compartir la cita»
+     * sale de `nombreDeLaCita()`; unificar este método es otra tarea (cambiaría el formulario de la cita).
      */
     public function deLaCita(Cola $cita): ?Paciente
     {
@@ -58,6 +64,75 @@ class PacientesDeCita
         $pacienteId = (new DuenoDeLaHistoria())->de($cita->reg_medico, $cita->numhistoria);
 
         return $pacienteId !== null ? Paciente::find($pacienteId) : null;
+    }
+
+    /**
+     * **El nombre del paciente de una cita**, para las pantallas de la agenda que lo nombran en una frase
+     * (la pantalla «Compartir la cita», trampa 145).
+     *
+     * Es **el mismo nombre de la fila de la agenda**, porque resuelve con el mismo orden que
+     * `ArmadorDeAgenda::fichaPorHistoria()`: **el número primero**, con su dueño (`DuenoDeLaHistoria`) y dentro
+     * del registro de la cita, y `paciente_sinhistoria_id` **sólo** cuando la cita no tiene número. El orden
+     * importa: `cola.paciente_sinhistoria_id` es el ancla que se escribe al agendar sin número y **no se limpia**
+     * si después se numera la historia, así que una cita numerada puede arrastrar el id de otro paciente.
+     *
+     * **Pediatría**: ahí el ABM real de pacientes es `paciente_chamo` (una fila por `historia`) y `pacientes`
+     * puede estar vacía o ser la de otro registro del médico, así que si por el número no hay nombre en
+     * `pacientes` se busca el niño en su tabla, acotado al registro de la cita. En las demás especialidades esa
+     * tabla no tiene filas para el registro y no cambia nada.
+     *
+     * Devuelve `'el paciente'` cuando no hay ningún nombre: es la frase que la pantalla ya usaba.
+     */
+    public function nombreDeLaCita(Cola $cita): string
+    {
+        $paciente = $this->deLaCitaComoLaAgenda($cita);
+
+        // El mismo texto que `ArmadorDeAgenda::nombreDe()`: `Apellidos, Nombres` (en pediatría el nombre completo
+        // vive en `nombres` y `apellidos` está vacío, así que sale el nombre solo).
+        $nombre = $paciente !== null
+            ? trim(($paciente->apellidos ?? '') . ', ' . ($paciente->nombres ?? ''), ', ')
+            : '';
+
+        return $nombre !== '' ? $nombre : ($this->nombreDelChamo($cita) ?? 'el paciente');
+    }
+
+    /**
+     * La ficha de la cita con **el orden de la agenda**: el dueño del número si la cita tiene número, y el
+     * ancla `paciente_sinhistoria_id` sólo si no lo tiene.
+     *
+     * No se reusa `deLaCita()` para no cambiar el formulario de la cita, que hoy prefiere el ancla (es una
+     * inconsistencia heredada, señalada y no arreglada acá).
+     */
+    private function deLaCitaComoLaAgenda(Cola $cita): ?Paciente
+    {
+        if ($cita->numhistoria !== null) {
+            $pacienteId = (new DuenoDeLaHistoria())->de($cita->reg_medico, $cita->numhistoria);
+
+            return $pacienteId !== null ? Paciente::find($pacienteId) : null;
+        }
+
+        return $cita->paciente_sinhistoria_id !== null
+            ? Paciente::find((int) $cita->paciente_sinhistoria_id)
+            : null;
+    }
+
+    /**
+     * El nombre del niño en `paciente_chamo` para la historia de la cita, en el registro de la cita; o `null`.
+     */
+    private function nombreDelChamo(Cola $cita): ?string
+    {
+        $historia = CamposDePaciente::historiaNumerica($cita->numhistoria);
+
+        if ($historia === null) {
+            return null;
+        }
+
+        $nombre = PacienteChamo::where('reg_medico', $cita->reg_medico)
+            ->where('historia', $historia)
+            ->orderBy('id')
+            ->value('nombre');
+
+        return CamposDePaciente::texto($nombre);
     }
 
     /**

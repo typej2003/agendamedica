@@ -83,7 +83,7 @@ final class FormatosEnBlanco
         // Todos los bloques pesan lo mismo **a propósito**: el reparto del alto lo hace el navegador (`flex`) sobre la
         // hoja que le toca al documento, y repartirlo por la cantidad de campos dejaba a los bloques chicos sin ningún
         // renglón. Desde O-26 estos tres formatos salen en **hoja completa vertical** (como su hoja real, `ModoDeLaHoja`):
-        // el mismo bloque de renglones se estira al A4 entero.
+        // el mismo bloque de renglones se estira a la Carta entera.
         DocumentoImpreso::ECO_OBSTETRICO => [
             'descripcion' => 'El embarazo temprano: la ficha, el útero, el saco y las medidas.',
             'fijos' => ['Gesta:', 'FUR:', 'EG:'],

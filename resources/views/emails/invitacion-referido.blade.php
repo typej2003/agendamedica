@@ -5,6 +5,7 @@
     <title>Una invitación a Doctorísimo</title>
 </head>
 <body style="font-family: Arial, Helvetica, sans-serif; color: #201048; font-size: 15px; line-height: 1.5;">
+    @include('emails._logo')
     <p>
         El <strong>{{ $invitador }}</strong> te ha invitado a <strong>Doctorísimo.App</strong>, la aplicación
         para atender el consultorio.

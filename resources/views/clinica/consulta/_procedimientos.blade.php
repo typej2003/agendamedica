@@ -12,15 +12,7 @@
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>
 
-        <nav class="pestanas-en-fila mb-3" aria-label="Endoscopías">
-            @foreach ($seccion->pestanas() as $pestana)
-                <a class="pestana {{ $pestana['activa'] ? 'activa' : '' }}" href="{{ $pestana['url'] }}"
-                   @if ($pestana['activa']) aria-current="page" @endif>
-                    {{ $pestana['texto'] }}
-                    @if ($pestana['cargada'])<i class="bi bi-check2-circle ms-1" title="Con datos" aria-hidden="true"></i>@endif
-                </a>
-            @endforeach
-        </nav>
+        <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()" etiqueta="Procedimientos" />
 
         @if ($seccion->esEcoAbdominal())
             {{-- La tercera pestaña del escritorio: el ítem «Procedimientos» también abre el eco abdominal. Se reusa

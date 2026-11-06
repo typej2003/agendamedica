@@ -251,10 +251,10 @@ class RecipeVerificacionQrWebTest extends TestCase
     public function test_la_segunda_hoja_de_un_recipe_largo_lleva_el_mismo_qr(): void
     {
         [$user, $medico, $gineco, , $consulta] = $this->escenario();
-        foreach (range(1, 12) as $n) {
+        foreach (range(1, 20) as $n) {
             $this->medicamento($medico, 'L' . str_pad((string) $n, 3, '0', STR_PAD_LEFT), 'LARGO ' . $n, null, 'Tab ' . $n);
         }
-        $this->recipe($medico, 1001, 1, 2, array_map(fn (int $n) => ['L' . str_pad((string) $n, 3, '0', STR_PAD_LEFT), 1, 'Una al día.'], range(1, 12)), '2026-10-05');
+        $this->recipe($medico, 1001, 1, 2, array_map(fn (int $n) => ['L' . str_pad((string) $n, 3, '0', STR_PAD_LEFT), 1, 'Una al día.'], range(1, 20)), '2026-10-05');
 
         $respuesta = $this->como($user, $medico, $gineco)->get($this->urlRecipe($consulta, 2))->assertOk();
         $html = $respuesta->getContent();

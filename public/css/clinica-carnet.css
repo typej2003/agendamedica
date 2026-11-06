@@ -1,17 +1,17 @@
-/* El carnet de vacunación para imprimir (`/clinica/pacientes/{id}/vacunas/carnet`, WEB-7.4.4c): una hoja A4 vertical. Se usa junto con
+/* El carnet de vacunación para imprimir (`/clinica/pacientes/{id}/vacunas/carnet`, WEB-7.4.4c): una hoja Carta vertical. Se usa junto con
    `clinica-impresion.css` (membrete, firma y pie, que son los mismos de los récipes). Los colores son los de la paleta con su respaldo, porque la
    hoja no carga el sistema de la aplicación. */
 
-@page { size: A4 portrait; margin: 12mm; }
+@page { size: letter portrait; margin: 12mm; }
 
 * { box-sizing: border-box; }
 
 body { margin: 0; background: #f6f5f9; font-family: Arial, Helvetica, sans-serif; color: #000; font-size: 10pt; }
 
 .carnet-hoja {
-    width: 210mm;
+    width: 215.9mm;
     max-width: 100%;
-    min-height: 297mm;
+    min-height: 255mm;
     margin: 1rem auto;
     padding: 12mm;
     background: #fff;

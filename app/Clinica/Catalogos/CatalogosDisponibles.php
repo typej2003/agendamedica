@@ -28,6 +28,8 @@ final class CatalogosDisponibles
         'examenes' => ['texto' => 'Exámenes', 'icono' => 'bi-eyedropper', 'ruta' => 'clinica.catalogos.examenes'],
         'tipos-examen' => ['texto' => 'Tipos de examen', 'icono' => 'bi-tags', 'ruta' => 'clinica.catalogos.tipos-examen'],
         'medicos-referidos' => ['texto' => 'Médicos referidos', 'icono' => 'bi-person-lines-fill', 'ruta' => 'clinica.catalogos.medicos-referidos'],
+        // El catálogo del que sale el desplegable «Seguro / empresa» del alta del paciente (O-62).
+        'seguros' => ['texto' => 'Seguros / empresas', 'icono' => 'bi-shield-check', 'ruta' => 'clinica.catalogos.seguros'],
         'plantillas-texto' => ['texto' => 'Plantillas de texto', 'icono' => 'bi-file-earmark-text', 'ruta' => 'clinica.catalogos.plantillas-texto'],
         // Propio de pediatría (WEB-7.4.4e): el submenú sólo se ofrece a esa especialidad (`especialidad` es un fragmento del slug).
         'vacunas' => ['texto' => 'Vacunas', 'icono' => 'bi-shield-plus', 'ruta' => 'clinica.catalogos.vacunas', 'especialidad' => 'pediatr'],

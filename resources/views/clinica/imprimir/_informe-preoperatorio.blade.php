@@ -1,6 +1,6 @@
 {{-- El **informe de evaluación pre-operatoria** en dos páginas (O-47, 2026-11-02). Recibe `$hoja` (HojasImpresasVista::hojas(),
      con `documento`) y `$membrete`. Los datos ya vienen resueltos en `$documento->preoperatorio` (`InformePreoperatorio`): la vista no
-     decide qué se imprime, sólo pinta los bloques que tienen dato. Reusa la hoja A4 vertical de los informes de los ecos
+     decide qué se imprime, sólo pinta los bloques que tienen dato. Reusa la hoja Carta vertical de los informes de los ecos
      (`clinica-informe-eco.css`) y suma unas pocas clases propias (`clinica-informe-preoperatorio.css`). --}}
 @php
     $documento = $hoja['documento'];
