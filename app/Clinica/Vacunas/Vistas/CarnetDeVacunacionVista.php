@@ -8,9 +8,14 @@ use App\Clinica\Vacunas\CalendarioDeVacunas;
 use Carbon\Carbon;
 
 /**
- * **El carnet de vacunación imprimible** (WEB-7.4.4c): la hoja Carta con el membrete del médico, los datos del niño, **las vacunas aplicadas** (el
- * reporte «VACUNAS APLICADAS» del escritorio, `d_vacunas_reporte`) y las **dosis que le faltan** según el calendario del consultorio. La
- * imprime el navegador (PLAN-WEB.md, R6); también sale en la vista previa («Visualizar»).
+ * **El carnet de vacunación imprimible** (WEB-7.4.4c): la hoja Carta con el membrete del médico, los datos del niño y **las vacunas aplicadas** (el
+ * reporte «VACUNAS APLICADAS» del escritorio, `d_vacunas_reporte`), cada una con su columna **«Próxima dosis»**. La imprime el navegador (PLAN-WEB.md,
+ * R6); también sale en la vista previa («Visualizar»).
+ *
+ * Desde O-70 (Alexander, 2026-11-06) la hoja **no imprime las dosis que faltan**: «a la hora de imprimir al paciente las vacunas que tenemos aplicadas
+ * no sale ese pocote de vacunas allí en blanco, sino va a salir solamente las que están aplicadas». El paciente se lleva **sólo lo que se le aplicó**, y
+ * el cuándo le toca la siguiente lo sigue diciendo la columna «Próxima dosis» de esa misma tabla, así que el bloque «DOSIS POR APLICAR» no hace falta.
+ * `pendientes()` se queda en el ViewModel porque `HistoriaPediatricaVista::vacunasPorAplicar()` la sigue llamando.
  *
  * No consulta nada: recibe el membrete, la ficha, las filas aplicadas de `vacuna_paciente` y lo que armó `CalendarioDeVacunas`.
  */
@@ -119,6 +124,9 @@ final class CarnetDeVacunacionVista
 
     /**
      * Las dosis que faltan (atrasadas, próximas y pendientes), por fecha.
+     *
+     * **El carnet ya no las imprime** (O-70, Alexander, 2026-11-06: el paciente se lleva sólo lo que se le aplicó). Se queda porque
+     * `HistoriaPediatricaVista::vacunasPorAplicar()` la sigue llamando; si esa llamada se va, esto se va con ella.
      *
      * @return array<int,array{vacuna:string, dosis:string, toca:string, estado:string, atrasada:bool}>
      */
