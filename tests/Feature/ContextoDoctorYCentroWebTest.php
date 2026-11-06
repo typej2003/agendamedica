@@ -172,6 +172,29 @@ class ContextoDoctorYCentroWebTest extends TestCase
     }
 
     /**
+     * **El consultorio manda sobre el `reg_medico` del formulario** (2026-11-06): la pantalla junta
+     * consultorios de registros distintos (los del médico y los de los centros donde trabaja) y el navegador
+     * no puede mandar el `reg_medico` del consultorio clickeado junto con su `office_id`. El servidor lo
+     * resuelve del consultorio, así que el contexto es el del lugar donde se atiende.
+     */
+    public function test_el_consultorio_fija_su_registro_aunque_el_formulario_mande_otro(): void
+    {
+        ['user' => $user, 'doctor' => $doctor, 'centros' => $centros, 'gineco' => $gineco] = $this->doctorConDosCentros();
+        $delCentro = $this->consultorio($centros[0]->reg_medico, $centros[0]->id, 'C1');
+
+        // El formulario manda el registro del doctor; el consultorio es del centro.
+        $this->actingAs($user)->post('/clinica/contexto', [
+            'reg_medico'   => $doctor->reg_medico,
+            'specialty_id' => $gineco->id,
+            'office_id'    => $delCentro->id,
+        ])->assertRedirect(route('clinica.inicio'));
+
+        $contexto = app(ContextoTrabajo::class)->actual($user);
+        $this->assertSame($centros[0]->reg_medico, $contexto['reg_medico']);
+        $this->assertSame($delCentro->id, $contexto['office']->id);
+    }
+
+    /**
      * Los consultorios del contexto son **los del tenant** (Fase 2): `Office::vigentesDe` ya no se filtra
      * por el `medico_id` del doctor, así que el doctor ve el consultorio que creó el centro y los que creó
      * otro doctor del mismo centro.
@@ -254,10 +277,18 @@ class ContextoDoctorYCentroWebTest extends TestCase
         $this->assertNull($sedes[$personal->id]['centro'], 'El consultorio principal va en «Mis consultorios».');
         $this->assertNull($sedes[$delHijo->id]['centro'], 'El consultorio del registro hijo va en el mismo grupo.');
 
+        // Los dos consultorios caen en **un solo** grupo: «Mis consultorios».
+        $grupos = $tarjetas[0]['grupos'];
+        $this->assertCount(1, $grupos);
+        $this->assertSame(ContextoVista::PROPIOS, $grupos[0]['etiqueta']);
+        $this->assertEqualsCanonicalizing([$personal->id, $delHijo->id], collect($grupos[0]['sedes'])->pluck('valor')->all());
+
+        // Y la pantalla lista las dos tarjetas, sin un grupo con el nombre del doctor.
         $respuesta = $this->actingAs($user)->get('/clinica/contexto');
         $respuesta->assertOk();
-        $respuesta->assertSee('<optgroup label="Mis consultorios">', false);
-        $respuesta->assertDontSee('<optgroup label="' . $doctor->nombreMostrar . '"', false);
+        $respuesta->assertSee('name="office_id" value="' . $personal->id . '"', false);
+        $respuesta->assertSee('name="office_id" value="' . $delHijo->id . '"', false);
+        $respuesta->assertDontSee('<h3 class="contexto-grupo-titulo">' . $doctor->nombreMostrar . '</h3>', false);
     }
 
     /**
@@ -276,7 +307,8 @@ class ContextoDoctorYCentroWebTest extends TestCase
         $delAjeno = $this->consultorio($hijoAjeno->reg_medico, $ajeno->id, 'A1');
 
         $vista = new ContextoVista(app(ContextoTrabajo::class)->disponibles($user));
-        $sedes = collect($vista->medicos()[0]['sedes'])->keyBy('valor');
+        $tarjeta = $vista->medicos()[0];
+        $sedes = collect($tarjeta['sedes'])->keyBy('valor');
 
         $this->assertSame(
             $ajeno->nombreMostrar,
@@ -285,11 +317,14 @@ class ContextoDoctorYCentroWebTest extends TestCase
         );
 
         // La ficha hija copia el nombre del doctor, así que el grupo del padre es el que se pinta (una sola
-        // vez): el menú junta el consultorio personal con el del hijo ajeno en dos grupos, no en tres.
+        // vez): la pantalla junta el consultorio personal con el del hijo ajeno en dos grupos, no en tres.
+        $this->assertCount(2, $tarjeta['grupos']);
+        $this->assertSame([ContextoVista::PROPIOS, $ajeno->nombreMostrar], collect($tarjeta['grupos'])->pluck('etiqueta')->all());
+
         $respuesta = $this->actingAs($user)->get('/clinica/contexto');
         $respuesta->assertOk();
-        $respuesta->assertSee('<optgroup label="' . $ajeno->nombreMostrar . '">', false);
-        $this->assertSame(2, substr_count($respuesta->getContent(), '<optgroup'));
+        $respuesta->assertSee('<h3 class="contexto-grupo-titulo">' . $ajeno->nombreMostrar . '</h3>', false);
+        $this->assertSame(2, substr_count($respuesta->getContent(), 'class="contexto-grupo"'));
     }
 
     // ------------------------------------------------------------------------------------ La secretaría

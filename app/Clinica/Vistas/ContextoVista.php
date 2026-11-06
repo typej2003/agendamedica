@@ -6,7 +6,12 @@ use App\Models\Medico;
 
 /**
  * La pantalla de **elegir consultorio** (`/clinica/contexto`): con qué médico, especialidad y **consultorio**
- * se opera. **Una tarjeta por médico**.
+ * se opera, **por pasos** (2026-11-06).
+ *
+ * El médico elige de a uno: primero el médico (sólo la secretaría con varios centros), después la
+ * especialidad —si hay más de una— y al final el consultorio, que se confirma con un click en su tarjeta (ya
+ * no hay botón «Trabajar aquí»). Cada elección **se colapsa** en una línea con el dato y «Cambiar», para que
+ * la pantalla no muestre todas las opciones a la vez.
  *
  * ⚠️ La clave `sedes` del contexto son los **consultorios** (`offices`) del médico, no las filas del
  * catálogo de sedes (`medical_centers`): el nombre viene del armado del contexto y se dejó como está (no se
@@ -15,20 +20,29 @@ use App\Models\Medico;
  * **Una sola tarjeta para el doctor** (corrección del usuario, 2026-10-20): el médico que inició sesión es
  * **siempre él** —no puede tomar la identidad de un centro—, así que sus registros (el personal y los
  * centros donde trabaja) **no** son tarjetas separadas: son una sola tarjeta con **sus** especialidades y
- * un menú de **consultorio que combina los suyos con los del centro**. Cada consultorio sabe de qué
- * `reg_medico` es, y el que se elige fija el contexto (el del consultorio). La secretaría sí ve **una
- * tarjeta por centro**, porque ahí el médico del contexto es la fila del centro.
+ * sus **consultorios**, que combinan los suyos con los del centro. Cada consultorio sabe de qué `reg_medico`
+ * es, y el que se elige fija el contexto (el del consultorio). La secretaría sí ve **un paso por centro**,
+ * porque ahí el médico del contexto es la fila del centro.
  *
  * **No se pregunta lo que ya está decidido** (decisión del usuario, 2026-10-19): si el médico tiene **una
- * sola especialidad** y **uno o ningún consultorio**, esos dos campos no se ofrecen —se entra con el único
- * valor que hay— y la pantalla sólo muestra cuál es. La elección se sigue ofreciendo en cuanto haya algo
- * entre qué elegir (dos especialidades, dos consultorios), y el formulario manda el valor fijo en un campo
- * oculto para que el contexto quede fijado explícitamente (sin consultorios no se manda: queda «todos»).
+ * sola especialidad**, no se ofrece entre qué elegir —se muestra cuál es—; si tiene **uno o ningún
+ * consultorio**, el paso del consultorio lo dice (con un único consultorio se entra clickeándolo igual). La
+ * elección se sigue ofreciendo en cuanto haya algo entre qué elegir (dos especialidades, dos consultorios).
  */
 final class ContextoVista
 {
-    /** @param  array<string,array{medico:object, centro:?object, especialidades:iterable, sedes:\Illuminate\Support\Collection}>  $disponibles */
-    public function __construct(private array $disponibles)
+    /** La etiqueta de los consultorios que no son de un centro: los del propio médico. */
+    public const PROPIOS = 'Mis consultorios';
+
+    /** Las tarjetas, calculadas una vez: la vista y `pasos()` llaman a `medicos()` varias veces. */
+    private ?array $tarjetas = null;
+
+    /**
+     * @param  array<string,array{medico:object, centro:?object, especialidades:iterable, sedes:\Illuminate\Support\Collection}>  $disponibles
+     * @param  array<string,mixed>|null  $actual  el contexto vigente (`ContextoTrabajo::actual()`), si hay: la
+     *                                            pantalla arranca con esos pasos colapsados
+     */
+    public function __construct(private array $disponibles, private ?array $actual = null)
     {
     }
 
@@ -52,9 +66,64 @@ final class ContextoVista
         return route('clinica.sedes');
     }
 
+    /** ¿La pantalla tiene que preguntar con quién se trabaja? (la secretaría de varios centros). */
+    public function hayVariosMedicos(): bool
+    {
+        return count($this->medicos()) > 1;
+    }
+
+    /**
+     * El número de cada paso que se ve, en orden: `medico` (sólo con varios médicos), `especialidad` (sólo si
+     * hay alguna entre qué elegir) y `consultorio`, que siempre está.
+     *
+     * @return array{medico?:int, especialidad?:int, consultorio:int}
+     */
+    public function pasos(): array
+    {
+        $pasos = [];
+        $numero = 0;
+
+        if ($this->hayVariosMedicos()) {
+            $pasos['medico'] = ++$numero;
+        }
+
+        foreach ($this->medicos() as $medico) {
+            if ($medico['elegirEspecialidad']) {
+                $pasos['especialidad'] = ++$numero;
+                break;
+            }
+        }
+
+        $pasos['consultorio'] = ++$numero;
+
+        return $pasos;
+    }
+
+    /** `medicos.id` del contexto vigente, o `null`. */
+    public function medicoActual(): ?int
+    {
+        return isset($this->actual['medico']) ? (int) $this->actual['medico']->id : null;
+    }
+
+    /** `specialties.id` del contexto vigente, o `null`. */
+    public function especialidadActual(): ?int
+    {
+        return isset($this->actual['specialty']) ? (int) $this->actual['specialty']->id : null;
+    }
+
+    /** `offices.id` del contexto vigente, o `null` («todos los consultorios»). */
+    public function consultorioActual(): ?int
+    {
+        return isset($this->actual['office']) ? (int) $this->actual['office']->id : null;
+    }
+
     /** @return array<int,array<string,mixed>> */
     public function medicos(): array
     {
+        if ($this->tarjetas !== null) {
+            return $this->tarjetas;
+        }
+
         $grupos = [];
 
         foreach ($this->disponibles as $regMedico => $acceso) {
@@ -65,6 +134,7 @@ final class ContextoVista
             $etiquetaDelMenu = $this->etiquetaDelMenu($centro, $medico);
 
             $grupo = $grupos[$id] ?? [
+                'id'             => (int) $id,
                 'medico'         => $medico,
                 'especialidades' => [],
                 'sedes'          => [],
@@ -83,6 +153,9 @@ final class ContextoVista
                 $grupo['sedes'][$sede->id] = [
                     'valor'     => $sede->id,
                     'texto'     => ($sede->medicalCenter->name ?? 'Sede') . ($sede->office_number ? ' · ' . $sede->office_number : ''),
+                    // La tarjeta del consultorio se lee por partes: la sede y su número, no el título armado.
+                    'sede'      => $sede->medicalCenter->name ?? 'Sede',
+                    'numero'    => $sede->office_number,
                     // El `reg_medico` **del consultorio**: es el que fija el contexto al elegirlo (el
                     // personal del médico o el centro donde está ese consultorio).
                     'regMedico' => (string) $regMedico,
@@ -91,6 +164,8 @@ final class ContextoVista
                     // El nombre del médico dueño del registro, para agrupar el menú: `null` = los
                     // consultorios personales del médico ("Mis consultorios").
                     'centro'    => $etiquetaDelMenu,
+                    // ¿Es el consultorio del contexto vigente? La tarjeta lo marca al volver a cambiar.
+                    'actual'    => $this->consultorioActual() === (int) $sede->id,
                 ];
             }
 
@@ -105,7 +180,11 @@ final class ContextoVista
             $sedes = collect($grupo['sedes'])->values();
             $medico = $grupo['medico'];
 
+            // La especialidad del contexto, si es de las que este médico ofrece: es el paso ya elegido.
+            $elegida = $especialidades->firstWhere('valor', $this->especialidadActual());
+
             $medicos[] = [
+                'id'             => $grupo['id'],
                 // El registro de la tarjeta es el del **médico**: su consultorio personal (o el del centro,
                 // en la secretaría). Los consultorios de los centros viajan con cada opción del menú.
                 'regMedico'      => (string) $medico->reg_medico,
@@ -116,22 +195,75 @@ final class ContextoVista
                 'esCentro'       => $grupo['esCentro'],
                 'especialidades' => $especialidades->all(),
                 'sedes'          => $sedes->all(),
+                // Los consultorios de la tarjeta, agrupados por su dueño y con su «Todas las sedes».
+                'grupos'         => $this->gruposDeConsultorios($sedes->all()),
+                'elegida'        => $elegida,
+                'actual'         => $this->medicoActual() === $grupo['id'],
                 // Sin consultorios no hay sede que elegir: la agenda no puede calcular la jornada. El camino
                 // es darlos de alta (WEB-2.8b.2), y para eso hay que elegir primero con quién trabajar.
                 'sinConsultorios' => $sedes->isEmpty(),
-                // Qué se pregunta y qué no: con **un solo** consultorio (o ninguno) no hay elección que hacer
-                // (ver la nota de la clase); con dos o más se ofrece el `<select>` de siempre.
-                // `consultorioFijo` es lo que la pantalla muestra en lugar del campo, y `sinConsultorios`
-                // deja el aviso de darlos de alta. La especialidad sigue la misma regla, salvo que **sin**
-                // ninguna se deja el `<select>` vacío que ya avisaba que no hay nada asignado.
+                // Qué se pregunta y qué no: con **una sola** especialidad no hay elección que hacer y se
+                // muestra cuál es; con dos o más se ofrecen las tarjetas. Sin ninguna se muestra el aviso y
+                // el paso del consultorio queda igual (el contexto se fija sin especialidad).
                 'elegirEspecialidad' => $especialidades->count() !== 1,
                 'especialidadFija'   => $especialidades->count() === 1 ? $especialidades->first() : null,
                 'elegirConsultorio'  => $sedes->count() > 1,
-                'consultorioFijo'    => $sedes->count() === 1 ? $sedes->first() : null,
             ];
         }
 
-        return $medicos;
+        return $this->tarjetas = $medicos;
+    }
+
+    /**
+     * Los consultorios de un médico agrupados por su dueño (los propios primero), con la opción «Todas las
+     * sedes» del grupo cuando junta más de una sede de **un solo** `reg_medico`.
+     *
+     * @param  array<int,array<string,mixed>>  $sedes
+     * @return array<int,array{etiqueta:string, sedes:array<int,array<string,mixed>>, todas:?string, todasReg:string}>
+     */
+    private function gruposDeConsultorios(array $sedes): array
+    {
+        return collect($sedes)
+            ->groupBy(fn (array $sede) => $sede['centro'] ?? self::PROPIOS)
+            ->sortKeysUsing(fn (string $a, string $b) => $this->ordenDelGrupo($a, $b))
+            ->map(function ($delGrupo, $etiqueta) {
+                $delGrupo = collect($delGrupo)->values();
+                $unRegistro = $delGrupo->pluck('regMedico')->unique()->count() === 1;
+
+                return [
+                    'etiqueta' => (string) $etiqueta,
+                    'sedes'    => $delGrupo->all(),
+                    // «Todas las sedes» fija el contexto sin consultorio y abarca los de **ese** registro: no
+                    // se ofrece si el grupo mezcla dos (el consultorio hijo del mismo doctor). El vacío del
+                    // formulario solamente puede decir un `reg_medico`.
+                    'todas' => $delGrupo->pluck('sedeId')->unique()->count() > 1 && $unRegistro
+                        ? ($etiqueta === self::PROPIOS
+                            ? 'Todas las sedes de mis consultorios'
+                            : 'Todas las sedes de ' . $etiqueta)
+                        : null,
+                    'todasReg' => (string) $delGrupo->first()['regMedico'],
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /** «Mis consultorios» primero; el resto, por nombre. */
+    private function ordenDelGrupo(string $a, string $b): int
+    {
+        if ($a === $b) {
+            return 0;
+        }
+
+        if ($a === self::PROPIOS) {
+            return -1;
+        }
+
+        if ($b === self::PROPIOS) {
+            return 1;
+        }
+
+        return strcmp($a, $b);
     }
 
     /**
