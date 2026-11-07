@@ -31,7 +31,8 @@ use App\Clinica\Impresion\FormatosEnBlanco;
  *
  * **Fuera de la consulta** el alcance también dice qué no se ofrece en las pantallas que mezclan especialidades: los
  * **tipos de plantilla de texto** —las plantillas de los exámenes y de los ecos que la especialidad no tiene—, los
- * **formatos en blanco** de esos ecos y los **documentos de la historia del paciente** que son de ginecología (O-72).
+ * **formatos en blanco** de esos ecos y los **documentos de ginecología**, que no se ofrecen ni en la historia del
+ * paciente (O-72) ni en los imprimibles de la consulta y de la cita (2026-11-06: «¿un eco ginecológico a un niño?»).
  * El **listado de embarazos y partos** no se decide acá: es un reporte que declara su
  * especialidad en `ListadosDisponibles`, junto a los demás.
  *
@@ -330,15 +331,19 @@ final class AlcanceDeLaEspecialidad
     }
 
     /**
-     * **Los documentos de la historia del paciente que no se listan** en esta especialidad: los de ginecología
-     * (O-72). Es el hermano de `formatosEnBlancoOcultos()`, pero para la lista de *Documentos* de la ficha del
-     * paciente: el informe de un eco y el de una solapa de texto del examen ginecológico.
+     * **Los documentos de ginecología que no se ofrecen** en esta especialidad: la hoja de un eco y la de una
+     * solapa de texto del examen ginecológico. Es el hermano de `formatosEnBlancoOcultos()`, y lo leen las dos
+     * listas que ofrecen documentos de ginecología fuera de la consulta: la de *Documentos* de la ficha del
+     * paciente (O-72) y la de los **imprimibles de la consulta y de la cita** (2026-11-06). Sirve para las dos
+     * porque la pregunta es una sola: «¿este documento es de ginecología?».
      *
-     * Alexander, 2026-11-06: «es de ginecología, hay que invisibilizar». En la ficha de un niño de pediatría la
-     * sección *Documentos* de su historia listaba «Histeroscopía» —y su hoja se podía imprimir—, y con ella los
-     * informes de los ecos. La decisión fue esconder **todos** los documentos de ginecología, y alcanza con que
-     * **no se listen**: la hoja por URL directa sigue abriendo, como todo lo que el alcance esconde (2026-10-22),
-     * y no se borra ningún dato —el texto sigue guardado en `consultas.cuello`; sólo deja de mostrarse—.
+     * Alexander lo pidió dos veces el 2026-11-06, por el mismo motivo. Por la historia: «es de ginecología, hay
+     * que invisibilizar» —en la ficha de un niño la sección *Documentos* listaba «Histeroscopía» y su hoja se
+     * podía imprimir—. Y por los imprimibles: «Es importante separar los imprimibles por especialidad, no
+     * debemos ofrecer documentos de otras especialidades. ¿Un eco ginecológico a un niño?». El alcance es que
+     * **no se ofrezcan**: la hoja por URL directa sigue abriendo, como todo lo que el alcance esconde
+     * (2026-10-22), y no se borra ningún dato —el texto sigue guardado en `consultas.cuello`; sólo deja de
+     * mostrarse—.
      *
      * La lista **no se escribe acá**: sale de lo que el alcance ya esconde. De los **estudios**, los que
      * `tiposDeEstudioOcultos()` no ofrece, cada uno con su hoja (`DocumentoImpreso::ESTUDIOS_DE_LA_HOJA`); de las
@@ -348,12 +353,12 @@ final class AlcanceDeLaEspecialidad
      *
      * **En ginecología no se oculta ninguno**, y por eso la respuesta es vacía antes de mirar las listas: el eco
      * abdominal, que en la consulta no se ofrece (WEB-11.14), es un documento que la historia sigue listando como
-     * siempre —esconderlo es otra decisión—. **Sin especialidad tampoco se listan** (2026-10-30: sin especialidad
+     * siempre —esconderlo es otra decisión—. **Sin especialidad tampoco se ofrecen** (2026-10-30: sin especialidad
      * no es ginecología), porque el alcance es el del modo medicina general.
      *
      * @return array<int,string> claves de `DocumentoImpreso`
      */
-    public function documentosDeLaHistoriaOcultos(): array
+    public function documentosDeGinecologiaQueNoSeOfrecen(): array
     {
         if ($this->esGinecologia()) {
             return [];

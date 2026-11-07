@@ -318,16 +318,17 @@ class AlcanceDeLaEspecialidadTest extends TestCase
     }
 
     /**
-     * Los **documentos de la historia que no se listan** (O-72): fuera de ginecología son los de ginecología —los
-     * informes de los siete ecos del ítem 5 y las tres solapas de texto con hoja (colposcopía, citología e
-     * histeroscopía; *Resultado de exámenes* no tiene)—, y en ginecología **ninguno**.
+     * Los **documentos de ginecología que no se ofrecen** fuera de ginecología: los informes de los ocho ecos del ítem 5
+     * y las tres solapas de texto con hoja (colposcopía, citología e histeroscopía; *Resultado de exámenes* no tiene), y
+     * en ginecología **ninguno**. Los leen la historia del paciente (O-72) y los imprimibles de la consulta y de la cita
+     * (Alexander, 2026-11-06: «¿un eco ginecológico a un niño?»), con una sola respuesta para las dos.
      *
      * La lista no es una lista nueva: sale de los estudios que el alcance ya no ofrece (cada uno con su hoja,
      * `DocumentoImpreso::ESTUDIOS_DE_LA_HOJA`) y de las solapas de texto que ya esconde. Lo demás —el resumen
      * médico, la constancia, el laboratorio, los estudios, los récipes…— no son de ginecología y se siguen
-     * listando.
+     * ofreciendo.
      */
-    public function test_fuera_de_ginecologia_no_se_listan_los_documentos_de_ginecologia(): void
+    public function test_fuera_de_ginecologia_no_se_ofrecen_los_documentos_de_ginecologia(): void
     {
         $deGinecologia = array_merge(
             array_keys(DocumentoImpreso::ESTUDIOS_DE_LA_HOJA),
@@ -337,13 +338,13 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         foreach (['pediatria', self::GENERAL, null] as $slug) {
             $this->assertEqualsCanonicalizing(
                 $deGinecologia,
-                AlcanceDeLaEspecialidad::de($slug)->documentosDeLaHistoriaOcultos(),
+                AlcanceDeLaEspecialidad::de($slug)->documentosDeGinecologiaQueNoSeOfrecen(),
                 (string) $slug,
             );
         }
 
         // Nada de lo que cualquier especialidad usa queda escondido.
-        $dePediatria = AlcanceDeLaEspecialidad::de('pediatria')->documentosDeLaHistoriaOcultos();
+        $dePediatria = AlcanceDeLaEspecialidad::de('pediatria')->documentosDeGinecologiaQueNoSeOfrecen();
 
         foreach ([DocumentoImpreso::RESUMEN_MEDICO, DocumentoImpreso::CONSTANCIA, DocumentoImpreso::LABORATORIO, DocumentoImpreso::ESTUDIOS, DocumentoImpreso::INFORME] as $seQueda) {
             $this->assertNotContains($seQueda, $dePediatria);
@@ -351,6 +352,6 @@ class AlcanceDeLaEspecialidadTest extends TestCase
 
         // En ginecología la historia sigue listando los suyos, el eco abdominal incluido: su chip no se ofrece en
         // la consulta (WEB-11.14), pero esconder su hoja de la historia es otra decisión.
-        $this->assertSame([], AlcanceDeLaEspecialidad::de(self::GINECO)->documentosDeLaHistoriaOcultos());
+        $this->assertSame([], AlcanceDeLaEspecialidad::de(self::GINECO)->documentosDeGinecologiaQueNoSeOfrecen());
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Impresion;
 
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Models\Consulta;
 
 /**
@@ -17,6 +18,13 @@ use App\Models\Consulta;
  *
  * **Extensible**: una solicitud nueva entra por `SolicitudesParaImprimir`, con las demás de las pestañas, y suma su icono acá; lo que sale en
  * pantalla y la ruta no cambian. Hospitalización y dieta (WEB-5.3b) y laboratorio y estudios (WEB-5.4) entraron así (claves `laboratorio` y `estudios`).
+ *
+ * **La especialidad del contexto decide qué se ofrece** (Alexander, 2026-11-06: «Es importante separar los imprimibles por
+ * especialidad, no debemos ofrecer documentos de otras especialidades. ¿Un eco ginecológico a un niño?»). Lo que se
+ * ofrece lo da `ofrecidos()`: la lista de qué es de ginecología la pone
+ * `AlcanceDeLaEspecialidad::documentosDeGinecologiaQueNoSeOfrecen()` —la misma que usa la historia del paciente (O-72)— y
+ * acá sólo se deja afuera. En ginecología no cambia nada y sin especialidad tampoco se ofrecen (2026-10-30). `disponibles()`
+ * no filtra: es «lo que la consulta tiene», y por eso la hoja pedida por URL directa sigue abriendo.
  *
  * Es de **sólo lectura**.
  */
@@ -77,6 +85,10 @@ final class DocumentosParaImprimir
     /**
      * Lo imprimible de la consulta, en el orden en que se ofrece: los récipes y después las solicitudes.
      *
+     * Es **todo lo que la consulta tiene**, sin mirar la especialidad: lo usa el controlador para saber si la hoja que se
+     * pide existe —la pedida por URL directa sigue abriendo aunque el alcance la esconda (2026-10-22)—. Lo que se **ofrece**
+     * en «Imprimir documentos» es `ofrecidos()`.
+     *
      * @param  array<int,string>  $registros  los `reg_medico` del médico del contexto
      * @param  bool  $constanciaBase  `true` ofrece la constancia aunque no tenga nada propio (lo que ve el médico en la
      *                                consulta); la secretaría la ve sólo si el médico escribió algo propio
@@ -103,6 +115,38 @@ final class DocumentosParaImprimir
         }
 
         return $disponibles;
+    }
+
+    /**
+     * **Lo que se ofrece** en «Imprimir documentos» (la consulta y la cita): `disponibles()` menos los documentos de
+     * ginecología, cuando la especialidad del contexto no es ginecología (Alexander, 2026-11-06: «Es importante separar
+     * los imprimibles por especialidad, no debemos ofrecer documentos de otras especialidades. ¿Un eco ginecológico a un
+     * niño?»).
+     *
+     * *Qué* documento es de ginecología **no se decide acá**: lo dice
+     * `AlcanceDeLaEspecialidad::documentosDeGinecologiaQueNoSeOfrecen()`, que es la misma respuesta que usa la historia
+     * del paciente (O-72) y la misma que esconde esos ecos y esas solapas dentro de la consulta. Sólo se dejan de
+     * ofrecer: la hoja pedida por URL directa sigue abriendo (2026-10-22) y no se borra ningún dato.
+     *
+     * Lo que **no** es de ginecología —constancia, reposo, referencia, informe, hospitalización, dieta, laboratorio,
+     * estudios, resumen médico, récipes y pre-factura— se sigue ofreciendo siempre, y **en ginecología no cambia nada**.
+     *
+     * @param  array<int,string>  $registros  los `reg_medico` del médico del contexto
+     * @param  bool  $constanciaBase  `true` ofrece la constancia aunque no tenga nada propio (lo que ve el médico)
+     * @return array<int,array{clave:string, tipo:string, titulo:string, resumen:string, fecha:?string, icono:string, de_la_pareja:bool}>
+     */
+    public function ofrecidos(Consulta $consulta, array $registros, AlcanceDeLaEspecialidad $alcance, bool $constanciaBase = false): array
+    {
+        $ocultos = $alcance->documentosDeGinecologiaQueNoSeOfrecen();
+
+        if ($ocultos === []) {
+            return $this->disponibles($consulta, $registros, $constanciaBase);
+        }
+
+        return array_values(array_filter(
+            $this->disponibles($consulta, $registros, $constanciaBase),
+            fn (array $documento) => ! in_array($documento['clave'], $ocultos, true),
+        ));
     }
 
     /**
