@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Closure;
 
 /**
- * **La lista de vacunas del paciente** (O-68 y O-69, Alexander 2026-11-06): las filas de `vacuna_paciente` del niño —lo
+ * **La lista de vacunas del paciente** (O-68 y O-69; «Propia», O-83, Alexander 2026-11-06): las filas de `vacuna_paciente` del niño —lo
  * aplicado **y** lo programado— tal como las muestra la solapa *Inmunizaciones* del escritorio. Es la pantalla principal:
  * el esquema del catálogo pasó a ser un panel plegado (`CalendarioDeVacunas`).
  *
@@ -35,9 +35,14 @@ use Closure;
  *    en que cargó la fila (`w_escoger_razon_vacuna_consu.srw:1249-1250`: `fecha_plane = today()` y `fec_eje = today()`).
  *    Por eso acá la «F. aplicada» **sólo** se muestra cuando `ejecutada = 'S'`: la fecha que trae una fila planeada es la
  *    de su carga, no la de una aplicación que no ocurrió.
- *  - **«Propia»** (la casilla del extremo derecho de la grilla): el rótulo está en `d_vacunas_consulta_dos.srd:55` y el único
- *    control de esa franja es `aplicada_aca` (`:33`, casilla `S`/`N`), o sea que la columna sale de ahí. **Qué significa no
- *    está relevado** (Alexander no lo sabe), así que no se muestra ni se escribe: queda señalado.
+ *  - **«Propia»** (la casilla del extremo derecho de la grilla, O-83): el rótulo está en `d_vacunas_consulta_dos.srd:55` y el
+ *    único control de esa franja es `aplicada_aca` (`:33`, casilla `S`/`N`), o sea que la columna sale de ahí. Significa
+ *    **«esta dosis la aplicó este consultorio»** (Alexander, 2026-11-06): «Propia es si se aplicó por el doctor, es decir, si
+ *    es falso, entonces se vacunó en otra parte». El escritorio la pone en `S` cuando aplica la dosis desde la grilla
+ *    (`w_consulta_principal.srw:24097-24099`, el mismo camino que descuenta el inventario); en `N` o vacía, el paciente se
+ *    vacunó en otro lado y acá sólo se registra. Por eso **no se muestra la `S`/`N`**: la fila dice «Aplicada acá» o
+ *    «Aplicada en otro lado» (`procedencia`), y **sólo** cuando está aplicada — una programada todavía no se aplicó.
+ *    **No** es `vacunas.inventa_propia`, que es una columna del catálogo.
  *  - **`fecha_vence`** es el vencimiento de la **ventana** de la vacuna (Alexander, 2026-11-06): «es para no recordar más,
  *    porque hay vacunas que son un requisito cuando tiene 6 meses, pero si se pasa de 9 meses ya no la aplican». Acá se
  *    muestra como dato de la fila; la ventana del catálogo (`vacunas.edad_final_meses`) la aplica el panel, que es donde se
@@ -55,14 +60,31 @@ final class ListaDeVacunasDelPaciente
     public const APLICADA = 'aplicada';
     public const PROGRAMADA = 'programada';
 
+    /** La dosis la aplicó **este consultorio**: `vacuna_paciente.aplicada_aca = 'S'`. */
+    public const APLICADA_ACA = 'aca';
+
+    /** La dosis se aplicó **en otra parte** y acá sólo se registra: `aplicada_aca` en `N` o vacía. */
+    public const APLICADA_EN_OTRO_LADO = 'otro-lado';
+
     private const ROTULOS = [
         self::APLICADA => 'Aplicada',
         self::PROGRAMADA => 'Programada',
     ];
 
+    private const ROTULOS_DE_LA_PROCEDENCIA = [
+        self::APLICADA_ACA => 'Aplicada acá',
+        self::APLICADA_EN_OTRO_LADO => 'Aplicada en otro lado',
+    ];
+
     public static function rotulo(string $estado): string
     {
         return self::ROTULOS[$estado] ?? $estado;
+    }
+
+    /** El rótulo legible de la procedencia de una fila, o `null` si no está aplicada. */
+    public static function rotuloDeLaProcedencia(?string $procedencia): ?string
+    {
+        return $procedencia === null ? null : (self::ROTULOS_DE_LA_PROCEDENCIA[$procedencia] ?? null);
     }
 
     /**
@@ -97,6 +119,7 @@ final class ListaDeVacunasDelPaciente
             $codigo = trim((string) $fila->codi_vacuna);
             $aplicada = strtoupper((string) ($fila->ejecutada ?? '')) === 'S';
             $estado = $aplicada ? self::APLICADA : self::PROGRAMADA;
+            $procedencia = self::procedencia($aplicada, $fila->aplicada_aca ?? null);
             $enCatalogo = isset($catalogo[$codigo]);
 
             $salida[] = [
@@ -121,6 +144,10 @@ final class ListaDeVacunasDelPaciente
                 'proxima' => self::proxima($fila),
                 'estado' => $estado,
                 'rotulo' => self::rotulo($estado),
+                // «Propia» (O-83): si esta dosis la aplicó este consultorio. `null` en una fila programada, porque la
+                // pregunta todavía no tiene respuesta (ver el docblock de la clase).
+                'procedencia' => $procedencia,
+                'procedenciaRotulo' => self::rotuloDeLaProcedencia($procedencia),
                 'enCatalogo' => $enCatalogo,
                 'urlQuitar' => $aplicada || $urlQuitar === null ? null : $urlQuitar((int) ($fila->id ?? 0)),
             ];
@@ -147,6 +174,21 @@ final class ListaDeVacunasDelPaciente
     private static function proxima(object $fila): ?string
     {
         return self::fecha($fila->fecha_proxima_dosis ?? null);
+    }
+
+    /**
+     * De dónde salió la dosis **aplicada** (O-83, Alexander 2026-11-06): «Propia es si se aplicó por el doctor, es decir, si
+     * es falso, entonces se vacunó en otra parte». `vacuna_paciente.aplicada_aca` vale `S` cuando la puso este consultorio y
+     * queda en `N` o vacía cuando el paciente se vacunó en otro lado. Una fila **programada** no tiene procedencia: la
+     * casilla del escritorio no dice nada de una dosis que todavía no se aplicó.
+     */
+    private static function procedencia(bool $aplicada, mixed $aplicadaAca): ?string
+    {
+        if (! $aplicada) {
+            return null;
+        }
+
+        return strtoupper(trim((string) $aplicadaAca)) === 'S' ? self::APLICADA_ACA : self::APLICADA_EN_OTRO_LADO;
     }
 
     private static function rotuloDeDosis(mixed $numero): string

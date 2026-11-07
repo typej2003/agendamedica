@@ -6,6 +6,12 @@
      sólo se muestra cuando `ejecutada = 'S'`: el escritorio guarda en esa columna el día en que cargó la fila planeada. La
      segunda línea (vía, zona, vence, próxima) son datos de la fila, no cálculos. «Atrasada» no existe acá: eso es del panel.
 
+     **La «Propia» del escritorio** (O-83): `vacuna_paciente.aplicada_aca` dice si la dosis **la aplicó este consultorio** o
+     si el paciente **se vacunó en otra parte** y acá sólo se registra. Va como un **chip al lado del estado** («Aplicada acá»
+     / «Aplicada en otro lado») y no en la segunda línea: ésa ya lleva cuatro datos de la dosis y el médico tiene que poder
+     distinguirlo de un vistazo, sin leer un texto chico y gris enterrado entre «Vence» y «Próxima». Sólo en las filas
+     aplicadas: una programada todavía no se aplicó y la casilla no dice nada de ella.
+
      Recibe `$vm` (CalendarioDeVacunasVista), que trae las filas ya armadas y las URLs. --}}
 <x-ui.tarjeta id="vacunas-del-paciente" titulo="Vacunas" icono="bi-shield-plus">
     <x-slot name="acciones">
@@ -49,6 +55,9 @@
                 @foreach ($vm->filas() as $fila)
                     @php
                         $aplicada = $fila['estado'] === \App\Clinica\Vacunas\ListaDeVacunasDelPaciente::APLICADA;
+                        // «Propia» (O-83): de dónde salió la dosis aplicada. `null` en una programada, que no tiene procedencia.
+                        $procedencia = $fila['procedenciaRotulo'] ?? null;
+                        $laAplicoEsteConsultorio = ($fila['procedencia'] ?? null) === \App\Clinica\Vacunas\ListaDeVacunasDelPaciente::APLICADA_ACA;
                         // La segunda línea de la fila del escritorio (`d_vacunas_consulta_dos.srd:41-50`), con su rótulo
                         // porque acá no hay una columna para cada dato.
                         $detalle = array_values(array_filter([
@@ -82,9 +91,19 @@
                         <td data-etiqueta="F. a aplicar">{{ $fila['planeada'] ?? '—' }}</td>
                         <td data-etiqueta="F. aplicada">{{ $fila['aplicada'] ?? '—' }}</td>
                         <td data-etiqueta="Estado">
-                            <x-ui.estado :tono="$aplicada ? 'exito' : 'aviso'" :icono="$aplicada ? 'bi-check-circle' : 'bi-calendar-event'">
-                                {{ $fila['rotulo'] }}
-                            </x-ui.estado>
+                            {{-- «Aplicada acá» / «Aplicada en otro lado» (O-83): dos pastillas chicas que se envuelven solas
+                                 en la tarjeta del celular, sin deslizar la página (regla 10). --}}
+                            <div class="d-flex flex-wrap align-items-center gap-1">
+                                <x-ui.estado :tono="$aplicada ? 'exito' : 'aviso'" :icono="$aplicada ? 'bi-check-circle' : 'bi-calendar-event'">
+                                    {{ $fila['rotulo'] }}
+                                </x-ui.estado>
+                                @if ($procedencia)
+                                    <x-ui.estado :tono="$laAplicoEsteConsultorio ? 'neutro' : 'info'"
+                                                 :icono="$laAplicoEsteConsultorio ? 'bi-house-check' : 'bi-geo-alt'">
+                                        {{ $procedencia }}
+                                    </x-ui.estado>
+                                @endif
+                            </div>
                         </td>
                         <td class="text-end celda-acciones">
                             @if (! $aplicada && $vm->puedeEscribir())

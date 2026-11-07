@@ -9,7 +9,8 @@ use Tests\TestCase;
  * **La lista de vacunas del paciente** (O-68/O-69), pura: arma las filas de `vacuna_paciente` como las muestra el escritorio en
  * la solapa *Inmunizaciones*. Se fija el orden del DataWindow (`codi_vacuna` + `dosis_numero` + `fecha_ejecutada`), que una fila
  * programada **no** muestre su `fecha_ejecutada` como fecha de aplicación (esa fecha es la del día de la carga), de dónde sale
- * la «Próxima» y que no se ofrezca quitar lo aplicado.
+ * la «Próxima», que no se ofrezca quitar lo aplicado y la «Propia» del escritorio (O-83: `aplicada_aca` dice si la dosis la
+ * aplicó este consultorio o el paciente se vacunó en otra parte).
  */
 class ListaDeVacunasDelPacienteTest extends TestCase
 {
@@ -105,6 +106,34 @@ class ListaDeVacunasDelPacienteTest extends TestCase
 
         $this->assertSame('VACUNA VIEJA', $r['filas'][0]['vacuna']);
         $this->assertFalse($r['filas'][0]['enCatalogo']);
+    }
+
+    /**
+     * **«Propia»** (O-83, Alexander 2026-11-06): «es si se aplicó por el doctor, es decir, si es falso, entonces se vacunó en
+     * otra parte». `vacuna_paciente.aplicada_aca` = `S` es «la aplicó este consultorio»; `N`, vacía o `null`, «se vacunó en
+     * otro lado». Una fila programada no tiene procedencia.
+     */
+    public function test_la_propia_dice_si_la_aplico_este_consultorio_o_el_nino_se_vacuno_en_otra_parte(): void
+    {
+        $r = $this->armar([
+            $this->fila(['id' => 1, 'codi_vacuna' => 'A', 'ejecutada' => 'S', 'aplicada_aca' => 'S']),
+            $this->fila(['id' => 2, 'codi_vacuna' => 'B', 'ejecutada' => 'S', 'aplicada_aca' => 'N']),
+            $this->fila(['id' => 3, 'codi_vacuna' => 'C', 'ejecutada' => 'S', 'aplicada_aca' => null]),
+            $this->fila(['id' => 4, 'codi_vacuna' => 'D', 'ejecutada' => 'N', 'aplicada_aca' => 'S']),
+        ]);
+
+        $this->assertSame(ListaDeVacunasDelPaciente::APLICADA_ACA, $r['filas'][0]['procedencia']);
+        $this->assertSame('Aplicada acá', $r['filas'][0]['procedenciaRotulo']);
+
+        // `N` y vacía dicen lo mismo: el paciente se vacunó en otra parte.
+        $this->assertSame(ListaDeVacunasDelPaciente::APLICADA_EN_OTRO_LADO, $r['filas'][1]['procedencia']);
+        $this->assertSame('Aplicada en otro lado', $r['filas'][1]['procedenciaRotulo']);
+        $this->assertSame('Aplicada en otro lado', $r['filas'][2]['procedenciaRotulo']);
+
+        // Programada: todavía no se aplicó, así que la casilla del escritorio no dice nada.
+        $this->assertSame(ListaDeVacunasDelPaciente::PROGRAMADA, $r['filas'][3]['estado']);
+        $this->assertNull($r['filas'][3]['procedencia']);
+        $this->assertNull($r['filas'][3]['procedenciaRotulo']);
     }
 
     public function test_quitar_solo_se_ofrece_para_lo_programado(): void

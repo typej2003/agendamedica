@@ -7,9 +7,14 @@
      - **«Aplicar»** de una fila de la lista o **«Registrar»** de una dosis del esquema (`data-registrar-dosis`): viene con la
        vacuna y la dosis ya puestas y la decisión fija en «ya se la apliqué».
 
-    El `action` del formulario y el texto del botón los cambia `public/js/clinica/vacunas.js` según la decisión: el registro
-    postea a `urlRegistrar()` y la programación a `urlProgramar()`. Las longitudes son las de las columnas del escritorio
-    (lote, vía y zona 20). Recibe `$vm` (CalendarioDeVacunasVista).
+     **Son dos booleanos, no tres desenlaces** (Alexander, 2026-11-06): «Uno si se aplicó o no, y el otro si se aplicó acá o
+     no (si es propia)». El primero es `ejecutada` (la decisión de arriba) y el segundo es **`aplicada_aca`**, que se pregunta
+     como «¿Dónde se la aplicaste?» —«En este consultorio» / «En otro lado»— también **sin opción marcada**: «Aplicada en otro
+     lado» no es un tercer estado, es aplicada (`ejecutada = 'S'`) y no propia (`aplicada_aca = 'N'`).
+
+     El `action` del formulario y el texto del botón los cambia `public/js/clinica/vacunas.js` según la decisión: el registro
+     postea a `urlRegistrar()` y la programación a `urlProgramar()`. Las longitudes son las de las columnas del escritorio
+     (lote, vía y zona 20). Recibe `$vm` (CalendarioDeVacunasVista).
 --}}
 <x-ui.dialogo id="dialogo-registrar-dosis" titulo="Agregar una vacuna" lateral>
     {{-- `data-sin-borrador`: es una acción de un solo uso, no texto que haya que recuperar al volver (y sus campos son de
@@ -50,13 +55,15 @@
                 </x-ui.campo>
             </div>
 
-            {{-- 2. La decisión (regla 9): sin opción marcada; recién entonces aparecen los campos de la elegida. --}}
+            {{-- 2. La decisión (regla 9): sin opción marcada; recién entonces aparecen los campos de la elegida. Son **dos
+                 booleanos** (Alexander, 2026-11-06): «Uno si se aplicó o no, y el otro si se aplicó acá o no». Éste es el
+                 primero (`ejecutada`); el segundo es «¿Dónde se la aplicaste?», abajo. --}}
             <div class="row g-3" data-dosis-modo-caja>
-                <x-ui.campo etiqueta="¿Qué haces con esta dosis?" for="dosis-modo" class="col-12" :requerido="true">
+                <x-ui.campo etiqueta="¿Ya se la aplicaste?" for="dosis-modo" class="col-12" :requerido="true">
                     <select name="modo" id="dosis-modo" class="form-select" data-dosis-modo>
                         <option value="">Elige…</option>
-                        <option value="aplicada">Ya se la apliqué</option>
-                        <option value="programada">Queda programada, para aplicarla después</option>
+                        <option value="aplicada">Sí, ya se la apliqué</option>
+                        <option value="programada">No, queda programada para aplicarla después</option>
                     </select>
                 </x-ui.campo>
             </div>
@@ -69,8 +76,25 @@
                 </x-ui.campo>
             </div>
 
-            {{-- 3b. Aplicada: los datos de la aplicación (WEB-7.4.4b). --}}
+            {{-- 3b. Aplicada: **el segundo booleano** y los datos de la aplicación (WEB-7.4.4b). «En este consultorio» deja
+                 `aplicada_aca = 'S'` y «En otro lado» lo deja en `'N'`: la dosis está aplicada (el primer booleano es Sí) pero
+                 la puso otro. También sin opción marcada (regla 9): el médico tiene que decirlo, no se adivina. --}}
             <div class="row g-3" data-dosis-aplicada hidden>
+                <x-ui.campo etiqueta="¿Dónde se la aplicaste?" for="dosis-procedencia" error="aplicada_aca" class="col-12" :requerido="true">
+                    <select name="aplicada_aca" id="dosis-procedencia" class="form-select" data-dosis-procedencia data-dosis-obligatorio>
+                        <option value="">Elige…</option>
+                        <option value="S">En este consultorio</option>
+                        <option value="N">En otro lado</option>
+                    </select>
+                </x-ui.campo>
+                {{-- La consecuencia de «En otro lado», a la vista: no se deja implícita. --}}
+                <div class="col-12" data-dosis-otro-lado hidden>
+                    <p class="small texto-tenue mb-0">
+                        <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                        Queda registrada como <strong>aplicada en otro lado</strong>: el niño la recibió en otra parte y acá
+                        sólo se anota en su historia. No cuenta como dosis aplicada por este consultorio.
+                    </p>
+                </div>
                 <x-ui.campo etiqueta="Fecha de aplicación" for="dosis-fecha" error="fecha_ejecutada" class="col-md-6" :requerido="true">
                     <input type="date" name="fecha_ejecutada" id="dosis-fecha" class="form-control" data-dosis-obligatorio
                            value="{{ $vm->maxima() }}" max="{{ $vm->maxima() }}" @if ($vm->minima() !== '') min="{{ $vm->minima() }}" @endif>

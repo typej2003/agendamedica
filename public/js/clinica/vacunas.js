@@ -2,9 +2,14 @@
  * Las vacunas del niño (O-68/O-69; WEB-7.4.4b): el diálogo único de la dosis, que se abre desde tres lugares y hace dos cosas.
  *
  *  - «Agregar una vacuna» (`data-agregar-vacuna`): muestra la elección **vacuna + dosis** del catálogo del médico y la decisión
- *    («ya se la apliqué» / «queda programada»). Es el *Escoger* del escritorio (`w_escoger_razon_vacuna_consu.srw:1180`).
+ *    («sí, ya se la apliqué» / «no, queda programada»). Es el *Escoger* del escritorio (`w_escoger_razon_vacuna_consu.srw:1180`).
  *  - «Aplicar» de una fila de la lista o «Registrar» de una dosis del esquema (`data-registrar-dosis`): viene llena con esa
  *    vacuna y esa dosis, y la decisión queda fija en aplicada.
+ *
+ * **Dos booleanos, no tres desenlaces** (O-83, Alexander 2026-11-06): «Uno si se aplicó o no, y el otro si se aplicó acá o
+ * no (si es propia)». El primero es la decisión de arriba (`ejecutada`) y el segundo es «¿Dónde se la aplicaste?»
+ * (`aplicada_aca`): al elegir «En otro lado» se avisa que la dosis queda como aplicada **por fuera** del consultorio. Los dos
+ * arrancan sin opción marcada y el botón no se habilita hasta que estén los dos: el que aplica una dosis dice dónde.
  *
  * Según la decisión, el formulario postea a `data-url-registrar` o a `data-url-programar` (los pone el ViewModel; si no hay
  * historia no hay url de programación y la opción no se ofrece). Los campos de la opción que no se eligió se ocultan y se
@@ -37,6 +42,9 @@
     const dosis = dialogo.querySelector('[data-dosis-dosis]');
     const planeada = dialogo.querySelector('[data-dosis-planeada]');
     const fechaAplicacion = document.getElementById('dosis-fecha');
+    // El segundo booleano de la dosis (O-83): «En este consultorio» (`S`) o «En otro lado» (`N`).
+    const procedencia = dialogo.querySelector('[data-dosis-procedencia]');
+    const avisoOtroLado = dialogo.querySelector('[data-dosis-otro-lado]');
 
     const campo = function (nombre) {
         return dialogo.querySelector('[data-dosis-campo="' + nombre + '"]');
@@ -86,6 +94,12 @@
         return opcion ? (opcion.dataset.rotulo || '') : '';
     };
 
+    /* El aviso de «aplicada en otro lado» sólo se ve cuando el médico elige esa opción: la consecuencia, a la vista. */
+    const aplicarProcedencia = function () {
+        const otroLado = !!procedencia && !procedencia.disabled && procedencia.value === 'N';
+        if (avisoOtroLado) avisoOtroLado.hidden = !otroLado;
+    };
+
     const aplicarDecision = function () {
         const elegida = modo ? modo.value : 'aplicada';
         const aplicada = elegida === 'aplicada';
@@ -102,8 +116,12 @@
 
         if (formulario) formulario.action = programada && urlProgramar ? urlProgramar : urlRegistrar;
 
+        aplicarProcedencia();
+
         if (enviar) {
-            enviar.disabled = !aplicada && !programada;
+            // Aplicar exige las dos respuestas: «¿ya se la aplicaste?» y «¿dónde?» (O-83).
+            const dondeElegido = !procedencia || procedencia.value !== '';
+            enviar.disabled = !(programada || (aplicada && dondeElegido));
             enviar.textContent = programada ? 'Programar la dosis' : 'Registrar la dosis';
         }
     };
@@ -124,6 +142,8 @@
         if (cajaModo) cajaModo.hidden = false;
         if (cajaModo) cajaModo.querySelectorAll('input, select').forEach(function (control) { control.disabled = false; });
         if (modo) modo.value = '';
+        // «¿Dónde se la aplicaste?» arranca sin opción marcada, como la decisión (O-83).
+        if (procedencia) procedencia.value = '';
 
         if (planeada) planeada.value = '';
         if (fechaAplicacion) fechaAplicacion.value = fechaAplicacion.defaultValue || fechaAplicacion.value;
@@ -164,6 +184,8 @@
         if (fechaAplicacion) fechaAplicacion.value = fechaAplicacion.defaultValue || fechaAplicacion.value;
 
         if (modo) modo.value = 'aplicada';
+        // Aplicar una dosis también pregunta dónde: el médico tiene que decirlo (O-83).
+        if (procedencia) procedencia.value = '';
         aplicarDecision();
     };
 
@@ -184,15 +206,20 @@
     });
 
     if (modo) modo.addEventListener('change', aplicarDecision);
+    if (procedencia) procedencia.addEventListener('change', aplicarDecision);
     if (vacuna) vacuna.addEventListener('change', filtrarDosis);
 
     if (formulario) {
         formulario.addEventListener('submit', function () {
-            // La dosis visible no tiene `name`: el número y el rótulo viajan en los campos ocultos que lee el servidor.
+            // Los desplegables visibles no tienen `name`: la vacuna, el número de la dosis y su rótulo viajan en los campos
+            // ocultos que lee el servidor (`vacuna_paciente.codi_vacuna` es parte de la clave de la fila). Sin el código, el
+            // registro de «Agregar una vacuna» rebotaba con «Falta elegir la vacuna».
+            const codigo = campo('codigo');
             const numero = campo('numero');
             const texto = campo('rotulo');
             const eligiendo = eleccion && !eleccion.hidden;
 
+            if (eligiendo && codigo && vacuna) codigo.value = vacuna.value;
             if (eligiendo && numero && dosis) numero.value = dosis.value;
             if (eligiendo && texto) texto.value = rotuloDeLaDosis();
         });
