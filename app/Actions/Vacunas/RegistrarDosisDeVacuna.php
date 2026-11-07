@@ -14,6 +14,10 @@ use InvalidArgumentException;
  * **Registrar una dosis aplicada** (WEB-7.4.4b): escribe en `vacuna_paciente` (clave del escritorio: `historia` + `codi_vacuna` +
  * `fecha_ejecutada`) lo que el calendario de vacunas del niño (WEB-7.4.4a) deja registrar. La usa la web y la reutilizará el móvil (R3).
  *
+ * Desde O-68/O-69 es la acción del botón **«Aplicar»** de la lista del paciente (`ListaDeVacunasDelPaciente`) y del «Registrar»
+ * del panel del esquema; su hermana `ProgramarDosisDeVacuna` crea la fila planeada y `QuitarDosisDeVacuna` la retira. Las tres
+ * comparten las reglas de la vacuna y de la identidad de la dosis en el trait `DosisDeVacuna`.
+ *
  * Las reglas:
  *
  *  - **La vacuna tiene que ser del catálogo del médico** (`vacunas` con su `reg_medico`): una desconocida se rechaza. La descripción, la prioridad
@@ -22,6 +26,7 @@ use InvalidArgumentException;
  *    rótulo— se rechaza, no se duplica.
  *  - **Si el escritorio había dejado esa dosis como planeada** (`ejecutada` distinta de `S`), esa fila se **completa**; si no, se crea una nueva.
  *    Al completar sólo se escribe **lo que cambió**, con el rastro por columna en `sync_changes` (`source = web`) y el last-write-wins.
+ *    Es también el camino de una dosis **programada desde la web** (`ProgramarDosisDeVacuna`): la fila planeada se completa en el lugar.
  *  - **La fecha** no puede ser futura (en el día del consultorio) ni anterior al nacimiento. La **edad aplicada** (`edad_aplicada`, en meses) se
  *    calcula con el nacimiento. `aplicada_aca = 'S'`: se aplicó en este consultorio.
  *  - **El cobro y el inventario no se tocan** (`vacunas_aplicadas`, `vacunas_salidas`: se difieren con la facturación, F9).
@@ -30,6 +35,9 @@ use InvalidArgumentException;
  */
 final class RegistrarDosisDeVacuna
 {
+    // Lo que comparte con `ProgramarDosisDeVacuna` y `QuitarDosisDeVacuna`: la vacuna del catálogo, la identidad de la
+    // dosis y la lectura de fechas y textos (ver el trait).
+    use DosisDeVacuna;
     use EscribeConRastro;
 
     /** Los campos opcionales que el formulario puede mandar y su tope (las columnas del escritorio). */
@@ -56,11 +64,7 @@ final class RegistrarDosisDeVacuna
         ?CarbonInterface $cuando = null,
         ?string $origen = 'web',
     ): object {
-        $vacuna = DB::table('vacunas')->where('reg_medico', $regMedico)->where('codi_vacuna', $codigo)->orderBy('id')->first();
-
-        if ($vacuna === null) {
-            throw new InvalidArgumentException('Esa vacuna no está en el catálogo de este consultorio.');
-        }
+        $vacuna = self::vacunaDelCatalogo($regMedico, $codigo);
 
         $fecha = self::fecha($datos['fecha_ejecutada'] ?? null, 'La fecha en que se aplicó');
         if ($fecha === null) {
@@ -84,12 +88,12 @@ final class RegistrarDosisDeVacuna
         $nuevos = [
             'dosis' => $rotulo,
             'dosis_numero' => $dosisNumero,
-            'fecha_planeada' => $planeada ? Carbon::parse($planeada)->toDateString() : null,
+        // La fecha que le tocaba se escribe **sólo si viene**: cuando se aplica una dosis que ya estaba programada, la fila
+        // conserva su `fecha_planeada` (si no, se borraría con `null`).
+        ] + ($planeada ? ['fecha_planeada' => Carbon::parse($planeada)->toDateString()] : []) + [
             'fecha_ejecutada' => $fecha->toDateString(),
             'ejecutada' => 'S',
-            'descripcion' => self::texto($vacuna->vacuna, 100),
-            'prioridad' => self::texto($vacuna->prioridad ?? null, 1),
-            'tipo_vacu' => self::texto($vacuna->tipo_vacu ?? null, 10),
+        ] + self::copiadoDelCatalogo($vacuna) + [
             'edad_aplicada' => $nace === null ? null : round($nace->diffInDays($fecha) / 30.4375, 2),
             'aplicada_aca' => 'S',
             'fecha_vence' => $vence?->toDateString(),
@@ -133,37 +137,5 @@ final class RegistrarDosisDeVacuna
 
             return (object) ['fila' => $fila, 'creada' => true, 'columnas' => []];
         });
-    }
-
-    /** ¿La fila es de esa dosis? Por su número y, si alguno falta, por su rótulo (sin distinguir mayúsculas). */
-    private static function esLaMisma(VacunaPaciente $fila, ?int $numero, ?string $rotulo): bool
-    {
-        if ($numero !== null && $fila->dosis_numero !== null) {
-            return (int) $fila->dosis_numero === $numero;
-        }
-
-        $propio = mb_strtolower(trim((string) $fila->dosis));
-
-        return $rotulo !== null && $propio !== '' && $propio === mb_strtolower($rotulo);
-    }
-
-    private static function fecha(mixed $valor, string $que): ?Carbon
-    {
-        if ($valor === null || trim((string) $valor) === '') {
-            return null;
-        }
-
-        try {
-            return Carbon::parse((string) $valor)->startOfDay();
-        } catch (\Throwable) {
-            throw new InvalidArgumentException("{$que} no es una fecha válida.");
-        }
-    }
-
-    private static function texto(mixed $valor, int $tope): ?string
-    {
-        $texto = trim((string) $valor);
-
-        return $texto === '' ? null : mb_substr($texto, 0, $tope);
     }
 }

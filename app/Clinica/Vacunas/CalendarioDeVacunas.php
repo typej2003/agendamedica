@@ -18,7 +18,20 @@ use Carbon\Carbon;
  *
  *    Una aplicada sin número ni rótulo ocupa, por orden de fecha, la primera dosis libre.
  *
- * Estados: aplicada · atrasada (la fecha ya pasó) · próxima (en los próximos 30 días) · pendiente (más adelante) · sin fecha.
+ * Estados: aplicada · atrasada (la fecha ya pasó) · próxima (en los próximos 30 días) · pendiente (más adelante) · sin fecha ·
+ * **vencida** (se pasó la ventana de la vacuna y ya no se recuerda).
+ *
+ * **La ventana** (dato del cliente, Alexander 2026-11-06): cada vacuna del catálogo tiene una edad final (`vacunas.edad_final_meses`,
+ * la pareja de `edad_inicial_meses`), y una dosis que se pasa de esa edad **ya no se aplica**: «hay vacunas que son un requisito
+ * cuando tiene 6 meses, pero si se pasa de 9 meses ya no la aplican». Esa es la razón por la que el escritorio no tenía «atrasadas
+ * eternas»: pasado el vencimiento, la dosis deja de recordarse. Por eso, una dosis sin aplicar cuya ventana ya cerró **no** cuenta
+ * como atrasada: queda en «vencida» y el panel no la ofrece para programar. (El escritorio nunca leyó `edad_final_meses`: el que la
+ * usa primero es la web, y si el catálogo la tiene vacía —como está hoy en el legado—, no hay ventana y todo funciona como antes.)
+ *
+ * **Desde O-68/O-69 este calendario ya no es la pantalla**: la pantalla es la lista de filas del paciente
+ * (`ListaDeVacunasDelPaciente`) y el esquema del catálogo quedó como un **panel plegado** que sólo **propone** —cada dosis
+ * trae `enLista` cuando el médico ya la agregó a la lista, para no ofrecerla dos veces—. El estado «atrasada» vive **sólo**
+ * aquí adentro: nunca es el estado de una fila del paciente.
  */
 final class CalendarioDeVacunas
 {
@@ -27,6 +40,7 @@ final class CalendarioDeVacunas
     public const PROXIMA = 'proxima';
     public const PENDIENTE = 'pendiente';
     public const SIN_FECHA = 'sin-fecha';
+    public const VENCIDA = 'vencida';
 
     /** Cuántos días adelante una dosis pendiente se considera «próxima». */
     public const DIAS_PROXIMA = 30;
@@ -37,6 +51,7 @@ final class CalendarioDeVacunas
         self::PROXIMA => 'Próxima',
         self::PENDIENTE => 'Pendiente',
         self::SIN_FECHA => 'Sin fecha',
+        self::VENCIDA => 'Vencida',
     ];
 
     public static function rotulo(string $estado): string
@@ -57,14 +72,17 @@ final class CalendarioDeVacunas
         $letra = strtoupper(trim((string) $sexo));
 
         $aplicadasPorCodigo = [];
+        $planeadasPorCodigo = [];
         foreach ($aplicadas as $fila) {
             if (strtoupper((string) ($fila->ejecutada ?? '')) === 'S') {
                 $aplicadasPorCodigo[(string) $fila->codi_vacuna][] = $fila;
+            } else {
+                $planeadasPorCodigo[(string) $fila->codi_vacuna][] = $fila;
             }
         }
 
         $salida = [];
-        $resumen = [self::APLICADA => 0, self::ATRASADA => 0, self::PROXIMA => 0, self::PENDIENTE => 0, self::SIN_FECHA => 0];
+        $resumen = [self::APLICADA => 0, self::ATRASADA => 0, self::PROXIMA => 0, self::PENDIENTE => 0, self::SIN_FECHA => 0, self::VENCIDA => 0];
         $codigosDelMedico = [];
 
         foreach ($vacunas as $vacuna) {
@@ -75,18 +93,35 @@ final class CalendarioDeVacunas
                 continue;
             }
 
+            // La ventana de la vacuna: hasta qué edad se aplica (`vacunas.edad_final_meses`). Un 0 o vacío no es ventana: una
+            // vacuna del nacimiento no vence el mismo día que nace.
+            $vence = null;
+            $final = (float) ($vacuna->edad_final_meses ?? 0);
+            if ($nace !== null && $final > 0) {
+                $vence = self::sumarMeses($nace, $final);
+            }
+
             $filas = [];
             foreach ($this->dosisPlaneadas($vacuna, $dosis[$codigo] ?? [], $letra) as $d) {
                 $filas[] = $d + ['aplicada' => null, 'lote' => null];
             }
 
             $sobrantes = $aplicadasPorCodigo[$codigo] ?? [];
+            // Las filas **programadas** (O-68/O-69) no son dosis aplicadas: se usan sólo para no volver a ofrecer en el panel
+            // una dosis que el médico ya agregó a la lista del paciente.
+            $programadas = $planeadasPorCodigo[$codigo] ?? [];
             foreach ($filas as $i => $fila) {
                 $indice = $this->buscarAplicada($sobrantes, $fila);
                 if ($indice !== null) {
                     $filas[$i]['aplicada'] = self::fecha($sobrantes[$indice]->fecha_ejecutada ?? null);
                     $filas[$i]['lote'] = self::texto($sobrantes[$indice]->lote ?? null);
                     unset($sobrantes[$indice]);
+                }
+
+                $programada = $this->buscarAplicada($programadas, $fila);
+                $filas[$i]['enLista'] = $programada !== null;
+                if ($programada !== null) {
+                    unset($programadas[$programada]);
                 }
             }
 
@@ -107,7 +142,8 @@ final class CalendarioDeVacunas
 
             foreach ($filas as $i => $fila) {
                 $filas[$i]['planeada'] = $nace !== null && $fila['meses'] !== null ? self::sumarMeses($nace, (float) $fila['meses'])->toDateString() : null;
-                $filas[$i]['estado'] = self::estado($filas[$i]['planeada'], $filas[$i]['aplicada'], $hoyFecha);
+                $filas[$i]['vence'] = $vence?->toDateString();
+                $filas[$i]['estado'] = self::estado($filas[$i]['planeada'], $filas[$i]['aplicada'], $hoyFecha, $vence);
             }
 
             // Lo aplicado que no encaja con ninguna dosis del calendario se muestra igual.
@@ -115,6 +151,7 @@ final class CalendarioDeVacunas
                 $filas[] = [
                     'numero' => null, 'rotulo' => self::texto($extra->dosis ?? null) ?? 'Aplicada', 'meses' => null, 'planeada' => null,
                     'aplicada' => self::fecha($extra->fecha_ejecutada ?? null), 'lote' => self::texto($extra->lote ?? null), 'estado' => self::APLICADA,
+                    'vence' => null, 'enLista' => true,
                 ];
             }
 
@@ -149,6 +186,43 @@ final class CalendarioDeVacunas
         }
 
         return ['vacunas' => $salida, 'otras' => $otras, 'resumen' => $resumen];
+    }
+
+    /**
+     * **El catálogo del médico para el diálogo «Agregar una vacuna»** (O-68/O-69): lo que se puede elegir y programar, con
+     * las mismas reglas que el calendario —la vacuna de otro sexo no se ofrece y una vacuna sin dosis cargadas es su dosis
+     * única a la `edad_inicial_meses`—, para que el médico no pueda agregar algo que el esquema nunca le propondría.
+     *
+     * @param  array<int,object>  $vacunas  las del médico
+     * @param  array<string,array<int,object>>  $dosis  `codi_vacuna` => sus dosis
+     * @return array<int,array{codigo:string, nombre:string, tipo:string, dosis:array<int,array{numero:int, rotulo:string}>}>
+     */
+    public function catalogo(?string $sexo, array $vacunas, array $dosis): array
+    {
+        $letra = strtoupper(trim((string) $sexo));
+        $salida = [];
+
+        foreach ($vacunas as $vacuna) {
+            if (! self::aplicaAlSexo($vacuna->sexo ?? null, $letra)) {
+                continue;
+            }
+
+            $codigo = (string) $vacuna->codi_vacuna;
+            $planes = $this->dosisPlaneadas($vacuna, $dosis[$codigo] ?? [], $letra);
+
+            if ($planes === []) {
+                continue;
+            }
+
+            $salida[] = [
+                'codigo' => $codigo,
+                'nombre' => trim((string) $vacuna->vacuna),
+                'tipo' => ConvencionDeVacunas::fija($vacuna->fija ?? null),
+                'dosis' => array_map(fn ($d) => ['numero' => (int) $d['numero'], 'rotulo' => $d['rotulo']], $planes),
+            ];
+        }
+
+        return $salida;
     }
 
     // ------------------------------------------------------------------------------------------ Adentro
@@ -207,10 +281,19 @@ final class CalendarioDeVacunas
         return null;
     }
 
-    private static function estado(?string $planeada, ?string $aplicada, Carbon $hoy): string
+    /**
+     * El estado de una dosis: aplicada, vencida (se pasó la ventana de la vacuna y ya no se recuerda), atrasada, próxima,
+     * pendiente o sin fecha.
+     */
+    private static function estado(?string $planeada, ?string $aplicada, Carbon $hoy, ?Carbon $vence = null): string
     {
         if ($aplicada !== null) {
             return self::APLICADA;
+        }
+
+        // La ventana cerrada manda sobre «atrasada»: una dosis que ya no se aplica no se le recuerda al médico.
+        if ($vence !== null && $vence->lt($hoy)) {
+            return self::VENCIDA;
         }
 
         if ($planeada === null) {

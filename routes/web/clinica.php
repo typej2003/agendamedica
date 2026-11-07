@@ -330,12 +330,18 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
                 Route::get('/vacunas', [VacunasDelPacienteController::class, 'entrada'])->name('vacunas');
                 Route::get('/pacientes/{paciente}/crecimiento', [CrecimientoController::class, 'ver'])->name('pacientes.crecimiento');
                 Route::get('/pacientes/{paciente}/crecimiento/imprimir', [CrecimientoController::class, 'imprimir'])->middleware('clinica.plan.impresion')->name('pacientes.crecimiento.imprimir');
-                // **El calendario de vacunas de un niño** (WEB-7.4.4a): sólo lectura; las dosis salen del catálogo del médico.
+                // **Las vacunas de un niño** (WEB-7.4.4a; O-68/O-69): la lista de sus dosis (aplicadas y programadas) y, plegado, el
+                // esquema del catálogo. Las dosis salen del catálogo del médico.
                 Route::get('/pacientes/{paciente}/vacunas', [VacunasDelPacienteController::class, 'ver'])->name('pacientes.vacunas');
                 // **La historia pediátrica imprimible** (WEB-12.5): familia, antecedentes, mediciones y vacunas del niño. Es clínica: sólo del médico.
                 Route::get('/pacientes/{paciente}/historia-pediatrica', [HistoriaPediatricaController::class, 'imprimir'])->middleware('clinica.plan.impresion')->name('pacientes.historia-pediatrica');
                 Route::get('/pacientes/{paciente}/vacunas/carnet', [VacunasDelPacienteController::class, 'carnet'])->middleware('clinica.plan.impresion')->name('pacientes.vacunas.carnet');
                 Route::post('/pacientes/{paciente}/vacunas', [VacunasDelPacienteController::class, 'registrar'])->name('pacientes.vacunas.registrar');
+                // **Programar una dosis** (O-68/O-69): la fila planeada, sin aplicarla todavía. La misma clave del escritorio.
+                Route::post('/pacientes/{paciente}/vacunas/programar', [VacunasDelPacienteController::class, 'programar'])->name('pacientes.vacunas.programar');
+                // **Quitar de la lista** una dosis programada (el «Quitar registro» del escritorio): una aplicada no se borra.
+                Route::delete('/pacientes/{paciente}/vacunas/{fila}', [VacunasDelPacienteController::class, 'quitar'])
+                    ->whereNumber('fila')->name('pacientes.vacunas.quitar');
 
                 // «Anterior» (WEB-11.4): copia motivos, diagnósticos o récipes de la consulta anterior de la historia.
                 Route::post('/consulta/{consulta}/anterior/{que}', [ConsultaAnteriorController::class, 'copiar'])

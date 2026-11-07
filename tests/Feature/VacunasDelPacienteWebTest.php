@@ -159,7 +159,10 @@ class VacunasDelPacienteWebTest extends TestCase
             ->assertSee('1 aplicada')->assertSee('1 próxima')->assertSee('1 pendiente');
 
         $sesion->get($this->url($id, ['ver' => 'pendientes']))
-            ->assertOk()->assertSee('2da. Dosis')->assertDontSee('Refuerzo')->assertDontSee('1era. Dosis');
+            ->assertOk()->assertSee('2da. Dosis')
+            // El esquema filtrado no muestra las dosis que no están pendientes. Se miran sus fechas y no sus rótulos porque el
+            // diálogo de «Agregar una vacuna» lista el catálogo completo (O-68/O-69) y los rótulos siempre están en la página.
+            ->assertDontSee('17/08/2026')->assertDontSee('17/12/2027');
     }
 
     public function test_pendientes_sin_nada_pendiente_dice_nada_pendiente(): void
