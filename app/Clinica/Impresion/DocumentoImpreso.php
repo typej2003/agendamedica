@@ -246,8 +246,9 @@ final class DocumentoImpreso
      *
      * Vive acá por la misma razón que el mapa de `FormatosEnBlanco::porEstudio()`: la relación entre una hoja y
      * su estudio es un dato del documento, no de la especialidad. Lo lee
-     * `AlcanceDeLaEspecialidad::documentosDeLaHistoriaOcultos()` para no repetir una lista de hojas: el informe
-     * de un estudio que la especialidad no tiene no se lista en la historia del paciente (O-72).
+     * `AlcanceDeLaEspecialidad::documentosDeGinecologiaQueNoSeOfrecen()` para no repetir una lista de hojas: el
+     * informe de un estudio que la especialidad no tiene no se lista en la historia del paciente (O-72) ni se
+     * ofrece entre los imprimibles de la consulta y de la cita (Alexander, 2026-11-06).
      *
      * ⚠️ **No es `FormatosEnBlanco::porEstudio()`**, que es más corta a propósito: ésos son los formatos en
      * blanco que el escritorio tiene, y no todos los ecos lo tienen.

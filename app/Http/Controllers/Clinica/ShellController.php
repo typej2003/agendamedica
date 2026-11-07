@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Clinica;
 use App\Clinica\Agenda\LectorDeAgenda;
 use App\Clinica\Agenda\MedicosDeLaCita;
 use App\Clinica\Agenda\ParametrosDeAgenda;
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Vistas\InicioVista;
 use App\Clinica\Impresion\DocumentosPorCita;
@@ -65,8 +66,13 @@ class ShellController extends Controller
                 $actual,
                 $cuantos,
                 (bool) $request->user()?->trabajaLaConsulta(),
-                // «Imprimir documentos» de una cita atendida (WEB-5.2/5.3a): la misma lectura en lote que usa la agenda.
-                $documentos->conDocumentos($actual['reg_medico'], $lectura->jornadas->flatMap(fn ($jornada) => $jornada->citas)),
+                // «Imprimir documentos» de una cita atendida (WEB-5.2/5.3a): la misma lectura en lote que usa la agenda,
+                // con lo que la especialidad del contexto no ofrece afuera (2026-11-06).
+                $documentos->conDocumentos(
+                    $actual['reg_medico'],
+                    $lectura->jornadas->flatMap(fn ($jornada) => $jornada->citas),
+                    AlcanceDeLaEspecialidad::de($actual['specialty']?->slug ?? null)->documentosQueNoSeOfrecen(),
+                ),
                 // El médico de cada cita (Fase 3 del cambio de `reg_medico`): el inicio es la lista del día
                 // del médico, y en un consultorio con varios doctores la fila dice cuál atiende cada una.
                 $this->medicosDeLaCita->nombres($actual['reg_medico']),

@@ -580,9 +580,10 @@ final class HistoriaDelPaciente
         }
 
         // O-72: los documentos de ginecología no se listan fuera de ginecología. La decisión la toma el alcance
-        // de la especialidad (`documentosDeLaHistoriaOcultos`), que es el mismo que esconde esas solapas y esos
-        // ecos en la consulta; acá sólo se dejan de sumar a la lista. No se borra el dato ni se toca la hoja.
-        $ocultos = $alcance->documentosDeLaHistoriaOcultos();
+        // de la especialidad (`documentosDeGinecologiaQueNoSeOfrecen`), que es el mismo que esconde esas solapas
+        // y esos ecos en la consulta y el que los deja de ofrecer en los imprimibles (2026-11-06); acá sólo se
+        // dejan de sumar a la lista. No se borra el dato ni se toca la hoja.
+        $ocultos = $alcance->documentosDeGinecologiaQueNoSeOfrecen();
 
         // El más reciente primero, como las consultas: la fecha del documento y, si no tiene, la de su
         // consulta. Sin fecha no se puede ordenar, así que queda al final.

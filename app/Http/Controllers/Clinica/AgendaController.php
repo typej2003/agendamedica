@@ -7,6 +7,7 @@ use App\Clinica\Agenda\MedicosDeLaCita;
 use App\Clinica\Agenda\ParametrosDeAgenda;
 use App\Clinica\Agenda\Vistas\AgendaVista;
 use App\Clinica\Agenda\Vistas\ListadoDelDiaVista;
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Impresion\DocumentosPorCita;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -38,7 +39,13 @@ class AgendaController extends Controller
                 // a la consulta —el médico—, con la misma regla que protege la ruta del shell (§3.14).
                 (bool) $request->user()?->trabajaLaConsulta(),
                 // "Imprimir documentos" (WEB-5.2/5.3a): qué citas atendidas tienen algo que imprimir, en lote para toda la agenda.
-                $documentosPorCita->conDocumentos($contexto['reg_medico'], $lectura->jornadas->flatMap(fn ($jornada) => $jornada->citas)),
+                // Lo que la especialidad del contexto no ofrece no cuenta (2026-11-06): en pediatría, un eco ginecológico no
+                // hace que la fila ofrezca el botón.
+                $documentosPorCita->conDocumentos(
+                    $contexto['reg_medico'],
+                    $lectura->jornadas->flatMap(fn ($jornada) => $jornada->citas),
+                    AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null)->documentosQueNoSeOfrecen(),
+                ),
                 // El médico de cada cita (Fase 3 del cambio de `reg_medico`): con más de un doctor en el
                 // consultorio la fila lo muestra y deja asignarlo. Se resuelve una vez para toda la página.
                 $this->medicosDeLaCita->nombres($contexto['reg_medico']),
