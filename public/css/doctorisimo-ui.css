@@ -4261,3 +4261,38 @@ body.panel .main-content { padding: 1rem 1.25rem 1.25rem; }
     .contexto-paso { padding: .8rem .9rem; }
     .contexto-opciones { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ==========================================================================
+   Vacunas: la lista del paciente y el esquema del catálogo plegado (O-68/O-69, 2026-11-06)
+   La pantalla principal son las filas de `vacuna_paciente` del niño (como la solapa *Inmunizaciones* del escritorio) y el
+   calendario quedó como un panel `<details>` cerrado por defecto, que sólo propone. La segunda línea de cada fila (vía,
+   zona, vence, próxima y notas) va debajo de la vacuna, en el mismo renglón de la tabla.
+   ========================================================================== */
+.vacunas-esquema {
+    border: 1px solid var(--ds-borde);
+    border-radius: var(--ds-radio-card);
+    background: var(--ds-superficie);
+    margin-bottom: 1rem;
+}
+
+.vacunas-esquema > .vacunas-esquema-titulo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .35rem .75rem;
+    padding: .85rem 1rem;
+    list-style: none;
+    cursor: pointer;
+}
+.vacunas-esquema > .vacunas-esquema-titulo::-webkit-details-marker { display: none; }
+.vacunas-esquema > .vacunas-esquema-titulo::marker { content: ''; }
+.vacunas-esquema-titulo .card-titulo { margin: 0; }
+.vacunas-esquema-ayuda { flex: 1 1 14rem; }
+.vacunas-esquema-flecha { margin-left: auto; color: var(--ds-texto-3); transition: transform var(--ds-dur-base) var(--ds-ease); }
+.vacunas-esquema[open] .vacunas-esquema-flecha { transform: rotate(90deg); }
+.vacunas-esquema-cuerpo { padding: 0 1rem 1rem; }
+
+/* La segunda línea de la fila: datos de la dosis, no cálculos. */
+.vacuna-detalle,
+.vacuna-nota { overflow-wrap: anywhere; }
+

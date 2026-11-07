@@ -140,8 +140,38 @@ class CalendarioDeVacunasTest extends TestCase
 
         $this->assertSame([
             CalendarioDeVacunas::APLICADA => 1, CalendarioDeVacunas::ATRASADA => 0, CalendarioDeVacunas::PROXIMA => 1,
-            CalendarioDeVacunas::PENDIENTE => 1, CalendarioDeVacunas::SIN_FECHA => 0,
+            CalendarioDeVacunas::PENDIENTE => 1, CalendarioDeVacunas::SIN_FECHA => 0, CalendarioDeVacunas::VENCIDA => 0,
         ], $r['resumen']);
         $this->assertSame('Atrasada', CalendarioDeVacunas::rotulo(CalendarioDeVacunas::ATRASADA));
+    }
+
+    /**
+     * **La ventana de la vacuna** (Alexander, 2026-11-06): `vacunas.edad_final_meses` es hasta qué edad se aplica. Pasada esa
+     * fecha, una dosis sin aplicar ya no se recuerda: es «vencida», no «atrasada», y no se ofrece para programar.
+     */
+    public function test_una_dosis_pasada_la_ventana_de_la_vacuna_queda_vencida_y_no_atrasada(): void
+    {
+        $r = $this->armar([
+            $this->vacuna('NEUMO', 'Neumococo', 6, ['edad_final_meses' => 9]),
+            $this->vacuna('SRP', 'Triple viral', 12, ['edad_final_meses' => 24]),
+        ]);
+
+        // El niño nació el 2026-06-17 y hoy es 2026-10-17 (4 meses): la ventana de 9 meses sigue abierta (vence el 2027-03-17).
+        $this->assertSame(CalendarioDeVacunas::PENDIENTE, $r['vacunas'][0]['dosis'][0]['estado']);
+        $this->assertSame('2027-03-17', $r['vacunas'][0]['dosis'][0]['vence']);
+
+        // Sin nacimiento no hay ventana que calcular.
+        $this->assertNull($this->armar([$this->vacuna('NEUMO', 'Neumococo', 6, ['edad_final_meses' => 9])], [], [], null)['vacunas'][0]['dosis'][0]['vence']);
+
+        // Un niño de 2 años: la ventana de 9 meses ya cerró.
+        $r = $this->armar([$this->vacuna('NEUMO', 'Neumococo', 6, ['edad_final_meses' => 9])], [], [], '2024-06-17');
+        $this->assertSame(CalendarioDeVacunas::VENCIDA, $r['vacunas'][0]['dosis'][0]['estado']);
+        $this->assertSame(1, $r['resumen'][CalendarioDeVacunas::VENCIDA]);
+        $this->assertSame(0, $r['resumen'][CalendarioDeVacunas::ATRASADA]);
+
+        // Una vacuna con la ventana vacía (o 0) no vence nunca: es como funcionaba antes.
+        $r = $this->armar([$this->vacuna('BCG', 'BCG', 0, ['edad_final_meses' => 0])], [], [], '2024-06-17');
+        $this->assertNull($r['vacunas'][0]['dosis'][0]['vence']);
+        $this->assertSame(CalendarioDeVacunas::ATRASADA, $r['vacunas'][0]['dosis'][0]['estado']);
     }
 }

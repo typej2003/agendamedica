@@ -14,16 +14,24 @@
         </x-slot>
     </x-ui.page-head>
 
-    {{-- El calendario es el mismo que se ve dentro de la consulta (`?seccion=inmunizaciones`, O-63): el parcial compartido
-         trae el resumen, el filtro, la tabla, las otras vacunas y el diálogo de registrar una dosis. --}}
+    {{-- La pantalla es **la lista del paciente** (O-68/O-69), como la solapa *Inmunizaciones* del escritorio: primero lo que
+         se le aplicó y lo que quedó programado, y abajo, plegado, el esquema del catálogo. Es la misma pantalla que la sección
+         *Inmunizaciones* de la consulta (`?seccion=inmunizaciones`, O-63): los dos parciales son compartidos. --}}
+    @include('clinica.vacunas._lista', ['vm' => $vm])
     @include('clinica.vacunas._calendario', ['vm' => $vm])
+
+    {{-- El diálogo de la dosis (registrar o programar) es uno solo por página lo abre `public/js/clinica/vacunas.js`
+         desde «Agregar una vacuna», «Aplicar» y «Registrar». --}}
+    @if ($vm->puedeEscribir())
+        @include('clinica.vacunas._dialogo-registrar', ['vm' => $vm])
+    @endif
 
     @include('clinica.consulta._visualizar')
 @endsection
 
 @section('scripts')
     <script src="{{ asset('js/clinica/consulta-visualizar.js') }}"></script>
-    @if ($vm->puedeRegistrar())
+    @if ($vm->puedeEscribir())
         <script src="{{ asset('js/clinica/vacunas.js') }}"></script>
     @endif
 @endsection

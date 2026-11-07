@@ -4,14 +4,21 @@ namespace App\Clinica\Vacunas\Vistas;
 
 use App\Clinica\Pacientes\CamposDePaciente;
 use App\Clinica\Vacunas\CalendarioDeVacunas;
+use App\Clinica\Vacunas\ListaDeVacunasDelPaciente;
 use Carbon\Carbon;
 use Closure;
 
 /**
- * **El calendario de vacunas de un niño** (WEB-7.4.4a), de sólo lectura: por vacuna, sus dosis con la fecha que le toca, el estado
- * (aplicada · atrasada · próxima · pendiente) y lo aplicado. Un segmentado deja ver **todas** o sólo las **pendientes** (atrasadas y próximas).
+ * **La pantalla de vacunas de un niño** (WEB-7.4.4a; O-68/O-69): la **lista de sus filas** (lo aplicado y lo programado, como la
+ * solapa *Inmunizaciones* del escritorio) y, plegado, el **esquema del catálogo** —las dosis que el catálogo del médico propone,
+ * con su «le toca» y su estado— del que se puede **programar** una dosis en la lista.
  *
- * No consulta nada: recibe lo que armó `CalendarioDeVacunas` y una función que arma el enlace de cada filtro (el controlador pone las URLs).
+ * El esquema conserva el segmentado que deja ver **todas** las dosis o sólo las **pendientes** (atrasadas y próximas). Los
+ * estados del esquema (`aplicada` · `atrasada` · `próxima` · `pendiente` · `sin fecha`) son **sólo** del panel: una fila de la
+ * lista está *aplicada* o *programada* y nada más.
+ *
+ * No consulta nada: recibe lo que armaron `ListaDeVacunasDelPaciente` y `CalendarioDeVacunas`, el catálogo para el diálogo de
+ * «Agregar una vacuna» y una función que arma el enlace de cada filtro (el controlador pone las URLs).
  */
 final class CalendarioDeVacunasVista
 {
@@ -24,6 +31,7 @@ final class CalendarioDeVacunasVista
         CalendarioDeVacunas::PROXIMA => 'aviso',
         CalendarioDeVacunas::PENDIENTE => 'neutro',
         CalendarioDeVacunas::SIN_FECHA => 'neutro',
+        CalendarioDeVacunas::VENCIDA => 'neutro',
     ];
 
     private const ICONOS = [
@@ -32,12 +40,16 @@ final class CalendarioDeVacunasVista
         CalendarioDeVacunas::PROXIMA => 'bi-clock',
         CalendarioDeVacunas::PENDIENTE => 'bi-hourglass-split',
         CalendarioDeVacunas::SIN_FECHA => 'bi-question-circle',
+        CalendarioDeVacunas::VENCIDA => 'bi-calendar-x',
     ];
 
     /**
      * @param  object  $paciente  `nombres`, `apellidos`, `sexo`, `fnacimiento` y `numhistoria`
      * @param  array{vacunas:array<int,array<string,mixed>>, otras:array<int,array<string,mixed>>, resumen:array<string,int>}  $calendario
      * @param  Closure(string):string  $url  arma el enlace de un filtro (`todas` | `pendientes`)
+     * @param  array{filas:array<int,array<string,mixed>>, resumen:array<aplicadas:int, programadas:int>}  $lista  las filas del niño
+     * @param  array<int,array{codigo:string, nombre:string, tipo:string, dosis:array<int,array{numero:int, rotulo:string}>}>  $catalogo
+     *         lo que ofrece el catálogo del médico para el diálogo «Agregar una vacuna»
      */
     public function __construct(
         private object $paciente,
@@ -46,7 +58,7 @@ final class CalendarioDeVacunasVista
         private string $filtro,
         private Closure $url,
         private string $urlFicha,
-        // A dónde se postea el registro de una dosis (WEB-7.4.4b); `null` = el calendario es de sólo lectura.
+        // A dónde se postea el registro de una dosis (WEB-7.4.4b); `null` = la pantalla es de sólo lectura.
         private ?string $urlRegistrar = null,
         private ?string $hoy = null,
         // La hoja del carnet de vacunación (WEB-7.4.4c).
@@ -54,6 +66,12 @@ final class CalendarioDeVacunasVista
         // La **consulta** desde la que se está mirando el calendario (O-63), o `null` si es la pantalla del módulo: es lo que
         // hace que registrar una dosis vuelva a la sección «Inmunizaciones» y no al módulo del niño.
         private ?int $consulta = null,
+        // **La lista del paciente** (O-68/O-69): sus filas ya armadas y su resumen.
+        private array $lista = ['filas' => [], 'resumen' => ['aplicadas' => 0, 'programadas' => 0]],
+        // A dónde se postea la programación de una dosis; `null` = no se ofrece programar.
+        private ?string $urlProgramar = null,
+        // El catálogo del médico (vacunas y dosis) que llena el diálogo de «Agregar una vacuna».
+        private array $catalogo = [],
     ) {
     }
 
@@ -76,6 +94,89 @@ final class CalendarioDeVacunasVista
     public function urlRegistrar(): ?string
     {
         return $this->urlRegistrar;
+    }
+
+    // ------------------------------------------------------------------------------------------ La lista del paciente (O-68/O-69)
+
+    /** ¿Se puede escribir en la lista (aplicar una dosis o programarla)? Sin historia no se puede: la clave la exige. */
+    public function puedeEscribir(): bool
+    {
+        return $this->urlRegistrar !== null || $this->urlProgramar !== null;
+    }
+
+    public function puedeProgramar(): bool
+    {
+        return $this->urlProgramar !== null;
+    }
+
+    public function urlProgramar(): ?string
+    {
+        return $this->urlProgramar;
+    }
+
+    /** Las filas de `vacuna_paciente` del niño, ya armadas por `ListaDeVacunasDelPaciente`. @return array<int,array<string,mixed>> */
+    public function filas(): array
+    {
+        return $this->lista['filas'];
+    }
+
+    public function hayFilas(): bool
+    {
+        return $this->lista['filas'] !== [];
+    }
+
+    /**
+     * Los contadores de la lista: cuántas dosis tiene aplicadas y cuántas programadas. No hay «atrasadas»: eso es del esquema.
+     *
+     * @return array<int,array{texto:string, tono:string, icono:string}>
+     */
+    public function resumenDeLaLista(): array
+    {
+        $filas = [];
+
+        foreach ($this->lista['resumen'] as $estado => $cantidad) {
+            if ($cantidad <= 0) {
+                continue;
+            }
+
+            $filas[] = [
+                'texto' => $cantidad . ' ' . ($estado === ListaDeVacunasDelPaciente::APLICADA
+                    ? ($cantidad === 1 ? 'aplicada' : 'aplicadas')
+                    : ($cantidad === 1 ? 'programada' : 'programadas')),
+                'tono' => $estado === ListaDeVacunasDelPaciente::APLICADA ? 'exito' : 'aviso',
+                'icono' => $estado === ListaDeVacunasDelPaciente::APLICADA ? 'bi-check-circle' : 'bi-calendar-event',
+            ];
+        }
+
+        return $filas;
+    }
+
+    /** @return array{titulo:string, texto:string} */
+    public function vacioDeLaLista(): array
+    {
+        return [
+            'titulo' => 'Todavía no tiene vacunas cargadas',
+            'texto' => $this->puedeEscribir()
+                ? 'Agrega la vacuna que se le aplicó con «Agregar una vacuna», o abre «Esquema del catálogo» para programar una dosis de las que propone tu catálogo.'
+                : 'Cuando el niño tenga historia y su médico abra esta pantalla, acá aparecen las dosis aplicadas y las programadas.',
+        ];
+    }
+
+    /** ¿No hay ninguna vacuna que ofrecer en el diálogo de «Agregar una vacuna»? (catálogo vacío o sin dosis para este niño). */
+    public function sinCatalogoParaAgregar(): bool
+    {
+        return $this->catalogo === [];
+    }
+
+    /**
+     * El catálogo del médico para llenar los dos desplegables del diálogo («vacuna» y «dosis»), con lo que el esquema le
+     * ofrecería a este niño.
+     *
+     * @return array<int,array{codigo:string, nombre:string, tipo:string, dosis:array<int,array{numero:int, rotulo:string}>}>
+     */
+    public function catalogoParaAgregar(): array
+    {
+        return $this->catalogo;
     }
 
     /** La fecha más tardía que acepta el formulario (hoy en el consultorio). */
@@ -181,12 +282,21 @@ final class CalendarioDeVacunasVista
                     'nombre' => $vacuna['vacuna'],
                     'numero' => $d['numero'],
                     'planeadaIso' => $d['planeada'],
-                    'registrable' => $this->urlRegistrar !== null && $d['estado'] !== CalendarioDeVacunas::APLICADA && $d['numero'] !== null,
+                    'registrable' => $this->urlRegistrar !== null && $d['numero'] !== null
+                        && ! in_array($d['estado'], [CalendarioDeVacunas::APLICADA, CalendarioDeVacunas::VENCIDA], true),
+                    // **Programar** (O-68/O-69): sólo lo que el catálogo propone, que todavía no está en la lista del paciente y
+                    // cuya ventana sigue abierta. Es la única forma en que el esquema agrega algo: el médico aprieta y la fila
+                    // aparece en la lista (nunca solo).
+                    'programable' => $this->urlProgramar !== null && $d['numero'] !== null && $d['planeada'] !== null
+                        && ! in_array($d['estado'], [CalendarioDeVacunas::APLICADA, CalendarioDeVacunas::VENCIDA], true) && ! $d['enLista'],
+                    'enLista' => $d['enLista'],
                     'rotulo' => $d['rotulo'],
                     'planeada' => self::fecha($d['planeada']),
+                    'vence' => self::fecha($d['vence'] ?? null),
                     'aplicada' => self::fecha($d['aplicada']),
                     'lote' => $d['lote'],
                     'estado' => CalendarioDeVacunas::rotulo($d['estado']),
+                    'clave' => $d['estado'],
                     'tono' => self::TONOS[$d['estado']],
                     'icono' => self::ICONOS[$d['estado']],
                 ];
