@@ -129,6 +129,9 @@ class VacunasDelPacienteController extends Controller
             'zona' => ['nullable', 'string', 'max:20'],
             'fecha_vence' => ['nullable', 'date_format:Y-m-d'],
             'fecha_proxima_dosis' => ['nullable', 'date_format:Y-m-d'],
+            // El segundo booleano de la dosis (O-83): `S` = la aplicó este consultorio, `N` = se aplicó en otro lado.
+            // Sin el campo se registra como propia, que es lo que hacía la web antes de preguntarlo.
+            'aplicada_aca' => ['nullable', 'in:S,N'],
             'nota' => ['nullable', 'string', 'max:2000'],
         ], [
             'codi_vacuna.required' => 'Falta elegir la vacuna.',
@@ -136,6 +139,7 @@ class VacunasDelPacienteController extends Controller
             'fecha_ejecutada.date_format' => 'La fecha de aplicación va como día/mes/año.',
             'fecha_vence.date_format' => 'La fecha de vencimiento va como día/mes/año.',
             'fecha_proxima_dosis.date_format' => 'La fecha de la próxima dosis va como día/mes/año.',
+            'aplicada_aca.in' => 'Elige dónde se aplicó la dosis: en este consultorio o en otro lado.',
             'lote.max' => 'El lote no puede pasar de 20 caracteres.',
             'via.max' => 'La vía no puede pasar de 20 caracteres.',
             'zona.max' => 'La zona no puede pasar de 20 caracteres.',
@@ -152,6 +156,9 @@ class VacunasDelPacienteController extends Controller
                 $datos,
                 $contexto['ficha']->fnacimiento ? (string) $contexto['ficha']->fnacimiento : null,
                 $datos['planeada'] ?? null,
+                // La Action recibe el segundo booleano (O-83): `false` = el niño se vacunó en otra parte. Sin el campo, la
+                // dosis sigue entrando como aplicada acá, como antes de que se preguntara.
+                aplicadaAca: ($datos['aplicada_aca'] ?? 'S') === 'S',
             );
         } catch (InvalidArgumentException $excepcion) {
             return redirect($volver)->with('error', $excepcion->getMessage());

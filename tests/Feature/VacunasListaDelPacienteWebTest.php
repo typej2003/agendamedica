@@ -20,7 +20,8 @@ use Tests\TestCase;
  * `vacuna_paciente` del niño —lo aplicado y lo programado— como la solapa *Inmunizaciones* del escritorio, y el esquema del
  * catálogo quedó como un panel plegado que sólo propone.
  *
- * Se fija que: la pantalla lista las filas con sus columnas y su segunda línea (vía, zona, vence, próxima, notas); el panel
+ * Se fija que: la pantalla lista las filas con sus columnas y su segunda línea (vía, zona, vence, próxima, notas); la fila
+ * aplicada dice si la dosis **la aplicó este consultorio** o el niño **se vacunó en otra parte** (O-83); el panel
  * está plegado y cada dosis se puede **programar** (nunca solo); «Agregar una vacuna» abre el catálogo para elegir vacuna +
  * dosis; programar escribe la fila planeada con el rastro de la web y no duplica; aplicar una programada **completa esa
  * fila** sin crear otra ni perder su «F. a aplicar»; quitar borra sólo lo programado; y los permisos son los de siempre.
@@ -150,8 +151,8 @@ class VacunasListaDelPacienteWebTest extends TestCase
             ->assertSeeInOrder(['Polio', '1era. Dosis', '17/08/2026', '20/08/2026', 'Aplicada'])
             ->assertSee('Lote L-77')->assertSee('Vía Oral')->assertSee('Zona Muslo derecho')
             ->assertSee('Vence 01/01/2027')->assertSee('Próxima 20/10/2026')->assertSee('Sin reacción')
-            // «Propia» (`aplicada_aca`) no se muestra: qué significa no está relevado (ver el docblock de la clase).
-            ->assertDontSee('Aplicada acá')
+            // «Propia» (O-83): `aplicada_aca = 'S'` quiere decir que la dosis la aplicó este consultorio, y eso se lee.
+            ->assertSee('Aplicada acá')->assertDontSee('Aplicada en otro lado')
             // La programada: su «F. a aplicar» está, su «F. aplicada» no (esa fecha es la de la carga, no la de una aplicación).
             ->assertSeeInOrder(['Rotavirus', '17/11/2026', 'Programada'])
             ->assertSee('1 aplicada')->assertSee('1 programada')
@@ -159,6 +160,54 @@ class VacunasListaDelPacienteWebTest extends TestCase
             ->assertSee('Esquema del catálogo')
             ->assertDontSee('<details class="vacunas-esquema" id="vacunas-calendario" open', false)
             ->assertSee('name="planeada" value="2026-10-17"', false);
+    }
+
+    /**
+     * **«Propia»** (O-83, Alexander 2026-11-06): «es si se aplicó por el doctor, es decir, si es falso, entonces se vacunó en
+     * otra parte». La fila de `vacuna_paciente` dice **«Aplicada acá»** cuando `aplicada_aca = 'S'` y **«Aplicada en otro
+     * lado»** cuando está en `N` o vacía —nunca la `S`/`N` cruda—, y una dosis programada no lleva ninguno de los dos: todavía
+     * no se aplicó.
+     */
+    public function test_la_fila_dice_si_la_dosis_la_aplico_el_consultorio_o_el_nino_se_vacuno_en_otra_parte(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $this->catalogo($medico);
+        $id = $this->nino($medico);
+
+        $filas = [
+            // La aplicó este consultorio.
+            ['codi_vacuna' => 'ROTA', 'dosis' => 'Dosis única', 'dosis_numero' => 1, 'descripcion' => 'Rotavirus',
+                'fecha_ejecutada' => '2026-08-01', 'ejecutada' => 'S', 'aplicada_aca' => 'S'],
+            // Se vacunó en otra parte: `N` y vacía son el mismo caso.
+            ['codi_vacuna' => 'POLI', 'dosis' => '1era. Dosis', 'dosis_numero' => 1, 'descripcion' => 'Polio',
+                'fecha_ejecutada' => '2026-07-01', 'ejecutada' => 'S', 'aplicada_aca' => 'N'],
+            ['codi_vacuna' => 'POLI', 'dosis' => '2da. Dosis', 'dosis_numero' => 2, 'descripcion' => 'Polio',
+                'fecha_ejecutada' => '2026-09-01', 'ejecutada' => 'S', 'aplicada_aca' => null],
+            // Programada: no se aplicó todavía, así que no hay procedencia que contar.
+            ['codi_vacuna' => 'ROTA', 'dosis' => '2da. Dosis', 'dosis_numero' => 2, 'descripcion' => 'Rotavirus',
+                'fecha_planeada' => '2026-11-20', 'fecha_ejecutada' => '2026-10-17', 'ejecutada' => 'N', 'aplicada_aca' => 'S'],
+        ];
+        foreach ($filas as $fila) {
+            DB::table('vacuna_paciente')->insert($fila + [
+                'reg_medico' => $medico->reg_medico, 'historia' => 9801, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
+
+        $html = $this->conContexto($medico, $pediatria)->actingAs($user)->get($this->url($id))
+            ->assertOk()
+            ->assertSee('Aplicada acá')
+            ->assertSee('Aplicada en otro lado')
+            ->getContent();
+
+        // Una fila con `S` y dos con `N`/vacía: el rótulo de cada una, y la programada sin ninguno (cuatro filas, tres chips).
+        $this->assertSame(1, substr_count($html, 'Aplicada acá'));
+        $this->assertSame(2, substr_count($html, 'Aplicada en otro lado'));
+
+        // Dentro de la lista hay cuatro filas y sólo tres llevan el chip de la procedencia: la programada no lo tiene.
+        $desde = strpos($html, 'id="vacunas-del-paciente"');
+        $lista = substr($html, $desde, strpos($html, 'id="vacunas-calendario"') - $desde);
+        $this->assertSame(4, substr_count($lista, 'data-etiqueta="Estado"'));
+        $this->assertSame(3, substr_count($lista, 'Aplicada acá') + substr_count($lista, 'Aplicada en otro lado'));
     }
 
     public function test_agregar_una_vacuna_trae_el_catalogo_del_medico_para_elegir_vacuna_y_dosis(): void
@@ -177,7 +226,21 @@ class VacunasListaDelPacienteWebTest extends TestCase
             ->assertSee('<option value="POLI">Polio</option>', false)
             ->assertSee('data-rotulo="2da. Dosis"', false)
             // La decisión primero, sin opción marcada.
-            ->assertSee('id="dosis-modo"', false)->assertSee('Ya se la apliqué')->assertSee('Queda programada');
+            ->assertSee('id="dosis-modo"', false)->assertSee('¿Ya se la aplicaste?')
+            ->assertSee('Sí, ya se la apliqué')->assertSee('No, queda programada para aplicarla después')
+            // Y el segundo booleano (O-83): dónde se aplicó, también sin opción marcada.
+            ->assertSee('id="dosis-procedencia"', false)->assertSee('¿Dónde se la aplicaste?')
+            ->assertSee('En este consultorio')->assertSee('En otro lado')
+            ->assertSee('data-dosis-otro-lado', false)
+            ->assertSee('Queda registrada como');
+
+        // Ninguno de los dos desplegables viene con una opción elegida (regla 9): la decisión no se adivina.
+        $html = $this->conContexto($medico, $pediatria)->actingAs($user)->get($this->url($id))->getContent();
+        foreach (['dosis-modo', 'dosis-procedencia'] as $idSelect) {
+            $desde = strpos($html, 'id="' . $idSelect . '"');
+            $select = substr($html, $desde, strpos($html, '</select>', $desde) - $desde);
+            $this->assertStringNotContainsString('selected', $select, "El desplegable {$idSelect} no puede venir marcado.");
+        }
     }
 
     // ------------------------------------------------------------------------------------------ Programar
