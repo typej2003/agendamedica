@@ -358,6 +358,12 @@ final class SeccionesDeLaConsulta
         ['numero' => 10, 'grupo' => 'Documentos', 'titulo' => 'Récipes', 'icono' => 'bi-prescription2',
             'detalle' => 'Varios por consulta, por medicamento o por tratamiento.', 'tarea' => 'WEB-5.1', 'estado' => 'listo',
             'seccion' => self::SECCION_RECIPES],
+        // La evaluación pre-operatoria del cardiólogo (CAR-5): la pantalla y las tablas son las de medicina interna
+        // (MI-5). Va **después de Récipes**, como la pidió el usuario en O-46: es el informe que valida al paciente
+        // para quirófano, así que tiene que estar a mano.
+        ['numero' => 11, 'grupo' => 'Documentos', 'titulo' => 'Evaluación pre-operatoria', 'icono' => 'bi-clipboard2-pulse',
+            'detalle' => 'Estimaciones (ASA, trombosis, infección, espirometría, situaciones especiales), riesgo operatorio y su informe.',
+            'tarea' => 'CAR-5', 'estado' => 'listo', 'seccion' => Interna\MapaDelInternista::SECCION_PREOPERATORIA],
         ['numero' => 12, 'grupo' => 'Documentos', 'titulo' => 'Solicitudes', 'icono' => 'bi-send',
             'detalle' => 'Laboratorio, estudios, constancia, reposo, referencia, hospitalización, informe médico y dieta / recomendaciones.',
             'tarea' => 'WEB-5.3a', 'estado' => 'listo', 'seccion' => self::SECCION_SOLICITUDES],
@@ -367,10 +373,6 @@ final class SeccionesDeLaConsulta
         ['numero' => 14, 'grupo' => 'Documentos', 'titulo' => 'Pre-factura', 'icono' => 'bi-receipt',
             'detalle' => 'Los conceptos que se cobran por la consulta, del catálogo del consultorio, con su total.', 'tarea' => 'F9',
             'estado' => 'listo', 'seccion' => self::SECCION_PREFACTURA],
-        // La evaluación pre-operatoria del cardiólogo (CAR-5): la pantalla y las tablas son las de medicina interna (MI-5).
-        ['numero' => 15, 'grupo' => 'Documentos', 'titulo' => 'Evaluación pre-operatoria', 'icono' => 'bi-scissors',
-            'detalle' => 'Estimaciones (ASA, trombosis, infección, espirometría, situaciones especiales) y riesgo operatorio.',
-            'tarea' => 'CAR-5', 'estado' => 'listo', 'seccion' => Interna\MapaDelInternista::SECCION_PREOPERATORIA],
     ];
 
     /**

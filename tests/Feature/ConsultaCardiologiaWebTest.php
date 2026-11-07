@@ -442,6 +442,37 @@ class ConsultaCardiologiaWebTest extends TestCase
         $this->assertSame(0, ArchivoDeHistoria::count());
     }
 
+    public function test_el_informe_preoperatorio_del_cardiologo_sale_con_la_clase_asa(): void
+    {
+        [$user, $medico, $especialidad] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        // La evaluación pre-operatoria es la de medicina interna (MI-5): el cardiólogo la carga desde su árbol.
+        $this->conContexto($user, $medico, $especialidad)
+            ->post(route('clinica.consulta.internista.guardar', $consulta->id), [
+                'pestana' => 'estimaciones',
+                'pre_aneste_tipo' => 'B',
+                'pre_aneste_resultado' => 'Asintomático, sin limitación funcional.',
+                'pre_aneste_emergencia' => 'N',
+                'pre_trombo_tipo' => 'A',
+                'pre_infec_tipo' => 'A',
+                'pre_espiro_tipo' => 'A',
+                'pre_espec_tipo' => 'E',
+            ])->assertSessionHas('estado', 'Datos guardados.');
+
+        $this->assertDatabaseHas('pre_aneste', [
+            'reg_medico' => $medico->reg_medico, 'historia' => 3001, 'consulta' => 1,
+            'tipo' => 'B', 'resultado' => 'Asintomático, sin limitación funcional.',
+        ]);
+
+        // El informe que valida al paciente para quirófano sale desde la consulta del cardiólogo.
+        $this->conContexto($user, $medico, $especialidad)
+            ->get(route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::EVALUACION_PREOPERATORIA]))
+            ->assertOk()
+            ->assertSee('EVALUACIÓN PRE-OPERATORIA')
+            ->assertSee('Clase II');
+    }
+
     public function test_una_pestana_que_no_existe_no_guarda(): void
     {
         [$user, $medico, $especialidad] = $this->medico();

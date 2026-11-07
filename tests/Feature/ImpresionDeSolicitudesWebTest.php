@@ -530,6 +530,14 @@ class ImpresionDeSolicitudesWebTest extends TestCase
             // consulta tiene datos, y deja de serlo cuando no queda ninguno.
             'resumen con enfermedad actual' => [fn () => DB::table('consultas')->where('reg_medico', $medico->reg_medico)->update(['enfermedadactual' => 'Dolor de dos días.']), true],
             'resumen vuelto a vaciar' => [fn () => DB::table('consultas')->where('reg_medico', $medico->reg_medico)->update(['enfermedadactual' => null]), false],
+            // La evaluación pre-operatoria (O-47; CAR-5 la enciende en cardiología): es el informe que valida
+            // al paciente para quirófano, así que la secretaría lo ve en la cita apenas el médico carga la
+            // estimación, y deja de verlo cuando la borra.
+            'evaluación pre-operatoria con la clase ASA' => [fn () => DB::table('pre_aneste')->insert([
+                'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'consulta' => 1, 'tipo' => 'B',
+                'created_at' => now(), 'updated_at' => now(),
+            ]), true],
+            'evaluación pre-operatoria borrada' => [fn () => DB::table('pre_aneste')->where('reg_medico', $medico->reg_medico)->delete(), false],
             'constancia vacía' => [fn () => DB::table('constancia_obs')->insert(['reg_medico' => $medico->reg_medico, 'numhistoria' => 1001, 'numconsulta' => 1, 'created_at' => now(), 'updated_at' => now()]), false],
             'constancia con observación' => [fn () => DB::table('constancia_obs')->where('reg_medico', $medico->reg_medico)->update(['observacion01' => 'Algo']), true],
             'constancia con diagnósticos editados' => [fn () => DB::table('constancia_obs')->where('reg_medico', $medico->reg_medico)->update(['observacion01' => null, 'observacion' => 'GASTRITIS.']), true],

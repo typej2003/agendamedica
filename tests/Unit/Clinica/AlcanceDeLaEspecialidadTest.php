@@ -86,7 +86,7 @@ class AlcanceDeLaEspecialidadTest extends TestCase
     {
         $vm = $this->shell('cardiologia');
 
-        $this->assertSame([1, 2, 3, 4, 5, 8, 9, 10, 12, 13, 15], $this->numeros($vm));
+        $this->assertSame([1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13], $this->numeros($vm));
         $this->assertSame(11, $vm->totalItems());
         $this->assertSame(11, $vm->totalListos());
         $this->assertFalse(SeccionesDeLaConsulta::existeSeccion(SeccionesDeLaConsulta::SECCION_ESTUDIO, 'cardiologia'));
