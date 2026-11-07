@@ -5,6 +5,7 @@
     <title>Paciente con posible urgencia</title>
 </head>
 <body style="font-family: Arial, Helvetica, sans-serif; color: #201048; font-size: 15px; line-height: 1.5;">
+    @include('emails._logo')
     <p>
         Una paciente escribió por WhatsApp pidiendo cita, el asistente detectó una <strong>posible urgencia</strong>
         y hoy no hay horario libre.

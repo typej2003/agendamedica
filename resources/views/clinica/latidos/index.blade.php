@@ -48,8 +48,8 @@
     <div class="card">
         <div class="card-header bg-white py-3"><strong>Últimos movimientos</strong></div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            {{-- Sin scroll horizontal: cuando no entra, cada movimiento es una tarjeta (regla del 2026-11-06). --}}
+            <x-ui.tabla>
                     <thead class="table-dark">
                         <tr>
                             <th>Fecha</th>
@@ -62,18 +62,18 @@
                     <tbody>
                         @forelse ($vm->movimientos() as $movimiento)
                             <tr>
-                                <td class="text-nowrap small">{{ $movimiento->created_at?->format('d/m/Y H:i') }}</td>
-                                <td><span class="badge bg-light text-dark">{{ $vm->tipoLegible($movimiento->tipo) }}</span></td>
-                                <td>
+                                <td class="text-nowrap small" data-etiqueta="Fecha">{{ $movimiento->created_at?->format('d/m/Y H:i') }}</td>
+                                <td data-etiqueta="Tipo"><span class="badge bg-light text-dark">{{ $vm->tipoLegible($movimiento->tipo) }}</span></td>
+                                <td class="celda-principal" data-etiqueta="Concepto">
                                     <div>{{ $movimiento->concepto }}</div>
                                     @if ($movimiento->nota)
                                         <small class="text-muted">{{ $movimiento->nota }}</small>
                                     @endif
                                 </td>
-                                <td class="text-end text-nowrap fw-semibold {{ (int) $movimiento->latidos < 0 ? 'text-danger' : 'text-success' }}">
+                                <td class="text-end text-nowrap fw-semibold {{ (int) $movimiento->latidos < 0 ? 'text-danger' : 'text-success' }}" data-etiqueta="Latidos">
                                     {{ \App\Latidos\Conversion::formatear((int) $movimiento->latidos) }}
                                 </td>
-                                <td class="text-end text-nowrap">
+                                <td class="text-end text-nowrap" data-etiqueta="Después">
                                     {{ \App\Latidos\Conversion::formatear((int) $movimiento->disponibles_despues) }}
                                 </td>
                             </tr>
@@ -85,8 +85,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
     </div>
 @endsection

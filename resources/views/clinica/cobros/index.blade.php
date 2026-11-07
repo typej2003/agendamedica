@@ -52,8 +52,7 @@
                 referencia, recházalo y pídele que lo haga de nuevo.
             </p>
 
-            <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
+            <x-ui.tabla class="table table-sm align-middle mb-0">
                     <thead>
                         <tr>
                             <th scope="col">Cita</th>
@@ -67,9 +66,9 @@
                         @foreach ($porConfirmar as $pago)
                             @php($transaccion = $pago->transacciones->last())
                             <tr>
-                                <td>{{ $pago->concepto }}</td>
-                                <td>{{ $pago->montoTexto() }}</td>
-                                <td>
+                                <td class="celda-principal" data-etiqueta="Cita">{{ $pago->concepto }}</td>
+                                <td data-etiqueta="Monto">{{ $pago->montoTexto() }}</td>
+                                <td data-etiqueta="Pagador">
                                     {{ $pago->datos_pagador['nombre'] ?? '—' }}<br>
                                     <span class="texto-tenue small">
                                         {{ $pago->datos_pagador['documento_tipo'] ?? '' }}{{ $pago->datos_pagador['documento_numero'] ?? '' }}
@@ -78,13 +77,13 @@
                                         @endif
                                     </span>
                                 </td>
-                                <td>
+                                <td data-etiqueta="Referencia">
                                     {{ $transaccion?->referencia ?? '—' }}
                                     @if ($transaccion?->mensaje)
                                         <br><span class="texto-tenue small">{{ $transaccion->mensaje }}</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="celda-acciones" data-etiqueta="Resolver">
                                     {{-- La decisión primero (guía de UI, §11): se elige confirmar o rechazar y
                                          recién ahí aparece el dato de esa acción y su botón. Sin JavaScript
                                          quedan las dos ramas a la vista, como antes. --}}
@@ -132,8 +131,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         @endif
     </x-ui.tarjeta>
 
@@ -142,8 +140,8 @@
             @if ($cuentas->isEmpty())
                 <p class="texto-tenue">Todavía no tienes cuentas cargadas. Carga la primera abajo.</p>
             @else
-                <div class="table-responsive mb-3">
-                    <table class="table table-sm align-middle mb-0">
+                <div class="mb-3">
+                    <x-ui.tabla class="table table-sm align-middle mb-0">
                         <thead>
                             <tr>
                                 <th scope="col">Banco</th>
@@ -156,15 +154,15 @@
                         <tbody>
                             @foreach ($cuentas as $cuenta)
                                 <tr>
-                                    <td>
+                                    <td class="celda-principal" data-etiqueta="Banco">
                                         {{ $cuenta->bancoNombre() }}
                                         @if ($cuenta->predeterminada)
                                             <span class="badge text-bg-secondary">Predeterminada</span>
                                         @endif
                                     </td>
-                                    <td>{{ $cuenta->telefono ?: '—' }}</td>
-                                    <td>{{ $cuenta->numero ?: '—' }}</td>
-                                    <td>
+                                    <td data-etiqueta="Pago móvil">{{ $cuenta->telefono ?: '—' }}</td>
+                                    <td data-etiqueta="Cuenta">{{ $cuenta->numero ?: '—' }}</td>
+                                    <td data-etiqueta="Confirmación">
                                         @if ($cuenta->conciliaSola())
                                             Automática
                                         @elseif ($cuenta->conciliacionAutomatica())
@@ -176,7 +174,7 @@
                                             <br><span class="texto-tenue small">{{ $cuenta->conciliacion_error }}</span>
                                         @endif
                                     </td>
-                                    <td class="text-end">
+                                    <td class="text-end celda-acciones">
                                         @if (! $cuenta->predeterminada)
                                             <form method="POST" action="{{ route('clinica.cobros.cuentas.predeterminada', $cuenta) }}" class="d-inline">
                                                 @csrf
@@ -201,7 +199,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-ui.tabla>
                 </div>
             @endif
 

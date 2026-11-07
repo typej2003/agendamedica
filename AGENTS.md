@@ -573,9 +573,49 @@ suman la comparación sin tildes y el `created`), `CrearExamenEnElCatalogo`, `Cr
 `UsoDeUnItemDelCatalogo` (qué es «en uso» en cada catálogo), `PaginaUnaColeccion` y `Vistas/{CatalogoSimpleVista,ExamenesVista,DoctoresVista,ComparteElListadoDeCatalogo}`; vistas `clinica/catalogos/{simple,examenes,doctores}.blade.php`; modelos `Examen` y `TipoExamen`.
 Sin columnas nuevas; las cinco tablas se suben por fila desde el escritorio y el móvil no cambió. Ver las trampas 60 a 62.
 
+Lo que **O-62 (2026-11-05)**, el catálogo de **seguros / empresas del consultorio**, agregó: controlador `SeguroCatalogoController` (`/clinica/catalogos/seguros`: listado paginado con `?buscar=`, `?editar=`/`?nuevo=` que abren el diálogo, `POST` alta/edición y `DELETE {id}` quitar), en el grupo `role:Root|Medico` (la secretaría: 403) y acotado al `reg_medico` del contexto (el de otro consultorio: 404). **Actions** en `App\Actions\Catalogos\`: `CrearSeguroDeEmpresa`, `EditarSeguroDeEmpresa` (el `codesegemp` **no** se edita: es con el que el paciente guarda su seguro), `QuitarSeguroDeEmpresa` (sobre `QuitarDelCatalogo`) y `ReglasDelSeguroDeEmpresa` (nombre **obligatorio** en mayúsculas ≤ 150 y sin duplicar por consultorio; `rif` 50, `direccion` 350 y `telef` 50 opcionales; **código del servidor con dos dígitos**, como el `right("00"+trim(codigo),2)` de `w_agregar_seguro_empresa.srw:129`/`:152`, así que `00` = PERSONAL no se recicla y el catálogo llega a 99). **Lectura** en `App\Clinica\Catalogos\`: `SegurosDelCatalogo`, `UsoDeUnItemDelCatalogo::seguro` (**en uso = pacientes** de ese consultorio con `pacientes.codesegemp`; el aviso dice cuántos y sus nombres, hasta cinco) y `Vistas/SegurosVista`; vista `clinica/catalogos/seguros.blade.php` (reusa `catalogos.js`) y la entrada «Seguros / empresas» en `CatalogosDisponibles` (el submenú pasa a 11). Lo cargado es lo que ofrece el `<select>` «Seguro / empresa» del alta del paciente (`CatalogoDeSeguros`), que no cambió. Se corrigió el `$table` de `App\Models\SegEmp` (`seg_emps` → `seg_emp`, clave `id`, `reg_medico` en el `$fillable`): era la trampa 14. **Sin columnas ni tablas nuevas**; `seg_emp` tiene disparadores de fila en el escritorio (`tr_ddrsync_seg_emp_ins/_upd/_del`) y se sube **por fila**, así que lo que crea la web sobrevive. Tests: `Feature/SegurosCatalogoWebTest` (9).
+
+**La tanda de observaciones del 2026-11-05** (O-56 a O-66; el detalle con el texto original está en
+[`../Docs/Web/observaciones-2026-11-05.md`](../Docs/Web/observaciones-2026-11-05.md)) agregó, además del
+catálogo de seguros de O-62:
+
+- **O-56, los correos del framework en español**: `App\Notifications\{RestablecerContrasena,VerificarCorreo}`
+  extienden las de Laravel y sólo reescriben el texto; `User` sobrescribe los dos `send…Notification()` y los
+  textos del armazón se traducen en `resources/lang/es.json` (no se publica el Blade del framework).
+  **El de verificar el correo queda dormido**: hoy no se manda (`User` no implementa `MustVerifyEmail` y
+  ningún alta dispara `Registered`), y el alta de médico ya tiene su propio correo de confirmación.
+- **O-57, el «+» del alta de paciente en la cita**: `btn-primary` y, sobre todo, `.buscador-accion .btn` perdió
+  las nueve declaraciones (`--bs-btn-bg: transparent` y compañía) que le apagaban el fondo —ese selector
+  (0,2,0) le gana a `.btn-primary` (0,1,0)—.
+- **O-58, «Compartir la cita» nombraba a otro paciente**: la pantalla prefería `paciente_sinhistoria_id` y
+  buscaba la historia **sin acotar al registro** (trampa 145). Ahora `PacientesDeCita::nombreDeLaCita()` resuelve
+  con el orden de la agenda (número con `DuenoDeLaHistoria`; `paciente_chamo` como caída en pediatría) y el
+  texto sale `Apellidos, Nombres`. Señalado: `deLaCita()` (formulario de la cita) y `Cola::paciente` (link de
+  pago y cobro) todavía prefieren el ancla.
+- **O-59, el estado civil del niño es del representante**: en pediatría el campo sale del alta y de «Datos
+  personales»; se carga en el bloque «Representante» (`representante.estado_civil`, nullable, escala
+  `S`/`C`/`D`/`V`) y **no** se rellena con `familia_bebe.situacion_pareja` (escala incompatible).
+- **O-60, todo consultorio nace con el seguro `00`/PERSONAL**: migración de relleno y
+  `AsegurarElSeguroPersonal` en los dos caminos del alta (`CargarCatalogosInicialesAlMedico` y
+  `AprobarSolicitudDeMedico`). Señalado: un **centro médico** nuevo no pasa por ahí.
+- **O-61, el catálogo de parentescos por migración**: en producción no corren los seeders; la migración recorre
+  `ParentescoSeeder::PARENTESCOS` e inserta con `insertOrIgnore`.
+- **O-63, las vacunas dentro de la consulta**: `?seccion=inmunizaciones` monta el calendario en el armazón con
+  **un solo parcial** para las dos pantallas (`clinica/vacunas/_calendario.blade.php` + `CalendarioDelNino`),
+  registrar una dosis vuelve a la sección y el carnet se ofrece desde ahí; `destinoDeLaSeccionPediatrica()` se
+  retiró.
+- **O-65, agendar desde los récipes vuelve a la pantalla donde estabas**: `VueltaDeLaCita` repetía
+  `?seccion=recipes`, que desde O-28 entra por el editor. «Agendar aquí» y «Hacer cita» mandan la pantalla
+  (`volver_recipe`: `lista`/`nuevo`/`pareja`/número) y `pantallaEnLaUrl()` es la única lista de lo aceptado.
+- **O-66, en pediatría el contacto es el del representante y nunca el del niño**: «Celular» y «E-mail» del
+  paciente quedan ocultos (el dato guardado **no se borra**), y `TelefonoDeContacto::paraElAviso()` +
+  `CorreoDeContacto::paraElAviso()` resuelven **sólo** al adulto, sin caer al niño: si falta, el aviso no sale.
+  «Niño» se decide por su fila de `paciente_chamo`, no por la especialidad de la sesión (trampa 137). Señalado:
+  la ficha de sólo lectura sigue mostrando el dato guardado y el **app Flutter** tiene su propia copia de la regla.
+
 Lo que **WEB-8.2 (2026-10-12)**, el formato de impresión del médico, agregó: controladores `FormatoDeImpresionController` (`GET /clinica/formato` la pantalla y `GET /clinica/formato/vista-previa` la hoja de prueba, con `?incrustada=1` para el `<iframe>`) y `FormatoDeImpresionGuardarController` (`POST /clinica/formato/{membrete,logo,estilo,firma,restablecer}`, una por sección), todos en el grupo `role:Root|Medico` (la secretaría: 403). **Actions** en `App\Actions\Configuracion\`: `GuardarMembreteDelMedico` (escribe `evolucion` sólo lo que cambia, con el logo, y deja el rastro `source = web` y el last-write-wins cuando recibe `$origen`), `GuardarFormatoDelRecipe` (escribe `recipe_formatos`, con `restablecer()`), `ReglasDelFormato`, `LimitesDelMembrete` y `ResultadoDelMembrete`; **el API del móvil (`ConfiguracionMedicoController`, `RecipeFormatoController`) las usa** con `$origen = null` y su JSON no cambió. **Lectura/archivos** en `App\Clinica\Impresion\`: `FormatoDelMedico`/`FormatoGuardado` (las dos filas bajo el registro principal), `RecipeDeEjemplo` y `Vistas/{FormatoDeImpresionVista,HojaDePruebaVista}` (la hoja de prueba reusa `HojasDeRecipeVista`), y `App\Clinica\Archivos\ImagenesDelMembrete` (disco `public`, carpetas `logos/`, `recipe/firmas/`, `recipe/sellos/`, tipo real y borrado del anterior si nadie lo usa). Vistas `clinica/formato/*` y `clinica/imprimir/hoja-de-prueba`, JS `public/js/clinica/formato-impresion.js`. El menú ganó el grupo «Configuración» (`ArmazonVista::menu()`). Sin columnas ni tablas nuevas. Ver las trampas 65 a 68.
 
-Lo que **la hoja de los imprimibles (2026-11-04)** agregó: el médico elige una de **cuatro** hojas para sus documentos de texto —**vertical** (A4 vertical completo), **media vertical** (su mitad superior), **horizontal** (media hoja acostada, la derecha en blanco) o **estilo récipe** (dos documentos por hoja, uno al lado del otro)— y se le recuerda. **Migración** nullable `recipe_formatos.formato_imprimibles`; **no** entra en `RecipeFormatoResource` (el JSON del móvil conserva sus claves y el alcance es sólo la web). `ModoDeLaHoja` gana `HORIZONTAL` (misma medida que `MITAD`, una por página), las cuatro claves `HOJA_*` + `HOJAS_DE_LOS_IMPRIMIBLES`, `deLaPreferencia`/`preferenciaDe`, `esVertical()` y un tercer parámetro `$preferido` en `de()` (el `?pagina=grande|pequena` histórico de las solicitudes sigue mandando sobre lo guardado; el resumen médico no lo tiene). `DocumentoImpreso::conPreferencia()` lleva la preferencia y `HojasDeDocumentoVista` **acumula mitades entre documentos** para el modo `MITAD` (así el estilo récipe comparte la hoja); cada mitad lleva su `tamano` y la regla `.recipe-mitad.tamano-* .recipe-cuerpo` de `clinica-recipe.css` la respeta. `MembreteDelMedico::hojaDeLosImprimibles()` lee la fila del **doctor que firma**; `ImpresionDeDocumentosController` aplica la guardada y un `?hoja=` de vista previa (no guarda), y `HojasImpresasVista::paginas()` ofrece las cuatro. La pantalla suma la tarjeta `clinica/formato/_hoja` y `POST /clinica/formato/hoja` (`FormatoDeImpresionGuardarController::hoja`), sólo del médico (un centro no la configura); `FormatosEnBlancoController` la aplica a la hoja en blanco. Los **récipes no cambian** (siempre media hoja horizontal) y los ecos, el control de embarazo, la colposcopía, la histeroscopía y el preoperatorio conservan su hoja fija. Tests: `Feature/HojaDeLosImprimiblesWebTest` (7). Verificador de Chrome: `../.agent-tools/verificar-formato-hoja-web.js`.
+Lo que **la hoja de cada imprimible (2026-11-05)** agregó: el médico elige la hoja de **cada** documento de texto —no una sola para todos— desde la vista previa de la impresión, con el **botón de configuración** al lado de «Imprimir» (el icono de la hoja con la parte que se imprime sombreada y la hoja actual marcada). Son **tres**: hoja completa, media hoja vertical y media hoja horizontal (el A4 horizontal entero no aplica y el «estilo récipe» se retiró con la hoja única). **Migración** nullable `recipe_formatos.hojas_de_los_imprimibles` (JSON `{clave: opción}`), **sin** tocar el JSON del móvil (`RecipeFormatoResource` no cambia). `ModoDeLaHoja` gana `MEDIA_VERTICAL` —la página del PDF mide la mitad, 210 × 148,5 mm, así que no deja el espacio de abajo— y `HORIZONTAL` pasa a medir 148,5 × 210 mm; cada una tiene su `@page` con nombre en `clinica-documento.css` (`documento-media-vertical`, `documento-media-horizontal`) y `clasesDeLaHoja()` le da a cada hoja su clase. `HojaDelImprimible` es **la** regla de la elección (las tres opciones, la clave de cada documento, el modo de cada una y el mapa limpio); `MembreteDelMedico::hojasDeLosImprimibles()` lee la fila del **doctor que firma**; `ImpresionDeDocumentosController` aplica la hoja de cada documento (el `?pagina=grande|pequena` histórico sigue mandando), y `guardarHojaDeLaConsulta`/`guardarHojaDeLaCita` (`POST …/documentos/hoja`) guardan un clic desde el diálogo. `HojasImpresasVista::hojaDelDocumento()` arma el botón sólo con **un** documento configurable; `HojasDeRecipeVista` devuelve `null` (el récipe no la ofrece). El formato en blanco sale igual que la hoja real. Los **récipes no cambian** (siempre media hoja horizontal) y los ecos, el control de embarazo, la colposcopía, la histeroscopía y el preoperatorio conservan su hoja fija. La tarjeta «Hoja de los imprimibles» de `/clinica/formato` y su ruta se retiraron. Tests: `Feature/HojaDeLosImprimiblesWebTest` (10) y `ImpresionDeSolicitudesWebTest`/`ImpresionDeHojaCompletaWebTest` actualizados. Verificador de Chrome: `../.agent-tools/verificar-hoja-por-imprimible-web.js` con `../.agent-tools/hoja-por-imprimible-preparar.php`.
 
 Lo que **WEB-8.1c (2026-10-12)**, el catálogo de motivos de cita con su monto, agregó: controlador `MotivoCitaCatalogoController` (`/clinica/catalogos/motivos-cita`: listado paginado con `?buscar=`, `?editar=`/`?nuevo=` que abren el diálogo, `POST` alta/edición, `PATCH {id}/alternar` —la marca de varias citas de WEB-2.17— y `DELETE {id}` quitar; `pantallaAnterior()` redirige con **301** la dirección vieja `/clinica/agenda/motivos`, que conserva su nombre de ruta `clinica.agenda.motivos`), en el grupo `role:Root|Medico` (la secretaría: 403) y acotado al `reg_medico` del contexto; **reemplazó** a `MotivoCitaController`, a `Agenda\Vistas\MotivosDeCitaVista` y a la vista `clinica/agenda/motivos.blade.php`. **Actions** en `App\Actions\Catalogos\`: `CrearMotivoDeCita` (razón en mayúsculas, precio, sede y marca; **código asignado por el servidor**: mayor numérico del médico + 1 con dos dígitos, con las filas del médico bloqueadas; rechaza el duplicado dentro de la misma sede), `EditarMotivoDeCita` (**la única puerta** a razón/precio/sede/marca: sólo lo que cambió, rastro por columna, no renombra por una diferencia de mayúsculas; la usan el diálogo y el interruptor), `QuitarMotivoDeCita` (sobre `QuitarDelCatalogo`: en uso = citas del médico con ese código en `cola.tipo` o `cola.motivo`, de cualquier fecha, salvo que otra fila conserve el código) y `ReglasDelMotivoDeCita` (razón, precio, código y la clave sin tildes). **Lectura** en `App\Clinica\Catalogos\`: `MotivosDeCitaDelCatalogo` (todas las filas del médico, repetidas incluidas, con `repetidos` y `con_el_mismo_codigo`; las sedes del formulario), `UsoDeUnItemDelCatalogo::motivoDeCita` y `Vistas/MotivosDeCitaVista`; vista `clinica/catalogos/motivos-cita.blade.php` (reusa `catalogos.js`). **El formulario de la cita cambió**: `MotivosDeCita::de()` ofrece **la sede elegida + las sin sede** (antes todos los del médico), `FormularioDeCitaVista` lleva el precio vigente en cada opción, la ayuda del monto («Vacío = el precio del motivo (150,00).») y «Administrar motivos» sólo para el médico (`FormularioDeCita::armar` recibe `puedeAdministrarMotivos`), con el JS en `cita-formulario.js`; el «Más» de la agenda enlaza al catálogo sólo para el médico (`AgendaVista::ofreceLosMotivos`). **Sync:** `motivo_cita` no tiene clave en el escritorio y sube **entera**: se agregó a `sin_clave_con_altas_del_app` y la clave nueva `columnas_del_app_en_el_reemplazo` de `config/sync_legado.php` (usada por `CambiosEscritorio::reemplazarTabla`) restaura `office_id`, `precio` y `admite_varias_citas_pendientes` de lo que el escritorio vuelve a mandar; el móvil no cambió (baja las ediciones por delta y las bajas por `eliminados`). `MotivoCita` ganó el cast `office_id` entero. **Sin columnas ni tablas nuevas.** Ver las trampas 69 a 71.
 
@@ -1125,8 +1165,9 @@ con aprobación** y el de la suscripción son las fases siguientes. Lo nuevo se 
   **estricto** (`reg_medico` y, por `medico_id`, sólo las filas sin registro): `Office::scopeDelMedico` también trae
   los consultorios **de un centro** que creó ese doctor, y editarlos desde su ficha los habría mudado de tenant
   (`GuardarConsultorio` reescribe `reg_medico`). Una ficha sin `reg_medico` no ofrece nada (404 en las acciones).
-  Qué hace cada nivel: **Sedes** (la sede es del catálogo de la clínica): «Agregar» elige una sede existente o
-  registra una nueva **y** su primer consultorio (sin consultorio la sede no es «del médico»), en transacción;
+  Qué hace cada nivel: **Sedes** (cada médico carga las suyas): «Agregar» elige **una sede del médico** —las
+  propias, las asignadas y donde ya tiene consultorio; nunca el catálogo de toda la plataforma, 2026-11-06— o
+  registra una nueva **y** su consultorio (sin consultorio la sede no es «del médico»), en transacción;
   «Editar» cambia la ficha para todos y avisa cuántos otros médicos atienden ahí (le pasa a `GuardarSede` el
   `activo` actual: sin él, la Action reactiva); «Quitar» **da de baja los consultorios del médico** en esa sede
   (`activo = false`), dice cuántas citas tiene ahí desde hoy y no toca la sede. **Consultorios**: alta y edición
@@ -1135,14 +1176,29 @@ con aprobación** y el de la suscripción son las fases siguientes. Lo nuevo se 
   **Horarios**: alta de uno o varios días (todo o nada), edición y «Quitar» que **borra** el bloque como en
   `/clinica` (el modelo deja el rastro en `sync_changes`, con el usuario). No hay bitácora propia del panel:
   `offices` y `medical_centers` no dejan rastro (tampoco desde `/clinica`). Nada se borra en cascada. Tests:
-  `tests/Feature/SedesDelMedicoAdminTest.php` (17); verificación en Chrome:
-  `../.agent-tools/verificar-sedes-admin-web.js` (crea una sede y dos consultorios en el primer médico del
-  listado, y no los borra). **Sin migraciones.**
+  `tests/Feature/SedesDelMedicoAdminTest.php` (19); verificación en Chrome:
+  `../.agent-tools/verificar-sedes-admin-web.js` (con `../.agent-tools/sedes-del-medico-admin-preparar.php`
+  comprueba que «Sede existente» sólo traiga las del médico; crea una sede y dos consultorios en el primer médico
+  del listado, y no los borra). **Sin migraciones.**
 - **Sección "API Keys"** (`/admin/api-keys`, `Admin\ApiKeys`, misma ruta-archivo `routes/web/cuentas.php`): genera y
   revoca la credencial de sync por médico (`SyncCredencialService`, el mismo que usa `php artisan sync:credencial`)
   y muestra por médico la última sincronización del escritorio y del app, la carga inicial, las API keys activas y
   los conteos de pacientes e historias (`SyncResumenService`, en lote por página). El token en claro se muestra una
   sola vez (copiar o descargar `sync-token.txt`); en la base solo queda su SHA-256.
+  **El registro se elige** (2026-11-05): un médico con varias sedes (varios `reg_medico`) emite la credencial para
+  **la que se elija** en el diálogo —antes tomaba siempre `regMedicoPrincipal()` y la segunda PC subía al tenant de
+  la primera sin avisar— y la lista de credenciales muestra el registro de cada una, que es lo que permite revocar
+  la correcta. Tests: `ApiKeysPanelTest`; verificación en Chrome:
+  `../.agent-tools/verificar-api-keys-registro-web.js` con `../.agent-tools/api-keys-registro-preparar.php`.
+  **El segundo consultorio del doctor** (2026-11-06): desde «Registros de datos» del médico, «Agregar un
+  consultorio» crea la ficha nueva (`es_centro` sin cuenta, con `medicos.medico_padre_id`) y el vínculo, sin
+  plan propio: `ServicioService::actual()` resuelve el del **padre** (el hijo no recibe prueba ni año de
+  cortesía y `otorgar` se lo impide), `CupoDelPlan` cuenta la **familia** —el mismo doctor no ocupa dos
+  asientos— y un consultorio hijo no se trata como centro en la agenda (`MedicosDeLaCita::centro()`). La
+  ficha muestra las sedes por consultorio y marca el plan heredado. Sin migración de datos: la columna es
+  nullable y lo existente queda independiente. Tests: `ConsultorioHijoDelMedicoTest`, `RegistrosDeMedicoTest`,
+  `DetalleDelMedicoGestionTest`; verificación en Chrome:
+  `../.agent-tools/verificar-consultorio-hijo-web.js` con `../.agent-tools/consultorio-hijo-preparar.php`.
   **Última actividad web** (2026-10-20): `users.ultima_actividad_web_at`. El middleware `RegistrarActividadWeb` (grupo
   `web`, sin el latido `clinica.sesion`) **no escribe en la base**: dispara `ActividadWebRegistrada` como mucho una vez
   cada 5 min por cuenta (`Cache::add`) y el listener `GuardarUltimaActividadWeb` (`ShouldQueue`) hace un `UPDATE` que
@@ -1539,7 +1595,7 @@ hay que saber sin volver a deducirlo (las trampas **151 a 156** de [`TRAMPAS.md`
 
 ## Trampas conocidas
 
-Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **188** y el archivo se lee
+Las trampas **medidas** del repo están en **[`TRAMPAS.md`](TRAMPAS.md)** (van **189** y el archivo se lee
 entero en una sola pasada). **Leélo antes de escribir código**: el esquema del legado, los `where`
 crudos, los roles de la consulta (**trampa 19: "Atender" es sólo del médico**, WEB-4.9), los `[hidden]`,
 `examen_fisico_nuevo`, las **reglas de archivo de

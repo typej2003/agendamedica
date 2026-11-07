@@ -687,6 +687,139 @@ class PacientesAltaEdicionWebTest extends TestCase
         $this->assertNull(DB::table('pacientes')->where('id', $paciente)->value('apellidos'));
     }
 
+    /**
+     * **O-59 (2026-11-05): en pediatría el estado civil no es del niño.** El alta no lo pide —el del adulto
+     * se carga en el bloque «Representante» de la ficha—, guardar sin el campo no rompe la validación y el
+     * `codeestado` que el niño ya tuviera (un dato heredado del escritorio) **no se borra** al guardar la
+     * ficha, porque el formulario no lo manda y la Action sólo escribe las columnas que recibe.
+     */
+    public function test_el_alta_de_pediatria_no_pide_el_estado_civil_del_nino(): void
+    {
+        [$user, $medico] = $this->medicoConAcceso();
+        $pediatria = Specialty::where('slug', 'pediatria')->firstOrFail();
+        $medico->specialties()->syncWithoutDetaching([$pediatria->id]);
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->get('/clinica/pacientes/nuevo')
+            ->assertOk()
+            ->assertDontSee('name="codeestado"', false)
+            ->assertDontSee('Estado civil');
+
+        // Guardar sin el campo no rompe nada y el niño queda sin estado civil.
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->post('/clinica/pacientes', [
+                'nac'         => 'V',
+                'nombres'     => 'Ana Lucía',
+                'sexo'        => 'F',
+                'fnacimiento' => now()->subYears(4)->toDateString(),
+            ])
+            ->assertSessionHasNoErrors();
+
+        $nueva = DB::table('pacientes')->where('nombres', 'Ana Lucía')->first();
+        $this->assertNotNull($nueva);
+        $this->assertNull($nueva->codeestado);
+
+        // Y la edición de la ficha del niño tampoco lo pide ni lo vacía.
+        $nino = $this->paciente($medico, ['nombres' => 'PEDRO ADRIAN', 'apellidos' => null, 'codeestado' => 'S'], '01002');
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->get('/clinica/pacientes/' . $nino . '/editar')
+            ->assertOk()
+            ->assertDontSee('name="codeestado"', false);
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->put('/clinica/pacientes/' . $nino, ['nombres' => 'PEDRO ADRIAN PEREZ'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('S', DB::table('pacientes')->where('id', $nino)->value('codeestado'), 'el dato heredado no se borra');
+    }
+
+    /** Fuera de pediatría no cambia nada: el paciente adulto sigue declarando su estado civil en el alta. */
+    public function test_en_ginecologia_el_alta_sigue_pidiendo_el_estado_civil(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/pacientes/nuevo')
+            ->assertOk()
+            ->assertSee('name="codeestado"', false)
+            ->assertSee('Estado civil')
+            ->assertSee('Soltero(a)')
+            ->assertSee('Casado(a)')
+            ->assertSee('Divorciado(a)')
+            ->assertSee('Viudo(a)');
+    }
+
+    /**
+     * **O-66 (2026-11-05): en pediatría no se piden el teléfono ni el correo del niño.** El bloque «Cómo se
+     * contacta» de la ficha (el mismo parcial del alta, la edición y «Datos personales» de la consulta) los
+     * oculta porque al niño no se lo contacta nunca: el aviso va al representante. El dato que el paciente ya
+     * tuviera (la excepción que el escritorio pudo dejar cargada) **no se borra**: el formulario no lo manda y
+     * la Action sólo escribe las columnas que recibe.
+     */
+    public function test_el_alta_y_la_ficha_de_pediatria_no_piden_telefono_ni_correo_del_nino(): void
+    {
+        [$user, $medico] = $this->medicoConAcceso();
+        $pediatria = Specialty::where('slug', 'pediatria')->firstOrFail();
+        $medico->specialties()->syncWithoutDetaching([$pediatria->id]);
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->get('/clinica/pacientes/nuevo')
+            ->assertOk()
+            ->assertDontSee('name="telefono"', false)
+            ->assertDontSee('name="email"', false)
+            ->assertDontSee('E-mail');
+
+        // El alta guarda al niño sin esos datos y sin que falte nada.
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->post('/clinica/pacientes', [
+                'nac'         => 'V',
+                'nombres'     => 'Ana Lucía',
+                'sexo'        => 'F',
+                'fnacimiento' => now()->subYears(4)->toDateString(),
+            ])
+            ->assertSessionHasNoErrors();
+
+        $nueva = DB::table('pacientes')->where('nombres', 'Ana Lucía')->first();
+        $this->assertNotNull($nueva);
+        $this->assertNull($nueva->telefono);
+        $this->assertNull($nueva->email);
+
+        // Un niño que ya traía el dato del escritorio: la edición no lo pide y, al guardar sin él, lo conserva.
+        $nino = $this->paciente($medico, [
+            'nombres'   => 'PEDRO ADRIAN',
+            'apellidos' => null,
+            'telefono'  => '0414-5550099',
+            'email'     => 'nino@example.com',
+        ], '01003');
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->get('/clinica/pacientes/' . $nino . '/editar')
+            ->assertOk()
+            ->assertDontSee('name="telefono"', false)
+            ->assertDontSee('name="email"', false);
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->put('/clinica/pacientes/' . $nino, ['nombres' => 'PEDRO ADRIAN PEREZ'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('0414-5550099', DB::table('pacientes')->where('id', $nino)->value('telefono'), 'el dato heredado no se borra');
+        $this->assertSame('nino@example.com', DB::table('pacientes')->where('id', $nino)->value('email'), 'el dato heredado no se borra');
+    }
+
+    /** Fuera de pediatría no cambia nada: el alta sigue pidiendo el teléfono y el correo del paciente. */
+    public function test_en_ginecologia_el_alta_sigue_pidiendo_el_telefono_y_el_correo_del_paciente(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/pacientes/nuevo')
+            ->assertOk()
+            ->assertSee('name="telefono"', false)
+            ->assertSee('name="email"', false)
+            ->assertSee('E-mail');
+    }
+
     public function test_editar_o_guardar_la_ficha_de_un_paciente_de_otro_medico_da_404(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();

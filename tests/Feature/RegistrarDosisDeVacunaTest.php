@@ -19,7 +19,9 @@ use Tests\TestCase;
 /**
  * **Registrar una dosis aplicada** (WEB-7.4.4b): la Action `RegistrarDosisDeVacuna` y su formulario en el calendario de vacunas del niño.
  * Se fija que escribe la fila del legado con sus campos y el rastro de la web, no duplica una dosis, completa la planeada que dejó el escritorio,
- * rechaza lo que no se puede (vacuna ajena, fecha futura o anterior al nacimiento) y que el calendario la muestra como aplicada.
+ * rechaza lo que no se puede (vacuna ajena, fecha futura o anterior al nacimiento, un «dónde se aplicó» que no sea `S`/`N`) y que el calendario
+ * la muestra como aplicada. **Los dos booleanos** de la dosis (O-83): `ejecutada` (¿se aplicó?) y `aplicada_aca` (¿se aplicó acá?), con el
+ * segundo por defecto en «acá» para que los llamadores de siempre no cambien.
  */
 class RegistrarDosisDeVacunaTest extends TestCase
 {
@@ -123,6 +125,7 @@ class RegistrarDosisDeVacunaTest extends TestCase
         $this->assertSame('ORAL', $fila->tipo_vacu);
         $this->assertSame('L-77', $fila->lote);
         $this->assertNull($fila->zona);
+        // El camino de siempre (sin el segundo booleano) deja la dosis como aplicada **acá** (O-83): el móvil no cambia.
         $this->assertSame('S', $fila->aplicada_aca);
         $this->assertSame('2026-08-17', Carbon::parse($fila->fecha_planeada)->toDateString());
         $this->assertSame('2026-08-20', Carbon::parse($fila->fecha_ejecutada)->toDateString());
@@ -133,6 +136,28 @@ class RegistrarDosisDeVacunaTest extends TestCase
         $rastro = SyncChange::where('table_name', 'vacuna_paciente')->where('record_id', $fila->id)->first();
         $this->assertSame('created', $rastro->operation);
         $this->assertSame('web', $rastro->source);
+    }
+
+    /**
+     * **Los dos booleanos** (O-83, Alexander 2026-11-06): «Uno si se aplicó o no, y el otro si se aplicó acá o no (si es
+     * propia). Si se aplicó en otro lado, se pone que se aplicó en true y el propia en false». Con `$aplicadaAca = false` la
+     * fila queda `ejecutada = 'S'` y `aplicada_aca = 'N'`: aplicada, pero no por este consultorio.
+     */
+    public function test_una_dosis_aplicada_en_otro_lado_queda_aplicada_pero_no_propia(): void
+    {
+        [, $medico] = $this->medicoConAcceso();
+        $this->catalogo($medico);
+
+        $this->accion()->ejecutar(
+            $medico->reg_medico, 9501, 'POLI', 1, '1era. Dosis',
+            ['fecha_ejecutada' => '2026-08-20', 'lote' => 'L-9'],
+            '2026-06-17', null, null, 'web',
+            false,
+        );
+
+        $fila = $this->filas($medico)->first();
+        $this->assertSame('S', $fila->ejecutada);
+        $this->assertSame('N', $fila->aplicada_aca);
     }
 
     public function test_no_duplica_una_dosis_ya_aplicada(): void
@@ -249,6 +274,30 @@ class RegistrarDosisDeVacunaTest extends TestCase
             ->assertOk()->assertSeeInOrder(['1era. Dosis', '17/08/2026', '20/08/2026', 'Lote L-1', 'Aplicada']);
     }
 
+    /**
+     * **El segundo booleano desde el formulario** (O-83): «En otro lado» viaja como `aplicada_aca = 'N'` y la dosis queda
+     * **aplicada** (`ejecutada = 'S'`) pero no propia; la lista la muestra como «Aplicada en otro lado».
+     */
+    public function test_registrar_con_en_otro_lado_guarda_la_dosis_aplicada_pero_no_propia(): void
+    {
+        [$user, $medico, $pediatria] = $this->medicoConAcceso();
+        $this->catalogo($medico);
+        $id = $this->nino($medico);
+        $url = route('clinica.pacientes.vacunas', $id);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->post(route('clinica.pacientes.vacunas.registrar', $id), [
+            'codi_vacuna' => 'POLI', 'dosis_numero' => 1, 'rotulo' => '1era. Dosis', 'fecha_ejecutada' => '2026-08-20',
+            'aplicada_aca' => 'N',
+        ])->assertRedirect($url)->assertSessionHas('estado');
+
+        $fila = $this->filas($medico)->first();
+        $this->assertSame('S', $fila->ejecutada);
+        $this->assertSame('N', $fila->aplicada_aca);
+
+        $this->conContexto($medico, $pediatria)->actingAs($user)->get($url)
+            ->assertOk()->assertSee('Aplicada en otro lado')->assertDontSee('Aplicada acá');
+    }
+
     public function test_el_formulario_rechaza_con_aviso_y_la_validacion_es_en_espanol(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
@@ -265,6 +314,11 @@ class RegistrarDosisDeVacunaTest extends TestCase
 
         $this->conContexto($medico, $pediatria)->actingAs($user)->post($post, ['lote' => str_repeat('x', 21)])
             ->assertSessionHasErrors(['codi_vacuna', 'fecha_ejecutada', 'lote']);
+
+        // El segundo booleano (O-83) sólo acepta `S` o `N`.
+        $this->conContexto($medico, $pediatria)->actingAs($user)->post($post, [
+            'codi_vacuna' => 'POLI', 'dosis_numero' => 1, 'fecha_ejecutada' => '2026-09-01', 'aplicada_aca' => 'X',
+        ])->assertSessionHasErrors('aplicada_aca');
 
         $this->assertCount(0, $this->filas($medico));
     }

@@ -111,8 +111,8 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
             $this->assertSame(1, ModoDeLaHoja::porPagina(ModoDeLaHoja::MITAD_SUPERIOR));
         }
 
-        // Las solicitudes: A4 vertical, grande por defecto y pequeña (mitad superior) a elección; nunca media hoja horizontal
-        // (2026-10-21).
+        // Las solicitudes: A4 vertical, grande por defecto y media hoja vertical (la página mide la mitad) a elección;
+        // nunca media hoja horizontal (2026-10-21 y 2026-11-05).
         foreach ([
             DocumentoImpreso::INFORME,
             DocumentoImpreso::REPOSO,
@@ -128,7 +128,7 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
             $this->assertSame(ModoDeLaHoja::COMPLETA, ModoDeLaHoja::de($documento), $documento);
             $this->assertSame(ModoDeLaHoja::COMPLETA, ModoDeLaHoja::de($documento, ModoDeLaHoja::PAGINA_GRANDE), $documento);
             $this->assertSame(ModoDeLaHoja::COMPLETA, ModoDeLaHoja::de($documento, 'cualquiera'), $documento);
-            $this->assertSame(ModoDeLaHoja::MITAD_SUPERIOR, ModoDeLaHoja::de($documento, ModoDeLaHoja::PAGINA_PEQUENA), $documento);
+            $this->assertSame(ModoDeLaHoja::MEDIA_VERTICAL, ModoDeLaHoja::de($documento, ModoDeLaHoja::PAGINA_PEQUENA), $documento);
         }
         $this->assertSame(ModoDeLaHoja::MITAD, ModoDeLaHoja::de(DocumentoImpreso::RESUMEN_MEDICO, ModoDeLaHoja::PAGINA_PEQUENA));
 
@@ -152,11 +152,8 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
         $superior = ModoDeLaHoja::medidas(ModoDeLaHoja::MITAD_SUPERIOR);
 
         $this->assertSame($completa->anchoDelCuerpo(), $superior->anchoDelCuerpo());
-        $this->assertSame(
-            MedidasDeLaMitad::ALTO_UTIL_DE_LA_HOJA_COMPLETA_MM / 2 - 5.5,
-            MedidasDeLaMitad::ALTO_UTIL_DE_LA_MITAD_SUPERIOR_MM,
-            'la mitad superior es media página menos 9 de margen arriba y 5 de aire abajo',
-        );
+        // Media Carta (279,4 / 2 = 139,7) menos 9 de margen arriba y 5 de aire abajo.
+        $this->assertSame(125.7, MedidasDeLaMitad::ALTO_UTIL_DE_LA_MITAD_SUPERIOR_MM, 'la mitad superior es media página menos 9 de margen arriba y 5 de aire abajo');
     }
 
     // =========================================================== El informe del control de embarazo

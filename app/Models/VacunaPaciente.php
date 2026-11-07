@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Una dosis de vacuna de un niño (`vacuna_paciente`, tabla del legado de pediatría). La clave del escritorio es `historia` + `codi_vacuna` +
- * `fecha_ejecutada`. `ejecutada` = `S` es una dosis **aplicada**; el escritorio también guarda ahí las planeadas con `N`.
+ * `fecha_ejecutada`. `ejecutada` = `S` es una dosis **aplicada**; el escritorio también guarda ahí las planeadas con `N` y, a esas,
+ * les escribe en `fecha_ejecutada` el día en que cargó la fila: **la fecha no dice si la dosis se aplicó, lo dice `ejecutada`**
+ * (Alexander, 2026-11-06). `fecha_planeada` es la «F. a aplicar» y `fecha_proxima_dosis`, el recordatorio de la próxima dosis de
+ * la misma vacuna, que se llena al aplicarla (`fecha_proxima_vac`, en cambio, no tiene semántica confirmada: no se usa).
  */
 class VacunaPaciente extends Model
 {

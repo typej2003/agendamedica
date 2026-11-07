@@ -5,10 +5,11 @@ namespace App\Clinica\Impresion;
 /**
  * **Las medidas de una mitad de la hoja del récipe** (WEB-5.2) y cuánto alto le queda al cuerpo.
  *
- * La hoja es un A4 horizontal (297 × 210 mm) partido en dos mitades de 148,5 × 210 mm. Cada mitad es un
- * récipe completo, con su membrete arriba y su firma y pie abajo, y **lo que sobra en el medio es el cuerpo**:
- * la lista de medicamentos. El navegador no sabe pasar a una segunda hoja repitiendo el membrete y la firma, así
- * que quien decide cuántos medicamentos entran es el servidor, y para eso tiene que saber cuánto alto queda.
+ * La hoja es una **Carta horizontal** (279,4 × 215,9 mm) partida en dos mitades de 139,7 × 215,9 mm (2026-11-05: los
+ * consultorios imprimen en Carta, no en A4). Cada mitad es un récipe completo, con su membrete arriba y su firma y pie
+ * abajo, y **lo que sobra en el medio es el cuerpo**: la lista de medicamentos. El navegador no sabe pasar a una
+ * segunda hoja repitiendo el membrete y la firma, así que quien decide cuántos medicamentos entran es el servidor, y
+ * para eso tiene que saber cuánto alto queda.
  *
  * Esta clase es esa cuenta. **Cada constante tiene su gemela en `public/css/clinica-recipe.css`** (el comentario
  * de cada regla dice cuál) y tienen que cambiar juntas; la prueba de navegador del verificador
@@ -18,8 +19,8 @@ namespace App\Clinica\Impresion;
  * ## La cuenta
  *
  * ```
- * 210,0  alto de la hoja
- *  − 17,0  márgenes (9 arriba, 8 abajo)                       = 193,0 mm útiles
+ * 215,9  alto de la hoja
+ *  − 17,0  márgenes (9 arriba, 8 abajo)                       = 198,9 mm útiles
  *  −  M    membrete (logo y textos, ver `altoDelMembrete`)
  *  −  5,0  línea separadora y su aire
  *  −  D    datos del paciente (ver `altoDeLosDatos`) + 4,0 de aire
@@ -29,21 +30,21 @@ namespace App\Clinica\Impresion;
  *  −  4,0  reserva de seguridad
  * ```
  *
- * Para el médico típico (logo mediano a la izquierda, tres líneas de pie) el cuerpo queda en ~102 mm: seis o siete
+ * Para el médico típico (logo mediano a la izquierda, tres líneas de pie) el cuerpo queda en ~108 mm: seis o siete
  * medicamentos con dos líneas de indicación.
  *
- * ## Las dos hojas (O-26)
+ * ## Las tres hojas
  *
- * La misma clase mide **las dos hojas** del motor, porque la cuenta de las franjas (membrete, datos, título, firma, pie) es la
- * misma y lo único que cambia son los milímetros útiles:
+ * La misma clase mide **todas las hojas** del motor, porque la cuenta de las franjas (membrete, datos, título, firma, pie) es
+ * la misma y lo único que cambia son los milímetros útiles:
  *
- *  - **Media hoja** (el caso de siempre): la mitad izquierda de un A4 horizontal, 128,5 × 193 mm útiles. Es la que construye
- *    el constructor sin argumentos.
- *  - **Hoja completa vertical** (`deLaHojaCompleta()`): un A4 vertical entero, 182 × 279,5 mm útiles (14 mm de margen a los
- *    lados). La usan el informe del control de embarazo y los informes de los ecos (O-26).
- *  - **Mitad superior de un A4 vertical** (`deLaMitadSuperior()`, 2026-10-18): la página vertical entera para la orientación,
- *    pero el informe usa sólo la mitad de arriba, 182 × 134,25 mm útiles. La usan la colposcopía y la histeroscopía, que
- *    llevan la imagen del examen en la misma página y dejan la mitad de abajo en blanco.
+ *  - **Media hoja** (el caso de siempre): la mitad izquierda de una Carta horizontal, 119,7 × 198,9 mm útiles. Es la que
+ *    construye el constructor sin argumentos.
+ *  - **Hoja completa vertical** (`deLaHojaCompleta()`): una Carta vertical entera, 187,9 × 261,9 mm útiles (14 mm de margen
+ *    a los lados). La usan el informe del control de embarazo y los informes de los ecos (O-26).
+ *  - **Mitad superior de una Carta vertical** (`deLaMitadSuperior()`, 2026-10-18): la página vertical entera para la
+ *    orientación, pero el informe usa sólo la mitad de arriba, 187,9 × 125,7 mm útiles. La usan la colposcopía y la
+ *    histeroscopía, que llevan la imagen del examen en la misma página y dejan la mitad de abajo en blanco.
  *
  * **Quién decide el modo de cada documento es `ModoDeLaHoja`**, que también devuelve estas medidas: no hay una regla suelta
  * por documento. Y `DistribuidorDeDocumento` mide con las que le pasen, sin saber de qué modo se trata.
@@ -52,24 +53,24 @@ namespace App\Clinica\Impresion;
  */
 final class MedidasDeLaMitad
 {
-    /** Ancho útil de la mitad: 148,5 − 10 − 10 de márgenes laterales (`.recipe-mitad` en el CSS). */
-    public const ANCHO_UTIL_MM = 128.5;
+    /** Ancho útil de la mitad: 139,7 − 10 − 10 de márgenes laterales (`.recipe-mitad` en el CSS). */
+    public const ANCHO_UTIL_MM = 119.7;
 
-    /** Alto útil de la mitad: 210 − 9 − 8 de márgenes (`.recipe-mitad` en el CSS). */
-    public const ALTO_UTIL_MM = 193.0;
+    /** Alto útil de la mitad: 215,9 − 9 − 8 de márgenes (`.recipe-mitad` en el CSS). */
+    public const ALTO_UTIL_MM = 198.9;
 
-    /** Ancho útil de la hoja completa: 210 − 14 − 14 de márgenes laterales (`.recipe-hoja-completa` en el CSS). */
-    public const ANCHO_UTIL_DE_LA_HOJA_COMPLETA_MM = 182.0;
+    /** Ancho útil de la hoja completa: 215,9 − 14 − 14 de márgenes laterales (`.recipe-hoja-completa` en el CSS). */
+    public const ANCHO_UTIL_DE_LA_HOJA_COMPLETA_MM = 187.9;
 
-    /** Alto útil de la hoja completa: 296,5 − 9 − 8 de márgenes (`.recipe-hoja-completa` en el CSS). */
-    public const ALTO_UTIL_DE_LA_HOJA_COMPLETA_MM = 279.5;
+    /** Alto útil de la hoja completa: 278,9 − 9 − 8 de márgenes (`.recipe-hoja-completa` en el CSS). */
+    public const ALTO_UTIL_DE_LA_HOJA_COMPLETA_MM = 261.9;
 
     /**
-     * Alto útil de la **mitad superior de un A4 vertical** (2026-10-18: los informes de colposcopía e histeroscopía, que el
-     * escritorio imprime en media hoja). La página es la misma vertical de 296,5 mm, la mitad de arriba mide 148,25 y el cuerpo
-     * descuenta 9 de margen arriba y 5 de aire abajo: 134,25 mm (`.recipe-hoja-mitad-superior` en el CSS).
+     * Alto útil de la **mitad superior de una Carta vertical** (2026-10-18: los informes de colposcopía e histeroscopía,
+     * que el escritorio imprime en media hoja). La página es la misma vertical de 279,4 mm, la mitad de arriba mide 139,7
+     * y el cuerpo descuenta 9 de margen arriba y 5 de aire abajo: 125,7 mm (`.recipe-hoja-mitad-superior` en el CSS).
      */
-    public const ALTO_UTIL_DE_LA_MITAD_SUPERIOR_MM = 134.25;
+    public const ALTO_UTIL_DE_LA_MITAD_SUPERIOR_MM = 125.7;
 
     /** La sangría del cuerpo respecto de los márgenes (`.recipe-cuerpo` en el CSS). */
     public const SANGRIA_DEL_CUERPO_MM = 3.0;
@@ -119,7 +120,7 @@ final class MedidasDeLaMitad
 
     /**
      * La **caja del destinatario** del resumen médico (WEB-5.3c, `informe.para`): el valor en negrita a 11 pt dentro de
-     * una caja con borde (`.documento-para`). El `para` es `char(50)`, así que a 11 pt entra en una línea de los 128,5 mm
+     * una caja con borde (`.documento-para`). El `para` es `char(50)`, así que a 11 pt entra en una línea de los 119,7 mm
      * útiles y la franja es fija: borde (0,5 + 0,5) + relleno (1 + 1) + la línea (4,85) + el aire de abajo (2) = 9,9 mm.
      */
     private const PARA_MM = 9.9;
@@ -134,7 +135,7 @@ final class MedidasDeLaMitad
     private const DOS_IMAGENES_DE_HOJA_COMPLETA_MM = 76.0;
 
     /**
-     * Lo mismo en la **mitad superior de un A4 vertical**: el bloque es mucho más chico porque tiene que entrar junto al texto,
+     * Lo mismo en la **mitad superior de una Carta vertical**: el bloque es mucho más chico porque tiene que entrar junto al texto,
      * la firma y el pie en media página (86 mm de imagen no dejarían lugar para nada).
      */
     private const IMAGENES_DE_LA_MITAD_SUPERIOR_MM = 32.0;
@@ -185,7 +186,7 @@ final class MedidasDeLaMitad
         $this->altoUtil ??= self::ALTO_UTIL_MM;
     }
 
-    /** Las medidas de una **hoja completa vertical** (O-26): un A4 vertical entero, una hoja por documento. */
+    /** Las medidas de una **hoja completa vertical** (O-26): una Carta vertical entera, una hoja por documento. */
     public static function deLaHojaCompleta(): self
     {
         return new self(
@@ -196,8 +197,8 @@ final class MedidasDeLaMitad
     }
 
     /**
-     * Las medidas de la **mitad superior de un A4 vertical** (2026-10-18): el informe de colposcopía y el de histeroscopía.
-     * Mismo ancho que la hoja completa (182 mm) y el alto de media página.
+     * Las medidas de la **mitad superior de una Carta vertical** (2026-10-18): el informe de colposcopía y el de
+     * histeroscopía. Mismo ancho que la hoja completa (187,9 mm) y el alto de media página.
      */
     public static function deLaMitadSuperior(): self
     {

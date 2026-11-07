@@ -11,39 +11,25 @@
             <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
         </x-slot>
 
-        <nav class="pestanas-en-fila mb-3" aria-label="Cirugía">
-            @foreach ($seccion->pestanas() as $pestana)
-                @if ($pestana['pendiente'])
-                    <span class="pestana" title="Llega en la próxima entrega">
-                        {{ $pestana['texto'] }} <small class="texto-tenue">(próximamente)</small>
-                    </span>
-                @else
-                    <a class="pestana {{ $pestana['activa'] ? 'activa' : '' }}" href="{{ $pestana['url'] }}"
-                       @if ($pestana['activa']) aria-current="page" @endif>
-                        {{ $pestana['texto'] }}
-                        @if ($pestana['cargada'])<i class="bi bi-check2-circle ms-1" title="Con datos" aria-hidden="true"></i>@endif
-                    </a>
-                @endif
-            @endforeach
-        </nav>
+        <x-ui.chips class="mb-3" :opciones="$seccion->pestanas()" etiqueta="Cirugía" />
 
         @if ($seccion->esPestana('riesgo'))
             @include('clinica.consulta._quirurgico-riesgo', ['seccion' => $seccion])
         @elseif ($seccion->esPestana('intervenciones'))
             {{-- Las intervenciones: una fila por intervención (`interven_consulta`). --}}
             @if ($seccion->tieneIntervenciones())
-                <div class="table-responsive mb-3">
-                    <table class="table table-sm align-middle">
+                <div class="mb-3">
+                    <x-ui.tabla class="table table-sm align-middle">
                         <thead>
                             <tr><th>Código</th><th>Descripción</th><th>Detalle</th><th></th></tr>
                         </thead>
                         <tbody>
                             @foreach ($seccion->intervenciones() as $intervencion)
                                 <tr>
-                                    <td><code>{{ $intervencion['codigo'] }}</code></td>
-                                    <td>{{ $intervencion['descripcion'] }}</td>
-                                    <td class="texto-tenue">{{ $intervencion['detalle'] }}</td>
-                                    <td class="text-end">
+                                    <td data-etiqueta="Código"><code>{{ $intervencion['codigo'] }}</code></td>
+                                    <td class="celda-principal" data-etiqueta="Descripción">{{ $intervencion['descripcion'] }}</td>
+                                    <td class="texto-tenue" data-etiqueta="Detalle">{{ $intervencion['detalle'] }}</td>
+                                    <td class="text-end celda-acciones">
                                         <form method="POST" action="{{ $intervencion['urlQuitar'] }}"
                                               onsubmit="return confirm('¿Quitar esta intervención?')">
                                             @csrf
@@ -56,7 +42,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-ui.tabla>
                 </div>
             @else
                 <p class="text-muted">Esta consulta todavía no tiene intervenciones cargadas.</p>

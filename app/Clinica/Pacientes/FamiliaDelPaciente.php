@@ -54,6 +54,48 @@ class FamiliaDelPaciente
     }
 
     /**
+     * **¿La historia es de un niño?** (O-66): la marca es su fila en `paciente_chamo`, que es el paciente de PediaReport (el que
+     * tiene familia y representante). Un paciente de otra especialidad no la tiene.
+     *
+     * Es lo que distingue al niño de un adulto **sin mirar la especialidad del contexto**: un mismo `reg_medico` puede atender en
+     * pediatría y en otra especialidad, y la especialidad de la sesión no llega a los caminos de envío (el comando de cumpleaños,
+     * el endpoint del móvil). El adulto que responde por él está en `representante` o en `familia_bebe`.
+     */
+    public function esUnNino(string $regMedico, ?string $numhistoria): bool
+    {
+        $historia = CamposDePaciente::historiaNumerica($numhistoria);
+
+        return $historia !== null && isset($this->ninos($regMedico, [$historia])[$historia]);
+    }
+
+    /**
+     * Varias historias de una vez (los cumpleaños del día y la agenda resuelven por lote, no una a una).
+     *
+     * @param  iterable<int|string>  $numhistorias
+     * @return array<int,true> `numhistoria` entero => `true`; sólo las que son de un niño
+     */
+    public function ninos(string $regMedico, iterable $numhistorias): array
+    {
+        $historias = Collection::make($numhistorias)
+            ->map(fn ($n) => CamposDePaciente::historiaNumerica((string) $n))
+            ->filter(fn ($n) => $n !== null)
+            ->unique()
+            ->values();
+
+        if ($historias->isEmpty()) {
+            return [];
+        }
+
+        return DB::table('paciente_chamo')
+            ->where('reg_medico', $regMedico)
+            ->whereIn('historia', $historias->all())
+            ->orderBy('id')
+            ->pluck('historia')
+            ->mapWithKeys(fn ($historia) => [(int) $historia => true])
+            ->all();
+    }
+
+    /**
      * Los otros niños de la misma familia, del más viejo al más joven, con el `id` de su ficha (el del paciente, por el vínculo
      * `medico_pacientes`) para poder enlazarlos. Un hermano sin ficha en la web se lista igual, sin enlace.
      *

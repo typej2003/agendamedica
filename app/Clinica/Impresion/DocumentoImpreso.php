@@ -2,6 +2,8 @@
 
 namespace App\Clinica\Impresion;
 
+use App\Clinica\Consulta\Vistas\TiposDeEstudio;
+
 /**
  * **Un documento de la consulta listo para imprimir en media hoja** (WEB-5.3a, WEB-5.3b, WEB-5.4): constancia, reposo, referencia,
  * informe, orden de hospitalización, dieta / recomendaciones, orden de laboratorio o solicitud de estudios. Lo arma `SolicitudesParaImprimir` y lo reparte en mitades `DistribuidorDeDocumento`.
@@ -14,7 +16,9 @@ namespace App\Clinica\Impresion;
  *  - `parrafos`: el texto, que **sí se parte por palabra** si no entra. Cada uno puede llevar un rótulo en negrita
  *    (`IDX:`, inline, o `MOTIVO DE LA REFERENCIA:`, en su propia línea). Un párrafo **de lista** (WEB-5.4, los exámenes de un tipo) lleva
  *    además `items`: el texto es esos elementos unidos por ` · ` y, si no entra, se parte **entre elementos** y nunca por palabra (un
- *    examen no queda cortado en dos mitades); la parte que sigue repite el rótulo con «(cont.)».
+ *    examen no queda cortado en dos mitades); la parte que sigue repite el rótulo con «(cont.)». Con `lineas` (la solicitud de
+ *    exámenes de laboratorio, 2026-11-05) los elementos salen **uno debajo del otro, con una línea en blanco entre uno y otro**,
+ *    como los medicamentos de un récipe; el reparto sigue cortando entre elementos.
  *
  * `clave` es con lo que se pide el documento (`constancia`, `reposo`, `referencia-3`, `informe`, `hospitalizacion`, `dieta`, `laboratorio`, `estudios`): es la misma que usan la
  * historia del paciente, la lista de la cita de la agenda y las rutas de impresión.
@@ -266,6 +270,33 @@ final class DocumentoImpreso
         self::ECO_OBSTETRICO_TERCERO => ' · TERCER TRIMESTRE',
     ];
 
+    /**
+     * **El estudio del que es la hoja**, por clave del documento y con el tipo de `TiposDeEstudio`: los ocho
+     * informes de ecografía del ítem 5 del panel del legado (el pélvico, los tres obstétricos, el Doppler
+     * perinatal, el ecocardiograma fetal, el mamario y el abdominal).
+     *
+     * Vive acá por la misma razón que el mapa de `FormatosEnBlanco::porEstudio()`: la relación entre una hoja y
+     * su estudio es un dato del documento, no de la especialidad. Lo lee
+     * `AlcanceDeLaEspecialidad::documentosDeGinecologiaQueNoSeOfrecen()` para no repetir una lista de hojas: el
+     * informe de un estudio que la especialidad no tiene no se lista en la historia del paciente (O-72) ni se
+     * ofrece entre los imprimibles de la consulta y de la cita (Alexander, 2026-11-06).
+     *
+     * ⚠️ **No es `FormatosEnBlanco::porEstudio()`**, que es más corta a propósito: ésos son los formatos en
+     * blanco que el escritorio tiene, y no todos los ecos lo tienen.
+     *
+     * @var array<string,string>
+     */
+    public const ESTUDIOS_DE_LA_HOJA = [
+        self::ECO_PELVICO => TiposDeEstudio::GINECOLOGICO,
+        self::ECO_OBSTETRICO => TiposDeEstudio::OBSTETRICO,
+        self::ECO_OBSTETRICO_SEGUNDO => TiposDeEstudio::SEGUNDO,
+        self::ECO_OBSTETRICO_TERCERO => TiposDeEstudio::TERCERO,
+        self::ECO_DOPPLER => TiposDeEstudio::DOPPLER,
+        self::ECO_CARDIOGRAMA_FETAL => TiposDeEstudio::FETAL,
+        self::ECO_MAMARIO => TiposDeEstudio::MAMARIO,
+        self::ECO_ABDOMINAL => TiposDeEstudio::ABDOMINAL,
+    ];
+
     /** Lo que separa los elementos de un párrafo de lista (los exámenes de un tipo). */
     public const SEPARADOR_DE_ITEMS = ' · ';
 
@@ -276,12 +307,23 @@ final class DocumentoImpreso
     }
 
     /**
+     * La clave de la hoja que informa ese estudio, o `null` si el estudio no tiene hoja (hoy ninguno): es el
+     * camino inverso de `ESTUDIOS_DE_LA_HOJA`.
+     */
+    public static function documentoDelEstudio(string $estudio): ?string
+    {
+        $documento = array_search($estudio, self::ESTUDIOS_DE_LA_HOJA, true);
+
+        return $documento === false ? null : $documento;
+    }
+
+    /**
      * @param  string  $titulo  lo que se imprime arriba del cuerpo (`CONSTANCIA`, `REPOSO MÉDICO`…)
      * @param  string  $nombre  cómo se llama en las listas (`Constancia`, `Reposo médico`…)
      * @param  string  $fecha  `AAAA-MM-DD`: la que sale en los datos del paciente
      * @param  array{nombre:string, cedula:?string, edad:?int, direccion:?string}  $persona
      * @param  array<int,array{etiqueta:string, valor:string}>  $fijos
-     * @param  array<int,array{texto:string, etiqueta:?string, aparte:bool, items?:array<int,string>}>  $parrafos
+     * @param  array<int,array{texto:string, etiqueta:?string, aparte:bool, items?:array<int,string>, lineas?:bool}>  $parrafos
      * @param  ?string  $para  el destinatario que sale **en la cabecera, en una caja con borde** (`informe.para`
      *                         del resumen médico, WEB-5.3c); en los demás documentos va en la cabecera del
      *                         paciente y no se imprime: `null`
@@ -308,12 +350,12 @@ final class DocumentoImpreso
     }
 
     /**
-     * **El modo de la hoja de este documento** (O-26): media hoja horizontal o A4 vertical completa.
+     * **El modo de la hoja de este documento** (O-26): media hoja horizontal o Carta vertical completa.
      *
      * No se decide acá: el documento lo **declara** con su clave en `ModoDeLaHoja`, que es la única tabla de esa regla. Un
      * documento con `informe` (los ecos, WEB-11.13) va siempre a hoja completa, porque su informe es un formulario lleno y
      * ocupa una página entera. El **informe pre-operatorio** (O-47) también: son dos páginas fijas. `preferido` es la hoja
-     * que eligió el médico (`ModoDeLaHoja::deLaPreferencia`), ya resuelta; `null` es la de siempre.
+     * que eligió el médico **para este imprimible** (`HojaDelImprimible::modoDe`), ya resuelta; `null` es la de siempre.
      */
     public function modo(): string
     {
@@ -322,7 +364,7 @@ final class DocumentoImpreso
             : ModoDeLaHoja::de($this->tipo, $this->pagina, $this->preferido);
     }
 
-    /** ¿Se imprime en hoja completa vertical (una por A4) y no en media hoja? */
+    /** ¿Se imprime en hoja completa vertical (una por Carta) y no en media hoja? */
     public function enHojaCompleta(): bool
     {
         return $this->modo() === ModoDeLaHoja::COMPLETA;
@@ -335,8 +377,8 @@ final class DocumentoImpreso
     }
 
     /**
-     * El mismo documento con la **hoja que eligió el médico** para sus documentos de texto, ya resuelta a un modo
-     * (`ModoDeLaHoja::deLaPreferencia`). Los documentos con hoja fija (ecos, colposcopía, preoperatorio) la ignoran.
+     * El mismo documento con la **hoja que eligió el médico para ese imprimible**, ya resuelta a un modo
+     * (`HojaDelImprimible::modoDe`). Los documentos con hoja fija (ecos, colposcopía, preoperatorio) la ignoran.
      */
     public function conPreferencia(?string $preferido): self
     {
@@ -392,14 +434,20 @@ final class DocumentoImpreso
     /**
      * Un párrafo de lista (WEB-5.4): un rótulo en su propia línea y debajo los elementos, unidos por ` · `. Se parte entre elementos, no por palabra.
      *
+     * Con `$unaPorLinea` (la solicitud de exámenes de laboratorio, 2026-11-05) los elementos no van en un renglón sino **uno
+     * debajo del otro, con una línea en blanco entre uno y otro**, como los medicamentos de un récipe. El reparto sigue
+     * cortando entre elementos y la parte que sigue repite el rótulo con «(cont.)».
+     *
      * @param  array<int,string>  $items  cada elemento en una sola línea de texto (los espacios de más ya colapsados)
-     * @return array{texto:string, etiqueta:string, aparte:bool, items:array<int,string>}
+     * @return array{texto:string, etiqueta:string, aparte:bool, items:array<int,string>, lineas?:bool}
      */
-    public static function parrafoDeLista(string $etiqueta, array $items): array
+    public static function parrafoDeLista(string $etiqueta, array $items, bool $unaPorLinea = false): array
     {
         $items = array_values(array_map(fn (string $item) => trim((string) preg_replace('/\s+/u', ' ', $item)), $items));
 
-        return ['texto' => implode(self::SEPARADOR_DE_ITEMS, $items), 'etiqueta' => $etiqueta, 'aparte' => true, 'items' => $items];
+        $parrafo = ['texto' => implode(self::SEPARADOR_DE_ITEMS, $items), 'etiqueta' => $etiqueta, 'aparte' => true, 'items' => $items];
+
+        return $unaPorLinea ? $parrafo + ['lineas' => true] : $parrafo;
     }
 
     /**

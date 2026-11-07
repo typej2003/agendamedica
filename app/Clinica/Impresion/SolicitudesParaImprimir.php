@@ -71,8 +71,9 @@ use Throwable;
  *    cabecera: la de la consulta.
  *  - **Laboratorio** (`d_examen_laboratorio_rut.srd`, la hoja de las *rutinas*; la de exámenes sueltos, `d_examen_laboratorio.srd`, es la misma sin
  *    agrupar): *EXÁMENES DE LABORATORIO*, los exámenes **agrupados por tipo** (`group by tipos_examenes_tipo`) y el *Resumen clínico*
- *    (`examen_obs.observacion`). Acá el título es «SOLICITUD DE EXÁMENES DE LABORATORIO», el grupo es un párrafo de lista (los exámenes del tipo, uno
- *    tras otro, `DocumentoImpreso::parrafoDeLista`) y el resumen sale como *RESUMEN CLÍNICO:*. Fecha de la cabecera: la de la consulta.
+ *    (`examen_obs.observacion`). Acá el título es «SOLICITUD DE EXÁMENES DE LABORATORIO», el grupo es un párrafo de lista con los exámenes del
+ *    tipo **uno debajo del otro y con una línea en blanco entre uno y otro** (2026-11-05, como los medicamentos de un récipe;
+ *    `DocumentoImpreso::parrafoDeLista(..., unaPorLinea: true)`) y el resumen sale como *RESUMEN CLÍNICO:*. Fecha de la cabecera: la de la consulta.
  *  - **Estudios** (`d_estudio_imagenes.srd`, *SOLICITUD DE ESTUDIOS*): los estudios en el orden de `radiologia_paciente.orden`, numerados
  *    («Estudios solicitados:»), y el *Resumen clínico* (`radiologia_obs.observacion`). Fecha: la de la consulta.
  *  - **Resumen médico** (WEB-5.3c, `d_resumen_medico_gra`): la hoja que se **arma sola** con los datos de toda la consulta
@@ -96,6 +97,12 @@ use Throwable;
  * Sólo los **documentos de verdad** (`QueEsUnDocumento`): nada de las plantillas vacías del escritorio. La **constancia**
  * es la excepción controlada: su texto base existe para toda consulta, así que el médico puede imprimirla siempre
  * (`$constanciaBase`), pero sólo se *ofrece* —en la agenda, a la secretaría— cuando el médico escribió algo propio.
+ *
+ * Desde el 2026-11-06 **lo que es de otra especialidad no se ofrece** (Alexander: «no debemos ofrecer documentos de otras
+ * especialidades. ¿Un eco ginecológico a un niño?»): con la especialidad del contexto (`$alcance`) quedan afuera los
+ * informes de los ecos, las tres solapas de texto del examen y la orden de laboratorio de la pareja, y qué es de cada una
+ * lo decide `AlcanceDeLaEspecialidad::documentosQueNoSeOfrecen()`, no una lista de acá. En ginecología no cambia nada y
+ * **sin especialidad tampoco se ofrecen** (2026-10-30).
  *
  * Es de **sólo lectura**.
  */
@@ -133,11 +140,17 @@ final class SolicitudesParaImprimir
     /**
      * Lo que se puede imprimir de la consulta, en el orden de las pestañas.
      *
+     * `$alcance` es la especialidad del **contexto** y con ella no se ofrecen los documentos de ginecología ni los de la
+     * pareja fuera de ginecología (Alexander, 2026-11-06: «¿un eco ginecológico a un niño?»); *qué* es de cada una lo
+     * decide el alcance (`documentosQueNoSeOfrecen`), no una lista de acá. Sin alcance (`null`) no se filtra: es la
+     * lectura de **todo lo que la consulta tiene**, la que usa el controlador para saber si la hoja que se pide existe
+     * (la pedida por URL directa sigue abriendo, 2026-10-22).
+     *
      * @param  array<int,string>  $registros  los `reg_medico` del médico (para resolver al médico referido)
      * @param  bool  $constanciaBase  `true` ofrece la constancia aunque no tenga nada propio (lo que ve el médico)
      * @return array<int,array{clave:string, tipo:string, titulo:string, resumen:string, fecha:?string}>
      */
-    public function disponibles(Consulta $consulta, array $registros, bool $constanciaBase = false): array
+    public function disponibles(Consulta $consulta, array $registros, bool $constanciaBase = false, ?AlcanceDeLaEspecialidad $alcance = null): array
     {
         $disponibles = [];
         $fechaDeLaConsulta = $this->fechaDeLaConsulta($consulta);
@@ -470,7 +483,19 @@ final class SolicitudesParaImprimir
             ];
         }
 
-        return $disponibles;
+        // Lo que la especialidad del contexto no tiene se deja de **ofrecer** (2026-11-06). La lista de claves la da el
+        // alcance —los documentos de ginecología y los de la pareja—, así que un documento nuevo de esos estudios o de la
+        // pareja queda escondido sin tocar esto. Sin alcance la lista queda entera: es la lectura de la consulta.
+        $noSeOfrecen = $alcance?->documentosQueNoSeOfrecen() ?? [];
+
+        if ($noSeOfrecen === []) {
+            return $disponibles;
+        }
+
+        return array_values(array_filter(
+            $disponibles,
+            fn (array $documento) => ! in_array($documento['clave'], $noSeOfrecen, true),
+        ));
     }
 
     /**
@@ -877,7 +902,8 @@ final class SolicitudesParaImprimir
 
     /**
      * La orden de laboratorio: los exámenes agrupados por tipo (el orden de `filas`: por tipo y por nombre, los que no tienen tipo al final) y el
-     * resumen clínico. Cada grupo es un párrafo de lista, que sólo se corta entre exámenes.
+     * resumen clínico. Cada grupo es un párrafo de lista **con un examen por renglón y una línea en blanco entre uno y otro**
+     * (2026-11-05), que sólo se corta entre exámenes.
      *
      * @param  Collection<int,object>  $examenes
      */
@@ -886,7 +912,7 @@ final class SolicitudesParaImprimir
         $parrafos = [];
 
         foreach ($examenes->groupBy(fn (object $examen) => $examen->tipo ?? CatalogoParaPedirExamenes::SIN_TIPO) as $tipo => $delTipo) {
-            $parrafos[] = DocumentoImpreso::parrafoDeLista(mb_strtoupper((string) $tipo) . ':', $delTipo->pluck('nombre')->map(fn ($nombre) => (string) $nombre)->all());
+            $parrafos[] = DocumentoImpreso::parrafoDeLista(mb_strtoupper((string) $tipo) . ':', $delTipo->pluck('nombre')->map(fn ($nombre) => (string) $nombre)->all(), true);
         }
 
         return new DocumentoImpreso(
@@ -903,7 +929,7 @@ final class SolicitudesParaImprimir
 
     /**
      * La orden de laboratorio de la **pareja** (WEB-11.21): la hoja de laboratorio **a nombre de la pareja** (su nombre y su C.I., sin edad ni
-     * dirección: no son del paciente de la consulta), con los exámenes por tipo y su resumen clínico.
+     * dirección: no son del paciente de la consulta), con los exámenes por tipo —uno por renglón, como la orden de la paciente— y su resumen clínico.
      *
      * @param  array{cedula:?string, nombre:?string, observacion:?string}  $datos
      */
@@ -912,7 +938,7 @@ final class SolicitudesParaImprimir
         $parrafos = [];
 
         foreach ($examenes->groupBy(fn (object $examen) => $examen->tipo ?? CatalogoParaPedirExamenes::SIN_TIPO) as $tipo => $delTipo) {
-            $parrafos[] = DocumentoImpreso::parrafoDeLista(mb_strtoupper((string) $tipo) . ':', $delTipo->pluck('nombre')->map(fn ($nombre) => (string) $nombre)->all());
+            $parrafos[] = DocumentoImpreso::parrafoDeLista(mb_strtoupper((string) $tipo) . ':', $delTipo->pluck('nombre')->map(fn ($nombre) => (string) $nombre)->all(), true);
         }
 
         return new DocumentoImpreso(

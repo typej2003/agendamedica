@@ -94,7 +94,21 @@
         @endif
 
         @foreach ($mitad['parrafos'] as $parrafo)
-            @if ($parrafo['etiqueta'] !== null && $parrafo['aparte'])
+            @if ($parrafo['lineas'] ?? false)
+                {{-- Un párrafo de lista **con un elemento por renglón** (la solicitud de exámenes de laboratorio, 2026-11-05): el
+                     rótulo del tipo y, debajo, cada examen con una línea en blanco entre uno y otro, como los medicamentos de un
+                     récipe. Su alto lo mide `DistribuidorDeDocumento` con esta misma regla (`.documento-lista`). --}}
+                <div class="documento-parrafo documento-parrafo-lista">
+                    @if ($parrafo['etiqueta'] !== null)
+                        <strong class="documento-rotulo documento-rotulo-aparte">{{ $parrafo['etiqueta'] }}</strong>
+                    @endif
+                    <ul class="documento-lista">
+                        @foreach ($parrafo['items'] as $item)
+                            <li>{{ $item }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @elseif ($parrafo['etiqueta'] !== null && $parrafo['aparte'])
                 <p class="documento-parrafo"><strong class="documento-rotulo documento-rotulo-aparte">{{ $parrafo['etiqueta'] }}</strong>{{ $parrafo['texto'] }}</p>
             @elseif ($parrafo['etiqueta'] !== null)
                 <p class="documento-parrafo"><strong class="documento-rotulo">{{ $parrafo['etiqueta'] }}</strong> {{ $parrafo['texto'] }}</p>

@@ -158,11 +158,13 @@ class SedesDelMedicoAdminTest extends TestCase
     public function test_agregar_una_sede_existente_crea_el_consultorio_del_medico(): void
     {
         $medico = $this->medico()['medico'];
-        $sede = $this->sede('Existente');
+        // «Sede existente» son las **del médico**: la suya, no una del catálogo de la plataforma (2026-11-06).
+        $sede = $this->sede('Existente', duenio: $medico);
         $this->actingAs($this->admin());
 
         Livewire::test(SedesDelMedico::class, ['medico' => $medico])
             ->call('abrirAgregar')
+            ->assertSet('modo', 'existente')
             ->set('modo', 'existente')
             ->set('sede_existente_id', (string) $sede->id)
             ->set('office_number', '12')
@@ -177,6 +179,60 @@ class SedesDelMedicoAdminTest extends TestCase
             'medical_center_id' => $sede->id, 'reg_medico' => $medico->reg_medico, 'medico_id' => $medico->id,
             'office_number' => '12', 'modalidad' => Office::MODALIDAD_HORA, 'duracion_cita' => 30, 'activo' => true,
         ]);
+    }
+
+    /**
+     * El desplegable de «Sede existente» lista **sólo las sedes del médico** —propias, asignadas y donde ya tiene
+     * consultorio— y nunca el catálogo de la plataforma: ni la sede de otro médico, ni una sin dueño, ni una cerrada.
+     */
+    public function test_el_desplegable_de_sede_existente_solo_trae_las_sedes_del_medico(): void
+    {
+        $medico = $this->medico()['medico'];
+        $otro = $this->medico('Vecino')['medico'];
+
+        $propia = $this->sede('Propia', duenio: $medico);
+        $asignada = $this->sede('Asignada');
+        DB::table('medico_medical_center')->insert([
+            'medico_id' => $medico->id, 'medical_center_id' => $asignada->id, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $conConsultorio = $this->sede('Con consultorio');
+        $this->consultorio($medico, $conConsultorio, '9');
+        $ajena = $this->sede('Ajena', duenio: $otro);
+        $sinDuenio = $this->sede('Sin dueño');
+        $cerrada = $this->sede('Cerrada', false, $medico);
+
+        $this->actingAs($this->admin());
+
+        $componente = Livewire::test(SedesDelMedico::class, ['medico' => $medico])
+            ->call('abrirAgregar')
+            ->assertSet('modo', 'existente')
+            ->assertSee('<option value="' . $propia->id . '">', false)
+            ->assertSee('<option value="' . $asignada->id . '">', false)
+            ->assertSee('<option value="' . $conConsultorio->id . '">', false)
+            ->assertDontSee('<option value="' . $ajena->id . '">', false)
+            ->assertDontSee('<option value="' . $sinDuenio->id . '">', false)
+            ->assertDontSee('<option value="' . $cerrada->id . '">', false);
+
+        // Aunque se fuerce el id de una sede ajena, la validación no deja agregarla.
+        $componente->set('sede_existente_id', (string) $ajena->id)
+            ->set('office_number', '1')
+            ->call('guardarAlta')
+            ->assertHasErrors(['sede_existente_id' => 'in'])
+            ->assertSee('no es de este médico');
+
+        $this->assertSame(0, Office::where('medical_center_id', $ajena->id)->count());
+    }
+
+    public function test_sin_sedes_suyas_el_alta_abre_en_sede_nueva(): void
+    {
+        $medico = $this->medico()['medico'];
+        $this->actingAs($this->admin());
+
+        Livewire::test(SedesDelMedico::class, ['medico' => $medico])
+            ->call('abrirAgregar')
+            ->assertSet('modo', 'nueva')
+            ->set('modo', 'existente')
+            ->assertSee('todavía no tiene sedes cargadas');
     }
 
     public function test_agregar_una_sede_nueva_la_registra_en_el_catalogo_con_su_consultorio(): void

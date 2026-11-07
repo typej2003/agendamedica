@@ -11,6 +11,7 @@ use App\Http\Controllers\Clinica\DiagnosticoCatalogoController;
 use App\Http\Controllers\Clinica\DoctorCatalogoController;
 use App\Http\Controllers\Clinica\ExamenCatalogoController;
 use App\Http\Controllers\Clinica\MotivoFacturaCatalogoController;
+use App\Http\Controllers\Clinica\SeguroCatalogoController;
 use App\Http\Controllers\Clinica\FormatoDeImpresionController;
 use App\Http\Controllers\Clinica\FormatosEnBlancoController;
 use App\Http\Controllers\Clinica\FormatoDeImpresionGuardarController;
@@ -329,12 +330,18 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
                 Route::get('/vacunas', [VacunasDelPacienteController::class, 'entrada'])->name('vacunas');
                 Route::get('/pacientes/{paciente}/crecimiento', [CrecimientoController::class, 'ver'])->name('pacientes.crecimiento');
                 Route::get('/pacientes/{paciente}/crecimiento/imprimir', [CrecimientoController::class, 'imprimir'])->middleware('clinica.plan.impresion')->name('pacientes.crecimiento.imprimir');
-                // **El calendario de vacunas de un niño** (WEB-7.4.4a): sólo lectura; las dosis salen del catálogo del médico.
+                // **Las vacunas de un niño** (WEB-7.4.4a; O-68/O-69): la lista de sus dosis (aplicadas y programadas) y, plegado, el
+                // esquema del catálogo. Las dosis salen del catálogo del médico.
                 Route::get('/pacientes/{paciente}/vacunas', [VacunasDelPacienteController::class, 'ver'])->name('pacientes.vacunas');
                 // **La historia pediátrica imprimible** (WEB-12.5): familia, antecedentes, mediciones y vacunas del niño. Es clínica: sólo del médico.
                 Route::get('/pacientes/{paciente}/historia-pediatrica', [HistoriaPediatricaController::class, 'imprimir'])->middleware('clinica.plan.impresion')->name('pacientes.historia-pediatrica');
                 Route::get('/pacientes/{paciente}/vacunas/carnet', [VacunasDelPacienteController::class, 'carnet'])->middleware('clinica.plan.impresion')->name('pacientes.vacunas.carnet');
                 Route::post('/pacientes/{paciente}/vacunas', [VacunasDelPacienteController::class, 'registrar'])->name('pacientes.vacunas.registrar');
+                // **Programar una dosis** (O-68/O-69): la fila planeada, sin aplicarla todavía. La misma clave del escritorio.
+                Route::post('/pacientes/{paciente}/vacunas/programar', [VacunasDelPacienteController::class, 'programar'])->name('pacientes.vacunas.programar');
+                // **Quitar de la lista** una dosis programada (el «Quitar registro» del escritorio): una aplicada no se borra.
+                Route::delete('/pacientes/{paciente}/vacunas/{fila}', [VacunasDelPacienteController::class, 'quitar'])
+                    ->whereNumber('fila')->name('pacientes.vacunas.quitar');
 
                 // «Anterior» (WEB-11.4): copia motivos, diagnósticos o récipes de la consulta anterior de la historia.
                 Route::post('/consulta/{consulta}/anterior/{que}', [ConsultaAnteriorController::class, 'copiar'])
@@ -575,7 +582,7 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
                 Route::post('/consulta/{consulta}/recipe-pareja', [ConsultaRecipeParejaController::class, 'guardar'])->name('consulta.recipe-pareja.guardar');
                 Route::delete('/consulta/{consulta}/recipe-pareja', [ConsultaRecipeParejaController::class, 'eliminar'])->name('consulta.recipe-pareja.eliminar');
 
-                // **Imprimir el récipe desde la consulta** (WEB-5.2): la vista previa de la hoja A4 horizontal que
+                // **Imprimir el récipe desde la consulta** (WEB-5.2): la vista previa de la hoja Carta horizontal que
                 // imprime el navegador, la de un récipe del paciente (por su número) y la de la pareja. Es la
                 // **misma hoja** que imprime la secretaría desde la agenda (más abajo): acá sólo cambia por dónde
                 // se entra, y como la consulta es del médico estas dos van en su grupo.
@@ -640,6 +647,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
                 Route::delete('/consulta/{consulta}/referencias/{cedula}', [ConsultaReferenciasController::class, 'eliminar'])->whereNumber('cedula')->name('consulta.referencias.eliminar');
                 // La hoja impresa de un documento (o de «todos»): `?documento=reposo`. La misma que imprime la secretaría desde la cita.
                 Route::get('/consulta/{consulta}/documentos/imprimir', [ImpresionDeDocumentosController::class, 'delaConsulta'])->middleware('clinica.plan.impresion')->name('consulta.documentos.imprimir');
+                // **La hoja de cada imprimible** (2026-11-05): el botón de configuración de la vista previa elige entre hoja
+                // completa, media vertical y media horizontal, y la recuerda en la fila del doctor que firma.
+                Route::post('/consulta/{consulta}/documentos/hoja', [ImpresionDeDocumentosController::class, 'guardarHojaDeLaConsulta'])->name('consulta.documentos.hoja');
 
                 // **Terminar la consulta** (WEB-4.8): la acción primaria del shell. "Cerrar" **no crea un
                 // estado nuevo** (PLAN-WEB.md §3.13): es terminar la atención —dejar la cita de la agenda
@@ -693,6 +703,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
                 Route::get('/catalogos/motivos-factura', [MotivoFacturaCatalogoController::class, 'index'])->name('catalogos.motivos-factura');
                 Route::post('/catalogos/motivos-factura', [MotivoFacturaCatalogoController::class, 'guardar'])->name('catalogos.motivos-factura.guardar');
                 Route::delete('/catalogos/motivos-factura/{id}', [MotivoFacturaCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.motivos-factura.quitar');
+                // **Seguros / empresas del consultorio** (O-62): `seg_emp` con el nombre obligatorio y el RIF, el teléfono y la
+                // dirección opcionales. Es el catálogo del que sale el desplegable «Seguro / empresa» del alta del paciente;
+                // un seguro que ya tiene un paciente de ese consultorio no se borra (y el aviso dice cuáles).
+                Route::get('/catalogos/seguros', [SeguroCatalogoController::class, 'index'])->name('catalogos.seguros');
+                Route::post('/catalogos/seguros', [SeguroCatalogoController::class, 'guardar'])->name('catalogos.seguros.guardar');
+                Route::delete('/catalogos/seguros/{id}', [SeguroCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.seguros.quitar');
                 Route::get('/catalogos/examenes', [ExamenCatalogoController::class, 'index'])->name('catalogos.examenes');
                 Route::post('/catalogos/examenes', [ExamenCatalogoController::class, 'guardar'])->name('catalogos.examenes.guardar');
                 Route::delete('/catalogos/examenes/{id}', [ExamenCatalogoController::class, 'quitar'])->whereNumber('id')->name('catalogos.examenes.quitar');
@@ -799,6 +815,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
             // informe de esa consulta (`?documento=recipe-1|reposo|referencia-3|todos`).
             Route::get('/agenda/{cola}/documentos', [ImpresionDeDocumentosController::class, 'listaDeLaCita'])->name('agenda.documentos');
             Route::get('/agenda/{cola}/documentos/imprimir', [ImpresionDeDocumentosController::class, 'imprimirDeLaCita'])->middleware('clinica.plan.impresion')->name('agenda.documentos.imprimir');
+            // La hoja del imprimible que la secretaría está imprimiendo (2026-11-05): se guarda en la fila del doctor que
+            // atendió, igual que las opciones del récipe.
+            Route::post('/agenda/{cola}/documentos/hoja', [ImpresionDeDocumentosController::class, 'guardarHojaDeLaCita'])->name('agenda.documentos.hoja');
             // Cómo sale la hoja (modo y nombre del medicamento) es **del médico del contexto**: lo guarda quien
             // imprime —el médico o su asistente— y los dos ven lo mismo la próxima vez.
             Route::post('/recipes/opciones-de-impresion', [ImpresionDeRecipeController::class, 'guardarOpciones'])->name('recipes.opciones');
@@ -870,9 +889,6 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
             Route::post('/formato/logo', [FormatoDeImpresionGuardarController::class, 'logo'])->name('formato.logo');
             Route::post('/formato/estilo', [FormatoDeImpresionGuardarController::class, 'estilo'])->name('formato.estilo');
             Route::post('/formato/firma', [FormatoDeImpresionGuardarController::class, 'firma'])->name('formato.firma');
-            // **La hoja de los imprimibles** (2026-11-04): vertical, media vertical, horizontal o estilo récipe. Es del
-            // médico que firma; la hoja de los récipes no se toca y un centro no la configura.
-            Route::post('/formato/hoja', [FormatoDeImpresionGuardarController::class, 'hoja'])->name('formato.hoja');
             Route::post('/formato/restablecer', [FormatoDeImpresionGuardarController::class, 'restablecer'])->name('formato.restablecer');
         });
     });

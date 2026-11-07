@@ -54,10 +54,6 @@
                 @include('clinica.formato._firma')
             @endif
 
-            @if ($vm->conHoja())
-                @include('clinica.formato._hoja')
-            @endif
-
             @include('clinica.formato._en-blanco')
         </div>
     </div>

@@ -8,8 +8,12 @@
         $hayQueElegir = $vm->hayAlgoQueElegir();
         $titulo = $hayQueElegir ? '¿Con qué consultorio vas a trabajar?' : 'Tu consultorio';
         $subtitulo = $hayQueElegir
-            ? 'Se elige una vez y se puede cambiar cuando quieras.'
+            ? 'Elige de a uno: cuando llegues al consultorio, un click te deja dentro.'
             : 'Ya está configurado: se entra con lo que ya tienes.';
+        $pasos = $vm->pasos();
+        $medicos = $vm->medicos();
+        $variosMedicos = $vm->hayVariosMedicos();
+        $medicoElegido = collect($medicos)->firstWhere('id', $vm->medicoActual());
     @endphp
 
     <x-ui.page-head :titulo="$titulo" :subtitulo="$subtitulo" />
@@ -24,131 +28,168 @@
         </div>
     @endif
 
-    <div class="row g-3">
-        @foreach ($vm->medicos() as $medico)
-            <div class="col-12 col-lg-6">
-                <x-ui.tarjeta class="h-100">
-                    <x-ui.identidad :nombre="$medico['nombre']"
-                                    :detalle="($medico['esCentro'] ? 'Centro médico · ' : '') . 'Registro ' . $medico['regMedico'] . ($medico['licencia'] ? ' · Licencia ' . $medico['licencia'] : '')"
-                                    class="mb-3" />
+    {{-- Los pasos (2026-11-06): cada elección colapsa en una línea con el dato y «Cambiar», y recién entonces
+         aparece el paso siguiente. Sin JavaScript se ven todos los pasos a la vez y el consultorio se envía
+         igual, con su formulario. --}}
+    <div class="contexto-pasos" data-contexto data-medico-actual="{{ $vm->medicoActual() ?? '' }}">
 
-                    <form method="POST" action="{{ $vm->urlGuardar() }}" class="form-contexto"
-                          data-reg-medico="{{ $medico['regMedico'] }}">
-                        @csrf
-                        {{-- El registro del contexto es **el del consultorio elegido**: el personal del
-                             médico o el del centro donde está ese consultorio. El script del final lo
-                             mantiene sincronizado con el menú; cuando hay un solo consultorio ya viene
-                             fijado. --}}
-                        <input type="hidden" name="reg_medico"
-                               value="{{ $medico['consultorioFijo']['regMedico'] ?? $medico['regMedico'] }}">
+        @if ($variosMedicos)
+            <section class="contexto-paso contexto-paso-medico" data-paso-medico
+                     @if ($vm->medicoActual() !== null) data-elegido="1" @endif>
+                <h2 class="contexto-paso-titulo">
+                    <span class="contexto-paso-numero">{{ $pasos['medico'] }}</span>
+                    ¿Con quién trabajas?
+                </h2>
 
-                        {{-- Con una sola especialidad no hay nada que elegir: se entra con esa y se muestra
-                             cuál es. El valor viaja igual, en un campo oculto, para que el contexto quede
-                             fijado explícitamente (decisión del usuario, 2026-10-19). --}}
-                        @if ($medico['elegirEspecialidad'])
-                            <x-ui.campo etiqueta="Especialidad" for="especialidad-{{ $medico['regMedico'] }}" class="mb-3">
-                                <select name="specialty_id" id="especialidad-{{ $medico['regMedico'] }}" class="form-select">
-                                    @forelse ($medico['especialidades'] as $especialidad)
-                                        <option value="{{ $especialidad['valor'] }}">{{ $especialidad['texto'] }}</option>
-                                    @empty
-                                        <option value="">{{ $medico['esCentro']
-                                            ? '(el centro todavía no tiene doctores con especialidad)'
-                                            : '(el médico no tiene especialidad asignada)' }}</option>
-                                    @endforelse
-                                </select>
-                            </x-ui.campo>
+                <div class="contexto-opciones contexto-opciones-medicos">
+                    @foreach ($medicos as $medico)
+                        <button type="button" class="contexto-opcion contexto-opcion-medico"
+                                data-elegir-medico="{{ $medico['id'] }}"
+                                data-nombre="{{ $medico['nombre'] }}"
+                                aria-pressed="{{ $medico['actual'] ? 'true' : 'false' }}">
+                            <span class="contexto-opcion-cuerpo">
+                                <span class="contexto-opcion-texto">
+                                    <span class="contexto-opcion-titulo">{{ $medico['nombre'] }}</span>
+                                    <span class="contexto-opcion-detalle">
+                                        {{ $medico['esCentro'] ? 'Centro médico · ' : '' }}Registro {{ $medico['regMedico'] }}
+                                    </span>
+                                </span>
+                                <span class="contexto-opcion-marca" aria-hidden="true"><i class="bi bi-check-circle-fill"></i></span>
+                            </span>
+                        </button>
+                    @endforeach
+                </div>
+
+                <p class="contexto-elegido">
+                    <span class="contexto-elegido-texto" data-texto-elegido>{{ $medicoElegido['nombre'] ?? '' }}</span>
+                    <button type="button" class="btn btn-link btn-sm contexto-cambiar" data-cambiar>Cambiar</button>
+                </p>
+            </section>
+        @endif
+
+        @foreach ($medicos as $medico)
+            <div class="contexto-panel" data-panel-medico="{{ $medico['id'] }}">
+                {{-- Con varios médicos cada panel dice de quién es: sin JavaScript se ven todos. --}}
+                @if ($variosMedicos)
+                    <h2 class="contexto-panel-titulo">{{ $medico['nombre'] }}</h2>
+                @endif
+
+                <form method="POST" action="{{ $vm->urlGuardar() }}" class="contexto-form"
+                      data-medico="{{ $medico['id'] }}" data-reg-medico="{{ $medico['regMedico'] }}">
+                    @csrf
+                    {{-- El registro del contexto es **el del consultorio elegido**: el del médico o el del
+                         centro donde está ese consultorio. Viaja el del médico y el script lo corrige con el
+                         del botón clickeado; el servidor, además, lo resuelve del `office_id`. --}}
+                    <input type="hidden" name="reg_medico" value="{{ $medico['regMedico'] }}">
+
+                    @if ($medico['elegirEspecialidad'])
+                        <section class="contexto-paso" data-paso="especialidad"
+                                 @if ($medico['elegida']) data-elegido="1" @endif>
+                            <h2 class="contexto-paso-titulo">
+                                <span class="contexto-paso-numero">{{ $pasos['especialidad'] }}</span> Especialidad
+                            </h2>
+
+                            <div class="contexto-opciones">
+                                @forelse ($medico['especialidades'] as $especialidad)
+                                    <label class="contexto-opcion">
+                                        <input type="radio" name="specialty_id" value="{{ $especialidad['valor'] }}"
+                                               @checked($medico['elegida'] && $medico['elegida']['valor'] === $especialidad['valor'])
+                                               required>
+                                        <span class="contexto-opcion-cuerpo">
+                                            <span class="contexto-opcion-texto">
+                                                <span class="contexto-opcion-titulo">{{ $especialidad['texto'] }}</span>
+                                            </span>
+                                            <span class="contexto-opcion-marca" aria-hidden="true"><i class="bi bi-check-circle-fill"></i></span>
+                                        </span>
+                                    </label>
+                                @empty
+                                    <p class="contexto-sin-especialidad">
+                                        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                                        {{ $medico['esCentro'] ? 'El centro todavía no tiene doctores con especialidad.' : 'El médico no tiene especialidad asignada.' }}
+                                    </p>
+                                @endforelse
+                            </div>
+
+                            @if (count($medico['especialidades']) > 0)
+                                <p class="contexto-elegido">
+                                    <span class="contexto-elegido-texto">{{ $medico['elegida']['texto'] ?? '' }}</span>
+                                    <button type="button" class="btn btn-link btn-sm contexto-cambiar" data-cambiar>Cambiar</button>
+                                </p>
+                            @endif
+                        </section>
+                    @elseif ($medico['especialidadFija'])
+                        <input type="hidden" name="specialty_id" value="{{ $medico['especialidadFija']['valor'] }}">
+                        <p class="contexto-fija">
+                            <i class="bi bi-mortarboard" aria-hidden="true"></i>
+                            <span class="contexto-fija-texto">{{ $medico['especialidadFija']['texto'] }}</span>
+                            <span class="contexto-fija-nota">Única especialidad</span>
+                        </p>
+                    @endif
+
+                    <section class="contexto-paso" data-paso="consultorio">
+                        <h2 class="contexto-paso-titulo">
+                            <span class="contexto-paso-numero">{{ $pasos['consultorio'] }}</span> Consultorio
+                        </h2>
+
+                        @if ($medico['sinConsultorios'])
+                            <div class="alert alert-warning d-flex gap-2 mb-0" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                                <div>
+                                    Este médico todavía no tiene consultorios cargados.
+                                    <a class="alert-link" href="{{ $vm->urlConsultorios() }}">Cárgalos en «Sedes y consultorios»</a>
+                                    para que la agenda pueda armar la jornada.
+                                </div>
+                            </div>
                         @else
-                            <input type="hidden" name="specialty_id" value="{{ $medico['especialidadFija']['valor'] }}">
-                            <x-ui.campo etiqueta="Especialidad" for="especialidad-{{ $medico['regMedico'] }}" class="mb-3">
-                                <output class="form-control-plaintext fw-semibold"
-                                        id="especialidad-{{ $medico['regMedico'] }}">{{ $medico['especialidadFija']['texto'] }}</output>
-                                <span class="form-text d-block">Es su única especialidad, así que no hay que elegirla.</span>
-                            </x-ui.campo>
-                        @endif
+                            @foreach ($medico['grupos'] as $grupo)
+                                <div class="contexto-grupo">
+                                    @if (count($medico['grupos']) > 1)
+                                        <h3 class="contexto-grupo-titulo">{{ $grupo['etiqueta'] }}</h3>
+                                    @endif
 
-                        {{-- El campo guarda el **consultorio** del médico (`offices`), no la sede
-                             (`medical_centers`): se etiqueta por lo que es, porque el rótulo "Sede" hacía
-                             buscar una pantalla para asignarle una sede al médico (2026-10-11). Vacío =
-                             todos los consultorios de ese registro: la agenda muestra las sedes juntas.
-                             **El menú combina los consultorios del médico con los del centro** (corrección
-                             del usuario, 2026-10-20): cada opción sabe de qué registro es y el script fija
-                             el contexto con ese. Con **un solo** consultorio tampoco se pregunta: se trabaja
-                             en él (2026-10-19). --}}
-                        @if ($medico['elegirConsultorio'])
-                            @php
-                                $gruposDeConsultorios = collect($medico['sedes'])
-                                    ->groupBy(fn ($sede) => $sede['centro'] ?? 'Mis consultorios');
-                            @endphp
-                            <x-ui.campo etiqueta="Consultorio" for="sede-{{ $medico['regMedico'] }}" class="mb-3">
-                                <select name="office_id" id="sede-{{ $medico['regMedico'] }}" class="form-select">
-                                    @foreach ($gruposDeConsultorios as $etiqueta => $sedes)
-                                        <optgroup label="{{ $etiqueta }}">
-                                            {{-- «Todas las sedes» sólo tiene sentido con más de una sede: con una sola es lo mismo
-                                                 que elegir sus consultorios (2026-10-20). --}}
-                                            @if ($sedes->pluck('sedeId')->unique()->count() > 1)
-                                                <option value="" data-reg-medico="{{ $sedes->first()['regMedico'] }}">
-                                                    Todas las sedes de {{ $etiqueta === 'Mis consultorios' ? 'mis consultorios' : $etiqueta }}
-                                                </option>
-                                            @endif
-                                            @foreach ($sedes as $sede)
-                                                <option value="{{ $sede['valor'] }}" data-reg-medico="{{ $sede['regMedico'] }}">
-                                                    {{ $sede['texto'] }}
-                                                </option>
-                                            @endforeach
-                                        </optgroup>
-                                    @endforeach
-                                </select>
-                                <span class="form-text d-block">
-                                    El consultorio es dónde atiende el médico dentro de una sede; el menú combina
-                                    los tuyos con los del centro. ¿Falta uno o quieres cambiarlo?
-                                    <a href="{{ $vm->urlConsultorios() }}">Sedes y consultorios</a>.
-                                </span>
-                            </x-ui.campo>
-                        @elseif ($medico['sinConsultorios'])
-                            {{-- Sin consultorios no hay nada que elegir, pero sí un camino: darlos de alta. --}}
-                            <x-ui.campo etiqueta="Consultorio" for="sede-{{ $medico['regMedico'] }}" class="mb-3">
-                                <output class="form-control-plaintext fw-semibold"
-                                        id="sede-{{ $medico['regMedico'] }}">Sin consultorios</output>
-                                <span class="form-text d-block">
-                                    Este médico todavía no tiene consultorios cargados: cárgalos en
-                                    <a href="{{ $vm->urlConsultorios() }}">Sedes y consultorios</a>.
-                                </span>
-                            </x-ui.campo>
-                        @else
-                            <input type="hidden" name="office_id" value="{{ $medico['consultorioFijo']['valor'] }}">
-                            <x-ui.campo etiqueta="Consultorio" for="sede-{{ $medico['regMedico'] }}" class="mb-3">
-                                <output class="form-control-plaintext fw-semibold"
-                                        id="sede-{{ $medico['regMedico'] }}">{{ $medico['consultorioFijo']['texto'] }}</output>
-                                <span class="form-text d-block">
-                                    Es su único consultorio, así que no hay que elegirlo. ¿Quieres cambiarlo?
-                                    <a href="{{ $vm->urlConsultorios() }}">Sedes y consultorios</a>.
-                                </span>
-                            </x-ui.campo>
-                        @endif
+                                    <div class="contexto-consultorios">
+                                        @if ($grupo['todas'])
+                                            <button type="submit" name="office_id" value=""
+                                                    data-reg-medico="{{ $grupo['todasReg'] }}"
+                                                    class="contexto-consultorio contexto-consultorio-todas">
+                                                <span class="contexto-consultorio-icono" aria-hidden="true"><i class="bi bi-grid-3x3-gap"></i></span>
+                                                <span class="contexto-consultorio-sede">{{ $grupo['todas'] }}</span>
+                                            </button>
+                                        @endif
 
-                        <button class="btn btn-primary">Trabajar aquí</button>
-                    </form>
-                </x-ui.tarjeta>
+                                        @foreach ($grupo['sedes'] as $sede)
+                                            <button type="submit" name="office_id" value="{{ $sede['valor'] }}"
+                                                    data-reg-medico="{{ $sede['regMedico'] }}"
+                                                    class="contexto-consultorio"
+                                                    @if ($sede['actual']) aria-current="true" @endif>
+                                                <span class="contexto-consultorio-icono" aria-hidden="true"><i class="bi bi-door-closed"></i></span>
+                                                <span class="contexto-consultorio-sede">{{ $sede['sede'] }}</span>
+                                                <span class="contexto-consultorio-pie">
+                                                    @if ($sede['numero'])
+                                                        <span class="contexto-consultorio-numero">Consultorio {{ $sede['numero'] }}</span>
+                                                    @endif
+                                                    @if ($sede['actual'])
+                                                        <span class="contexto-consultorio-actual">Actual</span>
+                                                    @endif
+                                                </span>
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            <p class="form-text mb-0 mt-3">
+                                El consultorio es dónde atiende el médico dentro de una sede. ¿Falta uno o quieres cambiarlo?
+                                <a href="{{ $vm->urlConsultorios() }}">Sedes y consultorios</a>.
+                            </p>
+                        @endif
+                    </section>
+                </form>
             </div>
         @endforeach
     </div>
+@endsection
 
-    <script>
-        // El menú de consultorios combina los del médico y los del centro: cada opción trae el `reg_medico`
-        // del consultorio y el formulario se fija con ese al enviar. Sin menú (un solo consultorio o
-        // ninguno) el `reg_medico` ya viene fijado desde el servidor.
-        document.querySelectorAll('form.form-contexto').forEach(function (form) {
-            var select = form.querySelector('select[name="office_id"]');
-            var oculto = form.querySelector('input[name="reg_medico"]');
-            if (! select || ! oculto) {
-                return;
-            }
-            var sincronizar = function () {
-                var opcion = select.options[select.selectedIndex];
-                oculto.value = (opcion && opcion.dataset.regMedico) ? opcion.dataset.regMedico : form.dataset.regMedico;
-            };
-            select.addEventListener('change', sincronizar);
-            sincronizar();
-        });
-    </script>
+@section('scripts')
+    <script src="{{ asset('js/clinica/contexto.js') }}?v={{ @filemtime(public_path('js/clinica/contexto.js')) }}"></script>
 @endsection

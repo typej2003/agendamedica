@@ -803,12 +803,14 @@ class CambiosEscritorioTest extends TestCase
 
     /**
      * **WEB-3.4**: `representante` es una tabla del legado más de la lista blanca y sigue subiendo por el
-     * camino genérico, sin que el sync se haya tocado. La web le agregó tres columnas **nullable**
-     * (`cedula`, `telefono`, `email`), así que este test fija las dos mitades del criterio de la tarea:
-     * una fila del escritorio **con las columnas de siempre y ninguna nueva** entra igual, y una con los
-     * datos de contacto nuevos los guarda. Además comprueba lo que la tabla tiene de particular: su clave
-     * real es el `numhistoria` (`PRIMARY KEY (numhistoria)` en el esquema del legado), así que el número
-     * se traduce como el de cualquier tabla hija y una historia que todavía no subió se rechaza.
+     * camino genérico, sin que el sync se haya tocado. La web le agregó columnas **nullable**
+     * (`cedula`, `telefono`, `email` y, con O-59, `estado_civil`), así que este test fija las dos mitades
+     * del criterio de la tarea: una fila del escritorio **con las columnas de siempre y ninguna nueva**
+     * entra igual, y una con los datos de contacto nuevos los guarda. Además comprueba lo que la tabla
+     * tiene de particular: su clave real es el `numhistoria` (`PRIMARY KEY (numhistoria)` en el esquema del
+     * legado), así que el número se traduce como el de cualquier tabla hija y una historia que todavía no
+     * subió se rechaza. Que la columna nueva **no se borre** en un `U` del escritorio se prueba aparte,
+     * en `test_la_subida_del_escritorio_no_borra_el_estado_civil_del_representante`.
      */
     public function test_la_tabla_representante_sigue_subiendo_por_el_camino_generico(): void
     {
@@ -851,6 +853,33 @@ class CambiosEscritorioTest extends TestCase
             'clave' => ['numhistoria' => '99'], 'fila' => ['numhistoria' => 99, 'nombre' => 'NADIE']]]);
         $this->assertSame([], $this->confirmados($r));
         $this->assertStringContainsString('todavía no está en el API', $r->json('rechazados'));
+    }
+
+    /**
+     * **O-59 (2026-11-05): la subida del escritorio no borra el estado civil del representante.** La web
+     * escribe `representante.estado_civil` (columna nullable nueva); el escritorio no la conoce y manda la
+     * fila con sus columnas de siempre. `CambiosEscritorio::guardarGenerico` filtra la fila por
+     * `Schema::getColumnListing` y hace el `UPDATE` **sólo con las columnas que vienen**, así que la que no
+     * viaja queda como está.
+     */
+    public function test_la_subida_del_escritorio_no_borra_el_estado_civil_del_representante(): void
+    {
+        // La fila llega del escritorio como siempre (sin la columna nueva) y la web le carga el estado civil.
+        $this->subir([['id' => 95, 'tabla' => 'representante', 'op' => 'I', 'fecha' => '2026-10-02 13:00:00',
+            'clave' => ['numhistoria' => '1'],
+            'fila' => ['numhistoria' => 1, 'nombre' => 'ROSA PEREZ', 'codeparentesco' => 'M']]]);
+
+        DB::table('representante')->where('reg_medico', self::REG)->where('numhistoria', 1)->update(['estado_civil' => 'C']);
+
+        // El escritorio vuelve a subir la MISMA fila, sin `estado_civil`.
+        $this->subir([['id' => 96, 'tabla' => 'representante', 'op' => 'U', 'fecha' => '2026-10-02 14:00:00',
+            'clave' => ['numhistoria' => '1'],
+            'fila' => ['numhistoria' => 1, 'nombre' => 'ROSA PEREZ DE PRUEBA', 'codeparentesco' => 'M', 'direccion' => 'CALLE 2']]]);
+
+        $fila = DB::table('representante')->where('reg_medico', self::REG)->where('numhistoria', 1)->first();
+        $this->assertSame('ROSA PEREZ DE PRUEBA', $fila->nombre, 'lo que sí manda el escritorio se actualiza');
+        $this->assertSame('CALLE 2', $fila->direccion);
+        $this->assertSame('C', $fila->estado_civil, 'la columna que el escritorio no manda no se borra');
     }
 
     public function test_estado_devuelve_el_prefijo_del_medico_o_null(): void

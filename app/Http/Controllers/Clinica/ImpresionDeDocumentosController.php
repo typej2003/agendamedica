@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Clinica;
 
+use App\Actions\Configuracion\GuardarFormatoDelRecipe;
 use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\ConsultasDelContexto;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
@@ -10,9 +11,9 @@ use App\Clinica\Consulta\Vistas\TiposDeEstudio;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\DocumentosParaImprimir;
 use App\Clinica\Impresion\DocumentosPorCita;
+use App\Clinica\Impresion\HojaDelImprimible;
 use App\Clinica\Impresion\MedicoQueFirma;
 use App\Clinica\Impresion\MembreteDelMedico;
-use App\Clinica\Impresion\ModoDeLaHoja;
 use App\Clinica\Impresion\ProximaCitaDelRecipe;
 use App\Clinica\Impresion\QrParaLosRecipes;
 use App\Clinica\Impresion\Vistas\DocumentosDeLaCitaVista;
@@ -27,6 +28,7 @@ use App\Models\Consulta;
 use App\Models\Medico;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * **Imprimir los documentos de una consulta** (WEB-5.3a): la constancia, el reposo, las referencias, el informe y —cuando se
@@ -65,6 +67,7 @@ class ImpresionDeDocumentosController extends Controller
         private ProximaCitaDelRecipe $proximaCita,
         private DocumentosPorCita $porCita,
         private QrParaLosRecipes $qr,
+        private GuardarFormatoDelRecipe $formatos,
     ) {
     }
 
@@ -87,17 +90,25 @@ class ImpresionDeDocumentosController extends Controller
 
         // El médico puede imprimir la constancia aunque no tenga nada propio; «todos» no la incluye en ese caso.
         $pedido = (string) $request->query('documento', '');
-        $ofrecidos = $this->documentos->disponibles($consulta, $registros, $pedido === DocumentosParaImprimir::TODOS ? false : true);
-        $claves = array_column($ofrecidos, 'clave');
+        $constanciaBase = $pedido !== DocumentosParaImprimir::TODOS;
 
-        $elegidos = $pedido === DocumentosParaImprimir::TODOS ? $claves : (in_array($pedido, $claves, true) ? [$pedido] : []);
+        // **Dos listas, a propósito** (2026-11-06). `ofrecidos` es lo que la especialidad del contexto ofrece en «Imprimir
+        // documentos»; `$todos` es todo lo que la consulta tiene, y es contra ésa que se valida el documento pedido y se
+        // resuelve a qué sección vuelve: la hoja que el alcance esconde deja de ofrecerse, pero **su enlace directo sigue
+        // abriendo** (2026-10-22).
+        $ofrecidos = $this->documentos->ofrecidos($consulta, $registros, $this->alcance($request), $constanciaBase);
+        $todos = $this->documentos->disponibles($consulta, $registros, $constanciaBase);
+
+        $elegidos = $pedido === DocumentosParaImprimir::TODOS
+            ? array_column($ofrecidos, 'clave')
+            : (in_array($pedido, array_column($todos, 'clave'), true) ? [$pedido] : []);
 
         // O-16: el documento todavía no existe (el estudio no se guardó, la solicitud está vacía). No es un 404: se dice qué
         // falta para poder imprimir y se ofrece la vuelta a la sección, en vez de la página «No encontramos esa página».
         if ($elegidos === []) {
             return view('clinica.imprimir.sin-documento', [
                 'vm' => new SinDocumentoVista(
-                    $this->nombreDelDocumento($pedido, $ofrecidos),
+                    $this->nombreDelDocumento($pedido, $todos),
                     [
                         // La vuelta es a la sección donde se carga ese documento, no a una pestaña cualquiera: el médico
                         // acaba de apretar «Imprimir» ahí.
@@ -114,11 +125,13 @@ class ImpresionDeDocumentosController extends Controller
             (int) $paciente->id,
             $registros,
             $elegidos,
-            $this->urlDeLaConsulta($consulta, $ofrecidos, $elegidos),
+            $this->urlDeLaConsulta($consulta, $todos, $elegidos),
             'Volver a la consulta',
             // La gesta del control de embarazo (`&gesta=2`): el informe prenatal es de una gesta y no de la
             // consulta, así que se pasa explícita en vez de que la lea el motor de documentos.
             ((int) $request->query('gesta', 0)) ?: null,
+            null,
+            route('clinica.consulta.documentos.hoja', $consulta->id),
         );
     }
 
@@ -138,7 +151,9 @@ class ImpresionDeDocumentosController extends Controller
         $registros = $this->registrosDelMedico($contexto['medico']);
 
         $de = $this->porCita->deLaCita($cita, $registros);
-        $disponibles = $atendida && $de['consulta'] !== null ? $this->documentos->disponibles($de['consulta'], $registros) : [];
+        // La lista ofrece lo de la especialidad del contexto (2026-11-06): en pediatría no aparece la hoja de un eco
+        // ginecológico aunque la consulta la tenga. Si con eso no queda nada, la pantalla lo dice (`sinDocumentos`).
+        $disponibles = $atendida && $de['consulta'] !== null ? $this->documentos->ofrecidos($de['consulta'], $registros, $this->alcance($request)) : [];
 
         if (count($disponibles) === 1) {
             return redirect()->route('clinica.agenda.documentos.imprimir', [$cita->id, 'documento' => $disponibles[0]['clave']]);
@@ -176,11 +191,15 @@ class ImpresionDeDocumentosController extends Controller
         $de = $this->porCita->deLaCita($cita, $registros);
         abort_if($de['consulta'] === null || $de['pacienteId'] === null, 404);
 
-        $disponibles = $this->documentos->disponibles($de['consulta'], $registros);
+        // Lo que se ofrece es lo de la especialidad del contexto; lo que **existe** es todo lo que la consulta tiene, y
+        // contra eso se valida la hoja pedida: la escondida por el alcance no se ofrece, pero su enlace directo sigue
+        // abriendo (2026-10-22).
+        $disponibles = $this->documentos->ofrecidos($de['consulta'], $registros, $this->alcance($request));
+        $existentes = array_column($this->documentos->disponibles($de['consulta'], $registros), 'clave');
         $claves = array_column($disponibles, 'clave');
         $pedido = (string) $request->query('documento', count($claves) === 1 ? $claves[0] : '');
 
-        $elegidos = $pedido === DocumentosParaImprimir::TODOS ? $claves : (in_array($pedido, $claves, true) ? [$pedido] : []);
+        $elegidos = $pedido === DocumentosParaImprimir::TODOS ? $claves : (in_array($pedido, $existentes, true) ? [$pedido] : []);
         abort_if($elegidos === [], 404);
 
         $dia = Carbon::parse($cita->fecha)->toDateString();
@@ -199,10 +218,24 @@ class ImpresionDeDocumentosController extends Controller
             // consultorio y **la firma del doctor asignado**, no la del centro.
             null,
             $this->firma->deUnaCita($cita, $contexto['medico']),
+            route('clinica.agenda.documentos.hoja', $cita->id),
         );
     }
 
     // ----------------------------------------------------------------------------------------- Adentro
+
+    /**
+     * **La especialidad del contexto** con la que se decide lo que se ofrece: es la misma que usa la consulta para
+     * esconder sus solapas y sus ecos, y la que lee la historia del paciente (O-72). Con ella, «Imprimir documentos» deja
+     * de ofrecer la hoja de un eco ginecológico a un niño (Alexander, 2026-11-06). **No se adivina por la edad** del
+     * paciente: un paciente de pediatría puede tener 21 años y un pediatra atiende a un adulto con otra especialidad.
+     */
+    private function alcance(Request $request): AlcanceDeLaEspecialidad
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+
+        return AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null);
+    }
 
     /**
      * La hoja: una sola implementación para los dos caminos. Arma los documentos pedidos, el membrete del formato del
@@ -218,18 +251,21 @@ class ImpresionDeDocumentosController extends Controller
      * paciente: sus documentos llevan la cabecera del escritorio (sexo, representante, historia y edad compacta). Del resto
      * de las especialidades, la hoja no cambia.
      *
-     * **La hoja** de cada documento de texto es la que el médico eligió (`MembreteDelMedico::hojaDeLosImprimibles`), salvo
-     * que esta impresión pida otra con `?hoja=` (vista previa) o con el `?pagina=grande|pequena` histórico. Los récipes y
-     * los documentos con hoja fija no la leen.
+     * **La hoja** de cada documento de texto es la que el médico eligió para **ese** imprimible
+     * (`HojaDelImprimible::modoDe`), salvo que esta impresión traiga el `?pagina=grande|pequena` histórico, que manda sobre
+     * lo guardado. Los récipes y los documentos con hoja fija no la leen. La barra ofrece el botón de configuración cuando
+     * lo que se imprime es **un solo** documento configurable: es la puerta por la que se cambia y se recuerda.
      *
      * @param  array<int,string>  $registros  los `reg_medico` del médico
      * @param  array<int,string>  $claves  `recipe-2`, `reposo`, `referencia-3`… lo que se imprime, en orden
      * @param  Medico|null  $firmante  el doctor que atendió la cita; `null` = el de la consulta o el del contexto
+     * @param  string|null  $urlGuardarHoja  la ruta POST donde se guarda la hoja de ese imprimible (la de la consulta o la de
+     *                                       la cita); `null` es una impresión que no la ofrece
      */
-    private function vistaPrevia(Request $request, Consulta $consulta, int $pacienteId, array $registros, array $claves, string $volver, string $textoVolver, ?int $gesta = null, ?Medico $firmante = null)
+    private function vistaPrevia(Request $request, Consulta $consulta, int $pacienteId, array $registros, array $claves, string $volver, string $textoVolver, ?int $gesta = null, ?Medico $firmante = null, ?string $urlGuardarHoja = null)
     {
         $contexto = $request->attributes->get('contexto_clinico');
-        $pediatria = AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null)->esPediatria();
+        $pediatria = $this->alcance($request)->esPediatria();
         $firmante = $firmante ?? ($this->firma->deUnaConsulta($consulta, $contexto['medico']) ?? $contexto['medico']);
 
         $documentos = [];
@@ -246,24 +282,25 @@ class ImpresionDeDocumentosController extends Controller
 
         abort_if($documentos === [], 404);
 
-        // **La hoja de los documentos de texto** (2026-11-04): la que el médico guardó en su formato, o `?hoja=` para
-        // previsualizar otra sin guardarla. El `?pagina=grande|pequena` histórico del escritorio sigue mandando sobre las
-        // dos (es una elección de esa impresión concreta).
-        $preferido = $this->membretes->hojaDeLosImprimibles($firmante);
-
-        if (is_string($hoja = $request->query('hoja'))) {
-            $preferido = ModoDeLaHoja::deLaPreferencia($hoja) ?? $preferido;
-        }
-
+        // **La hoja de cada documento** (2026-11-05): la que el médico guardó para ese imprimible, o la de siempre si no
+        // eligió. El `?pagina=grande|pequena` histórico del escritorio sigue mandando sobre lo guardado (es una elección de
+        // esa impresión concreta). Los récipes y los documentos con hoja fija no la leen (`modoDe` devuelve `null`).
         $pagina = $request->query('pagina');
-        $documentos = array_map(function ($documento) use ($preferido, $pagina) {
+        $pagina = is_string($pagina) ? $pagina : null;
+        $hojas = $this->membretes->hojasDeLosImprimibles($firmante);
+
+        $documentos = array_map(function ($documento) use ($hojas, $pagina) {
             if (! $documento instanceof DocumentoImpreso) {
                 return $documento;
             }
 
-            return $pagina === null
-                ? $documento->conPreferencia($preferido)
-                : $documento->conPreferencia($preferido)->conPagina((string) $pagina);
+            $modo = HojaDelImprimible::modoDe($hojas, $documento->tipo, $pagina);
+
+            if ($modo !== null) {
+                $documento = $documento->conPreferencia($modo);
+            }
+
+            return $pagina === null ? $documento : $documento->conPagina($pagina);
         }, $documentos);
 
         // El QR de verificación de cada récipe (WEB-5.6): el mismo que imprime el médico, sea quien sea quien imprima, y
@@ -283,29 +320,121 @@ class ImpresionDeDocumentosController extends Controller
                 ['volver' => $volver, 'volverTexto' => $textoVolver],
                 new OpcionesDeImpresionVista($opciones, route('clinica.recipes.opciones'), $request->getRequestUri()),
                 $pediatria,
-                $this->urlsDeLaHoja($request),
+                $this->hojaDelImprimible($documentos, $hojas, $pagina, $urlGuardarHoja),
             ),
         ]);
     }
 
-    /**
-     * Las cuatro hojas de los documentos de texto, como enlaces GET a esta misma impresión con `?hoja=`. Son una **vista
-     * previa**: no guardan nada (lo que se recuerda se elige en «Formato de impresión»). Se arma desde la URL sin query y
-     * se le vuelve a poner la actual, sacando `hoja` y `pagina` para que la elección nueva no quede pisada por la vieja.
-     *
-     * @return array<string,string>
-     */
-    private function urlsDeLaHoja(Request $request): array
-    {
-        $urls = [];
+    // --------------------------------------------------------------------- La hoja de cada imprimible
 
-        foreach (ModoDeLaHoja::HOJAS_DE_LOS_IMPRIMIBLES as $hoja) {
-            $urls[$hoja] = $request->url() . '?' . http_build_query(
-                array_merge($request->query(), ['hoja' => $hoja, 'pagina' => null]),
-            );
+    /**
+     * **Guardar la hoja de un imprimible** desde el botón de configuración de la vista previa (2026-11-05): la del médico
+     * desde su consulta. La clave del documento viene del propio formulario (`documento=reposo`; `referencia-3` se guarda
+     * como `referencia`) y la fila que se escribe es la del **doctor que firma**, como las opciones del récipe: la
+     * secretaría también la cambia y el médico ve lo mismo la próxima vez.
+     */
+    public function guardarHojaDeLaConsulta(Request $request, Consulta $consulta)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+        $registros = $this->registrosDelMedico($contexto['medico']);
+
+        $consulta = $this->consultas->consulta($registros, (int) $consulta->id, $contexto['reg_medico']);
+        abort_unless($this->consultas->paciente($consulta, $registros) !== null, 404);
+
+        $firmante = $this->firma->deUnaConsulta($consulta, $contexto['medico']) ?? $contexto['medico'];
+        $documento = $this->guardarLaHoja($request, $firmante);
+
+        return redirect()->route('clinica.consulta.documentos.imprimir', [
+            $consulta->id,
+            'documento' => $documento,
+        ]);
+    }
+
+    /** Lo mismo desde la cita atendida (la secretaría): la hoja se guarda en la fila del doctor que atendió. */
+    public function guardarHojaDeLaCita(Request $request, Cola $cola)
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+        $cita = $this->citaDelContexto($request, $cola);
+        abort_if($cita->movida_escritorio || (int) $cita->atendido !== 1, 404);
+
+        $de = $this->porCita->deLaCita($cita, $this->registrosDelMedico($contexto['medico']));
+        abort_if($de['consulta'] === null || $de['pacienteId'] === null, 404);
+
+        $firmante = $this->firma->deUnaCita($cita, $contexto['medico']) ?? $contexto['medico'];
+        $documento = $this->guardarLaHoja($request, $firmante);
+
+        return redirect()->route('clinica.agenda.documentos.imprimir', [
+            $cita->id,
+            'documento' => $documento,
+        ]);
+    }
+
+    /**
+     * Valida y escribe la elección en la fila del firmante, y devuelve el `documento` con el que se vuelve a la vista
+     * previa. Sólo se aceptan las claves de los imprimibles que admiten la elección: un POST inventado da 404.
+     */
+    private function guardarLaHoja(Request $request, Medico $firmante): string
+    {
+        $datos = $request->validate([
+            'documento' => ['required', 'string', 'max:60'],
+            'hoja' => ['required', Rule::in(HojaDelImprimible::OPCIONES)],
+        ], [
+            'documento.required' => 'No se sabe qué documento se está configurando.',
+            'hoja.required' => 'Elige una de las tres hojas.',
+            'hoja.in' => 'Elige una de las tres hojas de la lista.',
+        ]);
+
+        $clave = HojaDelImprimible::claveDe($datos['documento']);
+        abort_unless(HojaDelImprimible::acepta($clave), 404);
+
+        $this->formatos->ejecutar($firmante, [
+            'hojas_de_los_imprimibles' => array_replace(
+                $this->membretes->hojasDeLosImprimibles($firmante),
+                [$clave => $datos['hoja']],
+            ),
+        ]);
+
+        return $datos['documento'];
+    }
+
+    /**
+     * El documento cuya hoja se puede cambiar desde la barra: **uno solo**. Si el lote trae varios —o ninguno— no se
+     * ofrece el botón, porque la elección es por imprimible y cada uno tiene la suya. Devuelve lo que pinta el diálogo:
+     * qué documento es, cuál es su hoja actual y las tres opciones.
+     *
+     * @param  array<int,mixed>  $documentos
+     * @param  array<string,string>  $guardadas
+     * @return array{documento:string, nombre:string, actual:string, opciones:array<int,array{valor:string,titulo:string,descripcion:string,activa:bool}>, urlGuardar:string}|null
+     */
+    private function hojaDelImprimible(array $documentos, array $guardadas, ?string $pagina, ?string $urlGuardarHoja): ?array
+    {
+        if ($urlGuardarHoja === null) {
+            return null;
         }
 
-        return $urls;
+        $configurables = array_values(array_filter($documentos, fn ($documento) => $documento instanceof DocumentoImpreso
+            && $documento->informe === null
+            && $documento->preoperatorio === null
+            && HojaDelImprimible::acepta($documento->tipo)));
+
+        if (count($configurables) !== 1) {
+            return null;
+        }
+
+        $documento = $configurables[0];
+        $actual = HojaDelImprimible::actual($guardadas, $documento->tipo, $pagina);
+
+        return [
+            'documento' => $documento->clave,
+            'nombre' => $documento->nombre,
+            'actual' => $actual,
+            'actualTitulo' => HojaDelImprimible::titulo($actual),
+            'opciones' => array_map(
+                fn (array $opcion) => $opcion + ['activa' => $opcion['valor'] === $actual],
+                HojaDelImprimible::opciones(),
+            ),
+            'urlGuardar' => $urlGuardarHoja,
+        ];
     }
 
     /**

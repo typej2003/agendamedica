@@ -17,6 +17,7 @@ use App\Notificaciones\ExcepcionDeEnvio;
 use App\Notificaciones\MensajeDeRecordatorio;
 use App\Notificaciones\Telefono;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -384,5 +385,114 @@ class NotificacionesCitaTest extends TestCase
 
         $this->assertSame('otra@example.com', $notificacion->destino);
         Mail::assertSent(RecordatorioDeCita::class, fn (RecordatorioDeCita $correo) => $correo->hasTo('otra@example.com'));
+    }
+
+    // -------------------------------------------------------- Pediatría: el contacto es el del representante (O-66)
+
+    /** La fila de `paciente_chamo` es lo que dice que la historia es de un niño (el paciente de PediaReport). */
+    private function chamo(Medico $medico, int $numhistoria): void
+    {
+        DB::table('paciente_chamo')->insert([
+            'reg_medico' => $medico->reg_medico,
+            'familia'    => $numhistoria,
+            'historia'   => $numhistoria,
+            'nombre'     => 'NIÑO DE PRUEBA',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    private function representante(Medico $medico, int $numhistoria, array $datos = []): void
+    {
+        DB::table('representante')->insert(array_merge([
+            'reg_medico'  => $medico->reg_medico,
+            'numhistoria' => $numhistoria,
+            'nombre'      => 'MAMÁ DE PRUEBA',
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ], $datos));
+    }
+
+    /**
+     * **O-66 (2026-11-05): a un niño no se lo contacta nunca directamente.** Aunque tenga teléfono propio (la
+     * excepción que el escritorio pudo dejar), el recordatorio sale al del representante.
+     */
+    public function test_en_pediatria_el_recordatorio_va_al_telefono_del_representante_y_no_al_del_nino(): void
+    {
+        config($this->twilio);
+        Http::fake(['api.twilio.com/*' => Http::response(['sid' => 'SMnino'], 201)]);
+
+        $medico = $this->medico();
+        $this->paciente($medico, 3020, ['telefono' => '0414-1111111', 'email' => 'nino@example.com']);
+        $this->chamo($medico, 3020);
+        $this->representante($medico, 3020, ['telefono' => '0414-2222222', 'email' => 'mama@example.com']);
+        $cita = $this->cita($medico, 3020);
+
+        $notificacion = app(EnviarRecordatorio::class)->ejecutar($cita, 'sms', 'Hola.');
+
+        $this->assertSame('584142222222', $notificacion->destino);
+        Http::assertSent(fn ($peticion) => $peticion['To'] === '+584142222222');
+    }
+
+    /** El correo del aviso es el del representante (`representante.email`), no el del niño. */
+    public function test_en_pediatria_el_correo_del_recordatorio_es_el_del_representante(): void
+    {
+        Mail::fake();
+
+        $medico = $this->medico();
+        $this->paciente($medico, 3021, ['telefono' => '0414-1111111', 'email' => 'nino@example.com']);
+        $this->chamo($medico, 3021);
+        $this->representante($medico, 3021, ['telefono' => '0414-2222222', 'email' => 'mama@example.com']);
+        $cita = $this->cita($medico, 3021);
+
+        $notificacion = app(EnviarRecordatorio::class)->ejecutar($cita, 'correo');
+
+        $this->assertSame('mama@example.com', $notificacion->destino);
+        Mail::assertSent(RecordatorioDeCita::class, fn (RecordatorioDeCita $correo) => $correo->hasTo('mama@example.com'));
+    }
+
+    /**
+     * Si el representante no tiene el dato, **no se manda**: no se cae al del niño. El aviso dice de quién es el
+     * dato que falta, para que nadie crea que el niño no tiene teléfono.
+     */
+    public function test_en_pediatria_sin_el_dato_del_representante_no_se_manda_aunque_el_nino_lo_tenga(): void
+    {
+        config($this->twilio);
+        Http::fake();
+
+        $medico = $this->medico();
+        $this->paciente($medico, 3022, ['telefono' => '0414-1111111', 'email' => 'nino@example.com']);
+        $this->chamo($medico, 3022);
+        $cita = $this->cita($medico, 3022);
+
+        try {
+            app(EnviarRecordatorio::class)->ejecutar($cita, 'sms');
+            $this->fail('Se esperaba una excepción de envío.');
+        } catch (ExcepcionDeEnvio $excepcion) {
+            $this->assertSame(422, $excepcion->estadoHttp);
+            $this->assertStringContainsString('representante', $excepcion->getMessage());
+        }
+
+        $this->assertSame(0, NotificacionCita::where('cola_id', $cita->id)->count());
+        Http::assertNothingSent();
+    }
+
+    /**
+     * Fuera de pediatría no cambia nada: un paciente que **no** es un niño va a su propio teléfono, aunque tenga
+     * un representante cargado (la tabla la comparten todas las especialidades).
+     */
+    public function test_fuera_de_pediatria_el_recordatorio_sigue_yendo_al_telefono_del_paciente(): void
+    {
+        config($this->twilio);
+        Http::fake(['api.twilio.com/*' => Http::response(['sid' => 'SMadulto'], 201)]);
+
+        $medico = $this->medico();
+        $this->paciente($medico, 3023, ['telefono' => '0414-3333333']);
+        $this->representante($medico, 3023, ['telefono' => '0414-4444444']);
+        $cita = $this->cita($medico, 3023);
+
+        $notificacion = app(EnviarRecordatorio::class)->ejecutar($cita, 'sms', 'Hola.');
+
+        $this->assertSame('584143333333', $notificacion->destino);
     }
 }

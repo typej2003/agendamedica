@@ -278,4 +278,165 @@ class ConsultaProximaCitaWebTest extends TestCase
         $respuesta->assertSee('min="2026-10-08"', false);
         $respuesta->assertDontSee('min="2026-10-09"', false);
     }
+
+    // ------------------------------------------- La vuelta, a la pantalla en la que estaba el médico (O-65)
+
+    /**
+     * **El caso de O-65**: el médico está en la **lista** de récipes de la consulta (el listado de medicamentos que
+     * pidió), agenda la próxima cita desde ahí y la cita lo tiene que devolver **a esa lista**, no a la entrada de la
+     * sección (el editor del primer récipe, O-28).
+     */
+    public function test_al_agendar_desde_la_lista_de_recipes_la_cita_devuelve_a_la_lista(): void
+    {
+        [$user, $medico, $gineco, $pacienteId, $consulta, $sede] = $this->escenario();
+        $lista = $this->urlDeLaSeccion($consulta->id, true);
+
+        // El formulario de «Agendar aquí» dice a qué pantalla de la sección hay que volver.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($lista)
+            ->assertOk()
+            ->assertSee('name="volver_recipe" value="lista"', false);
+
+        // El POST del formulario, tal como lo manda el navegador.
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post(route('clinica.agenda.crear'), [
+            'origen'          => 'proxima-cita',
+            'paciente_id'     => $pacienteId,
+            'volver_consulta' => $consulta->id,
+            'volver_recipe'   => 'lista',
+            'sede'            => $sede->id,
+            'fecha'           => '2026-11-03',
+            'motivo'          => '',
+        ]);
+
+        $respuesta->assertRedirect($lista)->assertSessionHas('estado', 'Cita agendada.');
+
+        // Y lo que se ve al llegar es el listado de medicamentos, no el editor.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($lista)
+            ->assertOk()
+            ->assertSee('Récipes de esta consulta')
+            ->assertSee('LOSARTAN')
+            ->assertDontSee('Guardar el récipe');
+    }
+
+    /** Desde el editor de un récipe nuevo —donde el médico arma la receta y agenda la vuelta— se vuelve a ése. */
+    public function test_al_agendar_desde_un_recipe_nuevo_la_cita_devuelve_al_editor_de_ese_recipe(): void
+    {
+        [$user, $medico, $gineco, $pacienteId, $consulta, $sede] = $this->escenario();
+        $editor = route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes', 'recipe' => 'nuevo']);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($editor)
+            ->assertOk()
+            ->assertSee('name="volver_recipe" value="nuevo"', false);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post(route('clinica.agenda.crear'), [
+            'origen'          => 'proxima-cita',
+            'paciente_id'     => $pacienteId,
+            'volver_consulta' => $consulta->id,
+            'volver_recipe'   => 'nuevo',
+            'sede'            => $sede->id,
+            'fecha'           => '2026-11-03',
+            'motivo'          => '',
+        ])->assertRedirect($editor);
+    }
+
+    /** Y desde el editor de un récipe que ya existe, a ese récipe (no al primero). */
+    public function test_al_agendar_desde_el_editor_de_un_recipe_la_cita_devuelve_a_ese_recipe(): void
+    {
+        [$user, $medico, $gineco, $pacienteId, $consulta, $sede] = $this->escenario();
+        $this->recipe($medico, 1001, 1, 2, ['0001'], '2026-10-05');
+        $editor = route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes', 'recipe' => 2]);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($editor)
+            ->assertOk()
+            ->assertSee('name="volver_recipe" value="2"', false);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post(route('clinica.agenda.crear'), [
+            'origen'          => 'proxima-cita',
+            'paciente_id'     => $pacienteId,
+            'volver_consulta' => $consulta->id,
+            'volver_recipe'   => '2',
+            'sede'            => $sede->id,
+            'fecha'           => '2026-11-03',
+            'motivo'          => '',
+        ])->assertRedirect($editor);
+    }
+
+    /** La otra pestaña de la sección: agendar desde el récipe de la pareja vuelve a él, no al del paciente. */
+    public function test_al_agendar_desde_el_recipe_de_la_pareja_la_cita_devuelve_a_ese_recipe(): void
+    {
+        [$user, $medico, $gineco, $pacienteId, $consulta, $sede] = $this->escenario();
+        $this->pareja($medico, 1001, 1, ['0002']);
+        $pareja = route('clinica.consulta', [$consulta->id, 'seccion' => 'recipes', 'recipe' => 'pareja']);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->get($pareja)
+            ->assertOk()
+            ->assertSee('name="volver_recipe" value="pareja"', false);
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post(route('clinica.agenda.crear'), [
+            'origen'          => 'proxima-cita',
+            'paciente_id'     => $pacienteId,
+            'volver_consulta' => $consulta->id,
+            'volver_recipe'   => 'pareja',
+            'sede'            => $sede->id,
+            'fecha'           => '2026-11-03',
+            'motivo'          => '',
+        ])->assertRedirect($pareja);
+    }
+
+    /**
+     * La pregunta por la cita pendiente no pierde la pantalla: el formulario completo la lleva en su campo oculto y,
+     * al resolverla, la vuelta sigue siendo la lista de récipes.
+     */
+    public function test_la_pregunta_por_la_cita_pendiente_conserva_la_pantalla_de_los_recipes(): void
+    {
+        [$user, $medico, $gineco, $pacienteId, $consulta, $sede] = $this->escenario();
+        $this->cita($medico, 1001, '2026-10-20', ['medical_center_id' => $sede->medical_center_id]);
+        $lista = $this->urlDeLaSeccion($consulta->id, true);
+
+        $pregunta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post(route('clinica.agenda.crear'), [
+            'origen'          => 'proxima-cita',
+            'paciente_id'     => $pacienteId,
+            'volver_consulta' => $consulta->id,
+            'volver_recipe'   => 'lista',
+            'sede'            => $sede->id,
+            'fecha'           => '2026-11-03',
+            'motivo'          => '',
+        ]);
+
+        $pregunta->assertOk();
+        $pregunta->assertSee('Ya tiene una cita pendiente');
+        $pregunta->assertSee('name="volver_recipe" value="lista"', false);
+
+        // Resolver la pregunta (mover la cita) también vuelve a la lista.
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)->post(route('clinica.agenda.crear'), [
+            'origen'          => 'proxima-cita',
+            'paciente_id'     => $pacienteId,
+            'volver_consulta' => $consulta->id,
+            'volver_recipe'   => 'lista',
+            'sede'            => $sede->id,
+            'fecha'           => '2026-11-03',
+            'decision'        => 'mover',
+        ])->assertRedirect($lista);
+    }
+
+    /** Una pantalla que no existe se rechaza con un aviso en español: no se inventa el destino ni se sale de la sección. */
+    public function test_una_pantalla_de_los_recipes_que_no_existe_se_rechaza(): void
+    {
+        [$user, $medico, $gineco, $pacienteId, $consulta, $sede] = $this->escenario();
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)->post(route('clinica.agenda.crear'), [
+            'origen'          => 'proxima-cita',
+            'paciente_id'     => $pacienteId,
+            'volver_consulta' => $consulta->id,
+            'volver_recipe'   => 'https://malo.example.com',
+            'sede'            => $sede->id,
+            'fecha'           => '2026-11-03',
+        ]);
+
+        $respuesta->assertSessionHasErrors('volver_recipe');
+        $this->assertStringContainsString(
+            'No se sabe a qué parte de los récipes volver',
+            session('errors')->first('volver_recipe'),
+        );
+        $this->assertNull(DB::table('cola')->where('reg_medico', $medico->reg_medico)->whereDate('fecha', '2026-11-03')->first());
+    }
 }

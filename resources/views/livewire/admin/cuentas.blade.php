@@ -31,10 +31,7 @@
         </div>
 
         <div class="card-body p-0 tabla-cuentas">
-            {{-- En pantallas medianas y grandes la tabla no hace scroll: si no, el menú de 3 puntos queda cortado. --}}
-            <style>@media (min-width: 768px) { .tabla-cuentas .table-responsive { overflow: visible; } }</style>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <x-ui.tabla class="mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>{{ $pestana === 'medicos' ? 'Médico' : 'Nombre' }}</th>
@@ -51,12 +48,16 @@
                                 $m = $pestana === 'medicos' ? $fila : $fila->medico;
                             @endphp
                             <tr wire:key="{{ $pestana }}-{{ $fila->id }}">
-                                <td>
+                                <td class="celda-principal">
                                     @if ($pestana === 'medicos')
                                         <div class="fw-semibold">{{ trim($fila->name . ' ' . $fila->lastname) }}</div>
                                         <small class="text-muted">{{ $fila->reg_medico }}</small>
                                         @if ($fila->es_centro)
-                                            <span class="badge bg-primary" title="Es un centro médico: no inicia sesión ni atiende, es el tenant de sus doctores">Centro médico</span>
+                                            @if ($fila->esConsultorioHijo())
+                                                <span class="badge bg-primary" title="Un consultorio más del mismo médico: usa su plan, no tiene cuenta y no le suma un asiento">Consultorio</span>
+                                            @else
+                                                <span class="badge bg-primary" title="Es un centro médico: no inicia sesión ni atiende, es el tenant de sus doctores">Centro médico</span>
+                                            @endif
                                         @endif
                                         @php $extras = $fila->registros->where('reg_medico', '!=', $fila->reg_medico)->count(); @endphp
                                         @if ($extras > 0)
@@ -69,15 +70,15 @@
                                         @endif
                                     @endif
                                 </td>
-                                <td>{{ $u?->email ?? $fila->email }}</td>
-                                <td>
+                                <td data-etiqueta="Correo">{{ $u?->email ?? $fila->email }}</td>
+                                <td data-etiqueta="Roles">
                                     @if ($u)
                                         @foreach ($u->roles as $rol)
                                             <span class="badge bg-info text-dark">{{ $rol->name }}</span>
                                         @endforeach
                                     @endif
                                 </td>
-                                <td>
+                                <td data-etiqueta="Estado">
                                     @if (! $u)
                                         <span class="badge bg-secondary">Sin acceso</span>
                                     @elseif ($u->is_active === false)
@@ -89,17 +90,11 @@
                                         <span class="badge bg-warning text-dark" title="Debe cambiar su clave temporal en el próximo inicio de sesión">Clave temporal</span>
                                     @endif
                                 </td>
-                                <td class="text-end text-nowrap">
+                                <td class="text-end text-nowrap celda-acciones">
                                     @if (! $u && ! $fila->es_centro)
                                         <button wire:click="abrirAcceso({{ $fila->id }})" class="btn btn-sm btn-primary">
                                             <i class="bi bi-key me-1"></i> Crear acceso
                                         </button>
-                                    @endif
-
-                                    @if ($pestana === 'medicos')
-                                        <a href="{{ route('admin.cuentas.medico', $fila) }}" class="btn btn-sm btn-outline-secondary">
-                                            <i class="bi bi-eye me-1" aria-hidden="true"></i> Ver
-                                        </a>
                                     @endif
 
                                     <button wire:click="abrirEditar('{{ $pestana === 'medicos' ? 'medico' : 'administrador' }}', {{ $fila->id }})"
@@ -107,20 +102,32 @@
                                         <i class="bi bi-pencil-square me-1"></i> Editar
                                     </button>
 
-                                    {{-- Dónde atiende: sedes → consultorios → horarios y cupos (`admin.medicos.sedes`). --}}
-                                    @if ($pestana === 'medicos')
-                                        <a href="{{ route('admin.medicos.sedes', $fila) }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-geo-alt me-1" aria-hidden="true"></i> Ver sedes
-                                        </a>
-                                    @endif
-
-                                    @if ($u || $m)
+                                    {{-- «Ver» y «Ver sedes» van **en el menú «…»**, no como botones directos: con
+                                         «Crear acceso» + «Ver» + «Editar» + «Ver sedes» + el menú la fila medía 1004 px y
+                                         a 1280 px se salía de su tarjeta. La pauta es hasta dos acciones directas y el
+                                         resto en el menú (guía de UI §9.1). --}}
+                                    @if ($u || $m || $pestana === 'medicos')
                                         <div class="dropdown d-inline-block">
                                             <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown"
                                                     aria-expanded="false" title="Más acciones" aria-label="Más acciones">
                                                 <i class="bi bi-three-dots-vertical"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                @if ($pestana === 'medicos')
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ route('admin.cuentas.medico', $fila) }}">
+                                                            <i class="bi bi-eye me-2" aria-hidden="true"></i> Ver
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ route('admin.medicos.sedes', $fila) }}">
+                                                            <i class="bi bi-geo-alt me-2" aria-hidden="true"></i> Ver sedes
+                                                        </a>
+                                                    </li>
+                                                    @if ($u || $m)
+                                                        <li><hr class="dropdown-divider"></li>
+                                                    @endif
+                                                @endif
                                                 @if ($u)
                                                     <li>
                                                         <button type="button" class="dropdown-item" wire:click="abrirRoles({{ $u->id }})">
@@ -138,7 +145,7 @@
                                                     <li>
                                                         <button type="button" class="dropdown-item" wire:click="abrirRegistros({{ $m->id }})">
                                                             <i class="bi bi-database-lock me-2"></i>
-                                                            {{ $m->es_centro ? 'Doctores del centro' : 'Registros de datos' }}
+                                                            {{ $m->esConsultorioHijo() ? 'Doctores del consultorio' : ($m->es_centro ? 'Doctores del centro' : 'Registros de datos') }}
                                                         </button>
                                                     </li>
                                                     {{-- **El formato de impresión del centro** (Fase 5 del cambio de `reg_medico`): el
@@ -188,8 +195,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
 
         @if ($filas->hasPages())
@@ -441,7 +447,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            {{ $medicoRegistros->es_centro ? 'Doctores del centro' : 'Registros de datos' }}
+                            {{ $medicoRegistros->esConsultorioHijo() ? 'Doctores del consultorio' : ($medicoRegistros->es_centro ? 'Doctores del centro' : 'Registros de datos') }}
                             · {{ trim($medicoRegistros->name . ' ' . $medicoRegistros->lastname) }}
                         </h5>
                         <button type="button" class="btn-close" wire:click="cerrarModal" aria-label="Cerrar"></button>
@@ -537,6 +543,27 @@
                                     <span wire:loading wire:target="asignarRegistro">Asignando…</span>
                                 </button>
                             </form>
+
+                            {{-- **El segundo consultorio del médico** (2026-11-06): no es otra cuenta, es una ficha
+                                 que cuelga de la suya y usa su plan. La credencial de esa PC sale de API Keys. --}}
+                            <hr class="my-4">
+                            <h6>Agregar un consultorio</h6>
+                            <p class="text-muted small mb-2">
+                                El otro sitio donde atiende este médico, con su propio <code>reg_medico</code> (el de
+                                esa instalación; si lo dejas vacío se genera uno). No crea una cuenta: el consultorio
+                                <strong>usa el plan de este médico</strong> y no le suma un asiento al equipo. Después se
+                                emite la credencial de esa PC en <strong>API Keys</strong>.
+                            </p>
+                            <form wire:submit.prevent="agregarConsultorio" class="d-flex gap-2">
+                                <input type="text" class="form-control" wire:model="regConsultorio" maxlength="20"
+                                       autocomplete="off" placeholder="reg_medico (vacío = se genera)"
+                                       aria-label="reg_medico del consultorio nuevo">
+                                <button type="submit" class="btn btn-primary text-nowrap" wire:loading.attr="disabled">
+                                    <span wire:loading.remove wire:target="agregarConsultorio">Agregar consultorio</span>
+                                    <span wire:loading wire:target="agregarConsultorio">Agregando…</span>
+                                </button>
+                            </form>
+                            @error('reg_consultorio') <span class="text-danger small d-block mt-1">{{ $message }}</span> @enderror
                         @endif
                     </div>
                     <div class="modal-footer">

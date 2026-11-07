@@ -50,7 +50,7 @@ plan que escribe el médico y lo que recetó.
  *    distintos del legado: en `d_historia_clinica_resumen` esas mismas columnas salen como «Oído» y
  *    «Laringe»; acá, «RESULTADO DE EXÁMENES» y «PLAN DE TRATAMIENTO».
  *
- * La **hoja** es la media hoja A4 del resto de los documentos (decisión 17 de `TODO-WEB.md`): del `.srd`
+ * La **hoja** es la media hoja de Carta del resto de los documentos (decisión 17 de `TODO-WEB.md`): del `.srd`
  * se lee **qué datos** lleva, no se copia su layout.
  */
 final class ResumenMedico

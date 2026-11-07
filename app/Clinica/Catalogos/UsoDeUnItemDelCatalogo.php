@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\DB;
  *  - **Tipo de examen** (`tipos_examenes.codetipo`): los exámenes del catálogo que cuelgan de él (`examenes.codetipo`).
  *  - **Médico referido** (`doctores.cedula`): las referencias de las consultas (`referencia.ceduladoctor`), buscadas en
  *    **todos los registros del médico** porque el catálogo de colegas se resuelve por registros (`DoctoresDelMedico`).
+ *  - **Seguro / empresa** (`seg_emp.codesegemp`): los pacientes que lo tienen como su seguro (`pacientes.codesegemp`),
+ *    dentro de ese consultorio. Es el único que se cuenta por **pacientes** y no por consultas.
  *
  * Se cuentan **consultas** (`nrohistoria` + `nroconsulta`), no filas. El escritorio no comprobaba nada de esto: su
  * `DELETE` directo dejaba filas huérfanas (la consulta seguía nombrando un código que ya no existía). La web no lo
@@ -100,6 +102,50 @@ final class UsoDeUnItemDelCatalogo
             ->count();
 
         return new self(self::cuando($consultas, 'consulta con pre-factura', 'consultas con pre-factura'));
+    }
+
+    /**
+     * Un seguro / empresa del catálogo del consultorio (O-62): **los pacientes** que lo tienen guardado como su
+     * seguro (`pacientes.codesegemp`), acotados al consultorio dueño de la fila (`pacientes.reg_medico`, el tenant con
+     * el que se creó la ficha y el mismo `reg_medico` del catálogo del que salió el código).
+     *
+     * Se miran **los pacientes, no las consultas**: es el único catálogo clínico cuyo uso es un dato de la ficha y no
+     * de un acto médico. Los nombres van en el aviso —hasta cinco— para que el médico sepa a quién cambiarle el
+     * seguro antes de borrarlo.
+     */
+    public static function seguro(string $regMedico, string $codigo): self
+    {
+        $codigo = trim($codigo);
+
+        if ($codigo === '') {
+            return new self([]);
+        }
+
+        $pacientes = DB::table('pacientes')
+            ->where('reg_medico', $regMedico)
+            ->where('codesegemp', $codigo)
+            ->orderBy('apellidos')
+            ->orderBy('nombres')
+            ->get(['apellidos', 'nombres']);
+
+        $total = $pacientes->count();
+
+        if ($total === 0) {
+            return new self([]);
+        }
+
+        $nombres = $pacientes
+            ->map(fn ($fila) => trim(trim((string) $fila->apellidos) . ' ' . trim((string) $fila->nombres)))
+            ->filter(fn (string $nombre) => $nombre !== '')
+            ->take(self::MAX_NOMBRES)
+            ->map(fn (string $nombre) => '«' . $nombre . '»')
+            ->values()
+            ->all();
+
+        $resto = $total - count($nombres);
+        $detalle = $nombres === [] ? '' : ' (' . implode(', ', $nombres) . ($resto > 0 ? ' y ' . $resto . ' más' : '') . ')';
+
+        return new self([($total === 1 ? '1 paciente' : $total . ' pacientes') . $detalle]);
     }
 
     /** @param  array<int,string>  $registros  los registros del médico */

@@ -72,6 +72,12 @@ class Cuentas extends Component
     public $regNuevo = '';
     public $avisoRegistros = null;
 
+    /**
+     * **El segundo consultorio del médico** (2026-11-06): el `reg_medico` de la ficha que se le agrega. No es
+     * una cuenta nueva: queda colgada de la suya y usa su plan.
+     */
+    public $regConsultorio = '';
+
     /** Doctor elegido para **vincularlo a un centro** (el `medicos.id` de la ficha del doctor). */
     public $doctorNuevo = '';
 
@@ -465,6 +471,22 @@ class Cuentas extends Component
     }
 
     /**
+     * **Agregar un consultorio** al médico (su segundo sitio): crea la ficha que cuelga de la suya y el vínculo,
+     * sin cuenta y sin plan propio (lo resuelve `CuentaService::agregarConsultorio`).
+     */
+    public function agregarConsultorio(CuentaService $cuentas)
+    {
+        $this->ejecutar(function () use ($cuentas) {
+            $this->avisoRegistros = null;
+            $ficha = $cuentas->agregarConsultorio(Medico::findOrFail($this->medicoId), (string) $this->regConsultorio);
+
+            $this->avisoRegistros = "Consultorio {$ficha->reg_medico} agregado: usa el plan de este médico y no le suma un asiento. "
+                . 'La credencial de esa PC se emite en API Keys.';
+            $this->regConsultorio = '';
+        });
+    }
+
+    /**
      * **Desvincular a un doctor del centro** (Fase 2 del cambio de `reg_medico`): es la otra cara de
      * `asignarRegistro`. Se quita del doctor la fila de `medico_registros` con el `reg_medico` del centro —
      * nada se borra— y el doctor deja de ver el centro en su contexto.
@@ -524,7 +546,7 @@ class Cuentas extends Component
 
     private function limpiarFormulario(): void
     {
-        $this->reset(['name', 'lastname', 'prefix', 'email', 'reg_medico', 'phone', 'license_number', 'clave', 'userId', 'medicoId', 'motivo', 'rolesSeleccionados', 'regNuevo', 'avisoRegistros', 'es_centro', 'formato_reportes', 'doctorNuevo']);
+        $this->reset(['name', 'lastname', 'prefix', 'email', 'reg_medico', 'phone', 'license_number', 'clave', 'userId', 'medicoId', 'motivo', 'rolesSeleccionados', 'regNuevo', 'regConsultorio', 'avisoRegistros', 'es_centro', 'formato_reportes', 'doctorNuevo']);
         $this->tipoAlta = 'medico';
         $this->tipoEdicion = 'medico';
         $this->resetErrorBag();

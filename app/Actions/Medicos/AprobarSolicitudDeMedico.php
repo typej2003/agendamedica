@@ -2,6 +2,7 @@
 
 namespace App\Actions\Medicos;
 
+use App\Actions\Catalogos\AsegurarElSeguroPersonal;
 use App\Mail\LatidosGanadosPorReferido;
 use App\Models\Medico;
 use App\Models\Referido;
@@ -40,6 +41,10 @@ use Throwable;
  * La especialidad se asigna después de crear la cuenta, con `asignarEspecialidades`, que le copia el catálogo
  * inicial (WEB-12.9). El correo no es parte de la transacción: si falla, la clave se le muestra al administrador.
  *
+ * **El médico nuevo nace con el seguro «Personal»** (O-60, 2026-11-05): se le deja en cada consultorio que no
+ * tenga ninguno, sin pasar por el panel (`AsegurarElSeguroPersonal`). No se duplica con la copia del catálogo
+ * inicial: ésa sólo corre cuando se le **asigna una especialidad nueva**, y la Action es idempotente.
+ *
  * **Aprobación automática (2026-11-03)**: cuando la política no exige carnet, `automatica()` aprueba sin
  * administrador con el `reg_medico` propuesto (`MPPS-<número>`) y deja las tres verificaciones del perfil: el
  * correo verificado (por el código de 6 dígitos), el carnet `pendiente` o `sin_verificar` y el teléfono
@@ -52,6 +57,7 @@ final class AprobarSolicitudDeMedico
         private CorreosDeLaSolicitud $correos,
         private AcreditarReferido $referidos,
         private VerificacionesDelMedico $verificaciones,
+        private AsegurarElSeguroPersonal $seguros,
     ) {
     }
 
@@ -166,6 +172,14 @@ final class AprobarSolicitudDeMedico
             $this->cuentas->asignarEspecialidades($resultado['medico'], array_merge($actuales, [$especialidadId]));
         }
 
+        // **El seguro «Personal»** (O-60): el alta no pasa por el panel, así que se le deja acá. Va aparte de la
+        // copia del catálogo inicial porque ésa sólo corre cuando se le asigna una especialidad nueva (si ya la
+        // tenía, `asignarEspecialidades` no copia nada y el médico se quedaría sin seguro). Al del escritorio no
+        // se le toca: su carga inicial trae sus propios `seg_emp`.
+        if (! $this->trabajaConElEscritorio($resultado['medico'])) {
+            $this->seguros->paraElMedico($resultado['medico']);
+        }
+
         $this->avisarLatidosDelReferido($resultado['referido'] ?? null);
 
         $correoEnviado = $this->correos->aprobada($resultado['solicitud'], $resultado['clave']);
@@ -247,6 +261,22 @@ final class AprobarSolicitudDeMedico
                 ]);
             }
         }
+    }
+
+    /**
+     * ¿La ficha es de un consultorio que ya trabaja con el **escritorio**? Es la misma guarda con la que
+     * `CargarCatalogosInicialesAlMedico` no le copia el catálogo inicial: su carga del puente (`sync_cargas`) o
+     * su credencial (`sync_credentials`) traen sus propios `seg_emp`, y crearle el «Personal» acá duplicaría lo
+     * que sube PowerBuilder.
+     */
+    private function trabajaConElEscritorio(Medico $medico): bool
+    {
+        $registros = $medico->registrosDeTrabajo();
+
+        return $registros !== [] && (
+            DB::table('sync_cargas')->whereIn('reg_medico', $registros)->exists()
+            || DB::table('sync_credentials')->whereIn('reg_medico', $registros)->exists()
+        );
     }
 
     /**

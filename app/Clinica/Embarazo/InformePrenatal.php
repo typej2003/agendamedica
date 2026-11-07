@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
  * controles y su laboratorio, ya leídos y listos para armar la hoja.
  *
  * El escritorio imprime el *Reporte* con `d_informe_pre_nata_peque.srd` —título **«CONTROL DE EMBARAZO»**,
- * A4 horizontal— y cuatro sub-reportes anidados (`:32-35`, todos con `nest_arguments (NroHistoria, gesta)`):
+ * Carta horizontal— y cuatro sub-reportes anidados (`:32-35`, todos con `nest_arguments (NroHistoria, gesta)`):
  * la gesta (`d_pre_natal_observa_reporte`), los controles (`d_pre_natal_rutin_abuenas_reporte_peq_re`, sobre
  * `pre_natal_desarrollo_fino`), el laboratorio (`d_resultado_examen_reporte_peque_report`, sobre
  * `prena_exames_b`) y las observaciones (`d_pre_natal_observa_reporte_observa`). Esta clase es esa lectura.

@@ -8,6 +8,7 @@ use App\Http\Livewire\Components\DaySchedule;
 use App\Http\Controllers\Auth\CustomLoginController;
 use App\Http\Controllers\Auth\CambiarPasswordWebController;
 use App\Http\Controllers\Auth\ElegirPanelController;
+use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Clinica\MisSubespecialidadesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PortadaController;
@@ -35,6 +36,13 @@ Route::get('/r/{codigo}', EnlaceDeReferidoController::class)
 //    El alta de cuentas también: el registro de médicos (con aprobación) y el de pacientes son las
 //    fases siguientes del login; el formulario de `/register` creaba una cuenta sin rol y no se usa.
 Auth::routes(['login' => false, 'register' => false]);
+
+// 1.b El correo de verificar el correo firma la URL de `verification.verify`: la ruta tiene que existir para
+//     que el enlace se pueda armar. Se registra sólo esa (el controlador ya pone `auth`, `signed` y el
+//     throttle); el aviso `verification.notice` y el reenvío no se usan porque la verificación no está
+//     exigida hoy (`User` no implementa `MustVerifyEmail`).
+Route::get('email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
+    ->name('verification.verify');
 
 // 2. Definimos las rutas de Login personalizada (GET para mostrar el form y POST para autenticar).
 //    Es **un solo login**: el tipo de cuenta lo resuelve `AutenticacionPorCorreo`, no la pantalla.

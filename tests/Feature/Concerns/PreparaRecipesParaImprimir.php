@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Concerns;
 
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Models\Cola;
 use App\Models\Consulta;
 use App\Models\Evolucion;
@@ -100,6 +101,16 @@ trait PreparaRecipesParaImprimir
             'specialty_id' => $specialty->id,
             'office_id'    => null,
         ]]);
+    }
+
+    /**
+     * La **especialidad del contexto** con la que se decide qué documentos se ofrecen imprimir (2026-11-06). Por
+     * defecto, la de `medicoConAcceso()` —ginecología—; `'pediatria'` para los impresos del niño; y `null` es un
+     * consultorio **sin especialidad**, que desde el 2026-10-30 no es ginecología (es modo medicina general).
+     */
+    private function alcance(?string $especialidad = 'ginecologia-y-obstetricia'): AlcanceDeLaEspecialidad
+    {
+        return AlcanceDeLaEspecialidad::de($especialidad);
     }
 
     private function medicamento(Medico $medico, string $codigo, string $comercial, ?string $generico = null, ?string $presentacion = null, ?string $uso = null): void

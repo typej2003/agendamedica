@@ -1,18 +1,18 @@
 /*
- * El informe de una ecografía a hoja completa (WEB-11.13): A4 vertical, el formulario lleno con la opción elegida marcada y, aparte, una hoja
+ * El informe de una ecografía a hoja completa (WEB-11.13): Carta vertical, el formulario lleno con la opción elegida marcada y, aparte, una hoja
  * con las imágenes del estudio. Lo carga la vista previa de las hojas (`clinica/imprimir/hojas`). El resto de las hojas es horizontal
  * (`clinica-recipe.css`): esta usa una **página con nombre** para cambiar de orientación sólo ella.
  */
 
-@page informe { size: A4 portrait; margin: 0; }
+@page informe { size: letter portrait; margin: 0; }
 
 .informe-hoja {
     page: informe;
     position: relative;
     display: flex;
     flex-direction: column;
-    width: 210mm;
-    min-height: 294mm;
+    width: 215.9mm;
+    min-height: 276.4mm;
     flex: none;
     box-sizing: border-box;
     padding: 7mm 10mm 5mm;

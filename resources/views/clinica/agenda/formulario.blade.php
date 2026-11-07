@@ -23,6 +23,10 @@
         @if ($vm->volverConsulta())
             <input type="hidden" name="volver_consulta" value="{{ $vm->volverConsulta() }}">
         @endif
+        @if ($vm->volverRecipe() !== null)
+            {{-- La pantalla de los récipes a la que se vuelve (O-65): el paso 1 no la pierde al recargar. --}}
+            <input type="hidden" name="volver_recipe" value="{{ $vm->volverRecipe() }}">
+        @endif
 
         <x-ui.tarjeta class="mb-3">
             <h2 class="visually-hidden">Dónde y cuándo</h2>
@@ -106,6 +110,10 @@
                 {{-- "Hacer cita" desde los récipes de una consulta (WEB-5.2): al guardar vuelve a ellos. --}}
                 <input type="hidden" name="volver_consulta" value="{{ $vm->volverConsulta() }}">
             @endif
+            @if ($vm->volverRecipe() !== null)
+                {{-- Y a la pantalla de los récipes en la que estaba (O-65): resolver la cita pendiente no la pierde. --}}
+                <input type="hidden" name="volver_recipe" value="{{ $vm->volverRecipe() }}">
+            @endif
 
             {{-- La pregunta por la cita pendiente: no se escribió nada todavía, así que decide el usuario con
                  los mismos datos que ya cargó en el formulario. --}}
@@ -155,12 +163,14 @@
                     <div class="position-relative" id="paciente-busqueda-caja">
                         <label class="form-label" for="paciente-busqueda">Buscar por apellido, cédula o n.º de historia</label>
                         {{-- El «+» al final del buscador abre el diálogo lateral del alta (2026-11-03): antes el alta
-                             era un `<details>` y, al desplegarlo, «Agendar la cita» quedaba fuera de la pantalla. --}}
+                             era un `<details>` y, al desplegarlo, «Agendar la cita» quedaba fuera de la pantalla.
+                             Va en violeta lleno (2026-11-05), el `btn-primary` de la marca, para que el alta no pase
+                             desapercibida como cuando era un `btn-outline-secondary`. --}}
                         <x-ui.buscador-vivo id="paciente-busqueda" resultados="paciente-resultados"
                                             :valor="$vm->paciente()['nombre'] ?? ''" placeholder="Escribe al menos dos letras"
                                             etiqueta="Buscar paciente" :data-url="$vm->urlBuscarPacientes()">
                             <x-slot:accion>
-                                <button type="button" class="btn btn-outline-secondary" data-abrir-dialogo="dialogo-paciente-nuevo"
+                                <button type="button" class="btn btn-primary" data-abrir-dialogo="dialogo-paciente-nuevo"
                                         aria-label="Cargar un paciente nuevo" title="Cargar un paciente nuevo">
                                     <span class="signo-mas" aria-hidden="true">+</span>
                                 </button>
@@ -246,9 +256,14 @@
 
                     <div class="col-sm-6 col-xl">
                         <label class="form-label" for="monto">Monto <span id="monto-obligatorio" @if (! $vm->montoObligatorio()) hidden @endif>*</span></label>
-                        <input type="number" step="0.01" min="0" name="monto" id="monto" class="form-control"
-                               value="{{ $vm->valor('monto') }}" placeholder="{{ $vm->montoObligatorio() ? 'Sin precio: escríbelo (0 si es gratis)' : $vm->precioDelMotivo() }}"
-                               @if ($vm->montoObligatorio()) required @endif>
+                        {{-- El monto va en dólares (2026-11-05): el «USD» del campo es el que le dice a quien agenda en qué
+                             moneda está cargando, como en los motivos de cita. --}}
+                        <div class="input-group">
+                            <input type="number" step="0.01" min="0" name="monto" id="monto" class="form-control"
+                                   value="{{ $vm->valor('monto') }}" placeholder="{{ $vm->montoObligatorio() ? 'Sin precio: escríbelo (0 si es gratis)' : $vm->precioDelMotivo() }}"
+                                   @if ($vm->montoObligatorio()) required @endif>
+                            <span class="input-group-text">USD</span>
+                        </div>
                         @error('monto') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                     </div>
                 </div>

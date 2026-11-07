@@ -24,7 +24,7 @@ use Illuminate\Http\Request;
 use InvalidArgumentException;
 
 /**
- * **Imprimir el récipe** (WEB-5.2): la vista previa de la hoja A4 horizontal que imprime el navegador
+ * **Imprimir el récipe** (WEB-5.2): la vista previa de la hoja Carta horizontal que imprime el navegador
  * (PLAN-WEB.md R6, decisión 17) y la elección de cómo sale.
  *
  * Este controlador es **el del médico en la consulta**: la hoja de un récipe del paciente

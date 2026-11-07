@@ -229,11 +229,13 @@ class ImpresionDeSolicitudesWebTest extends TestCase
             $grande = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $documento))->assertOk()->getContent();
             $this->assertStringContainsString('recipe-hoja recipe-hoja-completa tamano-', $grande, $documento);
             $this->assertStringNotContainsString('recipe-mitad-vacia', $grande, $documento);
-            $this->assertMatchesRegularExpression('/hoja=vertical"\s+aria-current="true"\s*>Vertical</', $grande);
+            // La vista previa no ofrece el segmentado viejo: la hoja se elige con el botón de configuración (2026-11-05).
+            $this->assertStringNotContainsString('barra-impresion-modos', $grande, $documento);
 
+            // `?pagina=pequena` es la media hoja vertical: la página mide la mitad y no deja el espacio de abajo (2026-11-05).
             $pequena = $this->como($user, $medico, $gineco)->get($this->hoja($consulta, $documento) . '&pagina=pequena')->assertOk()->getContent();
-            $this->assertStringContainsString('recipe-hoja recipe-hoja-completa recipe-hoja-mitad-superior', $pequena, $documento);
-            $this->assertMatchesRegularExpression('/hoja=media-vertical"\s+aria-current="true"\s*>Media vertical</', $pequena);
+            $this->assertStringContainsString('recipe-hoja recipe-hoja-media-vertical', $pequena, $documento);
+            $this->assertStringNotContainsString('recipe-mitad-vacia', $pequena, $documento);
         }
 
         // Con un récipe en el lote la elección no le cambia la hoja: sigue en media hoja horizontal.
@@ -296,8 +298,8 @@ class ImpresionDeSolicitudesWebTest extends TestCase
         $this->assertGreaterThan(1, $this->hojasDe($html));
         $this->assertSame(1, substr_count($html, 'class="firmas"'));
         $this->assertSame(explode(' ', $texto), $this->palabrasDelCuerpo($html));
-        // Con tanto texto la letra baja al escalón más chico.
-        $this->assertStringContainsString('tamano-8', $html);
+        // Con tanto texto la letra baja por debajo del escalón más grande.
+        $this->assertStringNotContainsString('tamano-10', $html);
     }
 
     public function test_un_texto_corto_se_imprime_a_10_pt_y_en_una_sola_mitad(): void

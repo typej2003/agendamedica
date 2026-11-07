@@ -146,25 +146,43 @@
 
             {{-- ============================ Sedes ============================ --}}
             @elseif ($pestana === 'sedes')
-                @forelse ($datos['sedes'] as $sede)
-                    @if ($loop->first)
-                        <div class="table-responsive"><table class="table align-middle mb-0">
-                            <thead class="table-light"><tr><th>Sede</th><th>Ciudad</th><th class="text-end">Consultorios</th></tr></thead><tbody>
+                {{-- Un grupo por **consultorio del médico** (`reg_medico`): el principal y los que cuelgan de él
+                     (2026-11-06). Cada uno administra sus propias sedes con su ficha. --}}
+                @forelse ($datos['sedesPorConsultorio'] as $grupo)
+                    @if (count($datos['sedesPorConsultorio']) > 1)
+                        <h3 class="h6 d-flex align-items-center gap-2 {{ $loop->first ? '' : 'mt-4' }}">
+                            <code>{{ $grupo['registro'] }}</code>
+                            @if ($grupo['principal'])
+                                <span class="badge bg-secondary">principal</span>
+                            @elseif ($grupo['ficha']->esConsultorioHijo())
+                                <span class="badge bg-primary">consultorio del médico</span>
+                            @endif
+                        </h3>
                     @endif
-                    <tr wire:key="sede-{{ $sede->id }}">
-                        <td>{{ $sede->name }}<small class="text-muted d-block">{{ $sede->address }}</small></td>
-                        <td>{{ $sede->city->name ?? '—' }}</td>
-                        <td class="text-end">{{ $sede->consultorios_activos }}@if ($sede->consultorios_total > $sede->consultorios_activos) <small class="text-muted">(+{{ $sede->consultorios_total - $sede->consultorios_activos }} de baja)</small>@endif</td>
-                    </tr>
-                    @if ($loop->last) </tbody></table></div> @endif
+                    @if ($grupo['sedes']->isEmpty())
+                        <x-ui.vacio icono="bi-geo-alt" titulo="Sin sedes">Este consultorio no tiene sedes registradas.</x-ui.vacio>
+                    @else
+                        <x-ui.tabla class="table align-middle mb-0">
+                                <thead class="table-light"><tr><th>Sede</th><th>Ciudad</th><th class="text-end">Consultorios</th></tr></thead><tbody>
+                            @foreach ($grupo['sedes'] as $sede)
+                                <tr wire:key="sede-{{ $grupo['registro'] }}-{{ $sede->id }}">
+                                    <td class="celda-principal" data-etiqueta="Sede">{{ $sede->name }}<small class="text-muted d-block">{{ $sede->address }}</small></td>
+                                    <td data-etiqueta="Ciudad">{{ $sede->city->name ?? '—' }}</td>
+                                    <td class="text-end" data-etiqueta="Consultorios">{{ $sede->consultorios_activos }}@if ($sede->consultorios_total > $sede->consultorios_activos) <small class="text-muted">(+{{ $sede->consultorios_total - $sede->consultorios_activos }} de baja)</small>@endif</td>
+                                </tr>
+                            @endforeach
+                                </tbody>
+                        </x-ui.tabla>
+                    @endif
+                    <div class="mt-3 d-flex flex-wrap gap-2">
+                        <a href="{{ route('admin.medicos.sedes', $grupo['ficha']) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>
+                            {{ count($datos['sedesPorConsultorio']) > 1 ? 'Administrar las sedes de ' . $grupo['registro'] : 'Administrar sedes y consultorios' }}
+                        </a>
+                    </div>
                 @empty
-                    <x-ui.vacio icono="bi-geo-alt" titulo="Sin sedes">No tiene consultorios registrados.</x-ui.vacio>
+                    <x-ui.vacio icono="bi-geo-alt" titulo="Sin registros de datos">Sin <code>reg_medico</code> no hay sedes que administrar.</x-ui.vacio>
                 @endforelse
-                <div class="mt-3 d-flex flex-wrap gap-2">
-                    <a href="{{ route('admin.medicos.sedes', $medico) }}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-geo-alt me-1" aria-hidden="true"></i> Administrar sedes y consultorios
-                    </a>
-                </div>
 
             {{-- ============================ Horarios ============================ --}}
             @elseif ($pestana === 'horarios')
@@ -178,26 +196,25 @@
                         </a>
                     </div>
                 @else
-                    <div class="table-responsive">
-                        <table class="table align-middle mb-0">
+                    <x-ui.tabla class="table align-middle mb-0">
                             <thead class="table-dark">
                                 <tr><th>Consultorio</th><th>Modalidad</th><th>Horarios y cupos</th><th class="text-end">Acciones</th></tr>
                             </thead>
                             <tbody>
                                 @foreach ($datos['consultorios'] as $consultorio)
                                     <tr wire:key="horario-{{ $consultorio->id }}">
-                                        <td>
+                                        <td class="celda-principal" data-etiqueta="Consultorio">
                                             <div class="fw-semibold">{{ $consultorio->medicalCenter->name ?? 'Sede' }} · {{ $consultorio->office_number }}</div>
                                             <small class="text-muted">{{ $consultorio->medicalCenter->address ?? '' }}</small>
                                             @unless ($consultorio->activo) <span class="badge bg-secondary">De baja</span> @endunless
                                         </td>
-                                        <td>
+                                        <td data-etiqueta="Modalidad">
                                             {{ \App\Models\Office::modalidades()[$consultorio->modalidad] ?? $consultorio->modalidad }}
                                             @if ($consultorio->duracion_cita)
                                                 <small class="text-muted d-block">{{ $consultorio->duracion_cita }} min por cita</small>
                                             @endif
                                         </td>
-                                        <td>
+                                        <td data-etiqueta="Horarios y cupos">
                                             @forelse ($consultorio->schedules->sortBy(['dia_semana', 'hora_inicio']) as $bloque)
                                                 <div class="small d-flex align-items-center gap-2">
                                                     <span>
@@ -216,7 +233,7 @@
                                                 <span class="text-muted small">Sin horarios cargados.</span>
                                             @endforelse
                                         </td>
-                                        <td class="text-end text-nowrap">
+                                        <td class="text-end text-nowrap celda-acciones" data-etiqueta="Acciones">
                                             <button type="button" class="btn btn-sm btn-outline-primary" wire:click="abrirHorarioNuevo({{ $consultorio->id }})">
                                                 <i class="bi bi-plus-lg me-1" aria-hidden="true"></i> Agregar bloque
                                             </button>
@@ -228,8 +245,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
-                    </div>
+                    </x-ui.tabla>
 
                     @if ($horarioAvisos !== [])
                         @foreach ($horarioAvisos as $avisoHorario)
@@ -323,34 +339,35 @@
                 </div>
 
                 @if ($verCredenciales)
-                    @forelse ($sync['credenciales'] ?? [] as $credencial)
-                        @if ($loop->first)
-                            <div class="table-responsive"><table class="table align-middle mb-0">
-                                <thead class="table-light"><tr><th>Equipo</th><th>Vence</th><th>Último uso</th><th>Estado</th><th></th></tr></thead><tbody>
-                        @endif
-                        <tr wire:key="credencial-{{ $credencial->id }}">
-                            <td>{{ $credencial->machine_label }}</td>
-                            <td>{{ $fecha($credencial->expires_at, false) ?? '—' }}</td>
-                            <td>{{ $fecha($credencial->last_used_at) ?? 'Nunca' }}</td>
-                            <td>
-                                @if ($credencial->revoked_at) <x-ui.estado tono="neutro">Revocada</x-ui.estado>
-                                @elseif ($credencial->estaActiva()) <x-ui.estado tono="exito">Activa</x-ui.estado>
-                                @else <x-ui.estado tono="aviso">Vencida</x-ui.estado> @endif
-                            </td>
-                            <td class="text-end">
-                                @unless ($credencial->revoked_at)
-                                    <button type="button" class="btn btn-sm btn-outline-danger"
-                                            wire:click="revocarCredencial({{ $credencial->id }})"
-                                            wire:confirm="¿Revocar la API key del equipo {{ $credencial->machine_label }}? Ese equipo dejará de sincronizar.">
-                                        Revocar
-                                    </button>
-                                @endunless
-                            </td>
-                        </tr>
-                        @if ($loop->last) </tbody></table></div> @endif
-                    @empty
+                    @if (($sync['credenciales'] ?? collect())->isEmpty())
                         <x-ui.vacio icono="bi-key" titulo="Sin credenciales">Todavía no se emitió una API key.</x-ui.vacio>
-                    @endforelse
+                    @else
+                        <x-ui.tabla class="table align-middle mb-0">
+                                <thead class="table-light"><tr><th>Equipo</th><th>Vence</th><th>Último uso</th><th>Estado</th><th></th></tr></thead><tbody>
+                            @foreach ($sync['credenciales'] as $credencial)
+                                <tr wire:key="credencial-{{ $credencial->id }}">
+                                    <td class="celda-principal" data-etiqueta="Equipo">{{ $credencial->machine_label }}</td>
+                                    <td data-etiqueta="Vence">{{ $fecha($credencial->expires_at, false) ?? '—' }}</td>
+                                    <td data-etiqueta="Último uso">{{ $fecha($credencial->last_used_at) ?? 'Nunca' }}</td>
+                                    <td data-etiqueta="Estado">
+                                        @if ($credencial->revoked_at) <x-ui.estado tono="neutro">Revocada</x-ui.estado>
+                                        @elseif ($credencial->estaActiva()) <x-ui.estado tono="exito">Activa</x-ui.estado>
+                                        @else <x-ui.estado tono="aviso">Vencida</x-ui.estado> @endif
+                                    </td>
+                                    <td class="text-end celda-acciones">
+                                        @unless ($credencial->revoked_at)
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    wire:click="revocarCredencial({{ $credencial->id }})"
+                                                    wire:confirm="¿Revocar la API key del equipo {{ $credencial->machine_label }}? Ese equipo dejará de sincronizar.">
+                                                Revocar
+                                            </button>
+                                        @endunless
+                                    </td>
+                                </tr>
+                            @endforeach
+                                </tbody>
+                        </x-ui.tabla>
+                    @endif
                 @elseif (($sync['credenciales'] ?? collect())->isNotEmpty())
                     <p class="text-muted small mb-0">
                         Hay {{ $sync['credenciales']->count() }} credencial(es) emitidas. Usa «Ver credenciales» para ver el detalle y revocarlas.
@@ -394,7 +411,13 @@
             @elseif ($pestana === 'planes')
                 @forelse ($datos['estados'] as $estado)
                     <dl class="datos-rejilla mb-3" wire:key="plan-{{ $estado['reg_medico'] }}">
-                        <x-ui.dato etiqueta="Registro" :valor="$estado['reg_medico']" />
+                        <x-ui.dato etiqueta="Registro">
+                            <code>{{ $estado['reg_medico'] }}</code>
+                            @if ($estado['heredado_de'] ?? null)
+                                {{-- El consultorio hijo no tiene plan propio: muestra el del padre (2026-11-06). --}}
+                                <span class="badge bg-light text-dark border ms-1">usa el plan de {{ $estado['heredado_de'] }}</span>
+                            @endif
+                        </x-ui.dato>
                         <x-ui.dato etiqueta="Plan" :valor="$estado['plan'] ?? 'Sin servicio'" />
                         <x-ui.dato etiqueta="Estado">
                             @php
@@ -410,7 +433,13 @@
                     <x-ui.vacio icono="bi-card-checklist" titulo="Sin registros de datos">Sin <code>reg_medico</code> no hay plan.</x-ui.vacio>
                 @endforelse
 
-                @if ($datos['estados'] !== [])
+                @if ($medico->esConsultorioHijo())
+                    {{-- El consultorio hijo no tiene plan propio: el del padre se renueva desde su ficha (2026-11-06). --}}
+                    <p class="text-muted small mb-0">
+                        Este consultorio usa el plan de <code>{{ $medico->regMedicoDelPadre() }}</code>:
+                        el plan se renueva desde la ficha del consultorio principal.
+                    </p>
+                @elseif ($datos['estados'] !== [])
                     <div class="d-flex flex-wrap gap-2 mb-3">
                         <button type="button" class="btn btn-sm btn-outline-primary" wire:click="abrirRenovarPlan">
                             <i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i> Renovar
@@ -494,17 +523,17 @@
 
                 @if ($datos['historial']->isNotEmpty())
                     <h2 class="h6 mt-3">Historial de contrataciones</h2>
-                    <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+                    <x-ui.tabla class="table table-sm align-middle mb-0">
                         <thead class="table-light"><tr><th>Plan</th><th>Origen</th><th>Inicio</th><th>Vence</th><th>Estado</th><th></th></tr></thead>
                         <tbody>
                             @foreach ($datos['historial'] as $servicio)
                                 <tr wire:key="servicio-{{ $servicio->id }}">
-                                    <td>{{ $servicio->plan_nombre }}</td>
-                                    <td>{{ ucfirst($servicio->origen) }}</td>
-                                    <td>{{ $fecha($servicio->inicia_el, false) }}</td>
-                                    <td>{{ $fecha($servicio->vence_el, false) }}</td>
-                                    <td>{{ ucfirst($servicio->estado) }}</td>
-                                    <td class="text-end">
+                                    <td class="celda-principal" data-etiqueta="Plan">{{ $servicio->plan_nombre }}</td>
+                                    <td data-etiqueta="Origen">{{ ucfirst($servicio->origen) }}</td>
+                                    <td data-etiqueta="Inicio">{{ $fecha($servicio->inicia_el, false) }}</td>
+                                    <td data-etiqueta="Vence">{{ $fecha($servicio->vence_el, false) }}</td>
+                                    <td data-etiqueta="Estado">{{ ucfirst($servicio->estado) }}</td>
+                                    <td class="text-end celda-acciones">
                                         @if ($servicio->estado !== \App\Models\RegMedicoServicio::CANCELADO)
                                             <button type="button" class="btn btn-sm btn-outline-danger"
                                                     wire:click="cancelarServicioDelMedico({{ $servicio->id }})"
@@ -516,7 +545,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table></div>
+                    </x-ui.tabla>
                 @endif
                 <div class="mt-3"><a href="{{ route('admin.servicios') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-card-checklist me-1" aria-hidden="true"></i> Ir a Planes y servicios</a></div>
 
@@ -551,31 +580,30 @@
                 @if ($datos['cuentasDeCobro']->isEmpty())
                     <p class="text-muted">Todavía no tiene cuentas cargadas.</p>
                 @else
-                    <div class="table-responsive">
-                        <table class="table align-middle mb-0">
+                    <x-ui.tabla class="table align-middle mb-0">
                             <thead class="table-light">
                                 <tr><th>Banco</th><th>Pago móvil</th><th>Cuenta</th><th>Confirmación</th><th>Estado</th><th class="text-end">Acciones</th></tr>
                             </thead>
                             <tbody>
                                 @foreach ($datos['cuentasDeCobro'] as $cuenta)
                                     <tr wire:key="cuenta-{{ $cuenta->id }}">
-                                        <td>
+                                        <td class="celda-principal" data-etiqueta="Banco">
                                             {{ $cuenta->bancoNombre() }}
                                             @if ($cuenta->predeterminada) <span class="badge bg-secondary">Predeterminada</span> @endif
                                         </td>
-                                        <td>{{ $cuenta->telefono ?: '—' }}</td>
-                                        <td>{{ $cuenta->numero ?: '—' }}</td>
-                                        <td>
+                                        <td data-etiqueta="Pago móvil">{{ $cuenta->telefono ?: '—' }}</td>
+                                        <td data-etiqueta="Cuenta">{{ $cuenta->numero ?: '—' }}</td>
+                                        <td data-etiqueta="Confirmación">
                                             @if ($cuenta->conciliaSola()) Automática
                                             @elseif ($cuenta->conciliacionAutomatica()) Automática sin verificar
                                             @else Manual
                                             @endif
                                         </td>
-                                        <td>
+                                        <td data-etiqueta="Estado">
                                             @if ($cuenta->activa) <x-ui.estado tono="exito">Activa</x-ui.estado>
                                             @else <x-ui.estado tono="neutro">Inactiva</x-ui.estado> @endif
                                         </td>
-                                        <td class="text-end text-nowrap">
+                                        <td class="text-end text-nowrap celda-acciones" data-etiqueta="Acciones">
                                             <button type="button" class="btn btn-sm btn-outline-secondary" wire:click="abrirCuentaEditar({{ $cuenta->id }})">Editar</button>
                                             @unless ($cuenta->predeterminada)
                                                 <button type="button" class="btn btn-sm btn-outline-secondary" wire:click="predeterminarCuenta({{ $cuenta->id }})">Predeterminar</button>
@@ -588,8 +616,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
-                    </div>
+                    </x-ui.tabla>
                 @endif
 
                 @if ($cuentaForm)
@@ -696,26 +723,25 @@
                 @if ($datos['motivos']->isEmpty())
                     <x-ui.vacio icono="bi-calendar-check" titulo="Sin motivos de cita">Todavía no tiene motivos cargados.</x-ui.vacio>
                 @else
-                    <div class="table-responsive">
-                        <table class="table align-middle mb-0">
+                    <x-ui.tabla class="table align-middle mb-0">
                             <thead class="table-light">
                                 <tr><th>Código</th><th>Motivo</th><th>Sede</th><th class="text-end">Precio</th><th>Varias citas</th><th class="text-end">Acciones</th></tr>
                             </thead>
                             <tbody>
                                 @foreach ($datos['motivos'] as $motivo)
                                     <tr wire:key="motivo-{{ $motivo->id }}">
-                                        <td><code>{{ trim((string) $motivo->codigo) }}</code></td>
-                                        <td>{{ $motivo->tipo_atencion }}</td>
-                                        <td>{{ \App\Clinica\Catalogos\MotivosDeCitaDelCatalogo::sedeDelMotivo($motivo) }}</td>
-                                        <td class="text-end">{{ $motivo->precio === null ? '—' : number_format($motivo->precio, 2, ',', '.') }}</td>
-                                        <td>
+                                        <td data-etiqueta="Código"><code>{{ trim((string) $motivo->codigo) }}</code></td>
+                                        <td class="celda-principal" data-etiqueta="Motivo">{{ $motivo->tipo_atencion }}</td>
+                                        <td data-etiqueta="Sede">{{ \App\Clinica\Catalogos\MotivosDeCitaDelCatalogo::sedeDelMotivo($motivo) }}</td>
+                                        <td class="text-end" data-etiqueta="Precio">{{ $motivo->precio === null ? '—' : number_format($motivo->precio, 2, ',', '.') }}</td>
+                                        <td data-etiqueta="Varias citas">
                                             @if ($motivo->admite_varias_citas_pendientes)
                                                 <x-ui.estado tono="info">Sí</x-ui.estado>
                                             @else
                                                 <span class="text-muted small">No</span>
                                             @endif
                                         </td>
-                                        <td class="text-end text-nowrap">
+                                        <td class="text-end text-nowrap celda-acciones" data-etiqueta="Acciones">
                                             <button type="button" class="btn btn-sm btn-outline-secondary" wire:click="abrirMotivoEditar({{ $motivo->id }})">Editar</button>
                                             <button type="button" class="btn btn-sm btn-outline-secondary" wire:click="alternarMotivo({{ $motivo->id }})">
                                                 {{ $motivo->admite_varias_citas_pendientes ? 'No permitir varias' : 'Permitir varias' }}
@@ -729,8 +755,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
-                    </div>
+                    </x-ui.tabla>
                 @endif
 
             {{-- ============================ Cita online ============================ --}}
@@ -864,19 +889,18 @@
                 @if ($datos['secretarias']->isEmpty())
                     <x-ui.vacio icono="bi-people" titulo="Sin secretarias">Todavía no tiene asistentes con acceso a su consultorio.</x-ui.vacio>
                 @else
-                    <div class="table-responsive">
-                        <table class="table align-middle mb-0">
+                    <x-ui.tabla class="table align-middle mb-0">
                             <thead class="table-light"><tr><th>Nombre</th><th>Correo</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
                             <tbody>
                                 @foreach ($datos['secretarias'] as $secretaria)
                                     <tr wire:key="secretaria-{{ $secretaria->id }}">
-                                        <td>{{ $secretaria->name }}</td>
-                                        <td>{{ $secretaria->email }}</td>
-                                        <td>
+                                        <td class="celda-principal" data-etiqueta="Nombre">{{ $secretaria->name }}</td>
+                                        <td data-etiqueta="Correo">{{ $secretaria->email }}</td>
+                                        <td data-etiqueta="Estado">
                                             @if ($secretaria->is_active === false) <x-ui.estado tono="peligro">Bloqueada</x-ui.estado>
                                             @else <x-ui.estado tono="exito">Activa</x-ui.estado> @endif
                                         </td>
-                                        <td class="text-end text-nowrap">
+                                        <td class="text-end text-nowrap celda-acciones" data-etiqueta="Acciones">
                                             <button type="button" class="btn btn-sm btn-outline-secondary" wire:click="restablecerClaveSecretaria({{ $secretaria->id }})">Restablecer clave</button>
                                             @if ($secretaria->is_active === false)
                                                 <button type="button" class="btn btn-sm btn-outline-success" wire:click="desbloquearSecretaria({{ $secretaria->id }})">Desbloquear</button>
@@ -892,8 +916,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
-                    </div>
+                    </x-ui.tabla>
                 @endif
 
             {{-- ============================ Pacientes ============================ --}}
@@ -912,20 +935,20 @@
 
             {{-- ============================ Pagos ============================ --}}
             @elseif ($pestana === 'pagos')
-                <div class="table-responsive"><table class="table align-middle mb-0">
+                <x-ui.tabla class="table align-middle mb-0">
                     <thead class="table-light"><tr><th>Referencia</th><th>Concepto</th><th>Monto</th><th>Estado</th><th>Fecha</th></tr></thead>
                     <tbody>
                         @foreach ($datos['pagos'] as $pago)
                             <tr wire:key="pago-{{ $pago->id }}">
-                                <td><code>{{ $pago->referencia }}</code></td>
-                                <td>{{ $pago->concepto }}</td>
-                                <td>{{ $pago->montoTexto() }}</td>
-                                <td>{{ ucfirst(str_replace('_', ' ', $pago->estado)) }}</td>
-                                <td>{{ $fecha($pago->created_at) }}</td>
+                                <td data-etiqueta="Referencia"><code>{{ $pago->referencia }}</code></td>
+                                <td class="celda-principal" data-etiqueta="Concepto">{{ $pago->concepto }}</td>
+                                <td data-etiqueta="Monto">{{ $pago->montoTexto() }}</td>
+                                <td data-etiqueta="Estado">{{ ucfirst(str_replace('_', ' ', $pago->estado)) }}</td>
+                                <td data-etiqueta="Fecha">{{ $fecha($pago->created_at) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
-                </table></div>
+                </x-ui.tabla>
                 @if ($datos['total'] > count($datos['pagos']))
                     <p class="text-muted small mt-2 mb-0">Se muestran los {{ count($datos['pagos']) }} más recientes de {{ $datos['total'] }}.</p>
                 @endif
@@ -1045,19 +1068,19 @@
 
             {{-- ============================ Soporte y Sugerencias ============================ --}}
             @elseif ($pestana === 'comentarios')
-                <div class="table-responsive"><table class="table align-middle mb-0">
+                <x-ui.tabla class="table align-middle mb-0">
                     <thead class="table-light"><tr><th>Fecha</th><th>Tipo</th><th>Mensaje</th><th>Estado</th></tr></thead>
                     <tbody>
                         @foreach ($datos['comentarios'] as $comentario)
                             <tr wire:key="comentario-{{ $comentario->id }}">
-                                <td class="text-nowrap">{{ $fecha($comentario->created_at) }}</td>
-                                <td>{{ \App\Models\Comentario::TIPOS[$comentario->tipo] ?? $comentario->tipo }}</td>
-                                <td>{{ \Illuminate\Support\Str::limit($comentario->mensaje, 120) }}</td>
-                                <td>{{ ucfirst($comentario->estado) }}</td>
+                                <td class="text-nowrap" data-etiqueta="Fecha">{{ $fecha($comentario->created_at) }}</td>
+                                <td data-etiqueta="Tipo">{{ \App\Models\Comentario::TIPOS[$comentario->tipo] ?? $comentario->tipo }}</td>
+                                <td class="celda-principal" data-etiqueta="Mensaje">{{ \Illuminate\Support\Str::limit($comentario->mensaje, 120) }}</td>
+                                <td data-etiqueta="Estado">{{ ucfirst($comentario->estado) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
-                </table></div>
+                </x-ui.tabla>
                 @if ($datos['total'] > count($datos['comentarios']))
                     <p class="text-muted small mt-2 mb-0">Se muestran los {{ count($datos['comentarios']) }} más recientes de {{ $datos['total'] }}.</p>
                 @endif

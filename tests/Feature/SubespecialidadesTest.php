@@ -253,11 +253,11 @@ class SubespecialidadesTest extends TestCase
         $this->assertStringContainsString('Indicadores incidentes', $html);
     }
 
-    public function test_los_items_pediatricos_que_tienen_su_pantalla_en_otro_lado_redirigen(): void
+    public function test_los_items_pediatricos_abren_su_pantalla_dentro_de_la_consulta(): void
     {
         [$user, $medico, $pediatria] = $this->medicoConAcceso();
         $pediatra = $this->conContexto($user, $medico, $pediatria);
-        [$pacienteId, $consulta] = $this->pacienteYConsulta($medico);
+        [, $consulta] = $this->pacienteYConsulta($medico);
 
         // Exámenes/Estudios ya **no** redirige (2026-10-19): tiene su sección, como en el escritorio, y no la de la
         // evaluación física. El ítem 6 y el ítem 4 son dos pantallas distintas.
@@ -265,9 +265,11 @@ class SubespecialidadesTest extends TestCase
             ->assertOk()
             ->assertSee('Estudios exploratorios');
 
-        // Inmunizaciones → el carnet de vacunas del paciente.
+        // Inmunizaciones **tampoco** redirige (O-63): el calendario de vacunas es su sección, dentro de la consulta, y no
+        // manda al módulo del paciente (que sigue existiendo y es el mismo calendario).
         $pediatra->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'inmunizaciones']))
-            ->assertRedirect(route('clinica.pacientes.vacunas', $pacienteId));
+            ->assertOk()
+            ->assertSee('id="consulta-inmunizaciones"', false);
 
         // Alimentación ya **no** redirige a Solicitudes (2026-10-19): es su sección, con la dieta adentro.
         $pediatra->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'alimentacion']))

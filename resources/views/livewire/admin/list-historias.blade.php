@@ -35,8 +35,7 @@
     <div class="card">
         <x-ui.cargando cubre wire:loading.delay.flex />
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-bordered align-middle mb-0">
+            <x-ui.tabla class="table-bordered mb-0">
                     <thead class="table-dark">
                         <tr>
                             <th>Reg-Médico</th>
@@ -55,7 +54,7 @@
                             @endphp
                             <tr>
                                 <!-- Reg-Médico -->
-                                <td>
+                                <td class="celda-principal">
                                     <button class="btn btn-link btn-sm p-0 fw-bold text-decoration-none" 
                                         wire:click="showByRegMedico('{{ $regCode }}')" 
                                         title="Ver todas las historias de este registro">
@@ -64,7 +63,7 @@
                                 </td>
 
                                 <!-- Centro Médico -->
-                                <td>
+                                <td data-etiqueta="Centro Médico">
                                     @if($historia->medicalCenter)
                                         <button class="btn btn-link btn-sm p-0 text-start text-dark text-decoration-none" 
                                             wire:click="showByCentro({{ $historia->medical_center_id }})">
@@ -76,7 +75,7 @@
                                 </td>
 
                                 <!-- Historia -->
-                                <td class="text-center">
+                                <td class="text-center" data-etiqueta="Historia">
                                     @if($isSearching)
                                         <span class="badge bg-info text-dark">
                                             <i class="bi bi-file-earmark-text me-1"></i> {{ $historia->numhistoria ?? 'Sin N°' }}
@@ -97,7 +96,7 @@
                                 </td>
 
                                 <!-- Paciente -->
-                                <td class="text-center">
+                                <td class="text-center" data-etiqueta="Paciente">
                                     @if($isSearching)
                                         @if($historia->paciente)
                                             <span class="fw-semibold text-dark">
@@ -126,7 +125,7 @@
                                 </td>
 
                                 <!-- Médico -->
-                                <td>
+                                <td data-etiqueta="Médico">
                                     @if($historia->medico)
                                         <button class="btn btn-link btn-sm p-0 text-start text-decoration-none" 
                                             wire:click="showMedicoDetail({{ $historia->medico_id }})">
@@ -138,7 +137,7 @@
                                 </td>
 
                                 <!-- Acciones -->
-                                <td class="text-center">
+                                <td class="text-center celda-acciones">
                                     <div class="btn-group" role="group">
                                         <button class="btn btn-sm btn-outline-primary py-0 px-2" 
                                             wire:click="editCentro({{ $historia->id }})" title="Editar Registro">
@@ -159,8 +158,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
+            </x-ui.tabla>
         </div>
     </div>
 
@@ -317,8 +315,7 @@
                     
                     <!-- Caso A: Lista de Historias Médicas -->
                     @if($detailType === 'historias_list')
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered align-middle">
+                        <x-ui.tabla class="table-sm table-bordered">
                                 <thead class="table-light">
                                     <tr>
                                         <th>ID</th>
@@ -332,12 +329,12 @@
                                 <tbody>
                                     @forelse($historiasDetalle as $item)
                                         <tr>
-                                            <td>{{ $item->id }}</td>
-                                            <td><span class="badge bg-info text-dark">{{ $item->numhistoria ?? 'S/H' }}</span></td>
-                                            <td>{{ $item->getAttribute('reg-medico') }}</td>
-                                            <td>{{ $item->medicalCenter->name ?? 'N/A' }}</td>
-                                            <td>{{ $item->paciente ? $item->paciente->nombres . ' ' . $item->paciente->apellidos : 'N/A' }}</td>
-                                            <td>{{ $item->medico ? $item->medico->name . ' ' . $item->medico->lastname : 'N/A' }}</td>
+                                            <td class="celda-principal">{{ $item->id }}</td>
+                                            <td data-etiqueta="N° Historia"><span class="badge bg-info text-dark">{{ $item->numhistoria ?? 'S/H' }}</span></td>
+                                            <td data-etiqueta="Reg. Médico">{{ $item->getAttribute('reg-medico') }}</td>
+                                            <td data-etiqueta="Centro Médico">{{ $item->medicalCenter->name ?? 'N/A' }}</td>
+                                            <td data-etiqueta="Paciente">{{ $item->paciente ? $item->paciente->nombres . ' ' . $item->paciente->apellidos : 'N/A' }}</td>
+                                            <td data-etiqueta="Médico">{{ $item->medico ? $item->medico->name . ' ' . $item->medico->lastname : 'N/A' }}</td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -345,13 +342,11 @@
                                         </tr>
                                     @endforelse
                                 </tbody>
-                            </table>
-                        </div>
+                        </x-ui.tabla>
 
                     <!-- Caso B: Lista de Pacientes -->
                     @elseif($detailType === 'pacientes_list')
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered align-middle">
+                        <x-ui.tabla class="table-sm table-bordered">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Cédula</th>
@@ -364,11 +359,11 @@
                                 <tbody>
                                     @forelse($pacientesDetalle as $paciente)
                                         <tr>
-                                            <td><strong>{{ $paciente->nac ?? '' }}-{{ $paciente->cedula ?? 'N/A' }}</strong></td>
-                                            <td>{{ $paciente->nombres }} {{ $paciente->apellidos }}</td>
-                                            <td>{{ $paciente->telefono ?? 'N/A' }}</td>
-                                            <td>{{ $paciente->email ?? 'N/A' }}</td>
-                                            <td>{{ $paciente->direccion ?? 'N/A' }}</td>
+                                            <td class="celda-principal"><strong>{{ $paciente->nac ?? '' }}-{{ $paciente->cedula ?? 'N/A' }}</strong></td>
+                                            <td data-etiqueta="Nombre Completo">{{ $paciente->nombres }} {{ $paciente->apellidos }}</td>
+                                            <td data-etiqueta="Teléfono">{{ $paciente->telefono ?? 'N/A' }}</td>
+                                            <td data-etiqueta="Email">{{ $paciente->email ?? 'N/A' }}</td>
+                                            <td data-etiqueta="Dirección">{{ $paciente->direccion ?? 'N/A' }}</td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -376,8 +371,7 @@
                                         </tr>
                                     @endforelse
                                 </tbody>
-                            </table>
-                        </div>
+                        </x-ui.tabla>
 
                     <!-- Caso C: Detalle del Médico -->
                     @elseif($detailType === 'medico' && $selectedMedico)

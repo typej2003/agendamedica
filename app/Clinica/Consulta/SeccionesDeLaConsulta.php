@@ -114,7 +114,11 @@ final class SeccionesDeLaConsulta
     /** «Exámenes/Estudios»: la solapa *Resultado de exámenes* de la evaluación física (WEB-6.5). */
     public const SECCION_EXAMENES_ESTUDIOS = 'examenes-estudios';
 
-    /** «Inmunizaciones»: el carnet de vacunas del paciente, que es una pantalla propia (WEB-7.4.4). */
+    /**
+     * «Inmunizaciones»: el calendario de vacunas del niño **dentro** de la consulta (O-63). Es el mismo calendario de la
+     * pantalla del módulo (`/clinica/pacientes/{paciente}/vacunas`), con su diálogo de registrar una dosis y su carnet;
+     * hasta O-63 el ítem redirigía a esa pantalla y el médico salía de la consulta.
+     */
     public const SECCION_INMUNIZACIONES = 'inmunizaciones';
 
     /** «Alimentación»: la dieta / recomendaciones de la consulta (la pestaña *Dieta* de Solicitudes). */
@@ -208,8 +212,8 @@ final class SeccionesDeLaConsulta
      * «Indicadores incidentes» tampoco está acá**: es el panel de nefrología pediátrica y lo agrega ese
      * postgrado (`EXTRA['indicadores']`). Un pediatra general tiene 13 ítems; uno con nefrología, 14.
      *
-     * Los ítems que ya tienen pantalla la abren con su clave; los que la tienen en otra pantalla (el carnet
-     * de vacunas y la dieta) los redirige el controlador a donde corresponde.
+     * Todos los ítems abren su sección **dentro de la consulta**: desde O-63, *Inmunizaciones* tampoco sale a la
+     * pantalla del módulo de vacunas (la reusa, no la duplica).
      */
     private const ITEMS_PEDIATRIA = [
         ['numero' => 1, 'grupo' => 'Consulta', 'titulo' => 'Motivos de consulta', 'icono' => 'bi-list-check',

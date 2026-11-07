@@ -359,7 +359,7 @@
         <div class="container">
             <div class="row g-4">
                 <div class="col-lg-5">
-                    <h2 class="h5 fw-bold mb-3"><i class="bi bi-heart-pulse-fill me-2" style="color: var(--ds-violeta-300);" aria-hidden="true"></i>Doctorísimo</h2>
+                    <h2 class="h5 fw-bold mb-3"><x-marca-corazon class="me-2" style="color: var(--ds-violeta-300);" />Doctorísimo</h2>
                     <p class="small text-muted mb-0">Agenda, historia clínica y récipes para tu consultorio. Tú atiendes; del papeleo nos encargamos nosotros.</p>
                 </div>
                 <div class="col-6 col-lg-3">

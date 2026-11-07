@@ -6,7 +6,7 @@
      documento son válidos— sino el aviso de que falta el dato, con la vuelta a la sección donde se carga. No lleva hoja: no se
      imprime nada. --}}
 @section('estilos')
-    <link rel="stylesheet" href="{{ asset('css/clinica-impresion.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/clinica-impresion.css') }}?v={{ @filemtime(public_path('css/clinica-impresion.css')) }}">
     <style>
         .sin-documento { max-width: 46rem; margin: 4rem auto; padding: 0 1rem; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
         .sin-documento-caja { padding: 2rem; border: 1px solid #d8d4e4; border-radius: 14px; background: #fff; }

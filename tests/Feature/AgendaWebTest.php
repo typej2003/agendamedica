@@ -828,6 +828,33 @@ class AgendaWebTest extends TestCase
         $this->assertSame('REV', $cita->fresh()->tipo);
     }
 
+    /**
+     * El «+» del alta de paciente, en el paso 2 de «Nueva cita», va en violeta lleno (2026-11-05): es el
+     * `btn-primary` de la marca, el mismo de «Nueva cita» y «Nuevo paciente», porque como
+     * `btn-outline-secondary` pasaba desapercibido. El CSS del buscador le apagaba el fondo, así que también
+     * se fija que no vuelva a hacerlo: con el fondo en `transparent` el violeta no se ve aunque la clase sea
+     * la primaria.
+     */
+    public function test_el_mas_del_alta_de_paciente_en_la_cita_va_en_violeta_lleno(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+
+        $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get('/clinica/agenda/nueva?fecha=' . $this->lunes->toDateString())
+            ->assertOk()
+            // Sigue siendo el botón que abre el diálogo lateral del alta y conserva su etiqueta accesible.
+            ->assertSee('class="btn btn-primary" data-abrir-dialogo="dialogo-paciente-nuevo"', false)
+            ->assertSee('aria-label="Cargar un paciente nuevo" title="Cargar un paciente nuevo"', false)
+            ->assertDontSee('btn-outline-secondary" data-abrir-dialogo="dialogo-paciente-nuevo"', false);
+
+        // El bloque del buscador no le apaga el fondo ni el color: los pone la variante primaria.
+        $css = file_get_contents(public_path('css/doctorisimo-ui.css'));
+        $this->assertSame(1, preg_match('/\.buscador-accion \.btn\s*\{([^}]*)\}/', $css, $bloque), 'El «+» del buscador tiene que tener su bloque en el CSS.');
+        $this->assertStringNotContainsString('--bs-btn-bg', $bloque[1], 'El fondo lo pone `btn-primary`: el buscador no puede apagarlo.');
+        $this->assertStringNotContainsString('--bs-btn-color', $bloque[1], 'El «+» tiene que heredar el blanco del `btn-primary` para leerse sobre el violeta.');
+    }
+
     public function test_agendar_da_de_alta_al_paciente_nuevo_y_le_numera_la_historia(): void
     {
         // O-04 (2026-10-17): el alta rápida del paso 2 es un alta **desde la web**, así que numera en el
@@ -2069,6 +2096,45 @@ class AgendaWebTest extends TestCase
         // `@disabled` es de Blade 9: si se cuela, la página muestra el texto de la directiva.
         $respuesta->assertDontSee('@disabled', false);
         $this->assertSame(2, substr_count($respuesta->content(), 'name="citas[]"'));
+    }
+
+    /**
+     * **O-66 (2026-11-05): la página del envío del día muestra el contacto del representante, no el del niño.** Es el
+     * destino que el médico ve antes de mandar el aviso; si mostrara el del niño, estaría ofreciendo el lugar
+     * prohibido. El envío en sí ya resuelve lo mismo (`EnviarRecordatorio`), así que la lista y el envío no pueden
+     * decir cosas distintas.
+     */
+    public function test_en_pediatria_el_envio_del_dia_muestra_el_contacto_del_representante(): void
+    {
+        [$user, $medico] = $this->medicoConAcceso();
+        [$pediatria] = $this->pediatria($medico);
+        $sede = $this->sede($medico, $this->centro('San José')->id, Office::MODALIDAD_HORA, 'C1');
+        $this->bloque($sede, '08:00', '12:00');
+
+        // El niño **sí** tiene teléfono y correo propios (la excepción); aun así el contacto es el del adulto.
+        $this->pacienteConHistoria($medico, 4010, 'Luis', 'Niño', [
+            'telefono' => '0414-1111111',
+            'email'    => 'nino@example.com',
+        ]);
+        DB::table('paciente_chamo')->insert([
+            'reg_medico' => $medico->reg_medico, 'familia' => 4010, 'historia' => 4010,
+            'nombre' => 'LUIS NIÑO', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('representante')->insert([
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 4010, 'nombre' => 'MAMÁ',
+            'telefono' => '0414-2222222', 'email' => 'mama@example.com',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $this->cita($medico, $sede, $this->lunes->toDateString(), '08:00:00', 1, ['numhistoria' => 4010]);
+
+        $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->get('/clinica/agenda/envio?fecha=' . $this->lunes->toDateString() . '&sede=todas')
+            ->assertOk()
+            ->assertSee('0414-2222222')
+            ->assertSee('mama@example.com')
+            ->assertDontSee('0414-1111111')
+            ->assertDontSee('nino@example.com')
+            ->assertDontSee('Sin celular válido');
     }
 
     public function test_el_envio_del_dia_manda_a_los_seleccionados_y_reporta_los_que_fallan(): void

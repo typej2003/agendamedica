@@ -7,6 +7,7 @@ use App\Actions\Pacientes\SembrarTiposDeAntecedente;
 use App\Clinica\Agenda\ArmadorDeAgenda;
 use App\Clinica\Agenda\MotivosDeCita;
 use App\Clinica\Agenda\ParametrosDeAgenda;
+use App\Clinica\Agenda\VueltaDeLaCita;
 use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\CatalogoParaPedirExamenes;
 use App\Clinica\Consulta\CitaDeLaConsulta;
@@ -124,6 +125,9 @@ use App\Clinica\Embarazo\Vistas\PrenatalVista;
 use App\Clinica\Embarazo\Vistas\ReporteVista;
 use App\Clinica\Embarazo\Vistas\SeccionDeEmbarazoVista;
 use App\Clinica\Escaneo\LectorDeHojas;
+use App\Clinica\Pacientes\PacientesDelConsultorio;
+use App\Clinica\Vacunas\CalendarioDelNino;
+use App\Clinica\Vacunas\Vistas\CalendarioDeVacunasVista;
 use App\Clinica\FechaDelConsultorio;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\MedicoQueFirma;
@@ -277,14 +281,6 @@ class ConsultaController extends Controller
         $seccion = SeccionesDeLaConsulta::deEntrada((string) $request->query('seccion', ''));
         $urlConsulta = route('clinica.consulta', $consulta->id);
 
-        // **Los ítems de la consulta pediátrica que abren otra pantalla** (2026-10-19). En el árbol de PediaReport
-        // son ítems propios, pero el dato ya vive en otra pantalla de la web y no se duplica: se redirige (302),
-        // como con `?seccion=examenes` (O-22). El menú sigue mostrando el ítem pediátrico.
-        $destino = $this->destinoDeLaSeccionPediatrica($seccion, $consulta, $paciente, $contexto);
-        if ($destino !== null) {
-            return $destino;
-        }
-
         // Los siete tipos de antecedente con el nombre de la especialidad del contexto: pediatría tiene los suyos
         // (Patológicos, C.A., Madre…) y ginecología los suyos (Personal, Familiar, H.P., Obst., Gine., A.S., Otros);
         // las demás no tienen nombres en la fuente y no se siembran. Es idempotente y nunca pisa el nombre que el
@@ -323,7 +319,10 @@ class ConsultaController extends Controller
         return view('clinica.consulta.ver', [
             // El id de la consulta: lo usan los borradores locales y el candado de «abierta en otro dispositivo» (`consulta-borradores.js`).
             'consultaId' => (int) $consulta->id,
-            'avisoVacunas' => $avisoVacunas === null ? null : $avisoVacunas + ['url' => route('clinica.pacientes.vacunas', $paciente->id)],
+            'avisoVacunas' => $avisoVacunas === null ? null : $avisoVacunas + ['url' => route('clinica.consulta', [
+                $consulta->id,
+                'seccion' => SeccionesDeLaConsulta::SECCION_INMUNIZACIONES,
+            ])],
             'vm' => new ConsultaShellVista(
                 $paciente,
                 (int) $consulta->nroconsulta,
@@ -600,32 +599,36 @@ class ConsultaController extends Controller
     }
 
     /**
-     * **Las secciones de la consulta pediátrica que abren otra pantalla** (2026-10-19).
+     * **Inmunizaciones** (ítem 7 del árbol de pediatría): las vacunas del niño **dentro** de la consulta (O-63, Alexander:
+     * «que no se salga de la consulta para ver las vacunas»), con la lista del paciente como pantalla principal y el esquema del
+     * catálogo plegado (O-68/O-69).
      *
-     * En el árbol de PediaReport son ítems propios, pero en la web el dato ya vive en una pantalla y no se
-     * duplica: *Inmunizaciones* es el carnet de vacunas del paciente y *Representante* la ficha del paciente.
-     * Devuelve `null` para cualquier otra sección (incluidas *Exámenes/Estudios* y *Alimentación*, que **dejaron de redirigir** el
-     * 2026-10-19: cada una tiene su propia sección, como en el escritorio).
+     * Hasta O-63 este ítem **redirigía** a la pantalla del módulo (`/clinica/pacientes/{paciente}/vacunas`) y el médico
+     * perdía la atención en curso. Ahora se arma acá la misma pantalla —con `CalendarioDelNino`, que es lo que usa también
+     * esa pantalla— y lo único que cambia son las URLs: el filtro vuelve a esta sección, el registro y la programación de la
+     * dosis vuelven acá (el `consulta` que viaja en el formulario) y el carnet sigue a mano. La pantalla del módulo no se toca.
      */
-    private function destinoDeLaSeccionPediatrica(string $seccion, Consulta $consulta, object $paciente, array $contexto)
+    private function inmunizaciones(Consulta $consulta, int $pacienteId, string $regMedico): CalendarioDeVacunasVista
     {
-        // Sólo si la sección **existe en el catálogo de esta especialidad**: en ginecología esas claves no están
-        // y tienen que caer en el estado vacío del shell, no redirigir a una pantalla que no es de su consulta.
-        if (! SeccionesDeLaConsulta::existeSeccion(
-            $seccion,
-            $contexto['specialty']?->slug,
-            $contexto['secciones_postgrados'] ?? [],
-        )) {
-            return null;
-        }
+        $ficha = app(PacientesDelConsultorio::class)->ficha($regMedico, $pacienteId);
+        abort_if($ficha === null, 404);
 
-        return match ($seccion) {
-            // *Exámenes/Estudios* y *Alimentación* **ya no redirigen** (2026-10-19): cada una tiene su sección, como en el
-            // escritorio, donde son ítems propios. Ver `seccion()`.
-            SeccionesDeLaConsulta::SECCION_INMUNIZACIONES => redirect()->route('clinica.pacientes.vacunas', $paciente->id),
-            SeccionesDeLaConsulta::SECCION_REPRESENTANTE => redirect()->route('clinica.pacientes.ver', $paciente->id),
-            default => null,
-        };
+        $seccion = SeccionesDeLaConsulta::SECCION_INMUNIZACIONES;
+        $conHistoria = $ficha->numhistoria !== null;
+
+        return app(CalendarioDelNino::class)->de(
+            $regMedico,
+            $ficha,
+            CalendarioDeVacunasVista::normalizarFiltro((string) request()->query('ver', '')),
+            fn (string $filtro) => route('clinica.consulta', [$consulta->id, 'seccion' => $seccion, 'ver' => $filtro]),
+            route('clinica.pacientes.ver', $pacienteId),
+            $conHistoria ? route('clinica.pacientes.vacunas.registrar', $pacienteId) : null,
+            route('clinica.pacientes.vacunas.carnet', $pacienteId),
+            (int) $consulta->id,
+            null,
+            $conHistoria ? route('clinica.pacientes.vacunas.programar', $pacienteId) : null,
+            $conHistoria ? fn (int $fila) => route('clinica.pacientes.vacunas.quitar', [$pacienteId, $fila]) : null,
+        );
     }
 
     /**
@@ -1593,6 +1596,12 @@ class ConsultaController extends Controller
             );
         }
 
+        if ($seccion === ConsultaShellVista::SECCION_INMUNIZACIONES) {
+            // **Inmunizaciones** (ítem 7 del árbol de pediatría, O-63): el calendario de vacunas del niño, acá adentro. Antes
+            // el ítem redirigía al módulo del paciente y el médico salía de la consulta.
+            return $this->inmunizaciones($consulta, $pacienteId, $regMedico);
+        }
+
         if ($seccion === ConsultaShellVista::SECCION_ALIMENTACION) {
             // **La dieta de pediatría, con sección propia** (ítem 9 *Alimentación*, 2026-10-19): es la misma pantalla y la
             // misma fila de `dieta_paciente` que la pestaña de *Solicitudes*, pero acá el ítem del menú es el 9 y no el 12.
@@ -1849,9 +1858,11 @@ class ConsultaController extends Controller
             'tipo' => $fila->tipo,
             'aviso' => $fila->nombre === $fila->codigo ? 'No está en tu catálogo: se muestra el código.' : null,
             // El **resultado** y si **sale en el informe** (O-47): las dos columnas del escritorio, que esta pantalla
-            // ahora edita. `vinculante = 'S'` es «sale»; `NULL` y `'N'` son «no sale».
+            // ahora edita. `vinculante = 'S'` es «sale»; `NULL` y `'N'` son «no sale». La casilla viene **marcada por
+            // defecto** (2026-11-05): sólo un `'N'` explícito la apaga —lo que se guarda al destildarla—; el `NULL` es
+            // el valor que dejan el escritorio y las órdenes cargadas antes de esto, y ésos también salen.
             'resultado' => (string) ($fila->resultado ?? ''),
-            'reporte' => trim((string) ($fila->vinculante ?? '')) === GuardarOrdenDeLaboratorio::REPORTE,
+            'reporte' => trim((string) ($fila->vinculante ?? '')) !== GuardarOrdenDeLaboratorio::NO_REPORTE,
         ])->all();
 
         $orden = OrdenVista::laboratorio(
@@ -2178,10 +2189,19 @@ class ConsultaController extends Controller
         $proxima = $this->proximaCita->de((string) $consulta->reg_medico, (int) $consulta->numhistoria, $pacienteId);
         $firmante = $this->firma->deUnaConsulta($consulta, $medico) ?? $medico;
 
+        // «Hacer cita» lleva la pantalla de la sección en la que está el médico, igual que «Agendar aquí» (O-65): el
+        // formulario completo de la agenda la conserva y, al guardar, lo devuelve ahí y no a la entrada de la sección.
+        $aLaAgenda = ['paciente_id' => $pacienteId, 'volver_consulta' => $id];
+        $pantalla = $this->pantallaDeLosRecipes();
+
+        if ($pantalla !== null) {
+            $aLaAgenda['volver_recipe'] = $pantalla;
+        }
+
         return [
             'dialogo' => new OpcionesDeImpresionVista($this->membretes->opciones($firmante), route('clinica.recipes.opciones')),
             'proximaCita' => $proxima === null ? null : ProximaCitaDelRecipe::texto($proxima),
-            'hacerCita' => route('clinica.agenda.nueva', ['paciente_id' => $pacienteId, 'volver_consulta' => $id]),
+            'hacerCita' => route('clinica.agenda.nueva', $aLaAgenda),
             'imprimir' => fn (int $numero) => route('clinica.consulta.recipes.imprimir', [$id, $numero]),
             'imprimirPareja' => route('clinica.consulta.recipe-pareja.imprimir', $id),
         ];
@@ -2229,7 +2249,29 @@ class ConsultaController extends Controller
             // La hoja imprime la próxima cita de **mañana en adelante** (`ProximaCitaDelRecipe`): agendar hoy o antes
             // dejaría la hoja sin la línea, así que el formulario no lo ofrece y el request lo rechaza.
             fechaMinima: FechaDelConsultorio::hoy()->addDay()->toDateString(),
+            // O-65: la pantalla de la sección en la que está el médico —la lista o el editor de este récipe— para que
+            // la cita lo devuelva ahí y no a la entrada de la sección.
+            volverRecipe: $this->pantallaDeLosRecipes(),
         );
+    }
+
+    /**
+     * **La pantalla de la sección de récipes que se está viendo** (O-65), con las mismas claves que su URL: `lista`
+     * (`?lista=1`), `nuevo` (`?recipe=nuevo`), `pareja` (`?recipe=pareja`) o el número del récipe (`?recipe=2`), que
+     * `recipes()` resuelve igual. `null` cuando la URL no lo dice (la sección entra por su editor de siempre): la
+     * vuelta repite esa misma entrada y el médico aterriza donde estaba.
+     */
+    private function pantallaDeLosRecipes(): ?string
+    {
+        $recipe = VueltaDeLaCita::pantallaEnLaUrl(request()->query('recipe'));
+
+        if ($recipe !== null) {
+            return $recipe;
+        }
+
+        return filter_var(request()->query('lista', false), FILTER_VALIDATE_BOOLEAN)
+            ? VueltaDeLaCita::LA_LISTA
+            : null;
     }
 
     /**

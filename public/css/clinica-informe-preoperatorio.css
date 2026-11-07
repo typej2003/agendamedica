@@ -1,6 +1,6 @@
 /*
  * El **informe de evaluación pre-operatoria** en dos páginas (O-47). Lo carga la vista previa de las hojas
- * (`clinica/imprimir/hojas`) junto con `clinica-informe-eco.css`, que pone la hoja A4 vertical, el membrete, los
+ * (`clinica/imprimir/hojas`) junto con `clinica-informe-eco.css`, que pone la hoja Carta vertical, el membrete, los
  * bloques y el pie. Acá sólo va lo propio del informe: la lista del laboratorio, las escalas de la segunda página y
  * el renglón del riesgo.
  */

@@ -199,13 +199,16 @@
          récipe y el aviso de cambios sin guardar. Se inicializa sólo si la sección está en pantalla. --}}
     <script src="{{ asset('js/clinica/consulta-recipes.js') }}"></script>
     {{-- El diálogo «Imprimir récipe» de la sección (WEB-5.2): sólo se inicializa si hay un botón que lo abra. --}}
-    <script src="{{ asset('js/clinica/imprimir-recipe.js') }}"></script>
+    <script src="{{ asset('js/clinica/imprimir-recipe.js') }}?v={{ @filemtime(public_path('js/clinica/imprimir-recipe.js')) }}"></script>
     {{-- Las solicitudes de la consulta (WEB-5.3a): cambios sin guardar, plantillas, fechas del reposo y buscador de médicos. --}}
     <script src="{{ asset('js/clinica/consulta-solicitudes.js') }}"></script>
     {{-- Las órdenes de laboratorio y de estudios (WEB-5.4): la lista de la orden, el buscador del catálogo, las rutinas y el aviso de cambios sin guardar. --}}
     <script src="{{ asset('js/clinica/consulta-ordenes.js') }}"></script>
     {{-- Las mediciones de pediatría (WEB-7.4.3a): el IMC y el AC se recalculan al escribir el peso o la talla. --}}
     <script src="{{ asset('js/clinica/consulta-mediciones.js') }}"></script>
+    {{-- El calendario de vacunas dentro de la consulta (O-63): el «Registrar» de cada dosis llena y abre su diálogo. Se
+         inicializa sólo si la sección *Inmunizaciones* está en pantalla. --}}
+    <script src="{{ asset('js/clinica/vacunas.js') }}"></script>
     {{-- Las secciones del internista (MI-2 a MI-5): el aviso de cambios sin guardar de su formulario. --}}
     <script src="{{ asset('js/clinica/consulta-internista.js') }}?v={{ @filemtime(public_path('js/clinica/consulta-internista.js')) }}"></script>
     {{-- El panel lateral de plantillas con buscador (WEB-11.2): evolución, solapas de texto del examen, dieta e informe. --}}

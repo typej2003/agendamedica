@@ -5,6 +5,7 @@
     <title>Un médico se registró sin carnet verificado</title>
 </head>
 <body style="font-family: Arial, Helvetica, sans-serif; color: #201048; font-size: 15px; line-height: 1.5;">
+    @include('emails._logo')
     <p>
         <strong>{{ $solicitud->nombreCompleto() }}</strong> se registró y <strong>ya tiene acceso</strong> a
         Doctorisimo: la verificación del carnet está apagada, así que no esperó la aprobación.
