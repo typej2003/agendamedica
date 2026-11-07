@@ -49,6 +49,12 @@ use Illuminate\Support\Facades\DB;
  * `SolicitudesParaImprimir::disponibles` aplica a una sola consulta, escrita acá como consulta de conjunto (SQL) porque es
  * por toda la agenda; los tests comparan las dos formas.
  *
+ * **Con la especialidad del contexto** (`$noSeOfrecen`, 2026-11-06) no cuentan los documentos que esa especialidad no
+ * ofrece: en pediatría, una consulta cuyo único contenido es un eco ginecológico no tiene nada para imprimir y la fila de
+ * la agenda no muestra el botón. La lista la da el alcance
+ * (`AlcanceDeLaEspecialidad::documentosQueNoSeOfrecen()`), no una copia escrita acá; sin lista —el valor por omisión—
+ * cuenta todo, que es la lectura de ginecología.
+ *
  * Es de **sólo lectura**.
  */
 final class DocumentosPorCita
@@ -92,10 +98,16 @@ final class DocumentosPorCita
      * Cuáles de las citas atendidas tienen algo para imprimir.
      *
      * @param  Collection<int,CitaDeAgenda>  $citas
+     * @param  array<int,string>  $noSeOfrecen  las claves que la especialidad del contexto no ofrece
+     *                                          (`AlcanceDeLaEspecialidad::documentosQueNoSeOfrecen()`): un documento que no se
+     *                                          ofrece no cuenta como «tiene algo para imprimir» (2026-11-06). Vacío por omisión:
+     *                                          sin lista cuenta todo, que es la lectura de ginecología
      * @return array<int,int>  los ids de `cola` con algo para imprimir (como claves y valores)
      */
-    public function conDocumentos(string $regMedico, Collection $citas): array
+    public function conDocumentos(string $regMedico, Collection $citas, array $noSeOfrecen = []): array
     {
+        $seOfrece = fn (string $clave): bool => ! in_array($clave, $noSeOfrecen, true);
+
         $atendidas = $citas->filter(fn (CitaDeAgenda $cita) => $cita->atendida() && ! $cita->movida() && $cita->numHistoria !== null);
 
         if ($atendidas->isEmpty()) {
@@ -122,9 +134,12 @@ final class DocumentosPorCita
         $historias = $atendidas->pluck('numHistoria')->unique()->all();
         $conAlgo = [];
 
-        // Los récipes del paciente o el de la pareja: cualquier medicamento.
-        foreach (['recipes', 'recipes_pareja'] as $tabla) {
-            $this->marcar($conAlgo, DB::table($tabla)->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
+        // Los récipes del paciente o el de la pareja: cualquier medicamento. El de la pareja es de ginecología y fuera de
+        // ginecología no se ofrece (2026-11-06), así que no cuenta.
+        $this->marcar($conAlgo, DB::table('recipes')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
+
+        if ($seOfrece(DocumentoDeRecipe::PAREJA)) {
+            $this->marcar($conAlgo, DB::table('recipes_pareja')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
         }
 
         // Las solicitudes que son documentos de verdad (`QueEsUnDocumento`, en su forma de conjunto):
@@ -158,9 +173,12 @@ final class DocumentosPorCita
         $this->marcar($conAlgo, DB::table('examen_paciente')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
         $this->marcar($conAlgo, DB::table('examen_obs')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias)
             ->whereRaw("TRIM(COALESCE(observacion, '')) <> ''")->whereRaw("LOWER(TRIM(observacion)) <> 'none'"), 'numhistoria', 'numconsulta');
-        //  - orden de laboratorio de la pareja (WEB-11.21): algún examen o los datos de la pareja.
-        $this->marcar($conAlgo, DB::table('examen_pareja')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
-        $this->marcar($conAlgo, DB::table('examen_pareja_datos')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
+        //  - orden de laboratorio de la pareja (WEB-11.21): algún examen o los datos de la pareja. También es de
+        //    ginecología (2026-11-06).
+        if ($seOfrece(DocumentoImpreso::LABORATORIO_PAREJA)) {
+            $this->marcar($conAlgo, DB::table('examen_pareja')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
+            $this->marcar($conAlgo, DB::table('examen_pareja_datos')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
+        }
         //  - solicitud de estudios (WEB-5.4): lo mismo con `radiologia_paciente` y `radiologia_obs`.
         $this->marcar($conAlgo, DB::table('radiologia_paciente')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
         $this->marcar($conAlgo, DB::table('radiologia_obs')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias)
@@ -169,7 +187,10 @@ final class DocumentosPorCita
         //    texto vive en la **consulta** (su columna de `consultas`, lo que imprime la hoja), no en una tabla
         //    aparte (`QueEsUnDocumento::texto`; el literal `none` del DataWindow tampoco es texto).
         foreach (TextosDelExamen::claves() as $solapa) {
-            if (TextosDelExamen::documento($solapa) === null) {
+            $documento = TextosDelExamen::documento($solapa);
+
+            // Una solapa sin hoja no es un documento, y la que la especialidad no ofrece no cuenta (2026-11-06).
+            if ($documento === null || ! $seOfrece($documento)) {
                 continue;
             }
 
@@ -210,69 +231,87 @@ final class DocumentosPorCita
         //  - informe del eco pélvico (WEB-6.1): algún campo del estudio cargado o el informe en texto libre
         //    del escritorio (`QueEsUnDocumento::ecografia`; la fecha sola no cuenta y el literal `none`
         //    tampoco, como en `EstudioEcografico::limpiar`). La lista de columnas sale del mapa del dato,
-        //    así que un campo nuevo entra solo.
-        $this->marcar($conAlgo, DB::table('eco_pelvico')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias)
-            ->where(function ($q) {
-                foreach (array_keys(EcoGinecologico::columnas()) as $columna) {
-                    if ($columna === EcoGinecologico::COLUMNA_FECHA) {
-                        continue;
-                    }
+        //    así que un campo nuevo entra solo. **La especialidad que no lo ofrece no lo cuenta** (2026-11-06).
+        if ($seOfrece(DocumentoImpreso::ECO_PELVICO)) {
+            $this->marcar($conAlgo, DB::table('eco_pelvico')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias)
+                ->where(function ($q) {
+                    foreach (array_keys(EcoGinecologico::columnas()) as $columna) {
+                        if ($columna === EcoGinecologico::COLUMNA_FECHA) {
+                            continue;
+                        }
 
-                    $q->orWhere(function ($cada) use ($columna) {
-                        $cada->whereRaw("TRIM(COALESCE({$columna}, '')) <> ''")
-                            ->whereRaw("LOWER(TRIM(COALESCE({$columna}, ''))) <> 'none'");
-                    });
-                }
-            }), 'numhistoria', 'nroconsulta');
+                        $q->orWhere(function ($cada) use ($columna) {
+                            $cada->whereRaw("TRIM(COALESCE({$columna}, '')) <> ''")
+                                ->whereRaw("LOWER(TRIM(COALESCE({$columna}, ''))) <> 'none'");
+                        });
+                    }
+                }), 'numhistoria', 'nroconsulta');
+        }
 
         //  - informe del eco Doppler perinatal (WEB-6.3): algún campo del estudio cargado o el informe en
         //    texto libre del escritorio (`puro_texto`, su modo «Plantillas»), con la misma vara
         //    (`QueEsUnDocumento::ecografia`). **La clave es `historia` + `consulta`**, no
         //    `numhistoria`/`nroconsulta` como el pélvico, y la ficha (fecha, FUR, gesta y `para`) no cuenta.
-        $this->marcar($conAlgo, DB::table('eco_doppler')->where('reg_medico', $regMedico)->whereIn('historia', $historias)
-            ->where(function ($q) {
-                foreach (array_merge(
-                    array_diff(EcoDoppler::columnas(), EcoDoppler::COLUMNAS_QUE_NO_CUENTAN),
-                    [EcoDoppler::COLUMNA_PURO_TEXTO],
-                ) as $columna) {
-                    $q->orWhere(function ($cada) use ($columna) {
-                        $cada->whereRaw("TRIM(COALESCE({$columna}, '')) <> ''")
-                            ->whereRaw("LOWER(TRIM(COALESCE({$columna}, ''))) <> 'none'");
-                    });
-                }
-            }), 'historia', 'consulta');
+        if ($seOfrece(DocumentoImpreso::ECO_DOPPLER)) {
+            $this->marcar($conAlgo, DB::table('eco_doppler')->where('reg_medico', $regMedico)->whereIn('historia', $historias)
+                ->where(function ($q) {
+                    foreach (array_merge(
+                        array_diff(EcoDoppler::columnas(), EcoDoppler::COLUMNAS_QUE_NO_CUENTAN),
+                        [EcoDoppler::COLUMNA_PURO_TEXTO],
+                    ) as $columna) {
+                        $q->orWhere(function ($cada) use ($columna) {
+                            $cada->whereRaw("TRIM(COALESCE({$columna}, '')) <> ''")
+                                ->whereRaw("LOWER(TRIM(COALESCE({$columna}, ''))) <> 'none'");
+                        });
+                    }
+                }), 'historia', 'consulta');
+        }
 
         //  - informe de los dos ecos obstétricos (WEB-6.2): algún campo del estudio cargado, sin contar su
         //    ficha (la fecha, la FUR y la gesta). Se suman acá para cerrar el hueco que dejó WEB-6.2: su hoja
         //    se imprimía desde la consulta, pero la secretaría no la veía en «Imprimir documentos» de la cita
         //    atendida. **Su clave también es `historia` + `consulta`**, y no `numhistoria`/`nroconsulta`.
-        $this->marcarEstudio($conAlgo, DB::table('eco_obstetrico')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
-            EcoObstetrico::columnas(), EcoObstetrico::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
-        $this->marcarEstudio($conAlgo, DB::table('eco_obstetrico_tercer')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
-            EcoObstetricoTercero::columnas(), EcoObstetricoTercero::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+        if ($seOfrece(DocumentoImpreso::ECO_OBSTETRICO)) {
+            $this->marcarEstudio($conAlgo, DB::table('eco_obstetrico')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
+                EcoObstetrico::columnas(), EcoObstetrico::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+        }
+
+        if ($seOfrece(DocumentoImpreso::ECO_OBSTETRICO_TERCERO)) {
+            $this->marcarEstudio($conAlgo, DB::table('eco_obstetrico_tercer')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
+                EcoObstetricoTercero::columnas(), EcoObstetricoTercero::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+        }
+
         // El 2.º trimestre (WEB-11.14) vive en la tabla hermana.
-        $this->marcarEstudio($conAlgo, DB::table('eco_obstetrico_tercer_2')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
-            EcoObstetricoTercero::columnas(), EcoObstetricoTercero::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+        if ($seOfrece(DocumentoImpreso::ECO_OBSTETRICO_SEGUNDO)) {
+            $this->marcarEstudio($conAlgo, DB::table('eco_obstetrico_tercer_2')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
+                EcoObstetricoTercero::columnas(), EcoObstetricoTercero::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+        }
 
         //  - informe del ecocardiograma fetal (WEB-6.3): otro estudio del ítem 5, con la misma clave
         //    (`historia` + `consulta`) y su ficha más ancha (la fecha, la FUR, la gesta y la paridad). Su
         //    tabla trae el error de tipeo del legado (`ecocadiograma_fetal`, sin la «r»).
-        $this->marcarEstudio($conAlgo, DB::table('ecocadiograma_fetal')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
-            EcoCardiogramaFetal::columnas(), EcoCardiogramaFetal::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+        if ($seOfrece(DocumentoImpreso::ECO_CARDIOGRAMA_FETAL)) {
+            $this->marcarEstudio($conAlgo, DB::table('ecocadiograma_fetal')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
+                EcoCardiogramaFetal::columnas(), EcoCardiogramaFetal::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+        }
 
         //  - informe del eco mamario (WEB-6.4): otro estudio del ítem 5, con la misma clave (`historia` +
         //    `consulta`) y su ficha corta (sólo la fecha). Su tabla (`ultra_mama`) no se llama como su
         //    DataWindow: el vivo es `d_ultasonido_mamas`. Su `puro_texto` **no** cuenta: la hoja del mamario no
         //    tiene párrafos de texto libre (su modo «Plantillas» es otro DataWindow que la web no imprime).
-        $this->marcarEstudio($conAlgo, DB::table('ultra_mama')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
-            EcoMamario::columnas(), EcoMamario::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+        if ($seOfrece(DocumentoImpreso::ECO_MAMARIO)) {
+            $this->marcarEstudio($conAlgo, DB::table('ultra_mama')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
+                EcoMamario::columnas(), EcoMamario::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+        }
 
         //  - informe del eco abdominal (WEB-6.4), el séptimo y último tipo del ítem 5: su clave también es
         //    `historia` + `consulta` y su ficha es tan corta como la del mamario (sólo la fecha). Es una
         //    ecografía abdominal general (la misma tabla la usan cirugía y pediatría) y `prostata`/`vejiga_urina`
         //    no cuentan: no están en el mapa (son de urología y en ginecología van ocultas).
-        $this->marcarEstudio($conAlgo, DB::table('ultra_abdominal')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
-            EcoAbdominal::columnas(), EcoAbdominal::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+        if ($seOfrece(DocumentoImpreso::ECO_ABDOMINAL)) {
+            $this->marcarEstudio($conAlgo, DB::table('ultra_abdominal')->where('reg_medico', $regMedico)->whereIn('historia', $historias),
+                EcoAbdominal::columnas(), EcoAbdominal::COLUMNAS_QUE_NO_CUENTAN, 'historia', 'consulta');
+        }
 
         $ids = [];
         foreach ($atendidas as $cita) {

@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Impresion;
 
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\RecipeDeLaPareja;
 use App\Clinica\Consulta\RecipesDeLaConsulta;
 use App\Clinica\Pacientes\CamposDePaciente;
@@ -38,6 +39,12 @@ use Illuminate\Support\Collection;
  * **medidas de la consulta** (`MedidasDeLaConsulta`), que la hoja imprime sólo en la mitad de *Indicaciones*. El
  * récipe de la pareja no las lleva nunca.
  *
+ * ## Qué se ofrece (Alexander, 2026-11-06)
+ *
+ * El récipe de la pareja es **sólo de ginecología**: fuera de ginecología no se ofrece (`$alcance`), y la decisión de
+ * qué documento es de la pareja la toma `AlcanceDeLaEspecialidad::documentosDeLaParejaQueNoSeOfrecen()`, no una lista de
+ * acá. La hoja pedida por URL directa sigue abriéndose: se deja de ofrecer, no se rompe el enlace (2026-10-22).
+ *
  * Es de **sólo lectura**.
  */
 final class RecipesParaImprimir
@@ -53,9 +60,14 @@ final class RecipesParaImprimir
      * Lo que se puede imprimir de la consulta: cada récipe del paciente (con su número) y, si la consulta lo
      * tiene, el de la pareja. Un récipe **sin medicamentos** no se ofrece: no hay nada que poner en la hoja.
      *
+     * `$alcance` es la especialidad del **contexto**, y con ella el récipe de la pareja —que es sólo de ginecología,
+     * `AlcanceDeLaEspecialidad::muestraLaPareja()`— no se ofrece fuera de ginecología (Alexander, 2026-11-06: «no
+     * debemos ofrecer documentos de otras especialidades»). Sin alcance (`null`) no se filtra: es la lectura de **todo
+     * lo que la consulta tiene**, la que valida la hoja pedida por URL directa (2026-10-22).
+     *
      * @return array<int,array{clave:string, titulo:string, resumen:string, fecha:?string, de_la_pareja:bool}>
      */
-    public function disponibles(Consulta $consulta): array
+    public function disponibles(Consulta $consulta, ?AlcanceDeLaEspecialidad $alcance = null): array
     {
         $disponibles = [];
 
@@ -74,8 +86,9 @@ final class RecipesParaImprimir
         }
 
         $pareja = $this->pareja->de((string) $consulta->reg_medico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta);
+        $noSeOfrecen = $alcance?->documentosQueNoSeOfrecen() ?? [];
 
-        if ($pareja !== null && $pareja->items->isNotEmpty()) {
+        if ($pareja !== null && $pareja->items->isNotEmpty() && ! in_array(DocumentoDeRecipe::PAREJA, $noSeOfrecen, true)) {
             $disponibles[] = [
                 'clave' => DocumentoDeRecipe::PAREJA,
                 'titulo' => 'Récipe de la pareja',

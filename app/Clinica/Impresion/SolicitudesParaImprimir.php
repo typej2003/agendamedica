@@ -98,11 +98,11 @@ use Throwable;
  * es la excepción controlada: su texto base existe para toda consulta, así que el médico puede imprimirla siempre
  * (`$constanciaBase`), pero sólo se *ofrece* —en la agenda, a la secretaría— cuando el médico escribió algo propio.
  *
- * Desde el 2026-11-06 **lo que es de ginecología no se ofrece fuera de ginecología** (Alexander: «¿un eco ginecológico a
- * un niño?»): los informes de los ecos y las tres solapas de texto del examen quedan afuera de la lista que ofrecen las
- * pantallas (`DocumentosParaImprimir::ofrecidos`), y qué es de ginecología lo decide
- * `AlcanceDeLaEspecialidad::documentosDeGinecologiaQueNoSeOfrecen()`, no una lista de acá. En ginecología no cambia
- * nada y **sin especialidad tampoco se ofrecen** (2026-10-30).
+ * Desde el 2026-11-06 **lo que es de otra especialidad no se ofrece** (Alexander: «no debemos ofrecer documentos de otras
+ * especialidades. ¿Un eco ginecológico a un niño?»): con la especialidad del contexto (`$alcance`) quedan afuera los
+ * informes de los ecos, las tres solapas de texto del examen y la orden de laboratorio de la pareja, y qué es de cada una
+ * lo decide `AlcanceDeLaEspecialidad::documentosQueNoSeOfrecen()`, no una lista de acá. En ginecología no cambia nada y
+ * **sin especialidad tampoco se ofrecen** (2026-10-30).
  *
  * Es de **sólo lectura**.
  */
@@ -140,17 +140,17 @@ final class SolicitudesParaImprimir
     /**
      * Lo que se puede imprimir de la consulta, en el orden de las pestañas.
      *
-     * Devuelve **todo lo que la consulta tiene**, sin mirar la especialidad: es lo que usa el controlador para saber si
-     * la hoja que se pide existe (la pedida por URL directa sigue abriendo aunque el alcance la esconda, 2026-10-22) y
-     * la base de lo que se ofrece. La lista **de lo que se ofrece** en las pantallas la da
-     * `DocumentosParaImprimir::ofrecidos`, que es la que deja afuera los documentos de ginecología fuera de ginecología
-     * (2026-11-06).
+     * `$alcance` es la especialidad del **contexto** y con ella no se ofrecen los documentos de ginecología ni los de la
+     * pareja fuera de ginecología (Alexander, 2026-11-06: «¿un eco ginecológico a un niño?»); *qué* es de cada una lo
+     * decide el alcance (`documentosQueNoSeOfrecen`), no una lista de acá. Sin alcance (`null`) no se filtra: es la
+     * lectura de **todo lo que la consulta tiene**, la que usa el controlador para saber si la hoja que se pide existe
+     * (la pedida por URL directa sigue abriendo, 2026-10-22).
      *
      * @param  array<int,string>  $registros  los `reg_medico` del médico (para resolver al médico referido)
      * @param  bool  $constanciaBase  `true` ofrece la constancia aunque no tenga nada propio (lo que ve el médico)
      * @return array<int,array{clave:string, tipo:string, titulo:string, resumen:string, fecha:?string}>
      */
-    public function disponibles(Consulta $consulta, array $registros, bool $constanciaBase = false): array
+    public function disponibles(Consulta $consulta, array $registros, bool $constanciaBase = false, ?AlcanceDeLaEspecialidad $alcance = null): array
     {
         $disponibles = [];
         $fechaDeLaConsulta = $this->fechaDeLaConsulta($consulta);
@@ -472,7 +472,19 @@ final class SolicitudesParaImprimir
             ];
         }
 
-        return $disponibles;
+        // Lo que la especialidad del contexto no tiene se deja de **ofrecer** (2026-11-06). La lista de claves la da el
+        // alcance —los documentos de ginecología y los de la pareja—, así que un documento nuevo de esos estudios o de la
+        // pareja queda escondido sin tocar esto. Sin alcance la lista queda entera: es la lectura de la consulta.
+        $noSeOfrecen = $alcance?->documentosQueNoSeOfrecen() ?? [];
+
+        if ($noSeOfrecen === []) {
+            return $disponibles;
+        }
+
+        return array_values(array_filter(
+            $disponibles,
+            fn (array $documento) => ! in_array($documento['clave'], $noSeOfrecen, true),
+        ));
     }
 
     /**

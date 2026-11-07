@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Clinica\Agenda\CitaDeAgenda;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\DocumentosParaImprimir;
+use App\Clinica\Impresion\DocumentosPorCita;
 use App\Models\Cola;
 use App\Models\Consulta;
 use App\Models\Medico;
@@ -23,7 +25,11 @@ use Tests\TestCase;
  * misma de la historia del paciente** (O-72): la toma `AlcanceDeLaEspecialidad::documentosDeGinecologiaQueNoSeOfrecen()`,
  * no una lista nueva, y `DocumentosParaImprimir::ofrecidos()` deja esos documentos afuera de lo que se ofrece.
  *
- * Lo que **no** es de ginecología —constancia, reposo, referencia, informe, hospitalización, dieta, laboratorio,
+ * Lo mismo con **lo de la pareja** (el récipe y su orden de laboratorio), que es de la misma especialidad
+ * (`documentosDeLaParejaQueNoSeOfrecen()`), y con el **lote de la agenda** (`DocumentosPorCita::conDocumentos`), que
+ * decide si la fila de la cita ofrece el botón.
+ *
+ * Lo que **no** es de otra especialidad —constancia, reposo, referencia, informe, hospitalización, dieta, laboratorio,
  * estudios, resumen médico, récipes y pre-factura— se sigue ofreciendo; **en ginecología no cambia nada**; y **sin
  * especialidad tampoco se ofrecen** (2026-10-30: no tener especialidad no es ginecología).
  *
@@ -51,7 +57,7 @@ class ImpresionPorEspecialidadWebTest extends TestCase
     /**
      * El médico de la especialidad, su paciente con historia y consulta de hoy, la cita atendida y la secretaría.
      *
-     * @return array{0:User, 1:Medico, 2:Specialty, 3:Consulta, 4:Cola, 5:User}
+     * @return array{0:User, 1:Medico, 2:Specialty, 3:Consulta, 4:Cola, 5:User, 6:int}
      */
     private function escenario(string $especialidad = 'ginecologia-y-obstetricia'): array
     {
@@ -62,7 +68,7 @@ class ImpresionPorEspecialidadWebTest extends TestCase
         $cita = $this->cita($medico, 1001, $this->hoy->toDateString(), ['atendido' => 1, 'estado' => 1]);
         $secretaria = $this->secretariaConAcceso($medico);
 
-        return [$user, $medico, $specialty, $consulta, $cita, $secretaria];
+        return [$user, $medico, $specialty, $consulta, $cita, $secretaria, $pacienteId];
     }
 
     /**
@@ -110,6 +116,23 @@ class ImpresionPorEspecialidadWebTest extends TestCase
             'updated_at'  => now(),
         ]);
         $this->recipe($medico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta, 1, ['0001']);
+    }
+
+    /** Los documentos de la pareja: su récipe y la orden de laboratorio a su nombre (sólo de ginecología). */
+    private function datosDeLaPareja(Medico $medico, Consulta $consulta): void
+    {
+        $this->pareja($medico, (int) $consulta->numhistoria, (int) $consulta->nroconsulta, ['0001']);
+
+        DB::table('examen_pareja')->insert([
+            'reg_medico'  => $medico->reg_medico,
+            'nrohistoria' => (int) $consulta->numhistoria,
+            'nroconsulta' => (int) $consulta->nroconsulta,
+            'codeexamen'  => '001',
+            'cedula'      => '9876543',
+            'nombre'      => 'Mariana Rojas',
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
     }
 
     /** @return array<int,string> las claves de lo que se **ofrece** imprimir en esa especialidad */
@@ -242,5 +265,80 @@ class ImpresionPorEspecialidadWebTest extends TestCase
             ->assertOk()
             ->assertSee('Constancia')
             ->assertDontSee('Eco pélvico');
+    }
+
+    // ============================================================== La pareja: es de la misma especialidad
+
+    /**
+     * **El récipe de la pareja y su orden de laboratorio son de ginecología**: fuera de ginecología no se ofrecen
+     * (`AlcanceDeLaEspecialidad::muestraLaPareja()`), aunque la consulta tenga los datos cargados; en ginecología se
+     * siguen ofreciendo los dos.
+     */
+    public function test_fuera_de_ginecologia_no_se_ofrecen_los_imprimibles_de_la_pareja(): void
+    {
+        [, $pediatra, , $consultaDelNino] = $this->escenario('pediatria');
+        $this->datosDeLaPareja($pediatra, $consultaDelNino);
+        // El récipe del paciente, que sí se sigue ofreciendo: el filtro es de la pareja, no de la consulta entera.
+        $this->recipe($pediatra, (int) $consultaDelNino->numhistoria, (int) $consultaDelNino->nroconsulta, 1, ['0002']);
+
+        $dePediatria = $this->ofrecidas($pediatra, $consultaDelNino, 'pediatria');
+
+        $this->assertNotContains('recipe-pareja', $dePediatria);
+        $this->assertNotContains(DocumentoImpreso::LABORATORIO_PAREJA, $dePediatria);
+
+        // Y lo del paciente se sigue ofreciendo: el filtro no se lleva la consulta entera.
+        $this->assertContains('recipe-1', $dePediatria);
+
+        [, $ginecologa, , $consulta] = $this->escenario();
+        $this->datosDeLaPareja($ginecologa, $consulta);
+
+        $deGinecologia = $this->ofrecidas($ginecologa, $consulta, 'ginecologia-y-obstetricia');
+
+        $this->assertContains('recipe-pareja', $deGinecologia);
+        $this->assertContains(DocumentoImpreso::LABORATORIO_PAREJA, $deGinecologia);
+    }
+
+    // ========================================================= El lote de la agenda: el botón de la fila
+
+    /**
+     * **El lote de la agenda no cuenta lo que la especialidad no ofrece**: en pediatría, una consulta cuyo único
+     * contenido es un eco ginecológico no tiene nada para imprimir, así que la fila de la cita no ofrece el botón
+     * (antes lo ofrecía y la lista decía que no había nada).
+     */
+    public function test_el_lote_de_la_agenda_no_cuenta_un_eco_ginecologico_en_pediatria(): void
+    {
+        [$user, $medico, $pediatria, $consulta, $cita, , $pacienteId] = $this->escenario('pediatria');
+        $this->datosDeGinecologia($medico, $consulta);
+
+        $deLaAgenda = new CitaDeAgenda(
+            id: $cita->id, fecha: $this->hoy->toDateString(), horaIni: '10:30:00', numOrden: 1,
+            estado: 1, atendido: 1, monto: null, montoPagado: null, numHistoria: (int) $consulta->numhistoria,
+            pacienteSinHistoriaId: null, pacienteId: $pacienteId, paciente: 'Ana Alvarez',
+            centroId: null, motivo: null, tipo: null, medico: null,
+        );
+
+        // Sin la lista de lo que la especialidad no ofrece (la lectura de ginecología) el eco cuenta.
+        $this->assertArrayHasKey(
+            $cita->id,
+            app(DocumentosPorCita::class)->conDocumentos($medico->reg_medico, collect([$deLaAgenda])),
+        );
+
+        // Con la lista de pediatría, no: el único contenido es de ginecología.
+        $this->assertSame(
+            [],
+            app(DocumentosPorCita::class)->conDocumentos(
+                $medico->reg_medico,
+                collect([$deLaAgenda]),
+                $this->alcance('pediatria')->documentosQueNoSeOfrecen(),
+            ),
+        );
+
+        // Y la agenda de pediatría no le ofrece el botón a esa cita.
+        $agenda = $this->conContexto($user, $medico, $pediatria)->actingAs($user)
+            ->get(route('clinica.agenda', ['vista' => 'dia', 'fecha' => $this->hoy->toDateString(), 'sede' => 'todas']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('Imprimir documentos', $agenda);
     }
 }

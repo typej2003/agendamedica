@@ -5,6 +5,7 @@ namespace App\Clinica\Consulta;
 use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
+use App\Clinica\Impresion\DocumentoDeRecipe;
 use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\FormatosEnBlanco;
 
@@ -32,7 +33,8 @@ use App\Clinica\Impresion\FormatosEnBlanco;
  * **Fuera de la consulta** el alcance también dice qué no se ofrece en las pantallas que mezclan especialidades: los
  * **tipos de plantilla de texto** —las plantillas de los exámenes y de los ecos que la especialidad no tiene—, los
  * **formatos en blanco** de esos ecos y los **documentos de ginecología**, que no se ofrecen ni en la historia del
- * paciente (O-72) ni en los imprimibles de la consulta y de la cita (2026-11-06: «¿un eco ginecológico a un niño?»).
+ * paciente (O-72) ni en los imprimibles de la consulta y de la cita (2026-11-06: «¿un eco ginecológico a un niño?»),
+ * junto con los **de la pareja**, que son de la misma especialidad.
  * El **listado de embarazos y partos** no se decide acá: es un reporte que declara su
  * especialidad en `ListadosDisponibles`, junto a los demás.
  *
@@ -375,5 +377,42 @@ final class AlcanceDeLaEspecialidad
         }
 
         return array_values(array_unique(array_filter($ocultos)));
+    }
+
+    /**
+     * **Los documentos de la pareja que no se ofrecen** fuera de ginecología (Alexander, 2026-11-06): el récipe de la
+     * pareja y su orden de laboratorio. La consulta de pareja es **sólo de ginecología** (`muestraLaPareja()`), así que
+     * fuera de ginecología no se ofrece nada de eso, igual que los documentos de ginecología: al pediatra no le toca
+     * recetarle a la pareja de un niño.
+     *
+     * Las claves son las de las **listas que los arman**, porque cada una nombra lo suyo: el récipe de la pareja es
+     * `DocumentoDeRecipe::PAREJA` (`pareja`) en `RecipesParaImprimir` —y viaja como `recipe-pareja` en la lista de
+     * `DocumentosParaImprimir`—, y la orden es `DocumentoImpreso::LABORATORIO_PAREJA` (`laboratorio-pareja`) en las dos.
+     *
+     * @return array<int,string> claves de `DocumentoDeRecipe` y de `DocumentoImpreso`
+     */
+    public function documentosDeLaParejaQueNoSeOfrecen(): array
+    {
+        if ($this->muestraLaPareja()) {
+            return [];
+        }
+
+        return [DocumentoDeRecipe::PAREJA, DocumentoImpreso::LABORATORIO_PAREJA];
+    }
+
+    /**
+     * **Todo lo que esta especialidad no ofrece** de una consulta o de una cita: los documentos de ginecología y los de
+     * la pareja. Es la lista que consultan las listas de imprimibles y el lote de la agenda
+     * (`DocumentosPorCita::conDocumentos`), para que una sola decisión gobierne qué se ofrece y qué cuenta como «tiene
+     * algo para imprimir».
+     *
+     * @return array<int,string> claves de `DocumentoImpreso` y de `DocumentoDeRecipe`
+     */
+    public function documentosQueNoSeOfrecen(): array
+    {
+        return array_values(array_unique(array_merge(
+            $this->documentosDeGinecologiaQueNoSeOfrecen(),
+            $this->documentosDeLaParejaQueNoSeOfrecen(),
+        )));
     }
 }
