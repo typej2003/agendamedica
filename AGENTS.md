@@ -279,12 +279,13 @@ consulta.
   `CrecimientoVista` le pasa a `GraficaDeCrecimiento`): el día que se agregue la OMS (O-33) cada referencia dice la suya.
   Sin curvas no se dice ninguna fuente. Tests: `Feature/CrecimientoWebTest` y `Unit/Clinica/GraficaDeCrecimientoTest`;
   verificador `../.agent-tools/verificar-crecimiento-fuente-web.js`.
-- **El menú «⋯» de una fila de tabla (O-43, 2026-10-19, web en general)**: el contenedor de la tabla (`.tabla-envoltura`,
-  `overflow-x: auto`) **también recorta en vertical**, así que el menú de una fila —en la agenda, con pocas citas o en la
-  última fila— quedaba cortado o fuera de la pantalla. `shell.js` lo flota contra la ventana por estar dentro de
-  `.tabla-envoltura`/`.table-responsive` (antes sólo si la tabla desbordaba en horizontal), lo alinea sin salirse y **lo
-  abre hacia arriba** si no entra abajo; el `<details>` abierto sube su `z-index` y el menú flotante tiene `max-height`.
-  Verificador: `../.agent-tools/verificar-agenda-menu-fila-web.js` (falla con el código anterior).
+- **El menú «⋯» de una fila de tabla (O-43, 2026-10-19; corregido el 2026-11-07)**: el menú **cuelga del botón**
+  (`position: absolute` dentro del `<details>`, que es `position: relative`) y `shell.js` lo ubica arriba o abajo y a
+  izquierda o derecha según el espacio; el `<details>` abierto sube su `z-index` y el menú tiene `max-height`.
+  **No** es `position: fixed`: el `container-type: inline-size` del `.tabla-envoltura` (el que decide el apilado en
+  tarjetas, 2026-11-06) lo convierte en su bloque de contención en Safari y Firefox, y el menú aparecía fuera de la
+  pantalla con un scroll horizontal que además lo cerraba (bug de pediatría). Verificador:
+  `../.agent-tools/verificar-agenda-menu-fila-web.js` (falla con el código anterior; incluye `contain: layout`).
 - **La sesión que se vencía con la consulta abierta (2026-10-19, todo `/clinica`)**: «Terminar la consulta»
   contestaba **419** («Tu sesión venció») y la cita no quedaba atendida. La sesión de Laravel vence a los
   `SESSION_LIFETIME` minutos **sin peticiones** (120) y la consulta se queda abierta horas sin que el navegador manda
