@@ -417,11 +417,34 @@ final class AlcanceDeLaEspecialidad
      *
      * @return array<int,string> claves de `DocumentoImpreso` y de `DocumentoDeRecipe`
      */
+    /**
+     * **Los estudios del cardiólogo no se ofrecen fuera de cardiología** (2026-11-08): las diez hojas de sus estudios son
+     * de la especialidad y no se ofrecen en las demás, aunque la consulta tuviera la fila cargada por el escritorio. La
+     * evaluación pre-operatoria **no** entra: es compartida con medicina interna.
+     *
+     * @return array<int,string>
+     */
+    public function documentosDeCardiologiaQueNoSeOfrecen(): array
+    {
+        if ($this->esCardiologia()) {
+            return [];
+        }
+
+        return [
+            DocumentoImpreso::ECO_CARDIO, DocumentoImpreso::ECO_ESTRES, DocumentoImpreso::ECO_ETE,
+            DocumentoImpreso::DOPPLER_MIEMBROS_SUPERIORES, DocumentoImpreso::DOPPLER_CAROTIDEO,
+            DocumentoImpreso::DOPPLER_VENOSO, DocumentoImpreso::PRUEBA_DE_ESFUERZO,
+            DocumentoImpreso::OSCILOMETRIA, DocumentoImpreso::MARCAPASOS,
+            DocumentoImpreso::DOPPLER_ARTERIAL_MIEMBROS_INFERIORES,
+        ];
+    }
+
     public function documentosQueNoSeOfrecen(): array
     {
         return array_values(array_unique(array_merge(
             $this->documentosDeGinecologiaQueNoSeOfrecen(),
             $this->documentosDeLaParejaQueNoSeOfrecen(),
+            $this->documentosDeCardiologiaQueNoSeOfrecen(),
         )));
     }
 }

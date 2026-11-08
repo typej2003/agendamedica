@@ -369,4 +369,52 @@ class AlcanceDeLaEspecialidadTest extends TestCase
         // la consulta (WEB-11.14), pero esconder su hoja de la historia es otra decisión.
         $this->assertSame([], AlcanceDeLaEspecialidad::de(self::GINECO)->documentosDeGinecologiaQueNoSeOfrecen());
     }
+
+    /**
+     * **Cardiología es sólo de cardiología** (2026-11-08, Alexander): sus estudios y sus hojas no aparecen en las demás
+     * especialidades —ni en el árbol, ni por URL directa, ni en la lista de imprimibles—, y lo mismo tiene que pasar con
+     * cada especialidad nueva que se agregue (traumatología incluida).
+     */
+    public function test_la_seccion_y_los_imprimibles_de_cardiologia_son_solo_de_cardiologia(): void
+    {
+        $otras = [
+            'ginecologia-y-obstetricia', 'pediatria', 'medicina-interna',
+            'traumatologia', 'oftalmologia', 'orl', 'urologia', 'dermatologia',
+        ];
+
+        $hojas = [
+            DocumentoImpreso::ECO_CARDIO, DocumentoImpreso::ECO_ESTRES, DocumentoImpreso::ECO_ETE,
+            DocumentoImpreso::DOPPLER_MIEMBROS_SUPERIORES, DocumentoImpreso::DOPPLER_CAROTIDEO,
+            DocumentoImpreso::DOPPLER_VENOSO, DocumentoImpreso::PRUEBA_DE_ESFUERZO,
+            DocumentoImpreso::OSCILOMETRIA, DocumentoImpreso::MARCAPASOS,
+            DocumentoImpreso::DOPPLER_ARTERIAL_MIEMBROS_INFERIORES,
+        ];
+
+        foreach ($otras as $slug) {
+            $this->assertFalse(
+                SeccionesDeLaConsulta::existeSeccion(SeccionesDeLaConsulta::SECCION_CARDIOLOGIA, $slug),
+                'la sección de cardiología no debe existir en ' . $slug,
+            );
+
+            $this->assertNotContains(
+                SeccionesDeLaConsulta::SECCION_CARDIOLOGIA,
+                array_column(SeccionesDeLaConsulta::todas($slug), 'seccion'),
+                'el árbol de ' . $slug . ' no debe traer cardiología',
+            );
+
+            $ocultas = AlcanceDeLaEspecialidad::de($slug)->documentosQueNoSeOfrecen();
+
+            foreach ($hojas as $hoja) {
+                $this->assertContains($hoja, $ocultas, $slug . ' no debe ofrecer ' . $hoja);
+            }
+        }
+
+        // El cardiólogo sí los tiene, y la evaluación pre-operatoria sigue siendo compartida con medicina interna.
+        $this->assertTrue(SeccionesDeLaConsulta::existeSeccion(SeccionesDeLaConsulta::SECCION_CARDIOLOGIA, 'cardiologia'));
+        $this->assertSame([], AlcanceDeLaEspecialidad::de('cardiologia')->documentosDeCardiologiaQueNoSeOfrecen());
+        $this->assertNotContains(
+            DocumentoImpreso::EVALUACION_PREOPERATORIA,
+            AlcanceDeLaEspecialidad::de('medicina-interna')->documentosQueNoSeOfrecen(),
+        );
+    }
 }
