@@ -11,12 +11,12 @@
  *                             además numerar la consulta siguiente.
  *   data-cerrar-dialogo       en un botón: cierra el <dialog> que lo contiene.
  *   data-abrir-dialogo="id"   en un botón: abre ese <dialog> (showModal).
- *   <details class="menu-acciones">   el menú "⋯" cierra al hacer clic afuera o con Escape.
- *   .tabla-envoltura / .table-responsive   la tabla que no entra se desplaza dentro de su tarjeta (el
- *                             `overflow-x` está en el CSS) y acá se le pone `tabindex`, `role="region"` y
- *                             `aria-label` **sólo cuando desborda**, para que se pueda recorrer con el teclado.
- *                             El menú "⋯" de esas tablas se posiciona contra la ventana para que el recorte no
- *                             lo corte.
+ *   <details class="menu-acciones">   el menú "⋯" cierra al hacer clic afuera o con Escape. Se ubica dentro del
+ *                             botón (posición absoluta) y se abre hacia arriba o hacia abajo según el espacio.
+ *   .tabla-envoltura / .table-responsive   la tabla que no entra se apila en tarjetas: el contenedor no scrollea.
+ *                             La única que se desplaza es el calendario (`.tabla-envoltura-desplazable`). Acá se le
+ *                             pone `tabindex`, `role="region"` y `aria-label` **sólo cuando desborda**, para que se
+ *                             pueda recorrer con el teclado.
  */
 (function () {
     'use strict';
@@ -281,54 +281,82 @@
         document.fonts.ready.then(function () { envolturas.forEach(marcarEnvoltura); });
     }
 
-    // ---- El menú «…» de una fila de tabla: se posiciona contra la ventana para que el contenedor que recorta no lo
-    // corte. (`overflow-x: auto` también recorta **en vertical**, así que el menú de una fila cerca del final de la
-    // tabla se veía cortado: en la agenda, con pocas citas, las opciones directamente no aparecían —2026-10-19—.)
-    const RECORTA_MENU = '.tabla-envoltura, .table-responsive';
+    // ---- El menú «…» de una fila: cuelga del propio botón y se abre hacia arriba o hacia abajo según el espacio.
+    //
+    // **Por qué ya no se flota contra la ventana** (bug de pediatría, 2026-11-07). Hasta acá el menú era
+    // `position: fixed` y `shell.js` le ponía las coordenadas de la ventana, porque el contenedor de la tabla
+    // recortaba (`overflow-x: auto`). Desde el 2026-11-06 la tabla ya no recorta —se apila en tarjetas— y el
+    // `.tabla-envoltura` lleva `container-type: inline-size` para decidir el apilado por el ancho del contenedor.
+    // Ese `container-type` **también convierte el contenedor en el bloque de contención de los `position: fixed`**
+    // (es lo que dice la especificación de contención; Chrome todavía no lo aplica, Safari y Firefox sí). En esos
+    // motores el menú se iba a la coordenada de la ventana **dentro** de la tabla, o sea fuera de la pantalla; el
+    // desborde abría el scroll horizontal y el `scroll` cerraba el menú. El usuario veía el scroll y ningún menú.
+    //
+    // Sin `fixed` no hay bloque de contención que valga: el menú es absoluto dentro del `<details>`, que ya es
+    // `position: relative`, así que se ancla al botón y se mueve con la fila. Y como ya no se mueve solo, tampoco
+    // hace falta cerrarlo al desplazarse: se queda abierto.
+    const MARGEN_MENU = 8;
+    const SEPARACION_MENU = 4;
 
-    const flotarMenu = function (detalles) {
+    const ubicarMenu = function (detalles) {
         const lista = detalles.querySelector('.menu-lista');
         const disparador = detalles.querySelector('summary');
         if (!lista || !disparador) return;
 
-        // Alcanza con estar dentro de una envoltura que recorta: que la tabla desborde o no en horizontal es otra
-        // cosa (eso decide el `tabindex` de la tabla, no el menú).
-        const recortado = detalles.closest(RECORTA_MENU);
+        // Se ubica de cero en cada apertura: lo que dejó la vez anterior no sirve.
+        lista.classList.remove('menu-lista-flotante'); // por si el HTML viene de una versión anterior
+        ['left', 'right', 'top', 'bottom', 'max-width', 'max-height', 'overflow-x'].forEach(function (propiedad) {
+            lista.style.removeProperty(propiedad);
+        });
 
-        // El `<details>` abierto tiene que quedar por encima de lo que lo rodea, adentro o no de una tabla.
+        // El `<details>` abierto tiene que quedar por encima de lo que lo rodea: el encabezado pegajoso de la
+        // tabla o las filas de al lado, si algún antecesor arma un contexto de apilamiento.
         nivelar(detalles);
-
-        if (!detalles.open || !recortado) {
-            lista.classList.remove('menu-lista-flotante');
-            lista.style.removeProperty('left');
-            lista.style.removeProperty('top');
-            return;
-        }
+        if (!detalles.open) return;
 
         const caja = disparador.getBoundingClientRect();
-
-        lista.classList.add('menu-lista-flotante');
         const ancho = lista.offsetWidth;
         const alto = lista.offsetHeight;
+        const anchoVentana = document.documentElement.clientWidth;
+        const altoVentana = document.documentElement.clientHeight;
 
-        // Pegado al borde derecho del botón, sin salirse de la ventana.
-        const izquierda = Math.min(Math.max(8, caja.right - ancho), window.innerWidth - ancho - 8);
+        // Vertical: debajo del botón; si no entra y arriba hay más lugar, arriba. En los dos casos el alto se
+        // limita a lo que hay, así el menú se desplaza adentro en vez de salirse de la pantalla.
+        const lugarAbajo = altoVentana - caja.bottom - MARGEN_MENU - SEPARACION_MENU;
+        const lugarArriba = caja.top - MARGEN_MENU - SEPARACION_MENU;
 
-        // Debajo del botón; si no entra en la ventana (última fila de una tabla corta), se abre hacia arriba.
-        let arriba = caja.bottom + 4;
-        if (alto > 0 && arriba + alto > window.innerHeight - 8) {
-            arriba = Math.max(8, caja.top - alto - 4);
+        if (alto <= lugarAbajo || lugarAbajo >= lugarArriba) {
+            lista.style.top = 'calc(100% + ' + SEPARACION_MENU + 'px)';
+            lista.style.bottom = 'auto';
+            lista.style.maxHeight = Math.max(0, lugarAbajo) + 'px';
+        } else {
+            lista.style.bottom = 'calc(100% + ' + SEPARACION_MENU + 'px)';
+            lista.style.top = 'auto';
+            lista.style.maxHeight = Math.max(0, lugarArriba) + 'px';
         }
 
-        lista.style.left = Math.round(izquierda) + 'px';
-        lista.style.top = Math.round(arriba) + 'px';
+        // Horizontal: el borde derecho del menú con el del botón. Si así se saldría por la izquierda, se alinea al
+        // borde izquierdo; si tampoco entra, se limita al ancho de la ventana.
+        if (ancho > caja.right - MARGEN_MENU) {
+            lista.style.left = '0';
+            lista.style.right = 'auto';
+
+            const disponible = anchoVentana - caja.left - MARGEN_MENU * 2;
+            if (ancho > disponible) {
+                lista.style.maxWidth = Math.max(0, disponible) + 'px';
+                lista.style.overflowX = 'auto';
+            }
+        } else {
+            lista.style.right = '0';
+            lista.style.left = 'auto';
+        }
     };
 
     /**
-     * Un `<details>` dentro de una tabla es un **contexto de apilamiento** de la tabla: el menú flotante, que es
-     * `position: fixed`, igual quedaba **detrás** del encabezado fijo o de las filas de al lado si algún antecesor
-     * arma uno. Subir el `z-index` del propio `<details>` cuando está abierto es lo que lo saca adelante; el de la
-     * lista queda por encima del encabezado pegajoso (`.tabla-agenda thead th`).
+     * Un `<details>` dentro de una tabla es un **contexto de apilamiento** de la tabla: el menú, aunque esté
+     * posicionado, podía quedar **detrás** del encabezado fijo o de las filas de al lado. Subir el `z-index` del
+     * propio `<details>` cuando está abierto es lo que lo saca adelante; el de la lista queda por encima del
+     * encabezado pegajoso (`.tabla-agenda thead th`).
      */
     const nivelar = function (detalles) {
         detalles.style.zIndex = detalles.open ? '1070' : '';
@@ -336,13 +364,13 @@
 
     // El evento `toggle` de `<details>` no burbujea: se escucha en la fase de captura.
     document.addEventListener('toggle', function (evento) {
-        if (evento.target.matches && evento.target.matches('details.menu-acciones')) flotarMenu(evento.target);
+        if (evento.target.matches && evento.target.matches('details.menu-acciones')) ubicarMenu(evento.target);
     }, true);
 
-    // Un menú flotante queda pegado a un botón que se mueve: al desplazarse (la página o la tabla) se cierra.
-    document.addEventListener('scroll', function () {
-        if (document.querySelector('.menu-lista-flotante')) cerrarMenus(null);
-    }, true);
+    // Si cambia el ancho de la ventana, el menú abierto se vuelve a ubicar (el alto disponible cambió).
+    window.addEventListener('resize', function () {
+        document.querySelectorAll('details.menu-acciones[open]').forEach(ubicarMenu);
+    });
 })();
 
 // ---- El diálogo guiado de la puesta en marcha: se abre solo al cargar la pantalla (`data-abrir-al-cargar`).
