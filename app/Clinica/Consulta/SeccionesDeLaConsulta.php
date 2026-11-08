@@ -126,6 +126,11 @@ final class SeccionesDeLaConsulta
     /** «Ortopedia» (Traumatología, 2026-11-07): la plantilla ortopédica de la consulta. */
     public const SECCION_ORTOPEDIA = 'ortopedia';
 
+    /** El ítem «Ortopedia» de traumatología (2026-11-07). */
+    private const ITEM_ORTOPEDIA = ['numero' => 6, 'grupo' => 'Consulta', 'titulo' => 'Ortopedia', 'icono' => 'bi-person-arms-up',
+        'detalle' => 'La plantilla ortopédica: calzado, tacón, suela, bordes, aparatos y observación.', 'tarea' => 'TRA-1',
+        'estado' => 'listo', 'seccion' => self::SECCION_ORTOPEDIA];
+
     /** «Pre-factura» (F9): los conceptos facturables de la consulta (`his_con_pre_factura`). */
     public const SECCION_PREFACTURA = 'prefactura';
 
