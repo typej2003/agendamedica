@@ -5,6 +5,8 @@ namespace App\Clinica\Consulta;
 use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
 use App\Clinica\Consulta\Vistas\TiposDeEstudio;
+use App\Clinica\Impresion\DocumentoDeRecipe;
+use App\Clinica\Impresion\DocumentoImpreso;
 use App\Clinica\Impresion\FormatosEnBlanco;
 
 /**
@@ -29,8 +31,11 @@ use App\Clinica\Impresion\FormatosEnBlanco;
  * Lo oculto sólo se deja de **ofrecer**: la URL directa sigue abriendo, como el eco abdominal en ginecología (WEB-11.14).
  *
  * **Fuera de la consulta** el alcance también dice qué no se ofrece en las pantallas que mezclan especialidades: los
- * **tipos de plantilla de texto** —las plantillas de los exámenes y de los ecos que la especialidad no tiene— y los
- * **formatos en blanco** de esos ecos. El **listado de embarazos y partos** no se decide acá: es un reporte que declara su
+ * **tipos de plantilla de texto** —las plantillas de los exámenes y de los ecos que la especialidad no tiene—, los
+ * **formatos en blanco** de esos ecos y los **documentos de ginecología**, que no se ofrecen ni en la historia del
+ * paciente (O-72) ni en los imprimibles de la consulta y de la cita (2026-11-06: «¿un eco ginecológico a un niño?»),
+ * junto con los **de la pareja**, que son de la misma especialidad.
+ * El **listado de embarazos y partos** no se decide acá: es un reporte que declara su
  * especialidad en `ListadosDisponibles`, junto a los demás.
  *
  * Es pura (sin base de datos): recibe el `slug` de la especialidad (`pediatria`, `ginecologia-y-obstetricia`…).
@@ -325,5 +330,89 @@ final class AlcanceDeLaEspecialidad
         }
 
         return $ocultos;
+    }
+
+    /**
+     * **Los documentos de ginecología que no se ofrecen** en esta especialidad: la hoja de un eco y la de una
+     * solapa de texto del examen ginecológico. Es el hermano de `formatosEnBlancoOcultos()`, y lo leen las dos
+     * listas que ofrecen documentos de ginecología fuera de la consulta: la de *Documentos* de la ficha del
+     * paciente (O-72) y la de los **imprimibles de la consulta y de la cita** (2026-11-06). Sirve para las dos
+     * porque la pregunta es una sola: «¿este documento es de ginecología?».
+     *
+     * Alexander lo pidió dos veces el 2026-11-06, por el mismo motivo. Por la historia: «es de ginecología, hay
+     * que invisibilizar» —en la ficha de un niño la sección *Documentos* listaba «Histeroscopía» y su hoja se
+     * podía imprimir—. Y por los imprimibles: «Es importante separar los imprimibles por especialidad, no
+     * debemos ofrecer documentos de otras especialidades. ¿Un eco ginecológico a un niño?». El alcance es que
+     * **no se ofrezcan**: la hoja por URL directa sigue abriendo, como todo lo que el alcance esconde
+     * (2026-10-22), y no se borra ningún dato —el texto sigue guardado en `consultas.cuello`; sólo deja de
+     * mostrarse—.
+     *
+     * La lista **no se escribe acá**: sale de lo que el alcance ya esconde. De los **estudios**, los que
+     * `tiposDeEstudioOcultos()` no ofrece, cada uno con su hoja (`DocumentoImpreso::ESTUDIOS_DE_LA_HOJA`); de las
+     * **solapas del examen**, las de texto que `pestanasDelExamenOcultas()` deja afuera y que tienen hoja
+     * (`TextosDelExamen::documento()`: la colposcopía, la citología y la histeroscopía; *Resultado de exámenes* no
+     * tiene). Un estudio o una solapa nuevos entran solos.
+     *
+     * **En ginecología no se oculta ninguno**, y por eso la respuesta es vacía antes de mirar las listas: el eco
+     * abdominal, que en la consulta no se ofrece (WEB-11.14), es un documento que la historia sigue listando como
+     * siempre —esconderlo es otra decisión—. **Sin especialidad tampoco se ofrecen** (2026-10-30: sin especialidad
+     * no es ginecología), porque el alcance es el del modo medicina general.
+     *
+     * @return array<int,string> claves de `DocumentoImpreso`
+     */
+    public function documentosDeGinecologiaQueNoSeOfrecen(): array
+    {
+        if ($this->esGinecologia()) {
+            return [];
+        }
+
+        $ocultos = [];
+
+        foreach ($this->tiposDeEstudioOcultos() as $estudio) {
+            $ocultos[] = DocumentoImpreso::documentoDelEstudio($estudio);
+        }
+
+        foreach ($this->pestanasDelExamenOcultas() as $pestana) {
+            $ocultos[] = TextosDelExamen::existe($pestana) ? TextosDelExamen::documento($pestana) : null;
+        }
+
+        return array_values(array_unique(array_filter($ocultos)));
+    }
+
+    /**
+     * **Los documentos de la pareja que no se ofrecen** fuera de ginecología (Alexander, 2026-11-06): el récipe de la
+     * pareja y su orden de laboratorio. La consulta de pareja es **sólo de ginecología** (`muestraLaPareja()`), así que
+     * fuera de ginecología no se ofrece nada de eso, igual que los documentos de ginecología: al pediatra no le toca
+     * recetarle a la pareja de un niño.
+     *
+     * Las claves son las de las **listas que los arman**, porque cada una nombra lo suyo: el récipe de la pareja es
+     * `DocumentoDeRecipe::PAREJA` (`pareja`) en `RecipesParaImprimir` —y viaja como `recipe-pareja` en la lista de
+     * `DocumentosParaImprimir`—, y la orden es `DocumentoImpreso::LABORATORIO_PAREJA` (`laboratorio-pareja`) en las dos.
+     *
+     * @return array<int,string> claves de `DocumentoDeRecipe` y de `DocumentoImpreso`
+     */
+    public function documentosDeLaParejaQueNoSeOfrecen(): array
+    {
+        if ($this->muestraLaPareja()) {
+            return [];
+        }
+
+        return [DocumentoDeRecipe::PAREJA, DocumentoImpreso::LABORATORIO_PAREJA];
+    }
+
+    /**
+     * **Todo lo que esta especialidad no ofrece** de una consulta o de una cita: los documentos de ginecología y los de
+     * la pareja. Es la lista que consultan las listas de imprimibles y el lote de la agenda
+     * (`DocumentosPorCita::conDocumentos`), para que una sola decisión gobierne qué se ofrece y qué cuenta como «tiene
+     * algo para imprimir».
+     *
+     * @return array<int,string> claves de `DocumentoImpreso` y de `DocumentoDeRecipe`
+     */
+    public function documentosQueNoSeOfrecen(): array
+    {
+        return array_values(array_unique(array_merge(
+            $this->documentosDeGinecologiaQueNoSeOfrecen(),
+            $this->documentosDeLaParejaQueNoSeOfrecen(),
+        )));
     }
 }

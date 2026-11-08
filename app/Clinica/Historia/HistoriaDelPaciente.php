@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Historia;
 
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\AntecedentesDelPaciente;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoAbdominal;
@@ -198,10 +199,17 @@ final class HistoriaDelPaciente
      * informe) y, si no, la de su consulta. El texto viene **sin recortar**: el recorte para el listado lo
      * hace el ViewModel, y la impresión muestra el texto completo.
      *
+     * **Lo que es de ginecología no se lista fuera de ginecología** (O-72): la sección *Documentos* de la ficha
+     * de un paciente de pediatría mostraba la histeroscopía y los informes de los ecos. Qué es de ginecología no
+     * se decide acá: lo dice `AlcanceDeLaEspecialidad` —el mismo alcance que esconde esas solapas y esos ecos en
+     * la consulta— y acá sólo se dejan de sumar. No se borra nada: el texto sigue en `consultas.cuello` y la
+     * hoja de cada documento sigue abriendo por su URL.
+     *
      * @param  Collection<int, object>  $consultas  lo que devolvió `consultas()`, para la fecha de cada una
+     * @param  AlcanceDeLaEspecialidad  $alcance  la especialidad del contexto, que decide qué no se lista
      * @return Collection<int, array{tipo:string, icono:string, consulta:?int, fecha:?string, resumen:?string, recipe:?int, clave:?string}>
      */
-    public function documentos(string $regMedico, ?string $numhistoria, Collection $consultas): Collection
+    public function documentos(string $regMedico, ?string $numhistoria, Collection $consultas, AlcanceDeLaEspecialidad $alcance): Collection
     {
         $numero = CamposDePaciente::historiaNumerica($numhistoria);
 
@@ -571,9 +579,16 @@ final class HistoriaDelPaciente
             ));
         }
 
+        // O-72: los documentos de ginecología no se listan fuera de ginecología. La decisión la toma el alcance
+        // de la especialidad (`documentosDeGinecologiaQueNoSeOfrecen`), que es el mismo que esconde esas solapas
+        // y esos ecos en la consulta y el que los deja de ofrecer en los imprimibles (2026-11-06); acá sólo se
+        // dejan de sumar a la lista. No se borra el dato ni se toca la hoja.
+        $ocultos = $alcance->documentosDeGinecologiaQueNoSeOfrecen();
+
         // El más reciente primero, como las consultas: la fecha del documento y, si no tiene, la de su
         // consulta. Sin fecha no se puede ordenar, así que queda al final.
         return $documentos
+            ->reject(fn (array $documento) => in_array((string) $documento['clave'], $ocultos, true))
             ->sortByDesc(fn (array $documento) => $documento['fecha'] ?? $fechaDeLaConsulta[$documento['consulta']] ?? '')
             ->values();
     }

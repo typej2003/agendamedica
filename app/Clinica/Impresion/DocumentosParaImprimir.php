@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Impresion;
 
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Models\Consulta;
 
 /**
@@ -17,6 +18,14 @@ use App\Models\Consulta;
  *
  * **Extensible**: una solicitud nueva entra por `SolicitudesParaImprimir`, con las demás de las pestañas, y suma su icono acá; lo que sale en
  * pantalla y la ruta no cambian. Hospitalización y dieta (WEB-5.3b) y laboratorio y estudios (WEB-5.4) entraron así (claves `laboratorio` y `estudios`).
+ *
+ * **La especialidad del contexto decide qué se ofrece** (Alexander, 2026-11-06: «Es importante separar los imprimibles por
+ * especialidad, no debemos ofrecer documentos de otras especialidades. ¿Un eco ginecológico a un niño?»). Lo que se
+ * ofrece lo da `ofrecidos()`, con la lista de qué es de otra especialidad —los documentos de ginecología y los de la
+ * pareja— que dan `AlcanceDeLaEspecialidad::documentosQueNoSeOfrecen()` y sus hermanos, la misma que usa la historia del
+ * paciente (O-72); las listas que arman los documentos son las que la aplican. En ginecología no cambia nada y sin
+ * especialidad tampoco se ofrecen (2026-10-30). `disponibles()` no filtra: es «lo que la consulta tiene», y por eso la
+ * hoja pedida por URL directa sigue abriendo.
  *
  * Es de **sólo lectura**.
  */
@@ -77,6 +86,10 @@ final class DocumentosParaImprimir
     /**
      * Lo imprimible de la consulta, en el orden en que se ofrece: los récipes y después las solicitudes.
      *
+     * Es **todo lo que la consulta tiene**, sin mirar la especialidad: lo usa el controlador para saber si la hoja que se
+     * pide existe —la pedida por URL directa sigue abriendo aunque el alcance la esconda (2026-10-22)—. Lo que se **ofrece**
+     * en «Imprimir documentos» es `ofrecidos()`.
+     *
      * @param  array<int,string>  $registros  los `reg_medico` del médico del contexto
      * @param  bool  $constanciaBase  `true` ofrece la constancia aunque no tenga nada propio (lo que ve el médico en la
      *                                consulta); la secretaría la ve sólo si el médico escribió algo propio
@@ -84,9 +97,44 @@ final class DocumentosParaImprimir
      */
     public function disponibles(Consulta $consulta, array $registros, bool $constanciaBase = false): array
     {
+        return $this->armar($consulta, $registros, $constanciaBase, null);
+    }
+
+    /**
+     * **Lo que se ofrece** en «Imprimir documentos» (la consulta y la cita): lo mismo, con la especialidad del contexto,
+     * que deja afuera lo que no es de ella (Alexander, 2026-11-06: «Es importante separar los imprimibles por
+     * especialidad, no debemos ofrecer documentos de otras especialidades. ¿Un eco ginecológico a un niño?»).
+     *
+     * *Qué* documento es de otra especialidad **no se decide acá**: lo dicen
+     * `documentosDeGinecologiaQueNoSeOfrecen()` y `documentosDeLaParejaQueNoSeOfrecen()` —la misma respuesta que usa la
+     * historia del paciente (O-72) y la misma que esconde esos ecos y esas solapas dentro de la consulta—, y las listas
+     * que arman los documentos (`RecipesParaImprimir` y `SolicitudesParaImprimir`) son las que las aplican. Sólo se dejan
+     * de ofrecer: la hoja pedida por URL directa sigue abriendo (2026-10-22) y no se borra ningún dato.
+     *
+     * Lo que **no** es de otra especialidad —constancia, reposo, referencia, informe, hospitalización, dieta, laboratorio,
+     * estudios, resumen médico, récipes y pre-factura— se sigue ofreciendo siempre, y **en ginecología no cambia nada**.
+     *
+     * @param  array<int,string>  $registros  los `reg_medico` del médico del contexto
+     * @param  bool  $constanciaBase  `true` ofrece la constancia aunque no tenga nada propio (lo que ve el médico)
+     * @return array<int,array{clave:string, tipo:string, titulo:string, resumen:string, fecha:?string, icono:string, de_la_pareja:bool}>
+     */
+    public function ofrecidos(Consulta $consulta, array $registros, AlcanceDeLaEspecialidad $alcance, bool $constanciaBase = false): array
+    {
+        return $this->armar($consulta, $registros, $constanciaBase, $alcance);
+    }
+
+    /**
+     * La lista armada, con la especialidad del contexto si la hay: es la única diferencia entre lo que la consulta tiene
+     * (`$alcance` nulo) y lo que se ofrece. Cada lista de documentos aplica la suya.
+     *
+     * @param  array<int,string>  $registros
+     * @return array<int,array{clave:string, tipo:string, titulo:string, resumen:string, fecha:?string, icono:string, de_la_pareja:bool}>
+     */
+    private function armar(Consulta $consulta, array $registros, bool $constanciaBase, ?AlcanceDeLaEspecialidad $alcance): array
+    {
         $disponibles = [];
 
-        foreach ($this->recipes->disponibles($consulta) as $recipe) {
+        foreach ($this->recipes->disponibles($consulta, $alcance) as $recipe) {
             $disponibles[] = [
                 'clave' => self::PREFIJO_RECIPE . $recipe['clave'],
                 'tipo' => 'recipe',
@@ -98,7 +146,7 @@ final class DocumentosParaImprimir
             ];
         }
 
-        foreach ($this->solicitudes->disponibles($consulta, $registros, $constanciaBase) as $solicitud) {
+        foreach ($this->solicitudes->disponibles($consulta, $registros, $constanciaBase, $alcance) as $solicitud) {
             $disponibles[] = $solicitud + ['icono' => self::ICONOS[$solicitud['tipo']] ?? 'bi-file-earmark', 'de_la_pareja' => false];
         }
 

@@ -36,6 +36,8 @@
             @endforeach
         </dl>
 
+        {{-- Sólo lo aplicado (O-70, Alexander, 2026-11-06): el paciente se lleva las vacunas que se le pusieron y la columna «Próxima dosis» dice
+             cuándo le toca la siguiente. El bloque «DOSIS POR APLICAR» no se imprime: era el pocote de vacunas en blanco. --}}
         <section class="carnet-bloque">
             @if ($vm->aplicadas() === [])
                 <p class="carnet-vacio">Todavía no se le registró ninguna dosis.</p>
@@ -57,25 +59,6 @@
                 </table>
             @endif
         </section>
-
-        @if ($vm->pendientes() !== [])
-            <section class="carnet-bloque">
-                <h3 class="carnet-subtitulo">DOSIS POR APLICAR</h3>
-                <table class="carnet-tabla" id="carnet-pendientes">
-                    <thead>
-                        <tr><th>Vacuna</th><th>Dosis</th><th>Le toca</th><th>Estado</th></tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($vm->pendientes() as $fila)
-                            <tr>
-                                <td>{{ $fila['vacuna'] }}</td><td>{{ $fila['dosis'] }}</td><td>{{ $fila['toca'] }}</td>
-                                <td @if ($fila['atrasada']) class="carnet-atrasada" @endif>{{ $fila['estado'] }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </section>
-        @endif
 
         <x-impresion.firma :membrete="$vm->membrete()" />
         <x-impresion.pie :membrete="$vm->membrete()" />

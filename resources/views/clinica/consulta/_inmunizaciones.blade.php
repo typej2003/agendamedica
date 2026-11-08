@@ -1,11 +1,12 @@
-{{-- **Inmunizaciones** de la consulta pediátrica (ítem 7 del árbol de PediaReport, O-63 de Alexander): el calendario de
-     vacunas del niño **dentro** de la consulta, con la barra y el menú de la consulta.
+{{-- **Inmunizaciones** de la consulta pediátrica (ítem 7 del árbol de PediaReport, O-63 de Alexander; O-68/O-69): las vacunas
+     del niño **dentro** de la consulta, con la barra y el menú de la consulta.
 
      Antes el ítem **sacaba** de la consulta: `ConsultaController::destinoDeLaSeccionPediatrica()` redirigía a la pantalla del
      módulo (`/clinica/pacientes/{paciente}/vacunas`) y el médico perdía la atención en curso. Ahora la pantalla del módulo y
-     esta sección son **la misma**: el parcial `clinica.vacunas._calendario` (el resumen, el filtro, la tabla, las otras
-     vacunas y el diálogo de registrar una dosis) y el ViewModel `CalendarioDeVacunasVista`, que trae las URLs ya resueltas.
-     Registrar una dosis vuelve acá (`VacunasDelPacienteController::registrar`), y el carnet imprimible sigue a mano.
+     esta sección son **la misma**: los parciales `clinica.vacunas._lista` (las filas del paciente y «Agregar una vacuna») y
+     `clinica.vacunas._calendario` (el esquema del catálogo, plegado) con el ViewModel `CalendarioDeVacunasVista`, que trae las
+     URLs ya resueltas. Registrar, programar o quitar una dosis vuelve acá (`VacunasDelPacienteController`), y el carnet
+     imprimible sigue a mano.
 
      El `$seccion` es el `CalendarioDeVacunasVista` que arma `ConsultaController::inmunizaciones()`. --}}
 <div class="consulta-seccion" id="consulta-inmunizaciones">
@@ -22,5 +23,10 @@
         @endif
     </div>
 
+    @include('clinica.vacunas._lista', ['vm' => $seccion])
     @include('clinica.vacunas._calendario', ['vm' => $seccion])
+
+    @if ($seccion->puedeEscribir())
+        @include('clinica.vacunas._dialogo-registrar', ['vm' => $seccion])
+    @endif
 </div>

@@ -90,17 +90,25 @@ class ImpresionDeDocumentosController extends Controller
 
         // El médico puede imprimir la constancia aunque no tenga nada propio; «todos» no la incluye en ese caso.
         $pedido = (string) $request->query('documento', '');
-        $ofrecidos = $this->documentos->disponibles($consulta, $registros, $pedido === DocumentosParaImprimir::TODOS ? false : true);
-        $claves = array_column($ofrecidos, 'clave');
+        $constanciaBase = $pedido !== DocumentosParaImprimir::TODOS;
 
-        $elegidos = $pedido === DocumentosParaImprimir::TODOS ? $claves : (in_array($pedido, $claves, true) ? [$pedido] : []);
+        // **Dos listas, a propósito** (2026-11-06). `ofrecidos` es lo que la especialidad del contexto ofrece en «Imprimir
+        // documentos»; `$todos` es todo lo que la consulta tiene, y es contra ésa que se valida el documento pedido y se
+        // resuelve a qué sección vuelve: la hoja que el alcance esconde deja de ofrecerse, pero **su enlace directo sigue
+        // abriendo** (2026-10-22).
+        $ofrecidos = $this->documentos->ofrecidos($consulta, $registros, $this->alcance($request), $constanciaBase);
+        $todos = $this->documentos->disponibles($consulta, $registros, $constanciaBase);
+
+        $elegidos = $pedido === DocumentosParaImprimir::TODOS
+            ? array_column($ofrecidos, 'clave')
+            : (in_array($pedido, array_column($todos, 'clave'), true) ? [$pedido] : []);
 
         // O-16: el documento todavía no existe (el estudio no se guardó, la solicitud está vacía). No es un 404: se dice qué
         // falta para poder imprimir y se ofrece la vuelta a la sección, en vez de la página «No encontramos esa página».
         if ($elegidos === []) {
             return view('clinica.imprimir.sin-documento', [
                 'vm' => new SinDocumentoVista(
-                    $this->nombreDelDocumento($pedido, $ofrecidos),
+                    $this->nombreDelDocumento($pedido, $todos),
                     [
                         // La vuelta es a la sección donde se carga ese documento, no a una pestaña cualquiera: el médico
                         // acaba de apretar «Imprimir» ahí.
@@ -117,7 +125,7 @@ class ImpresionDeDocumentosController extends Controller
             (int) $paciente->id,
             $registros,
             $elegidos,
-            $this->urlDeLaConsulta($consulta, $ofrecidos, $elegidos),
+            $this->urlDeLaConsulta($consulta, $todos, $elegidos),
             'Volver a la consulta',
             // La gesta del control de embarazo (`&gesta=2`): el informe prenatal es de una gesta y no de la
             // consulta, así que se pasa explícita en vez de que la lea el motor de documentos.
@@ -143,7 +151,9 @@ class ImpresionDeDocumentosController extends Controller
         $registros = $this->registrosDelMedico($contexto['medico']);
 
         $de = $this->porCita->deLaCita($cita, $registros);
-        $disponibles = $atendida && $de['consulta'] !== null ? $this->documentos->disponibles($de['consulta'], $registros) : [];
+        // La lista ofrece lo de la especialidad del contexto (2026-11-06): en pediatría no aparece la hoja de un eco
+        // ginecológico aunque la consulta la tenga. Si con eso no queda nada, la pantalla lo dice (`sinDocumentos`).
+        $disponibles = $atendida && $de['consulta'] !== null ? $this->documentos->ofrecidos($de['consulta'], $registros, $this->alcance($request)) : [];
 
         if (count($disponibles) === 1) {
             return redirect()->route('clinica.agenda.documentos.imprimir', [$cita->id, 'documento' => $disponibles[0]['clave']]);
@@ -181,11 +191,15 @@ class ImpresionDeDocumentosController extends Controller
         $de = $this->porCita->deLaCita($cita, $registros);
         abort_if($de['consulta'] === null || $de['pacienteId'] === null, 404);
 
-        $disponibles = $this->documentos->disponibles($de['consulta'], $registros);
+        // Lo que se ofrece es lo de la especialidad del contexto; lo que **existe** es todo lo que la consulta tiene, y
+        // contra eso se valida la hoja pedida: la escondida por el alcance no se ofrece, pero su enlace directo sigue
+        // abriendo (2026-10-22).
+        $disponibles = $this->documentos->ofrecidos($de['consulta'], $registros, $this->alcance($request));
+        $existentes = array_column($this->documentos->disponibles($de['consulta'], $registros), 'clave');
         $claves = array_column($disponibles, 'clave');
         $pedido = (string) $request->query('documento', count($claves) === 1 ? $claves[0] : '');
 
-        $elegidos = $pedido === DocumentosParaImprimir::TODOS ? $claves : (in_array($pedido, $claves, true) ? [$pedido] : []);
+        $elegidos = $pedido === DocumentosParaImprimir::TODOS ? $claves : (in_array($pedido, $existentes, true) ? [$pedido] : []);
         abort_if($elegidos === [], 404);
 
         $dia = Carbon::parse($cita->fecha)->toDateString();
@@ -209,6 +223,19 @@ class ImpresionDeDocumentosController extends Controller
     }
 
     // ----------------------------------------------------------------------------------------- Adentro
+
+    /**
+     * **La especialidad del contexto** con la que se decide lo que se ofrece: es la misma que usa la consulta para
+     * esconder sus solapas y sus ecos, y la que lee la historia del paciente (O-72). Con ella, «Imprimir documentos» deja
+     * de ofrecer la hoja de un eco ginecológico a un niño (Alexander, 2026-11-06). **No se adivina por la edad** del
+     * paciente: un paciente de pediatría puede tener 21 años y un pediatra atiende a un adulto con otra especialidad.
+     */
+    private function alcance(Request $request): AlcanceDeLaEspecialidad
+    {
+        $contexto = $request->attributes->get('contexto_clinico');
+
+        return AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null);
+    }
 
     /**
      * La hoja: una sola implementación para los dos caminos. Arma los documentos pedidos, el membrete del formato del
@@ -238,7 +265,7 @@ class ImpresionDeDocumentosController extends Controller
     private function vistaPrevia(Request $request, Consulta $consulta, int $pacienteId, array $registros, array $claves, string $volver, string $textoVolver, ?int $gesta = null, ?Medico $firmante = null, ?string $urlGuardarHoja = null)
     {
         $contexto = $request->attributes->get('contexto_clinico');
-        $pediatria = AlcanceDeLaEspecialidad::de($contexto['specialty']?->slug ?? null)->esPediatria();
+        $pediatria = $this->alcance($request)->esPediatria();
         $firmante = $firmante ?? ($this->firma->deUnaConsulta($consulta, $contexto['medico']) ?? $contexto['medico']);
 
         $documentos = [];

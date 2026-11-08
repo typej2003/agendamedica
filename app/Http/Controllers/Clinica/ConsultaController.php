@@ -544,13 +544,14 @@ class ConsultaController extends Controller
     }
 
     /**
-     * **Inmunizaciones** (ítem 7 del árbol de pediatría): el calendario de vacunas del niño **dentro** de la consulta (O-63,
-     * Alexander: «que no se salga de la consulta para ver las vacunas»).
+     * **Inmunizaciones** (ítem 7 del árbol de pediatría): las vacunas del niño **dentro** de la consulta (O-63, Alexander:
+     * «que no se salga de la consulta para ver las vacunas»), con la lista del paciente como pantalla principal y el esquema del
+     * catálogo plegado (O-68/O-69).
      *
      * Hasta O-63 este ítem **redirigía** a la pantalla del módulo (`/clinica/pacientes/{paciente}/vacunas`) y el médico
-     * perdía la atención en curso. Ahora se arma acá el mismo calendario —con `CalendarioDelNino`, que es lo que usa
-     * también esa pantalla— y lo único que cambia son las URLs: el filtro vuelve a esta sección, el registro de la dosis
-     * vuelve acá (el `consulta` que viaja en el formulario) y el carnet sigue a mano. La pantalla del módulo no se toca.
+     * perdía la atención en curso. Ahora se arma acá la misma pantalla —con `CalendarioDelNino`, que es lo que usa también
+     * esa pantalla— y lo único que cambia son las URLs: el filtro vuelve a esta sección, el registro y la programación de la
+     * dosis vuelven acá (el `consulta` que viaja en el formulario) y el carnet sigue a mano. La pantalla del módulo no se toca.
      */
     private function inmunizaciones(Consulta $consulta, int $pacienteId, string $regMedico): CalendarioDeVacunasVista
     {
@@ -558,6 +559,7 @@ class ConsultaController extends Controller
         abort_if($ficha === null, 404);
 
         $seccion = SeccionesDeLaConsulta::SECCION_INMUNIZACIONES;
+        $conHistoria = $ficha->numhistoria !== null;
 
         return app(CalendarioDelNino::class)->de(
             $regMedico,
@@ -565,9 +567,12 @@ class ConsultaController extends Controller
             CalendarioDeVacunasVista::normalizarFiltro((string) request()->query('ver', '')),
             fn (string $filtro) => route('clinica.consulta', [$consulta->id, 'seccion' => $seccion, 'ver' => $filtro]),
             route('clinica.pacientes.ver', $pacienteId),
-            $ficha->numhistoria === null ? null : route('clinica.pacientes.vacunas.registrar', $pacienteId),
+            $conHistoria ? route('clinica.pacientes.vacunas.registrar', $pacienteId) : null,
             route('clinica.pacientes.vacunas.carnet', $pacienteId),
             (int) $consulta->id,
+            null,
+            $conHistoria ? route('clinica.pacientes.vacunas.programar', $pacienteId) : null,
+            $conHistoria ? fn (int $fila) => route('clinica.pacientes.vacunas.quitar', [$pacienteId, $fila]) : null,
         );
     }
 
