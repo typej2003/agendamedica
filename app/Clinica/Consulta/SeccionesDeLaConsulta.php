@@ -123,6 +123,9 @@ final class SeccionesDeLaConsulta
     /** «Indicadores incidentes»: el panel de **nefrología pediátrica** (`tabpage_35` del escritorio). */
     public const SECCION_INDICADORES = 'indicadores';
 
+    /** «Ortopedia» (Traumatología, 2026-11-07): la plantilla ortopédica de la consulta. */
+    public const SECCION_ORTOPEDIA = 'ortopedia';
+
     /** «Pre-factura» (F9): los conceptos facturables de la consulta (`his_con_pre_factura`). */
     public const SECCION_PREFACTURA = 'prefactura';
 
