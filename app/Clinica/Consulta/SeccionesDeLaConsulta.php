@@ -130,6 +130,17 @@ final class SeccionesDeLaConsulta
     /** «Indicadores incidentes»: el panel de **nefrología pediátrica** (`tabpage_35` del escritorio). */
     public const SECCION_INDICADORES = 'indicadores';
 
+    /**
+     * **Las secciones que son de una sola especialidad** (2026-11-08): la clave de la sección y la dueña. Es el registro
+     * que usa el test de aislamiento: ninguna otra especialidad ofrece la sección, ni en su árbol ni por URL directa.
+     * Cada especialidad nueva agrega su fila acá cuando enciende su módulo (traumatología entra con «Ortopedia»).
+     *
+     * @var array<string,string>
+     */
+    public const SECCIONES_DE_UNA_ESPECIALIDAD = [
+        self::SECCION_CARDIOLOGIA => 'cardiologia',
+        self::SECCION_ORTOPEDIA => 'traumatologia',
+    ];
     /** «Ortopedia» (Traumatología, 2026-11-07): la plantilla ortopédica de la consulta. */
     public const SECCION_ORTOPEDIA = 'ortopedia';
 
