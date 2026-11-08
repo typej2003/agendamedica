@@ -115,7 +115,8 @@ class PediatriaSyncTest extends TestCase
         $sync = app(TablasDelSync::class);
 
         $this->assertSame(config('sync_legado.tablas'), $sync->para(null));
-        $this->assertSame(config('sync_legado.tablas'), $sync->para('cardiologia'));
+        // Cardiología ya tiene manifiesto (CAR-1); una que todavía no, sigue con la lista histórica.
+        $this->assertSame(config('sync_legado.tablas'), $sync->para('oftalmologia'));
         $this->assertContains('paciente_chamo', $sync->para('pediatria'));
         $this->assertNotContains('paciente_chamo', $sync->para('ginecologia'));
     }

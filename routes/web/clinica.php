@@ -226,6 +226,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
             Route::middleware('role:Root|Medico')->group(function () {
                 Route::get('/configuracion/cita-online', [CitaOnlineConfiguracionController::class, 'index'])->name('configuracion.cita-online');
                 Route::post('/configuracion/cita-online', [CitaOnlineConfiguracionController::class, 'guardar'])->name('configuracion.cita-online.guardar');
+
+                // Los textos por defecto de los informes del cardiólogo (C12, 2026-11-07).
+                Route::get('/configuracion/textos-cardiacos', [\App\Http\Controllers\Clinica\TextosDeLosInformesController::class, 'editar'])
+                    ->name('configuracion.textos-cardiacos');
+                Route::post('/configuracion/textos-cardiacos', [\App\Http\Controllers\Clinica\TextosDeLosInformesController::class, 'guardar'])
+                    ->name('configuracion.textos-cardiacos.guardar');
             });
 
             // El tour guiado de la pantalla (A-15): el JS lo marca al terminar o al saltar. Es un **POST**
@@ -532,6 +538,18 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
                 // «Actualizar» del resumen físico (Alexander, 2026-10-29): arma el texto con los signos y el examen guardados.
                 Route::post('/consulta/{consulta}/internista/resumen', [\App\Http\Controllers\Clinica\ConsultaInternistaController::class, 'resumen'])
                     ->name('consulta.internista.resumen');
+
+                // **Cardiología** (CAR-2, 2026-11-04): una pestaña de sus estudios (la pestaña viaja en el cuerpo).
+                Route::post('/consulta/{consulta}/cardiologia', [\App\Http\Controllers\Clinica\ConsultaCardiologoController::class, 'guardar'])
+                    ->name('consulta.cardiologia.guardar');
+
+                // Los **archivos PDF** de la consulta del cardiólogo (CAR-5, 2026-11-04): el «Archivos-PDF» del escritorio.
+                Route::post('/consulta/{consulta}/archivos', [\App\Http\Controllers\Clinica\ConsultaArchivosController::class, 'subir'])
+                    ->name('consulta.archivos.subir');
+                Route::get('/consulta/{consulta}/archivos/{archivo}', [\App\Http\Controllers\Clinica\ConsultaArchivosController::class, 'descargar'])
+                    ->name('consulta.archivos.descargar');
+                Route::delete('/consulta/{consulta}/archivos/{archivo}', [\App\Http\Controllers\Clinica\ConsultaArchivosController::class, 'quitar'])
+                    ->name('consulta.archivos.quitar');
 
                 // Exámenes e imágenes de la consulta (WEB-4.7): el ítem 7 del panel. La sección **lee**
                 // los exámenes de laboratorio de la consulta (`examen_paciente`, que escribe el

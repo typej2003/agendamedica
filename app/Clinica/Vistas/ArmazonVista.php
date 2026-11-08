@@ -343,6 +343,17 @@ final class ArmazonVista
                 }
             }
 
+            // **Los textos de los informes** (C12, 2026-11-07): el cardiólogo escribe una vez el texto del Doppler de
+            // miembros superiores y el del marcapasos, y la web los precarga al abrir cada estudio. Es de cardiología.
+            if (str_contains((string) ($this->contexto['specialty']->slug ?? ''), 'cardiolog')) {
+                $hijos[] = [
+                    'texto'  => 'Textos de los informes',
+                    'icono'  => 'bi-file-earmark-text',
+                    'url'    => route('clinica.configuracion.textos-cardiacos'),
+                    'activo' => $this->rutaActual !== null && str_starts_with($this->rutaActual, 'clinica.configuracion.textos-cardiacos'),
+                ];
+            }
+
             $menu[] = [
                 'texto'  => 'Configuración',
                 'icono'  => 'bi-gear',

@@ -104,6 +104,15 @@ final class AlcanceDeLaEspecialidad
     }
 
     /**
+     * **¿Es cardiología?** (CAR-2, 2026-11-04). Es la que estrena los estudios cardiológicos: el ecocardiograma, el
+     * Doppler, la prueba de esfuerzo y el marcapasos. Sin esta rama, cardiología veía el núcleo de medicina general.
+     */
+    public function esCardiologia(): bool
+    {
+        return $this->slug !== null && str_contains($this->slug, 'cardiolog');
+    }
+
+    /**
      * **El modo medicina general** (Alexander, 2026-10-22): cualquier especialidad que no sea ginecología ni pediatría. Es el
      * núcleo compartido —agenda, consulta, récipes y documentos— sin nada de las otras dos: sin estudio ecográfico, sin
      * control de embarazo, sin examen ginecológico y sin la consulta de pareja. Es lo que permite **habilitar las nueve
@@ -122,6 +131,12 @@ final class AlcanceDeLaEspecialidad
     public function esMedicinaInterna(): bool
     {
         return $this->slug === 'medicina-interna';
+    }
+
+    /** Traumatología (2026-11-07): su consulta es la genérica y lo propio es la plantilla ortopédica. */
+    public function esTraumatologia(): bool
+    {
+        return $this->slug === 'traumatologia';
     }
 
     /**
@@ -408,11 +423,34 @@ final class AlcanceDeLaEspecialidad
      *
      * @return array<int,string> claves de `DocumentoImpreso` y de `DocumentoDeRecipe`
      */
+    /**
+     * **Los estudios del cardiólogo no se ofrecen fuera de cardiología** (2026-11-08): las diez hojas de sus estudios son
+     * de la especialidad y no se ofrecen en las demás, aunque la consulta tuviera la fila cargada por el escritorio. La
+     * evaluación pre-operatoria **no** entra: es compartida con medicina interna.
+     *
+     * @return array<int,string>
+     */
+    public function documentosDeCardiologiaQueNoSeOfrecen(): array
+    {
+        if ($this->esCardiologia()) {
+            return [];
+        }
+
+        return [
+            DocumentoImpreso::ECO_CARDIO, DocumentoImpreso::ECO_ESTRES, DocumentoImpreso::ECO_ETE,
+            DocumentoImpreso::DOPPLER_MIEMBROS_SUPERIORES, DocumentoImpreso::DOPPLER_CAROTIDEO,
+            DocumentoImpreso::DOPPLER_VENOSO, DocumentoImpreso::PRUEBA_DE_ESFUERZO,
+            DocumentoImpreso::OSCILOMETRIA, DocumentoImpreso::MARCAPASOS,
+            DocumentoImpreso::DOPPLER_ARTERIAL_MIEMBROS_INFERIORES,
+        ];
+    }
+
     public function documentosQueNoSeOfrecen(): array
     {
         return array_values(array_unique(array_merge(
             $this->documentosDeGinecologiaQueNoSeOfrecen(),
             $this->documentosDeLaParejaQueNoSeOfrecen(),
+            $this->documentosDeCardiologiaQueNoSeOfrecen(),
         )));
     }
 }

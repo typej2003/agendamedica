@@ -166,6 +166,26 @@ final class DocumentoImpreso
      */
     public const RESUMEN_MEDICO = 'resumen-medico';
 
+    /*
+    |--------------------------------------------------------------------------
+    | Cardiología (CAR-5, 2026-11-04): las hojas de los estudios del cardiólogo
+    |--------------------------------------------------------------------------
+    |
+    | Cada estudio tiene su hoja (la de su DataWindow de impresión). Las arma
+    | `SolicitudesParaImprimir::estudioCardiologico()` a partir de `MapaDelCardiologo`, así que las columnas y sus
+    | rótulos son los mismos de la pantalla.
+    */
+    public const ECO_CARDIO = 'eco-cardiograma';
+    public const ECO_ESTRES = 'eco-estres';
+    public const ECO_ETE = 'eco-ete';
+    public const DOPPLER_MIEMBROS_SUPERIORES = 'doppler-miembros-superiores';
+    public const DOPPLER_CAROTIDEO = 'doppler-carotideo';
+    public const DOPPLER_VENOSO = 'doppler-venoso';
+    public const PRUEBA_DE_ESFUERZO = 'prueba-esfuerzo';
+    public const OSCILOMETRIA = 'oscilometria';
+    public const MARCAPASOS = 'marcapasos';
+    public const DOPPLER_ARTERIAL_MIEMBROS_INFERIORES = 'doppler-arterial-miembros-inferiores';
+
     /**
      * El título que se imprime arriba del cuerpo y el nombre con que aparece en las listas, de cada documento. Es **la** fuente de
      * esos textos: la hoja real (`SolicitudesParaImprimir`) y la hoja en blanco (`FormatosEnBlanco`, WEB-5.5b) leen de acá.
@@ -222,6 +242,17 @@ final class DocumentoImpreso
         // El del resumen médico: el título del radio del escritorio; el DataWindow no imprime un título
         // propio (su encabezado es el membrete), así que la hoja de la web lleva el nombre del documento.
         self::RESUMEN_MEDICO => ['RESUMEN MÉDICO', 'Resumen médico'],
+        // Cardiología (CAR-5): el título de cada hoja de estudio.
+        self::ECO_CARDIO => ['INFORME DE ECOCARDIOGRAMA', 'Ecocardiograma'],
+        self::ECO_ESTRES => ['INFORME DE ECOCARDIOGRAMA DE ESTRÉS', 'Eco de estrés'],
+        self::ECO_ETE => ['INFORME DE ECOCARDIOGRAMA TRANSESOFÁGICO', 'Eco transesofágico'],
+        self::DOPPLER_MIEMBROS_SUPERIORES => ['INFORME DOPPLER DE MIEMBROS SUPERIORES', 'Doppler de miembros superiores'],
+        self::DOPPLER_CAROTIDEO => ['INFORME DOPPLER CAROTÍDEO', 'Doppler carotídeo'],
+        self::DOPPLER_VENOSO => ['INFORME DOPPLER VENOSO DE MIEMBROS INFERIORES', 'Doppler venoso de miembros inferiores'],
+        self::PRUEBA_DE_ESFUERZO => ['PRUEBA DE ESFUERZO', 'Prueba de esfuerzo'],
+        self::OSCILOMETRIA => ['OSCILOMETRÍA', 'Oscilometría'],
+        self::MARCAPASOS => ['IMPLANTE DE MARCAPASOS', 'Marcapasos'],
+        self::DOPPLER_ARTERIAL_MIEMBROS_INFERIORES => ['INFORME DOPPLER ARTERIAL DE MIEMBROS INFERIORES', 'Doppler arterial de miembros inferiores'],
     ];
 
     /**

@@ -54,6 +54,8 @@ return [
         'ginecoreport.exe',
         'pediareport.exe',
         'medicalreport.exe',
+        'orthoreport.exe',
+        'cardioreport.exe',
     ],
 
     /*

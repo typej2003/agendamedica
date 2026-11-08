@@ -540,6 +540,32 @@ class HistoriaDelPacienteWebTest extends TestCase
         $respuesta->assertSee('no tiene consultas registradas');
     }
 
+    /**
+     * **La evaluación pre-operatoria se lista en la historia** (2026-11-07): es el informe que valida al paciente
+     * para quirófano, así que no puede quedar sólo en la consulta. Cualquier especialidad puede mandar al paciente
+     * al cardiólogo o al internista; la hoja aparece con los demás documentos de esa consulta.
+     */
+    public function test_la_historia_lista_la_evaluacion_preoperatoria(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+        $paciente = $this->paciente($medico, 'Nora');
+        $this->consulta($medico, '1001', 1);
+
+        // La clase ASA de la estimación: con eso la consulta ya tiene evaluación pre-operatoria.
+        DB::table('pre_aneste')->insert([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'consulta' => 1,
+            'tipo' => 'B', 'resultado' => 'Asintomático.', 'emergencia' => 'N',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $respuesta = $this->conContexto($user, $medico, $gineco)->actingAs($user)
+            ->get(route('clinica.pacientes.historia', $paciente));
+
+        $respuesta->assertOk();
+        $respuesta->assertSee('Evaluación pre-operatoria');
+        $respuesta->assertSee('Informe que valida al paciente para quirófano');
+    }
+
     public function test_un_invitado_no_ve_la_historia(): void
     {
         [$user, $medico] = $this->medicoConAcceso();
