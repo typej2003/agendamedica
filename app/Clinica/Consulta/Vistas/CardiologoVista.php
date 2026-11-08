@@ -28,6 +28,8 @@ final class CardiologoVista
         /** @var array<int,array{id:int, nombre:string, url:?string, quitables:bool}> los PDF de la pestaña «Archivos PDF» */
         private array $archivos = [],
         private string $urlSubirArchivo = '',
+        /** @var array<string,string> los textos por defecto, por `tabla.columna` (C12) */
+        private array $precarga = [],
     ) {
     }
 
@@ -106,7 +108,11 @@ final class CardiologoVista
         $salida = [];
 
         foreach (MapaDelCardiologo::deLaPestana($this->pestana) as $campo) {
-            $valor = (string) old($campo['clave'], $this->valores[$campo['clave']] ?? '');
+            // El valor guardado; si el estudio todavía no tiene texto, el **texto por defecto** del médico (C12),
+            // igual que el escritorio al abrir la consulta.
+            $guardado = (string) ($this->valores[$campo['clave']] ?? '');
+            $porDefecto = $this->precarga[$campo['tabla'] . '.' . $campo['columna']] ?? '';
+            $valor = (string) old($campo['clave'], $guardado !== '' ? $guardado : $porDefecto);
 
             $salida[] = [
                 'clave' => $campo['clave'],

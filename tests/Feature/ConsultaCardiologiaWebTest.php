@@ -473,6 +473,42 @@ class ConsultaCardiologiaWebTest extends TestCase
             ->assertSee('Clase II');
     }
 
+    public function test_guarda_los_textos_por_defecto_y_precarga_los_estudios(): void
+    {
+        [$user, $medico, $especialidad] = $this->medico();
+        $consulta = $this->consulta($medico);
+
+        $this->conContexto($user, $medico, $especialidad)
+            ->get(route('clinica.configuracion.textos-cardiacos'))
+            ->assertOk()
+            ->assertSee('Doppler de miembros superiores')
+            ->assertSee('Protocolo del marcapasos');
+
+        $this->conContexto($user, $medico, $especialidad)
+            ->post(route('clinica.configuracion.textos-cardiacos.guardar'), [
+                'duplex_superior' => 'Arterias de miembros superiores sin lesiones.',
+                'protocolo_marcapaso' => 'Implante de marcapasos sin complicaciones.',
+                'texto_marca' => 'Marca de prueba.',
+            ])->assertSessionHas('estado', 'Textos guardados.');
+
+        $this->assertDatabaseHas('texto_cardiaco_medico', [
+            'reg_medico' => $medico->reg_medico,
+            'duplex_superior' => 'Arterias de miembros superiores sin lesiones.',
+        ]);
+
+        // Los estudios que el escritorio precarga arrancan con el texto del médico.
+        $this->conContexto($user, $medico, $especialidad)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'cardiologia', 'pestana' => 'doppler-ms']))
+            ->assertOk()
+            ->assertSee('Arterias de miembros superiores sin lesiones.');
+
+        $this->conContexto($user, $medico, $especialidad)
+            ->get(route('clinica.consulta', [$consulta->id, 'seccion' => 'cardiologia', 'pestana' => 'marcapasos']))
+            ->assertOk()
+            ->assertSee('Implante de marcapasos sin complicaciones.')
+            ->assertSee('Marca de prueba.');
+    }
+
     public function test_una_pestana_que_no_existe_no_guarda(): void
     {
         [$user, $medico, $especialidad] = $this->medico();

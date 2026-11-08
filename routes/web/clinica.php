@@ -226,6 +226,12 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
             Route::middleware('role:Root|Medico')->group(function () {
                 Route::get('/configuracion/cita-online', [CitaOnlineConfiguracionController::class, 'index'])->name('configuracion.cita-online');
                 Route::post('/configuracion/cita-online', [CitaOnlineConfiguracionController::class, 'guardar'])->name('configuracion.cita-online.guardar');
+
+                // Los textos por defecto de los informes del cardiólogo (C12, 2026-11-07).
+                Route::get('/configuracion/textos-cardiacos', [\App\Http\Controllers\Clinica\TextosDeLosInformesController::class, 'editar'])
+                    ->name('configuracion.textos-cardiacos');
+                Route::post('/configuracion/textos-cardiacos', [\App\Http\Controllers\Clinica\TextosDeLosInformesController::class, 'guardar'])
+                    ->name('configuracion.textos-cardiacos.guardar');
             });
 
             // El tour guiado de la pantalla (A-15): el JS lo marca al terminar o al saltar. Es un **POST**

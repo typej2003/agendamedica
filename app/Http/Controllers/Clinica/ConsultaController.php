@@ -571,6 +571,8 @@ class ConsultaController extends Controller
             (array) old(),
             $archivos,
             route('clinica.consulta.archivos.subir', $consulta->id),
+            // Los textos por defecto del médico (C12): precargan el Doppler de miembros superiores y el marcapasos.
+            (new \App\Clinica\Consulta\Cardiologia\TextosDeLosInformes())->precarga((string) $consulta->reg_medico),
         );
     }
 
