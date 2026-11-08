@@ -61,6 +61,9 @@ final class HistoriaDelPaciente
         // cualquier otro sólo completa lo que le falte (`AntecedentesDelPaciente::tipos`). Sin esto la historia
         // agrupaba con el primer catálogo de la base, que podía ser el de otra especialidad.
         private AntecedentesDelPaciente $tipos,
+        // La evaluación pre-operatoria (2026-11-07): el informe que valida al paciente para quirófano también se
+        // lista en la historia, con los demás documentos de su consulta.
+        private PreoperatoriosDeLaHistoria $preoperatorios,
     ) {
     }
 
@@ -559,6 +562,22 @@ final class HistoriaDelPaciente
                 null,
                 null,
                 DocumentoImpreso::RESUMEN_MEDICO,
+            ));
+        }
+
+        // La **evaluación pre-operatoria** (2026-11-07): el informe con el que el cardiólogo o el internista valida
+        // al paciente para quirófano. Cualquier especialidad puede mandarlo a evaluar, así que su hoja se lista acá
+        // como un documento más y no depende de quién la cargó.
+        foreach ($this->preoperatorios->deLaHistoria($regMedico, $numero) as $nroconsulta) {
+            $documentos->push($this->documento(
+                'Evaluación pre-operatoria',
+                'bi-clipboard2-pulse',
+                $nroconsulta,
+                $fechaDeLaConsulta,
+                'Informe que valida al paciente para quirófano',
+                null,
+                null,
+                DocumentoImpreso::EVALUACION_PREOPERATORIA,
             ));
         }
 
