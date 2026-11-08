@@ -158,16 +158,17 @@ class RegistroDeMedicoWebTest extends TestCase
             ->assertOk()
             ->assertSee('Ginecología y Obstetricia')
             ->assertSee('Pediatría')
-            ->assertDontSee('Cardiología')
+            // Cardiología entró al registrarse con su manifiesto (CAR-1, 2026-11-04).
+            ->assertSee('Cardiología')
             ->assertDontSee('Dermatología')
             ->assertDontSee('Medicina General');
     }
 
     public function test_una_especialidad_que_todavia_no_se_ofrece_se_rechaza(): void
     {
-        $cardiologia = Specialty::where('name', 'Cardiología')->firstOrFail();
+        $dermatologia = Specialty::where('name', 'Dermatología')->firstOrFail();
 
-        $this->post(route('medico.registro.codigo.enviar'), $this->datos(['specialty_id' => $cardiologia->id]))
+        $this->post(route('medico.registro.codigo.enviar'), $this->datos(['specialty_id' => $dermatologia->id]))
             ->assertSessionHasErrors('specialty_id');
 
         Mail::assertNotSent(CodigoDeRegistroDeMedico::class);

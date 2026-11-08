@@ -520,6 +520,63 @@ class ConsultaController extends Controller
     }
 
     /**
+     * **Una sección de los estudios cardiológicos** (CAR-2, 2026-11-04): sus pestañas y los valores de la pestaña abierta.
+     * El guardado lo hace `ConsultaCardiologoController`; acá sólo se lee.
+     */
+    private function seccionDelCardiologo(string $seccion, Consulta $consulta): \App\Clinica\Consulta\Vistas\CardiologoVista
+    {
+        $mapa = \App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::class;
+        $datos = new \App\Clinica\Consulta\Cardiologia\DatosDelCardiologo();
+
+        $pestana = $mapa::pestana($seccion, (string) request()->query('pestana', ''));
+        $url = fn (?string $clave = null) => route('clinica.consulta', array_filter([
+            $consulta->id,
+            'seccion' => $seccion,
+            'pestana' => $clave,
+        ]));
+
+        // Los PDF de la consulta (CAR-5): la pestaña no tiene campos, se listan las filas de `archivos_historia`.
+        $archivos = [];
+        if ($pestana === $mapa::PESTANA_ARCHIVOS) {
+            foreach ((new \App\Clinica\Consulta\Cardiologia\ArchivosDeLaConsulta())->de($consulta) as $fila) {
+                $deLaWeb = \App\Clinica\Consulta\Cardiologia\ArchivosDeLaConsulta::esDeLaWeb($fila->archivo);
+                $archivos[] = [
+                    'id' => (int) $fila->id,
+                    'nombre' => \App\Clinica\Consulta\Cardiologia\ArchivosDeLaConsulta::nombreVisible($fila->archivo),
+                    'url' => $deLaWeb ? route('clinica.consulta.archivos.descargar', [$consulta->id, $fila->id]) : null,
+                    'urlQuitar' => $deLaWeb ? route('clinica.consulta.archivos.quitar', [$consulta->id, $fila->id]) : null,
+                    'quitables' => $deLaWeb,
+                ];
+            }
+        }
+
+        $pestanas = [];
+        foreach ($mapa::PESTANAS[$seccion] ?? [] as $clave => $texto) {
+            $pestanas[] = [
+                'clave' => $clave,
+                'texto' => $texto,
+                'url' => $url($clave),
+                'activa' => $clave === $pestana,
+                'cargada' => $clave === $mapa::PESTANA_ARCHIVOS ? $archivos !== [] : $datos->tieneDatos($consulta, $clave),
+            ];
+        }
+
+        return new \App\Clinica\Consulta\Vistas\CardiologoVista(
+            $seccion,
+            $pestana,
+            $pestanas,
+            $pestana === $mapa::PESTANA_ARCHIVOS ? [] : $datos->valores($consulta, $pestana),
+            route('clinica.consulta.cardiologia.guardar', $consulta->id),
+            $url($pestana),
+            (array) old(),
+            $archivos,
+            route('clinica.consulta.archivos.subir', $consulta->id),
+            // Los textos por defecto del médico (C12): precargan el Doppler de miembros superiores y el marcapasos.
+            (new \App\Clinica\Consulta\Cardiologia\TextosDeLosInformes())->precarga((string) $consulta->reg_medico),
+        );
+    }
+
+    /**
      * **La lista y la subida de las fotos de la placa de la Rx de tórax** (O-44).
      *
      * Es el ViewModel de siempre (`ImagenesDeLaConsultaVista`) con la etiqueta `rx` de `TagDeImagen`: la subida
@@ -648,6 +705,16 @@ class ConsultaController extends Controller
     ): ?object {
         // **Las secciones del internista** (MI-2 a MI-5, 2026-10-28): las arma `seccionDelInternista`.
         if ($this->alcance()->esMedicinaInterna() && \App\Clinica\Consulta\Interna\MapaDelInternista::esSeccion($seccion)) {
+            return $this->seccionDelInternista($seccion, $consulta, $regMedico, $imagenes);
+        }
+
+        // **Los estudios cardiológicos** (CAR-2, 2026-11-04): los arma `seccionDelCardiologo`.
+        if ($this->alcance()->esCardiologia() && \App\Clinica\Consulta\Cardiologia\MapaDelCardiologo::esSeccion($seccion)) {
+            return $this->seccionDelCardiologo($seccion, $consulta);
+        }
+
+        // La **evaluación pre-operatoria** del cardiólogo (CAR-5): reusa la pantalla y las tablas de medicina interna (MI-5).
+        if ($this->alcance()->esCardiologia() && $seccion === \App\Clinica\Consulta\Interna\MapaDelInternista::SECCION_PREOPERATORIA) {
             return $this->seccionDelInternista($seccion, $consulta, $regMedico, $imagenes);
         }
 
