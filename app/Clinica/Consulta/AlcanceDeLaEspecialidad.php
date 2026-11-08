@@ -133,6 +133,12 @@ final class AlcanceDeLaEspecialidad
         return $this->slug === 'medicina-interna';
     }
 
+    /** Traumatología (2026-11-07): su consulta es la genérica y lo propio es la plantilla ortopédica. */
+    public function esTraumatologia(): bool
+    {
+        return $this->slug === 'traumatologia';
+    }
+
     /**
      * **¿El registro es de un internista?** Para lo que se arma sin el contexto clínico a mano (las hojas impresas, el resumen médico):
      * mira las especialidades del médico dueño del `reg_medico`.

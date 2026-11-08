@@ -417,4 +417,35 @@ class AlcanceDeLaEspecialidadTest extends TestCase
             AlcanceDeLaEspecialidad::de('medicina-interna')->documentosQueNoSeOfrecen(),
         );
     }
+
+    /**
+     * **Ninguna sección propia se ofrece fuera de su especialidad** (2026-11-08): recorre el registro
+     * `SeccionesDeLaConsulta::SECCIONES_DE_UNA_ESPECIALIDAD`, así que la especialidad que se agregue mañana queda
+     * cubierta con sumar su fila. Es la regla que Alexander pidió para poder subir a QA sin tocar a las demás.
+     */
+    public function test_cada_seccion_propia_es_solo_de_su_especialidad(): void
+    {
+        $especialidades = [
+            'ginecologia-y-obstetricia', 'pediatria', 'medicina-interna', 'cardiologia',
+            'traumatologia', 'oftalmologia', 'orl', 'urologia', 'dermatologia', 'nefrologia',
+        ];
+
+        foreach (SeccionesDeLaConsulta::SECCIONES_DE_UNA_ESPECIALIDAD as $seccion => $duena) {
+            foreach ($especialidades as $slug) {
+                if ($slug === $duena) {
+                    continue;
+                }
+
+                $this->assertFalse(
+                    SeccionesDeLaConsulta::existeSeccion($seccion, $slug),
+                    "la sección {$seccion} no debe existir en {$slug}",
+                );
+                $this->assertNotContains(
+                    $seccion,
+                    array_column(SeccionesDeLaConsulta::todas($slug), 'seccion'),
+                    "el árbol de {$slug} no debe traer {$seccion}",
+                );
+            }
+        }
+    }
 }

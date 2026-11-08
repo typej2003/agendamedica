@@ -130,6 +130,25 @@ final class SeccionesDeLaConsulta
     /** «Indicadores incidentes»: el panel de **nefrología pediátrica** (`tabpage_35` del escritorio). */
     public const SECCION_INDICADORES = 'indicadores';
 
+    /**
+     * **Las secciones que son de una sola especialidad** (2026-11-08): la clave de la sección y la dueña. Es el registro
+     * que usa el test de aislamiento: ninguna otra especialidad ofrece la sección, ni en su árbol ni por URL directa.
+     * Cada especialidad nueva agrega su fila acá cuando enciende su módulo (traumatología entra con «Ortopedia»).
+     *
+     * @var array<string,string>
+     */
+    public const SECCIONES_DE_UNA_ESPECIALIDAD = [
+        self::SECCION_CARDIOLOGIA => 'cardiologia',
+        self::SECCION_ORTOPEDIA => 'traumatologia',
+    ];
+    /** «Ortopedia» (Traumatología, 2026-11-07): la plantilla ortopédica de la consulta. */
+    public const SECCION_ORTOPEDIA = 'ortopedia';
+
+    /** El ítem «Ortopedia» de traumatología (2026-11-07). */
+    private const ITEM_ORTOPEDIA = ['numero' => 6, 'grupo' => 'Consulta', 'titulo' => 'Ortopedia', 'icono' => 'bi-person-arms-up',
+        'detalle' => 'La plantilla ortopédica: calzado, tacón, suela, bordes, aparatos y observación.', 'tarea' => 'TRA-1',
+        'estado' => 'listo', 'seccion' => self::SECCION_ORTOPEDIA];
+
     /** «Pre-factura» (F9): los conceptos facturables de la consulta (`his_con_pre_factura`). */
     public const SECCION_PREFACTURA = 'prefactura';
 
