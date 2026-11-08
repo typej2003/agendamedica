@@ -228,6 +228,26 @@ final class DocumentosPorCita
         $this->marcar($conAlgo, DB::table('motivo_consulta_paciente')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
         $this->marcar($conAlgo, DB::table('diagnostico_paciente')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias), 'nrohistoria', 'nroconsulta');
 
+        //  - **evaluación pre-operatoria** (O-47; CAR-5 la enciende también en cardiología): es el informe que
+        //    valida al paciente para quirófano, así que la secretaría lo tiene que ver en «Imprimir documentos»
+        //    de la cita atendida. Cuenta cuando la consulta tiene la estimación (la clase ASA, la trombosis, la
+        //    infección, la espirometría o las situaciones especiales), el resumen del riesgo, o una intervención
+        //    cargada: es cuando la hoja tiene su cuerpo propio. Es la misma vara de `SolicitudesParaImprimir`.
+        if ($seOfrece(DocumentoImpreso::EVALUACION_PREOPERATORIA)) {
+            $this->marcar($conAlgo, DB::table('pre_aneste')->where('reg_medico', $regMedico)->whereIn('historia', $historias)
+                ->where(fn ($q) => $q
+                    ->whereRaw("TRIM(COALESCE(tipo, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(resultado, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(emergencia, '')) <> ''")), 'historia', 'consulta');
+            $this->marcar($conAlgo, DB::table('riesgo_paciente_opera')->where('reg_medico', $regMedico)->whereIn('historia', $historias)
+                ->where(fn ($q) => $q
+                    ->whereRaw("TRIM(COALESCE(conclusion, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(nombre_intervencion, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(recomendaciones, '')) <> ''")
+                    ->orWhere('puntos', '>', 0)), 'historia', 'consulta');
+            $this->marcar($conAlgo, DB::table('interven_consulta')->where('reg_medico', $regMedico)->whereIn('historia', $historias), 'historia', 'consulta');
+        }
+
         //  - informe del eco pélvico (WEB-6.1): algún campo del estudio cargado o el informe en texto libre
         //    del escritorio (`QueEsUnDocumento::ecografia`; la fecha sola no cuenta y el literal `none`
         //    tampoco, como en `EstudioEcografico::limpiar`). La lista de columnas sale del mapa del dato,
