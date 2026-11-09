@@ -143,6 +143,11 @@ final class AlcanceDeLaEspecialidad
      * **¿El registro es de un internista?** Para lo que se arma sin el contexto clínico a mano (las hojas impresas, el resumen médico):
      * mira las especialidades del médico dueño del `reg_medico`.
      */
+    /** ¿El médico de ese registro es ginecólogo? (El resumen médico suma sus bloques propios sólo entonces.) */
+    public static function esDeGinecologia(string $regMedico): bool
+    {
+        return (bool) \App\Models\Medico::where('reg_medico', $regMedico)->first()?->specialties->contains('slug', 'ginecologia-y-obstetricia');
+    }
     public static function esDeMedicinaInterna(string $regMedico): bool
     {
         return (bool) \App\Models\Medico::where('reg_medico', $regMedico)->first()?->specialties->contains('slug', 'medicina-interna');

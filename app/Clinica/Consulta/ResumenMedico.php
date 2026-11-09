@@ -69,6 +69,12 @@ final class ResumenMedico
 
     public const EXAMEN_GINECOLOGICO = 'examen-ginecologico';
 
+    /** La **colposcopía** (texto de la solapa, consultas.observaciones): bloque de ginecología (2026-11-09). */
+    public const COLPOSCOPIA = 'colposcopia';
+
+    /** La **histeroscopía** (texto de la solapa, consultas.cuello): bloque de ginecología (2026-11-09). */
+    public const HISTEROSCOPIA = 'histeroscopia';
+
     public const RESULTADO_DE_EXAMENES = 'resultado-de-examenes';
 
     public const DIAGNOSTICO = 'diagnostico';
@@ -92,6 +98,8 @@ final class ResumenMedico
         self::EXAMEN_FISICO => ['rotulo' => 'EXAMEN FÍSICO:', 'lista' => false],
         self::CUESTIONARIO => ['rotulo' => 'CUESTIONARIO:', 'lista' => true],
         self::EXAMEN_GINECOLOGICO => ['rotulo' => 'EXAMEN GINECOLÓGICO:', 'lista' => false],
+        self::COLPOSCOPIA => ['rotulo' => 'COLPOSCOPÍA:', 'lista' => false],
+        self::HISTEROSCOPIA => ['rotulo' => 'HISTEROSCOPÍA:', 'lista' => false],
         self::RESULTADO_DE_EXAMENES => ['rotulo' => 'RESULTADO DE EXÁMENES:', 'lista' => false],
         // El único rótulo sin dos puntos: así está en el `text` del DataWindow (`d_lista_diagnostic01.srd`).
         self::DIAGNOSTICO => ['rotulo' => 'DIAGNOSTICO', 'lista' => true],
