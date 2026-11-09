@@ -166,6 +166,23 @@ final class DocumentosPorCita
         //  - dieta con texto (la tabla llama `histroria` a la historia y `consulta` al número de la consulta);
         $this->marcar($conAlgo, DB::table('dieta_paciente')->where('reg_medico', $regMedico)->whereIn('histroria', $historias)
             ->whereRaw("TRIM(COALESCE(descripcion, '')) <> ''"), 'histroria', 'consulta');
+        //  - plantilla ortopédica (Traumatología, 2026-11-09): con alguna casilla marcada o algún texto;
+        if ($seOfrece(DocumentoImpreso::ORTOPEDIA)) {
+            $this->marcar($conAlgo, DB::table('ortopedia')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias)
+                ->where(fn ($q) => $q
+                    ->whereIn('botas', ['1'])->orWhereIn('zapatos', ['1'])->orWhereIn('normal', ['1'])->orWhereIn('plantilla', ['1'])
+                    ->orWhereIn('borde_int_rect', ['1'])->orWhereIn('borde_int_abdu', ['1'])
+                    ->orWhereIn('suela_normal', ['1'])->orWhereIn('suela_antirres', ['1'])
+                    ->orWhereRaw("TRIM(COALESCE(soporte, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(thomas, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(tacon_int, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(tacon_ext, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(suela_int, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(suela_ext, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(aparatos, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(observacion, '')) <> ''")),
+                'nrohistoria', 'nroconsulta');
+        }
         //  - pre-factura (F9): al menos un concepto cargado;
         $this->marcar($conAlgo, DB::table('his_con_pre_factura')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias), 'numhistoria', 'nroconsulta');
         //  - orden de laboratorio (WEB-5.4): al menos un examen, o un resumen clínico con texto (`QueEsUnDocumento::laboratorio`; el literal

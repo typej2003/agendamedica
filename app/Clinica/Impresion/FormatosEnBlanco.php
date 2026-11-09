@@ -64,7 +64,15 @@ final class FormatosEnBlanco
             'fijos' => ['DIETA:'],
             'secciones' => [['etiqueta' => null, 'peso' => 1]],
         ],
-        DocumentoImpreso::LABORATORIO => [
+        DocumentoImpreso::ORTOPEDIA => [
+            'descripcion' => 'Con las casillas del calzado, el tacón, la suela y los aparatos.',
+            'fijos' => [
+                'BOTAS ORTOPÉDICAS:', 'CALZADO COLEGIAL:', 'CALZADO NORMAL:', 'SOPORTE PLANTAR:', 'CONTRAFUERTE:',
+                'PLANTILLA:', 'TACÓN (EN TACÓN):', 'TACÓN (EN SUELA):', 'CUÑA INTERNA:', 'CUÑA EXTERNA:',
+                'BORDE INTERNO RECTO:', 'BORDE INTERNO INVERTIDO:', 'SUELA NORMAL:', 'SUELA ANTIRRESBALANTE:', 'APARATOS:',
+            ],
+            'secciones' => [['etiqueta' => 'OBSERVACIÓN:', 'peso' => 1]],
+        ],        DocumentoImpreso::LABORATORIO => [
             'descripcion' => 'Con los exámenes pedidos y el resumen clínico.',
             'fijos' => [],
             'secciones' => [['etiqueta' => 'EXÁMENES SOLICITADOS:', 'peso' => 2], ['etiqueta' => 'RESUMEN CLÍNICO:', 'peso' => 1]],

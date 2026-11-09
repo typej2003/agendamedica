@@ -37,6 +37,12 @@ final class DocumentoImpreso
 
     public const DIETA = 'dieta';
 
+    /**
+     * **La plantilla ortopédica** (Traumatología, 2026-11-09): la hoja «Calzados Ortopédicos» del escritorio
+     * (d_ortopedia.srd), con las casillas y los textos de la plantilla de la consulta.
+     */
+    public const ORTOPEDIA = 'ortopedia';
+
     /** La **pre-factura** (F9): los conceptos facturables de la consulta con su cantidad, su monto y el total. */
     public const PREFACTURA = 'prefactura';
 
@@ -199,6 +205,7 @@ final class DocumentoImpreso
         self::INFORME => ['INFORME MÉDICO', 'Informe médico'],
         self::HOSPITALIZACION => ['ORDEN DE HOSPITALIZACIÓN', 'Orden de hospitalización'],
         self::DIETA => ['DIETA / RECOMENDACIONES', 'Dieta / Recomendaciones'],
+        self::ORTOPEDIA => ['CALZADOS ORTOPÉDICOS', 'Calzados ortopédicos'],
         self::PREFACTURA => ['PRE-FACTURA', 'Pre-factura'],
         self::LABORATORIO => ['SOLICITUD DE EXÁMENES DE LABORATORIO', 'Orden de laboratorio'],
         self::LABORATORIO_PAREJA => ['SOLICITUD DE EXÁMENES DE LABORATORIO', 'Orden de laboratorio de la pareja'],

@@ -53,6 +53,7 @@ final class HojaDelImprimible
         DocumentoImpreso::INFORME,
         DocumentoImpreso::HOSPITALIZACION,
         DocumentoImpreso::DIETA,
+        DocumentoImpreso::ORTOPEDIA,
         DocumentoImpreso::LABORATORIO,
         DocumentoImpreso::ESTUDIOS,
         DocumentoImpreso::RESUMEN_MEDICO,

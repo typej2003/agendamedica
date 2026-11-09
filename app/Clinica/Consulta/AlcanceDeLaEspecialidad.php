@@ -457,12 +457,23 @@ final class AlcanceDeLaEspecialidad
         ];
     }
 
+    /**
+     * **La hoja ortopédica no se ofrece fuera de traumatología** (2026-11-09): es la plantilla de esa especialidad y en
+     * las demás no se ofrece aunque la consulta tuviera la fila cargada por el escritorio.
+     *
+     * @return array<int,string>
+     */
+    public function documentosDeTraumatologiaQueNoSeOfrecen(): array
+    {
+        return $this->esTraumatologia() ? [] : [DocumentoImpreso::ORTOPEDIA];
+    }
     public function documentosQueNoSeOfrecen(): array
     {
         return array_values(array_unique(array_merge(
             $this->documentosDeGinecologiaQueNoSeOfrecen(),
             $this->documentosDeLaParejaQueNoSeOfrecen(),
             $this->documentosDeCardiologiaQueNoSeOfrecen(),
+            $this->documentosDeTraumatologiaQueNoSeOfrecen(),
         )));
     }
 }

@@ -8,6 +8,8 @@ use App\Clinica\Consulta\TextoDelExamen;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\DietaDeLaConsulta;
+use App\Clinica\Consulta\Traumatologia\DatosDeLaOrtopedia;
+use App\Clinica\Consulta\Traumatologia\MapaDeLaOrtopedia;
 use App\Clinica\Consulta\DoctoresDelMedico;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoAbdominal;
@@ -134,6 +136,7 @@ final class SolicitudesParaImprimir
         private LaboratorioDeLaPareja $laboratoriosDeLaPareja,
         private ImagenesDelExamenParaElInforme $imagenesDelExamen,
         private RepresentanteParaLaHoja $representantes,
+        private DatosDeLaOrtopedia $ortopedias,
     ) {
     }
 
@@ -467,6 +470,17 @@ final class SolicitudesParaImprimir
             ];
         }
 
+        // La **plantilla ortopédica** (Traumatología, 2026-11-09): se ofrece si la consulta tiene algo cargado.
+        if ($this->ortopedias->tieneDatos($consulta)) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::ORTOPEDIA,
+                'tipo' => DocumentoImpreso::ORTOPEDIA,
+                'titulo' => 'Calzados ortopédicos',
+                // Sin los valores clínicos: la lista de la cita la ve la secretaría.
+                'resumen' => 'Plantilla ortopédica',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
         // La **pre-factura** (F9): se ofrece si tiene algún concepto **y si la sección está encendida** (O-45: con la
         // bandera apagada el documento no se ofrece y lo cargado queda intacto). La lista de la cita lleva sólo la
         // cuenta, no los montos.
@@ -743,6 +757,11 @@ final class SolicitudesParaImprimir
             return $this->dietas->esReal($dieta) ? $this->dieta($paciente, $dieta, $fechaDeLaConsulta) : null;
         }
 
+        if ($clave === DocumentoImpreso::ORTOPEDIA) {
+            return $this->ortopedias->tieneDatos($consulta)
+                ? $this->ortopedia($paciente, $this->ortopedias->valores($consulta), $fechaDeLaConsulta)
+                : null;
+        }
         if ($clave === DocumentoImpreso::PREFACTURA) {
             $items = $this->preFacturas->de($consulta);
 
@@ -988,6 +1007,50 @@ final class SolicitudesParaImprimir
      *
      * @param  Collection<int,\App\Models\PreFacturaConsulta>  $items
      */
+    /**
+     * La hoja **«Calzados Ortopédicos»** (Traumatología, 2026-11-09): las casillas marcadas y los textos que tienen algo,
+     * con el rótulo de la hoja, y la observación como párrafo. Las casillas van como «Sí»: la hoja del escritorio las
+     * tacha, y acá se leen.
+     *
+     * @param  array<string,string>  $valores  clave del mapa => valor guardado
+     */
+    private function ortopedia(Paciente $paciente, array $valores, string $fecha): DocumentoImpreso
+    {
+        $fijos = [];
+        $observacion = '';
+
+        foreach (MapaDeLaOrtopedia::campos() as $campo) {
+            $valor = trim((string) ($valores[$campo['clave']] ?? ''));
+
+            if ($campo['tipo'] === 'parrafo') {
+                $observacion = $valor;
+                continue;
+            }
+
+            if ($campo['tipo'] === 'marca') {
+                if ($valor === '1') {
+                    $fijos[] = ['etiqueta' => mb_strtoupper($campo['etiqueta']) . ':', 'valor' => 'Sí'];
+                }
+
+                continue;
+            }
+
+            if ($valor !== '') {
+                $fijos[] = ['etiqueta' => mb_strtoupper($campo['etiqueta']) . ':', 'valor' => $valor];
+            }
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::ORTOPEDIA,
+            DocumentoImpreso::ORTOPEDIA,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ORTOPEDIA][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ORTOPEDIA][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            $fijos,
+            DocumentoImpreso::parrafosDe($observacion, 'OBSERVACIÓN:', true),
+        );
+    }
     private function preFactura(Paciente $paciente, Collection $items, string $fecha): DocumentoImpreso
     {
         $dinero = fn (float $valor) => number_format($valor, 2, ',', '.');

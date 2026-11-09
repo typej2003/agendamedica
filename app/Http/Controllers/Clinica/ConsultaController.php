@@ -1705,6 +1705,7 @@ class ConsultaController extends Controller
             $ortopedias->valores($consulta),
             $ortopedias->tieneDatos($consulta),
             route('clinica.consulta.ortopedia.guardar', $consulta->id),
+            route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ORTOPEDIA]),
             $old,
         );
     }

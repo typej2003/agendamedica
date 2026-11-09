@@ -5,6 +5,11 @@
 
 <x-ui.tarjeta titulo="Ortopedia" icono="bi-person-arms-up">
     <x-slot name="acciones">
+        @if ($vm->esReal())
+            <x-ui.imprimir-guardando :url="$vm->urlImprimir()" form="ortopedia-form" documento="ortopedia" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-printer" aria-hidden="true"></i> Imprimir
+            </x-ui.imprimir-guardando>
+        @endif
         <x-ui.estado :tono="$estado['tono']" :icono="$estado['icono']" :title="$estado['titulo']">{{ $estado['texto'] }}</x-ui.estado>
     </x-slot>
 

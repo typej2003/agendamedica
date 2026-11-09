@@ -32,6 +32,7 @@ final class OrtopediaVista
         private array $valores,
         private bool $esReal,
         private string $urlGuardar,
+        private string $urlImprimir,
         private array $old = [],
     ) {
     }
@@ -69,12 +70,19 @@ final class OrtopediaVista
         return $this->esReal;
     }
 
+
+
+    /** @return array{tono:string, icono:string, texto:string, titulo:string} */
     public function urlGuardar(): string
     {
         return $this->urlGuardar;
     }
 
-    /** @return array{tono:string, icono:string, texto:string, titulo:string} */
+    public function urlImprimir(): string
+    {
+        return $this->urlImprimir;
+    }
+
     public function estado(): array
     {
         return $this->esReal
