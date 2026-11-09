@@ -26,6 +26,7 @@ use App\Http\Controllers\Clinica\CitasDelPacienteController;
 use App\Http\Controllers\Clinica\ConsultaAntecedentesController;
 use App\Http\Controllers\Clinica\ConsultaConstanciaController;
 use App\Http\Controllers\Clinica\ConsultaDietaController;
+use App\Http\Controllers\Clinica\ConsultaOrtopediaController;
 use App\Http\Controllers\Clinica\ConsultaEstudioController;
 use App\Http\Controllers\Clinica\ConsultaEstudiosController;
 use App\Http\Controllers\Clinica\ConsultaPlantillaDelFormatoController;
@@ -623,6 +624,9 @@ Route::middleware(['auth', 'role:Root|Medico|Secretaria', 'verificacion.medico']
                 Route::delete('/consulta/{consulta}/hospitalizacion', [ConsultaHospitalizacionController::class, 'eliminar'])->name('consulta.hospitalizacion.eliminar');
                 Route::post('/consulta/{consulta}/dieta', [ConsultaDietaController::class, 'guardar'])->name('consulta.dieta.guardar');
                 Route::delete('/consulta/{consulta}/dieta', [ConsultaDietaController::class, 'eliminar'])->name('consulta.dieta.eliminar');
+                // **Ortopedia** (Traumatología, 2026-11-09): la plantilla ortopédica, una por consulta (nrohistoria + nroconsulta).
+                // Sólo se ofrece en traumatología (AlcanceDeLaEspecialidad::pestanasDeSolicitudesOcultas).
+                Route::post('/consulta/{consulta}/ortopedia', [ConsultaOrtopediaController::class, 'guardar'])->name('consulta.ortopedia.guardar');
                 // **Laboratorio y estudios** (WEB-5.4, como Motivos de consulta desde O-29): el catálogo a la vista con su «Pasar» por
                 // fila, y **cada alta y cada baja es una escritura** (`agregar` / `quitar`, rastro `source = web`); el `POST` de la
                 // ruta sin sufijo guarda **sólo el resumen clínico**, que sigue siendo un formulario con su botón. El buscador JSON

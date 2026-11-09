@@ -60,6 +60,12 @@ final class PestanasDeSolicitudes
 
     public const DIETA = 'dieta';
 
+    /**
+     * **La plantilla ortopédica** (Traumatología, 2026-11-09): la solapa «Ortopedia» del escritorio
+     * (`tab_1.tabpage_solicitudes.tab_4.tabpage_6`), con las casillas y los textos de la hoja «Calzados Ortopédicos».
+     * Es de traumatología: fuera de esa especialidad no se ofrece y su URL no la abre.
+     */
+    public const ORTOPEDIA = 'ortopedia';
     /** La orden de laboratorio de la pareja (WEB-11.21): se abre con el botón «Pareja» del laboratorio y no es una pestaña de la fila. */
     public const PAREJA = 'pareja';
 
@@ -94,6 +100,7 @@ final class PestanasDeSolicitudes
         // La historia va después del informe y las imágenes después de la historia, como en el escritorio.
         self::HISTORIA => ['texto' => 'Historia clínica', 'icono' => 'bi-journal-medical'],
         self::IMAGENES => ['texto' => 'Imágenes', 'icono' => 'bi-images'],
+        self::ORTOPEDIA => ['texto' => 'Ortopedia', 'icono' => 'bi-person-arms-up'],
         self::DIETA => ['texto' => 'Dieta / Recomendaciones', 'icono' => 'bi-egg-fried'],
     ];
 

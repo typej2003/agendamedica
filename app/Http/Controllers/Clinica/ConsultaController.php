@@ -52,6 +52,7 @@ use App\Clinica\Consulta\Vistas\ProximaCitaVista;
 use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\Vistas\ConstanciaVista;
+use App\Clinica\Consulta\Traumatologia\DatosDeLaOrtopedia;
 use App\Clinica\Consulta\Vistas\DietaVista;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoDoppler;
@@ -93,6 +94,7 @@ use App\Clinica\Consulta\Vistas\ImagenesDeLaConsultaVista;
 use App\Clinica\Consulta\Vistas\InformeVista;
 use App\Clinica\Consulta\Vistas\OrdenDeCatalogoVista;
 use App\Clinica\Consulta\Vistas\OrdenVista;
+use App\Clinica\Consulta\Vistas\OrtopediaVista;
 use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
 use App\Clinica\Consulta\Vistas\MedicionesVista;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
@@ -1692,6 +1694,20 @@ class ConsultaController extends Controller
      *
      * @param  array<int,string>  $registros  los `reg_medico` del médico del contexto
      */
+    /**
+     * La pestaña **Ortopedia** (Traumatología, 2026-11-09): la plantilla del escritorio con sus casillas y sus textos.
+     *
+     * @param  array<string,mixed>  $old
+     */
+    private function ortopediaVista(Consulta $consulta, DatosDeLaOrtopedia $ortopedias, array $old): OrtopediaVista
+    {
+        return new OrtopediaVista(
+            $ortopedias->valores($consulta),
+            $ortopedias->tieneDatos($consulta),
+            route('clinica.consulta.ortopedia.guardar', $consulta->id),
+            $old,
+        );
+    }
     private function solicitudes(
         Consulta $consulta,
         array $registros,
@@ -1821,6 +1837,9 @@ class ConsultaController extends Controller
                 ['guardar' => route('clinica.consulta.hospitalizacion.guardar', $id), 'eliminar' => route('clinica.consulta.hospitalizacion.eliminar', $id), 'imprimir' => $imprimir('hospitalizacion')],
                 $old,
             );
+        } elseif ($activa === PestanasDeSolicitudes::ORTOPEDIA) {
+            // La plantilla ortopédica (Traumatología, 2026-11-09): la pestaña Ortopedia de las Solicitudes.
+            $vista = $this->ortopediaVista($consulta, app(DatosDeLaOrtopedia::class), $old);
         } elseif ($activa === PestanasDeSolicitudes::DIETA) {
             $vista = $this->dietaVista($consulta, $dietas, $old, $imprimir('dieta'));
         } else {

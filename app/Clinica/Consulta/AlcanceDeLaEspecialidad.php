@@ -263,7 +263,19 @@ final class AlcanceDeLaEspecialidad
      */
     public function pestanasDeSolicitudesOcultas(): array
     {
-        return $this->esPediatria() ? [PestanasDeSolicitudes::DIETA] : [];
+        $ocultas = [];
+
+        // En pediatría la dieta es su ítem *Alimentación*, con sección propia.
+        if ($this->esPediatria()) {
+            $ocultas[] = PestanasDeSolicitudes::DIETA;
+        }
+
+        // La plantilla ortopédica es de traumatología: en las demás no se ofrece, ni se abre por URL.
+        if (! $this->esTraumatologia()) {
+            $ocultas[] = PestanasDeSolicitudes::ORTOPEDIA;
+        }
+
+        return $ocultas;
     }
 
     /**
