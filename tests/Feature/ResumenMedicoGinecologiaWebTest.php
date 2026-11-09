@@ -49,6 +49,23 @@ class ResumenMedicoGinecologiaWebTest extends TestCase
                 'cuello' => 'Canal cervical permeable, cavidad regular.',
             ]);
 
+        // Un eco de cada tipo con su conclusión: son los otros tres bloques de ginecología.
+        DB::table('eco_pelvico')->insert([
+            'reg_medico' => $medico->reg_medico, 'numhistoria' => 1001, 'nroconsulta' => 1,
+            'sugerencias' => 'Útero de tamaño normal, sin hallazgos.', 'fecha' => '2026-10-07', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('eco_obstetrico')->insert([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'consulta' => 1,
+            'dianostico' => 'Embarazo de 12 semanas, único, vivo.', 'fecha' => '2026-10-07', 'eg' => '12', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('eco_doppler')->insert([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001, 'consulta' => 1,
+            'conclusion' => 'Flujo umbilical normal.', 'fecha' => '2026-10-07', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('pre_natal_observaciones')->insert([
+            'reg_medico' => $medico->reg_medico, 'historia' => 1001,
+            'observaciones' => 'Control mensual, sin complicaciones.', 'created_at' => now(), 'updated_at' => now(),
+        ]);
         return [$user, $medico, $especialidadModelo, $consulta];
     }
 
@@ -68,7 +85,15 @@ class ResumenMedicoGinecologiaWebTest extends TestCase
             ->assertSee('COLPOSCOPÍA:')
             ->assertSee('Epitelio escamoso maduro')
             ->assertSee('HISTEROSCOPÍA:')
-            ->assertSee('Canal cervical permeable');
+            ->assertSee('Canal cervical permeable')
+            ->assertSee('ECO GINECOLÓGICO:')
+            ->assertSee('Útero de tamaño normal')
+            ->assertSee('ECO OBSTÉTRICO:')
+            ->assertSee('Embarazo de 12 semanas')
+            ->assertSee('ECO DOPPLER:')
+            ->assertSee('Flujo umbilical normal')
+            ->assertSee('CONTROL PRENATAL:')
+            ->assertSee('Control mensual, sin complicaciones.');
     }
 
     public function test_el_internista_no_ve_esos_bloques_aunque_las_columnas_tengan_texto(): void
@@ -81,6 +106,11 @@ class ResumenMedicoGinecologiaWebTest extends TestCase
             ->assertOk()
             ->assertDontSee('COLPOSCOPÍA:')
             ->assertDontSee('HISTEROSCOPÍA:')
-            ->assertDontSee('Epitelio escamoso maduro');
+            ->assertDontSee('Epitelio escamoso maduro')
+            ->assertDontSee('ECO GINECOLÓGICO:')
+            ->assertDontSee('ECO OBSTÉTRICO:')
+            ->assertDontSee('ECO DOPPLER:')
+            ->assertDontSee('Flujo umbilical normal')
+            ->assertDontSee('CONTROL PRENATAL:');
     }
 }

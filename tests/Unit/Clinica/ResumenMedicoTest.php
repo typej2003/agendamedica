@@ -189,6 +189,9 @@ class ResumenMedicoTest extends TestCase
         $resumen = new ResumenMedico($this->completo() + [
             ResumenMedico::COLPOSCOPIA => 'Epitelio escamoso maduro.',
             ResumenMedico::HISTEROSCOPIA => 'Cavidad regular.',
+            ResumenMedico::ECO_GINECOLOGICO => 'Útero normal.',
+            ResumenMedico::ECO_OBSTETRICO => 'Embarazo de 12 semanas.',
+            ResumenMedico::ECO_DOPPLER => 'Flujo normal.',
         ]);
 
         $rotulos = $resumen->rotulos();
@@ -200,6 +203,10 @@ class ResumenMedicoTest extends TestCase
         $this->assertIsInt($ginecologico);
         $this->assertSame($ginecologico + 1, $colposcopia);
         $this->assertSame($colposcopia + 1, $histeroscopia);
-        $this->assertSame($histeroscopia + 1, $resultado);
+        // Los tres ecos van después de los textos del examen y antes del resultado de exámenes.
+        $this->assertSame($histeroscopia + 1, array_search('ECO GINECOLÓGICO:', $rotulos, true));
+        $this->assertSame($histeroscopia + 2, array_search('ECO OBSTÉTRICO:', $rotulos, true));
+        $this->assertSame($histeroscopia + 3, array_search('ECO DOPPLER:', $rotulos, true));
+        $this->assertSame($histeroscopia + 4, $resultado);
     }
 }
