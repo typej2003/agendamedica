@@ -38,8 +38,6 @@ class DashboardController extends Controller
         // panel— entraba a una pantalla en blanco. Ver `PanelAdministracionTest`.
         if ($user->hasAnyRole(User::ROLES_ADMIN)) {
             $dashboardComponent = 'dashboard.root-dashboard';
-        } elseif ($user->hasRole('Medico')) {
-            $dashboardComponent = 'dashboard.medico-dashboard';
         } elseif ($user->hasRole('Secretaria')) {
             $dashboardComponent = 'dashboard.secretaria-dashboard';
         } elseif ($user->hasRole('Paciente')) {

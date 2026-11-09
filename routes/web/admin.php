@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\Admin\ListMedicos;
 use App\Http\Livewire\Admin\ListPacientes;
 use App\Http\Livewire\Admin\ListHistorias;
-use App\Http\Livewire\Admin\ListUsers;
 use App\Http\Livewire\Medico\ListMedicoCenterMedical;
 use App\Http\Livewire\Admin\Privacidad;
 use App\Http\Livewire\Admin\Servicio;
@@ -24,7 +23,6 @@ Route::middleware(['auth'])->group(function () {
     // La antigua herramienta de importación `/cargar-sql` fue removida.
     Route::middleware(['role:Root'])->prefix('admin')->name('admin.')->group(function () {
         // Rutas heredadas conservadas solo para soporte interno si fuera necesario:
-        Route::get('/users', ListUsers::class)->name('users');
         Route::get('/medicos', ListMedicos::class)->name('medicos');
         Route::get('/pacientes', ListPacientes::class)->name('pacientes');
         Route::get('/medico-centro-medico', ListMedicoCenterMedical::class)->name('medico-centro-medico');
