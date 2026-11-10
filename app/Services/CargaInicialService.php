@@ -184,6 +184,16 @@ class CargaInicialService
             ]);
         }
 
+        // Reintento de una carga que arrancó como `limpia`: si el API ya tiene datos de ese médico (una
+        // carga anterior que se cortó, la web o el app), el número de historia del escritorio puede estar
+        // ocupado. Se pasa a `mezcla` para que `Traslados::prepararPaciente` aparte o adopte antes de
+        // insertar; sin esto el reintento moría con `Duplicate entry ... for key
+        // historias.reg_medico_numhistoria_unique` (medido en producción el 2026-11-10, med_00005).
+        if ($carga->modo === Traslados::MODO_LIMPIA && $this->tablasConDatos($regMedico, $medico) !== []) {
+            $carga->modo = Traslados::MODO_MEZCLA;
+            $carga->save();
+        }
+
         // Antes de armarle la lista: si este médico no tiene ninguna especialidad vinculada, se la deduce de
         // las tablas que acaba de anunciar y se le asigna. Es la primera sincronización de esa instalación y
         // el técnico no tiene que hacer este paso a mano —sin especialidad el médico no recibe su lista de
