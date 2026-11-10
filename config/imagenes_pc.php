@@ -38,6 +38,13 @@ return [
         'imagenes' => ['columnas' => ['imagen'], 'dueno' => 'reg_medico', 'reescribe' => false],
         'pacientes' => ['columnas' => ['foto_pac'], 'dueno' => 'paciente', 'reescribe' => false],
         'paciente_chamo' => ['columnas' => ['foto_paciente'], 'dueno' => 'reg_medico', 'reescribe' => false],
+        // Otorrinolaringología (2026-11-10): las imágenes de la nasofibrolaringoscopía (una fila por imagen) y las
+        // tres rutas de la nasofibrolaringoscopía en su propia fila (`ima_nasa`, `ima_rinof`, `ima_farin`).
+        'imagen_nasolarigo' => ['columnas' => ['imagen'], 'dueno' => 'reg_medico', 'reescribe' => false],
+        'imagen_nasovideo' => ['columnas' => ['imagen'], 'dueno' => 'reg_medico', 'reescribe' => false],
+        'NASO' => ['columnas' => ['ima_nasa', 'ima_rinof', 'ima_farin'], 'dueno' => 'reg_medico', 'reescribe' => false],
+        'naso_new' => ['columnas' => ['ima_nasa', 'ima_rinof', 'ima_farin'], 'dueno' => 'reg_medico', 'reescribe' => false],
+        'naso_new_video' => ['columnas' => ['ima_nasa', 'ima_rinof', 'ima_farin'], 'dueno' => 'reg_medico', 'reescribe' => false],
     ],
 
     // Cuántas referencias devuelve una página de `pendientes` (y el tope que se acepta).

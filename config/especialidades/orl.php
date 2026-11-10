@@ -20,8 +20,8 @@
 |    `imagen_nasovideo`);
 |  - las **intervenciones quirúrgicas** de la consulta (`interven_consulta`, ya migrada) y su catálogo.
 |
-| ⚠️ **Las once tablas propias todavía NO están migradas** (2026-11-10): van en su migración antes de que el módulo
-| tenga pantalla. Por eso `sync.tablas` va vacío: el sync sólo puede subir tablas que existan en MySQL.
+| ⚠️ **Las once tablas propias se migraron el 2026-11-10** (`2026_11_10_120000_create_tablas_orl`): ya se pueden
+| subir por el sync. Falta el módulo (pantallas) y el catálogo inicial.
 |
 | `codigos_legado` va vacío: el `codeespecial` del catálogo `especial` de la instalación no se leyó todavía. El sync
 | toma la especialidad del médico (`medico_specialty`), no del código.
@@ -51,7 +51,7 @@ return [
     ],
 
     /*
-    | Tablas que sólo usa esta especialidad (esquema `orl.sql`). **Pendientes de migración.**
+    | Tablas que sólo usa esta especialidad (esquema `orl.sql`), migradas el 2026-11-10.
     */
     'propias' => [
         // La evaluación física del ORL, una fila por consulta (`historia` + `consulta`).
@@ -83,10 +83,13 @@ return [
 
     /*
     | Lo que el escritorio del ORL sube ADEMÁS de la lista histórica (`config/sync_legado.php` → `tablas`).
-    | Vacío hasta que sus tablas estén migradas.
     */
     'sync' => [
-        'tablas' => [],
+        'tablas' => [
+            'fisico_orl',
+            'oido_derecho', 'oido_izquierdo', 'oidos_graficas', 'oidos_graficas_iz', 'audio_detalle',
+            'NASO', 'naso_new', 'naso_new_video', 'imagen_nasolarigo', 'imagen_nasovideo',
+        ],
     ],
 
     /*
