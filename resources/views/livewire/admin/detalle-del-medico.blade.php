@@ -325,7 +325,7 @@
                 @php $sync = $datos['sync']; @endphp
                 <dl class="datos-rejilla mb-3">
                     <x-ui.dato etiqueta="Credenciales activas" :valor="(string) ($sync['activas'] ?? 0)" />
-                    <x-ui.dato etiqueta="Carga inicial" :valor="isset($sync['carga']) && $sync['carga'] ? ucfirst((string) $sync['carga']->estado) : 'Sin carga'" />
+                    <x-ui.dato etiqueta="Carga inicial" :valor="isset($sync['carga']) && $sync['carga'] ? ($sync['carga']->completaConDatos() ? 'Completa' : ($sync['carga']->estado === 'completa' ? 'Sin datos' : ucfirst((string) $sync['carga']->estado))) : 'Sin carga'" />
                     <x-ui.dato etiqueta="Última sincronización del escritorio" :valor="$fecha($sync['ultima_escritorio'] ?? null) ?? 'Sin registro'" />
                 </dl>
 

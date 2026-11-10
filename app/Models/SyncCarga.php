@@ -43,4 +43,22 @@ class SyncCarga extends Model
     {
         return $this->modo === self::MODO_MEZCLA;
     }
+
+    /**
+     * ¿La carga se cerró **con datos**? Una carga `completa` que no recibió ninguna fila es el síntoma de
+     * un escritorio que leyó una base vacía (DSN o carpeta equivocada): no habilita la sincronización
+     * periódica ni se muestra como completa. Se puede volver a intentar y `iniciar` la reabre.
+     */
+    public function completaConDatos(): bool
+    {
+        if ($this->estado !== self::COMPLETA) {
+            return false;
+        }
+
+        // El resumen del panel trae el total con `withSum('tablas', 'filas_recibidas')`; en el resto de
+        // los casos se consulta. El atributo ausente devuelve null, no lanza.
+        $recibidas = $this->tablas_sum_filas_recibidas ?? $this->tablas()->sum('filas_recibidas');
+
+        return (int) $recibidas > 0;
+    }
 }

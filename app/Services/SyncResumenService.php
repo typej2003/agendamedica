@@ -69,7 +69,8 @@ class SyncResumenService
         $credenciales = $todosLosRegs
             ? SyncCredential::whereIn('reg_medico', $todosLosRegs)->orderByDesc('created_at')->get()->groupBy('reg_medico')
             : collect();
-        $cargas = $todosLosRegs ? SyncCarga::whereIn('reg_medico', $todosLosRegs)->get()->keyBy('reg_medico') : collect();
+        $cargas = $todosLosRegs ? SyncCarga::whereIn('reg_medico', $todosLosRegs)
+            ->withSum('tablas', 'filas_recibidas')->get()->keyBy('reg_medico') : collect();
 
         $cambios = $todosLosRegs
             ? SyncChange::whereIn('reg_medico', $todosLosRegs)
@@ -106,8 +107,9 @@ class SyncResumenService
 
             $creds = collect($regs)->flatMap(fn ($r) => $credenciales[$r] ?? collect())->sortByDesc('created_at')->values();
             $cargasDelMedico = collect($regs)->map(fn ($r) => $cargas[$r] ?? null)->filter();
-            // Si hay varias, la completa manda; si no, la más reciente.
-            $carga = $cargasDelMedico->first(fn ($c) => $c->estado === SyncCarga::COMPLETA) ?? $cargasDelMedico->sortByDesc('id')->first();
+            // Si hay varias, la completa **con datos** manda; una completa sin filas es el síntoma de una
+            // base vacía y no cuenta (el panel la muestra como «Sin datos»). Si no, la más reciente.
+            $carga = $cargasDelMedico->first(fn ($c) => $c->completaConDatos()) ?? $cargasDelMedico->sortByDesc('id')->first();
 
             $deCambios = fn (string $source) => collect($cambios)
                 ->filter(fn ($c) => in_array($c->reg_medico, $regs, true) && $c->source === $source)

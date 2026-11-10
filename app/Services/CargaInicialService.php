@@ -117,8 +117,44 @@ class CargaInicialService
         $limpiadas = [];
 
         if ($carga && $carga->estado === SyncCarga::COMPLETA) {
-            return $this->error(409, 'carga_ya_completa',
-                "La carga inicial de {$regMedico} ya se completó el {$carga->finalizada_at}. Desde acá se sincronizan solo los cambios.");
+            if ($carga->completaConDatos()) {
+                return $this->error(409, 'carga_ya_completa',
+                    "La carga inicial de {$regMedico} ya se completó el {$carga->finalizada_at}. Desde acá se sincronizan solo los cambios.");
+            }
+
+            // Se cerró sin una sola fila: el escritorio leyó una base vacía (DSN o carpeta equivocada).
+            // Se reabre y se borra el avance, para que el botón «Sincronización completa» pueda subir los
+            // datos de verdad. No se toca nada clínico: esa carga no insertó filas.
+            $carga->tablas()->delete();
+            $carga->estado = SyncCarga::EN_CURSO;
+            $carga->finalizada_at = null;
+            $carga->save();
+        }
+
+        // Normalizar lo anunciado y separar lo que el API no acepta. Lo que se **acepta** es la unión
+        // de todas las especialidades (una tabla de otra especialidad no se rechaza); lo que se le
+        // **pide** al escritorio, más abajo, es lo de la especialidad de este médico.
+        $permitidas = $this->sync->aceptadas();
+        $aceptadas = [];
+        $ignoradas = [];
+        foreach ($anunciadas as $tabla => $filas) {
+            $tabla = $this->tablas->normalizar((string) $tabla);
+            if (in_array($tabla, $permitidas, true) && Schema::hasTable($tabla)) {
+                $aceptadas[$tabla] = max(0, (int) $filas);
+            } elseif ((int) $filas > 0) {
+                $ignoradas[] = $tabla;
+            }
+        }
+
+        // Un escritorio que anuncia 0 filas en TODAS las tablas no leyó la base del consultorio (la tabla
+        // `evolucion` siempre tiene al menos el médico). Antes eso cerraba la carga como «completa» con 0
+        // pacientes y habilitaba el sync periódico sobre una base vacía. Un consultorio **sin pacientes**
+        // pero con sus catálogos sigue entrando: el corte es sobre el total anunciado, no sobre pacientes.
+        if (array_sum($aceptadas) === 0) {
+            return $this->error(409, 'carga_vacia',
+                'El escritorio anunció 0 filas en todas las tablas: la base local está vacía o la aplicación ' .
+                'está abriendo otra base. Revisa la carpeta/DSN de la base (cdatabase.ini y cdirorigen.ini) y ' .
+                'vuelve a intentar la sincronización completa.');
         }
 
         if (! $carga) {
@@ -146,21 +182,6 @@ class CargaInicialService
                 'modo'        => $modo,
                 'iniciada_at' => now(),
             ]);
-        }
-
-        // Normalizar lo anunciado y separar lo que el API no acepta. Lo que se **acepta** es la unión
-        // de todas las especialidades (una tabla de otra especialidad no se rechaza); lo que se le
-        // **pide** al escritorio, más abajo, es lo de la especialidad de este médico.
-        $permitidas = $this->sync->aceptadas();
-        $aceptadas = [];
-        $ignoradas = [];
-        foreach ($anunciadas as $tabla => $filas) {
-            $tabla = $this->tablas->normalizar((string) $tabla);
-            if (in_array($tabla, $permitidas, true) && Schema::hasTable($tabla)) {
-                $aceptadas[$tabla] = max(0, (int) $filas);
-            } elseif ((int) $filas > 0) {
-                $ignoradas[] = $tabla;
-            }
         }
 
         // Antes de armarle la lista: si este médico no tiene ninguna especialidad vinculada, se la deduce de
@@ -418,6 +439,19 @@ class CargaInicialService
                 'error'      => 'carga_incompleta',
                 'mensaje'    => 'Faltan filas por subir en: ' . $pendientes->pluck('tabla')->implode(', '),
                 'pendientes' => $pendientes->mapWithKeys(fn ($t) => [$t->tabla => $t->filas_esperadas - $t->filas_recibidas])->all(),
+            ]];
+        }
+
+        // Ninguna fila en toda la carga: no se cierra. Es una base vacía (o un cliente viejo que no pasó
+        // por el corte de `iniciar`). Cerrarla dejaría el consultorio «sincronizado» sin un solo paciente
+        // y habilitaría el sync periódico; se deja en curso para que se reintente con la base correcta.
+        if ((int) $tablas->sum('filas_recibidas') === 0) {
+            return ['http' => 409, 'cuerpo' => [
+                'ok'      => false,
+                'error'   => 'carga_vacia',
+                'mensaje' => 'La carga no recibió ninguna fila. No se cierra: revisa que el escritorio esté ' .
+                    'abriendo la base correcta (cdatabase.ini y cdirorigen.ini) y vuelve a intentar la ' .
+                    'sincronización completa.',
             ]];
         }
 

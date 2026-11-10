@@ -1236,16 +1236,16 @@ citas a la misma hora son legítimas; `cola.clave_escritorio` lleva sólo un ín
 
 | Método | Ruta | Controlador |
 |---|---|---|
-| `POST` | `/api/sync/carga-inicial/iniciar` | `CargaInicialController@iniciar` — solo si el `reg_medico` no tiene datos (primera carga); si hay una carga cortada, la retoma y devuelve cuántas filas tiene de cada tabla. |
+| `POST` | `/api/sync/carga-inicial/iniciar` | `CargaInicialController@iniciar` — solo si el `reg_medico` no tiene datos (primera carga); si hay una carga cortada, la retoma y devuelve cuántas filas tiene de cada tabla. Rechaza con `409 carga_vacia` si el escritorio anuncia **0 filas en todas las tablas** (leyó una base vacía), y reabre una carga `completa` que no recibió ninguna fila. |
 | `POST` | `/api/sync/carga-inicial/lote` | `@lote` — idempotente por posición (`desde`): reenviar un lote no duplica; `409 posicion_incorrecta` + `esperado` si hay hueco. `pacientes` crea paciente + `medico_pacientes` + `historias`; el resto se inserta con el `reg_medico` de la carga. |
-| `POST` | `/api/sync/carga-inicial/finalizar` | `@finalizar` — cierra solo si llegaron todas las filas anunciadas. Después, `iniciar` para ese médico da `409 carga_ya_completa`. |
+| `POST` | `/api/sync/carga-inicial/finalizar` | `@finalizar` — cierra solo si llegaron todas las filas anunciadas **y recibió al menos una** (`409 carga_vacia` si no). Después, `iniciar` para ese médico da `409 carga_ya_completa` (salvo que esa carga haya quedado vacía, que se reabre). |
 
 *Sincronización de cambios* (Fase 2, mismos límites; `App\Sync\Escritorio\CambiosEscritorio`, tests en
 `tests/Feature/CambiosEscritorioTest.php`, diseño en `../bridge/DISENO-FASE-2.md`):
 
 | Método | Ruta | Controlador |
 |---|---|---|
-| `POST` | `/api/sync/cambios/estado` | `CambiosEscritorioController@estado` — si el médico completó la carga inicial y qué tablas vigilar; el nombre/prefijo del médico y el **servicio contratado** (`servicio_estado|plan|vence|dias|gracia_hasta`). Nunca se bloquea por servicio vencido. |
+| `POST` | `/api/sync/cambios/estado` | `CambiosEscritorioController@estado` — si el médico completó la carga inicial y qué tablas vigilar; una carga `completa` **sin filas** se informa `en_curso` (el escritorio vuelve a mostrar el botón de la carga inicial); el nombre/prefijo del médico y el **servicio contratado** (`servicio_estado|plan|vence|dias|gracia_hasta`). Nunca se bloquea por servicio vencido. |
 | `POST` | `/api/sync/cambios/subir` | `@subir` — aplica lo que cambió en el escritorio. Traduce números de historia/consulta con `clave_escritorio` (historias, consultas, cola); "gana la última edición" por columna con `sync_changes` (solo cuentan ediciones del app). |
 
 *Imágenes de la PC del consultorio (WEB-T.1, 2026-10-12)*: la herramienta `../bridge/subir-imagenes.exe` (Node, sin dependencias; instructivo

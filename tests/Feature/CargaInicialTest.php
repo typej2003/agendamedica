@@ -8,6 +8,8 @@ use App\Models\Medico;
 use App\Models\MedicoPaciente;
 use App\Models\MedicoRegistro;
 use App\Models\Paciente;
+use App\Models\SyncCarga;
+use App\Models\SyncCargaTabla;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
@@ -397,7 +399,7 @@ class CargaInicialTest extends TestCase
         DB::table('tipos_examenes')->insert(['reg_medico' => 'carga-t-030', 'codetipo' => '001', 'tipo' => 'LABORATORIO']);
         DB::table('examenes')->insert(['reg_medico' => 'carga-t-030', 'codeexamen' => '001', 'examen' => 'HEMOGRAMA', 'codetipo' => '001']);
 
-        $r = $this->iniciar('carga-t-030', ['pacientes' => 0, 'consultas' => 0])->assertOk();
+        $r = $this->iniciar('carga-t-030', ['pacientes' => 0, 'consultas' => 0, 'diagnosticos' => 1])->assertOk();
 
         $this->assertEqualsCanonicalizing(
             ['diagnosticos', 'examenes', 'tipos_examenes'],
@@ -423,7 +425,7 @@ class CargaInicialTest extends TestCase
         DB::table('diagnosticos')->insert(['reg_medico' => 'carga-t-031', 'codediagnostico' => '0001', 'descripcion' => 'CONTROL']);
         DB::table('historias')->insert(['reg_medico' => 'carga-t-031', 'numhistoria' => '9001']);
 
-        $this->iniciar('carga-t-031', ['pacientes' => 0])
+        $this->iniciar('carga-t-031', ['pacientes' => 0, 'diagnosticos' => 1])
             ->assertOk()
             ->assertJson(['ok' => true, 'modo' => 'mezcla', 'limpiadas' => '']);
 
@@ -459,5 +461,94 @@ class CargaInicialTest extends TestCase
         // El escritorio no vio la respuesta y reintenta: la carga ya estaba completa.
         $this->enviar('finalizar', ['carga_id' => $carga])->assertOk();
         Event::assertDispatchedTimes(CargaInicialCompletada::class, 1);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Una carga que no leyó ninguna fila no se cierra                     */
+    /* ------------------------------------------------------------------ */
+
+    public function test_una_carga_con_cero_filas_en_todas_las_tablas_no_se_abre(): void
+    {
+        $this->crearMedico('carga-vacia-1');
+
+        $this->iniciar('carga-vacia-1', ['pacientes' => 0, 'cola' => 0])
+            ->assertStatus(409)
+            ->assertJson(['ok' => false, 'error' => 'carga_vacia']);
+
+        $this->assertSame(0, SyncCarga::where('reg_medico', 'carga-vacia-1')->count(),
+            'no se crea una carga que después se cerraría vacía');
+    }
+
+    /**
+     * El corte es sobre el **total** anunciado, no sobre pacientes: un consultorio sin pacientes pero con
+     * sus catálogos (o al menos la fila de `evolucion`) sigue pudiendo hacer la carga inicial.
+     */
+    public function test_un_consultorio_sin_pacientes_pero_con_catalogos_si_inicia_la_carga(): void
+    {
+        $this->crearMedico('carga-vacia-2');
+
+        $this->iniciar('carga-vacia-2', ['pacientes' => 0, 'evolucion' => 1])
+            ->assertOk()
+            ->assertJson(['ok' => true, 'estado' => 'en_curso']);
+    }
+
+    public function test_una_carga_en_curso_que_no_recibio_filas_no_se_puede_cerrar(): void
+    {
+        $medico = $this->crearMedico('carga-vacia-3');
+        $carga = SyncCarga::create([
+            'reg_medico' => 'carga-vacia-3', 'medico_id' => $medico->id, 'estado' => SyncCarga::EN_CURSO,
+            'modo' => SyncCarga::MODO_LIMPIA, 'iniciada_at' => now(),
+        ]);
+        SyncCargaTabla::create([
+            'sync_carga_id' => $carga->id, 'tabla' => 'pacientes',
+            'filas_esperadas' => 0, 'filas_recibidas' => 0,
+        ]);
+
+        $this->enviar('finalizar', ['carga_id' => $carga->id])
+            ->assertStatus(409)
+            ->assertJson(['ok' => false, 'error' => 'carga_vacia']);
+
+        $this->assertSame(SyncCarga::EN_CURSO, $carga->fresh()->estado,
+            'la carga queda abierta para reintentarla con la base correcta');
+    }
+
+    /**
+     * El caso medido en producción (2026-11-10): una carga se cerró «completa» sin una sola fila porque
+     * el escritorio leyó una base vacía. No cuenta como completa: el `estado` del escritorio vuelve a
+     * decir que falta, `subir` la rechaza y `iniciar` la reabre para que el botón suba los datos de verdad.
+     */
+    public function test_una_carga_completa_sin_filas_se_reabre_y_se_puede_rehacer(): void
+    {
+        $medico = $this->crearMedico('carga-vacia-4');
+        $carga = SyncCarga::create([
+            'reg_medico' => 'carga-vacia-4', 'medico_id' => $medico->id,
+            'estado' => SyncCarga::COMPLETA, 'modo' => SyncCarga::MODO_LIMPIA,
+            'iniciada_at' => now()->subMinute(), 'finalizada_at' => now(),
+        ]);
+        SyncCargaTabla::create([
+            'sync_carga_id' => $carga->id, 'tabla' => 'pacientes',
+            'filas_esperadas' => 0, 'filas_recibidas' => 0,
+        ]);
+
+        $this->postJson('/api/sync/cambios/estado', ['reg_medico' => 'carga-vacia-4'], ['X-API-KEY' => self::API_KEY])
+            ->assertOk()->assertJson(['carga' => SyncCarga::EN_CURSO]);
+
+        $this->postJson('/api/sync/cambios/subir', ['reg_medico' => 'carga-vacia-4', 'cambios' => []], ['X-API-KEY' => self::API_KEY])
+            ->assertStatus(409)->assertJson(['error' => 'sin_carga_inicial']);
+
+        $this->iniciar('carga-vacia-4', ['pacientes' => 1])
+            ->assertOk()
+            ->assertJson(['carga_id' => $carga->id, 'estado' => SyncCarga::EN_CURSO, 'retomada' => 1]);
+
+        $this->enviar('lote', ['carga_id' => $carga->id, 'tabla' => 'pacientes', 'desde' => 0,
+            'filas' => [$this->paciente(1, 'VACIA-1')]])->assertOk();
+
+        $this->enviar('finalizar', ['carga_id' => $carga->id])
+            ->assertOk()->assertJson(['estado' => SyncCarga::COMPLETA, 'filas' => 1]);
+
+        $this->assertTrue($carga->fresh()->completaConDatos());
+
+        $this->postJson('/api/sync/cambios/estado', ['reg_medico' => 'carga-vacia-4'], ['X-API-KEY' => self::API_KEY])
+            ->assertOk()->assertJson(['carga' => SyncCarga::COMPLETA]);
     }
 }
