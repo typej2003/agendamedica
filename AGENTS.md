@@ -1236,7 +1236,7 @@ citas a la misma hora son legítimas; `cola.clave_escritorio` lleva sólo un ín
 
 | Método | Ruta | Controlador |
 |---|---|---|
-| `POST` | `/api/sync/carga-inicial/iniciar` | `CargaInicialController@iniciar` — solo si el `reg_medico` no tiene datos (primera carga); si hay una carga cortada, la retoma y devuelve cuántas filas tiene de cada tabla. Rechaza con `409 carga_vacia` si el escritorio anuncia **0 filas en todas las tablas** (leyó una base vacía), y reabre una carga `completa` que no recibió ninguna fila. |
+| `POST` | `/api/sync/carga-inicial/iniciar` | `CargaInicialController@iniciar` — solo si el `reg_medico` no tiene datos (primera carga); si hay una carga cortada, la retoma y devuelve cuántas filas tiene de cada tabla. Rechaza con `409 carga_vacia` si el escritorio anuncia **0 filas en todas las tablas** (leyó una base vacía), reabre una carga `completa` que no recibió ninguna fila y, al retomar una carga `limpia` cuando el API ya tiene datos, la pasa a `mezcla` (los números de historia pueden estar ocupados; ver trampa 194). |
 | `POST` | `/api/sync/carga-inicial/lote` | `@lote` — idempotente por posición (`desde`): reenviar un lote no duplica; `409 posicion_incorrecta` + `esperado` si hay hueco. `pacientes` crea paciente + `medico_pacientes` + `historias`; el resto se inserta con el `reg_medico` de la carga. |
 | `POST` | `/api/sync/carga-inicial/finalizar` | `@finalizar` — cierra solo si llegaron todas las filas anunciadas **y recibió al menos una** (`409 carga_vacia` si no). Después, `iniciar` para ese médico da `409 carga_ya_completa` (salvo que esa carga haya quedado vacía, que se reabre). |
 
