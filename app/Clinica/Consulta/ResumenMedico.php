@@ -69,6 +69,25 @@ final class ResumenMedico
 
     public const EXAMEN_GINECOLOGICO = 'examen-ginecologico';
 
+    /** La **colposcopía** (texto de la solapa, consultas.observaciones): bloque de ginecología (2026-11-09). */
+    public const COLPOSCOPIA = 'colposcopia';
+
+    /** La **histeroscopía** (texto de la solapa, consultas.cuello): bloque de ginecología (2026-11-09). */
+    public const HISTEROSCOPIA = 'histeroscopia';
+
+    /** Los **ecos** de ginecología (2026-11-09): el ginecológico, el obstétrico y el Doppler, con su conclusión. */
+    public const ECO_GINECOLOGICO = 'eco-ginecologico';
+
+    public const ECO_OBSTETRICO = 'eco-obstetrico';
+
+    public const ECO_DOPPLER = 'eco-doppler';
+
+    /**
+     * Las **observaciones del control prenatal** (pre_natal_observaciones.observaciones). La tabla del legado las
+     * guarda por historia y gesta, no por consulta: el bloque repite las de la gesta en cada resumen.
+     */
+    public const CONTROL_PRENATAL = 'control-prenatal';
+
     public const RESULTADO_DE_EXAMENES = 'resultado-de-examenes';
 
     public const DIAGNOSTICO = 'diagnostico';
@@ -92,6 +111,12 @@ final class ResumenMedico
         self::EXAMEN_FISICO => ['rotulo' => 'EXAMEN FÍSICO:', 'lista' => false],
         self::CUESTIONARIO => ['rotulo' => 'CUESTIONARIO:', 'lista' => true],
         self::EXAMEN_GINECOLOGICO => ['rotulo' => 'EXAMEN GINECOLÓGICO:', 'lista' => false],
+        self::COLPOSCOPIA => ['rotulo' => 'COLPOSCOPÍA:', 'lista' => false],
+        self::HISTEROSCOPIA => ['rotulo' => 'HISTEROSCOPÍA:', 'lista' => false],
+        self::ECO_GINECOLOGICO => ['rotulo' => 'ECO GINECOLÓGICO:', 'lista' => false],
+        self::ECO_OBSTETRICO => ['rotulo' => 'ECO OBSTÉTRICO:', 'lista' => false],
+        self::ECO_DOPPLER => ['rotulo' => 'ECO DOPPLER:', 'lista' => false],
+        self::CONTROL_PRENATAL => ['rotulo' => 'CONTROL PRENATAL:', 'lista' => false],
         self::RESULTADO_DE_EXAMENES => ['rotulo' => 'RESULTADO DE EXÁMENES:', 'lista' => false],
         // El único rótulo sin dos puntos: así está en el `text` del DataWindow (`d_lista_diagnostic01.srd`).
         self::DIAGNOSTICO => ['rotulo' => 'DIAGNOSTICO', 'lista' => true],

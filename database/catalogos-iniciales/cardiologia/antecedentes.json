@@ -1,0 +1,90 @@
+[
+ {
+  "descripcion": "DIABETES",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "TVP / TEP",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "CARDIOPATIA",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "TABAQUISMO",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "NEOPLASIA",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "REPOSO PROLONGADO",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "VARICES / TVS",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "TRAUMATISMO",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "HIPERTENSION ARTERIAL",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "CIRUGIA DE BYPASS",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "ENDARTERECTOMIA",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "ACV / AMAUROSIS",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "ACTP (ANGIOPLASTIA)",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "AMPUTACION DE MIEMBROS INFERIORES",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "AMAUROSIS",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "BRONCOPULMONARES",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "CARDIOVASCULARES",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "HEPATICOS",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "RENALES",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "ALCOHOLISMO",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "ALERGIAS MEDICAMENTOSAS",
+  "codtipo": "01"
+ },
+ {
+  "descripcion": "OTROS",
+  "codtipo": "01"
+ }
+]

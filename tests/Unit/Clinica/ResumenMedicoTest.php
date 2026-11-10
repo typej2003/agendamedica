@@ -179,4 +179,34 @@ class ResumenMedicoTest extends TestCase
         $this->assertSame('Dolor de dos días.', $parrafos[1]['texto']);
         $this->assertSame('Sin fiebre.', $parrafos[2]['texto']);
     }
+
+    /**
+     * Los dos bloques de ginecología (2026-11-09): la colposcopía y la histeroscopía van **después** del examen
+     * ginecológico y antes del resultado de exámenes, como las solapas del examen en el panel.
+     */
+    public function test_la_colposcopia_y_la_histeroscopia_van_despues_del_examen_ginecologico(): void
+    {
+        $resumen = new ResumenMedico($this->completo() + [
+            ResumenMedico::COLPOSCOPIA => 'Epitelio escamoso maduro.',
+            ResumenMedico::HISTEROSCOPIA => 'Cavidad regular.',
+            ResumenMedico::ECO_GINECOLOGICO => 'Útero normal.',
+            ResumenMedico::ECO_OBSTETRICO => 'Embarazo de 12 semanas.',
+            ResumenMedico::ECO_DOPPLER => 'Flujo normal.',
+        ]);
+
+        $rotulos = $resumen->rotulos();
+        $ginecologico = array_search('EXAMEN GINECOLÓGICO:', $rotulos, true);
+        $colposcopia = array_search('COLPOSCOPÍA:', $rotulos, true);
+        $histeroscopia = array_search('HISTEROSCOPÍA:', $rotulos, true);
+        $resultado = array_search('RESULTADO DE EXÁMENES:', $rotulos, true);
+
+        $this->assertIsInt($ginecologico);
+        $this->assertSame($ginecologico + 1, $colposcopia);
+        $this->assertSame($colposcopia + 1, $histeroscopia);
+        // Los tres ecos van después de los textos del examen y antes del resultado de exámenes.
+        $this->assertSame($histeroscopia + 1, array_search('ECO GINECOLÓGICO:', $rotulos, true));
+        $this->assertSame($histeroscopia + 2, array_search('ECO OBSTÉTRICO:', $rotulos, true));
+        $this->assertSame($histeroscopia + 3, array_search('ECO DOPPLER:', $rotulos, true));
+        $this->assertSame($histeroscopia + 4, $resultado);
+    }
 }

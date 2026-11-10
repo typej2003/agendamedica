@@ -105,6 +105,7 @@ final class ModoDeLaHoja
         DocumentoImpreso::REFERENCIA,
         DocumentoImpreso::HOSPITALIZACION,
         DocumentoImpreso::DIETA,
+        DocumentoImpreso::ORTOPEDIA,
         DocumentoImpreso::LABORATORIO,
         DocumentoImpreso::LABORATORIO_PAREJA,
         DocumentoImpreso::ESTUDIOS,

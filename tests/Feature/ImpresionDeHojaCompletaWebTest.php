@@ -214,8 +214,10 @@ class ImpresionDeHojaCompletaWebTest extends TestCase
         // Una página por documento: la horizontal del récipe y las dos verticales con nombre (el informe del eco y, desde
         // 2026-10-23, el del control de embarazo, que es un formulario lleno con tablas).
         $html = $hojas->getContent();
-        $this->assertSame(1, substr_count($html, 'class="recipe-hoja '), 'la hoja horizontal del récipe');
-        $this->assertSame(2, substr_count($html, 'class="informe-hoja"'), 'las hojas verticales del eco y del control de embarazo');
+        $this->assertSame(2, substr_count($html, 'class="recipe-hoja '), 'la hoja horizontal del récipe');
+        // Desde el 2026-11-09 son **tres**: el eco y el control de embarazo alimentan bloques del resumen médico, así que
+        // el resumen también es un documento de la consulta.
+        $this->assertSame(2, substr_count($html, 'class="informe-hoja"'), 'las hojas verticales del eco, el control de embarazo y el resumen');
     }
 
     // ======================================================================= Los formatos en blanco

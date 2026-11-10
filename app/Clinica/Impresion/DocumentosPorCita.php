@@ -13,6 +13,8 @@ use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\PacienteDeLaCita;
 use App\Clinica\Consulta\TextosDelExamen;
+use App\Clinica\Consulta\Traumatologia\MapaDeLaOrdenDeIngreso;
+use App\Clinica\Consulta\Traumatologia\MapaDelImplante;
 use App\Models\Cola;
 use App\Models\Consulta;
 use App\Models\Paciente;
@@ -166,6 +168,44 @@ final class DocumentosPorCita
         //  - dieta con texto (la tabla llama `histroria` a la historia y `consulta` al número de la consulta);
         $this->marcar($conAlgo, DB::table('dieta_paciente')->where('reg_medico', $regMedico)->whereIn('histroria', $historias)
             ->whereRaw("TRIM(COALESCE(descripcion, '')) <> ''"), 'histroria', 'consulta');
+        //  - plantilla ortopédica (Traumatología, 2026-11-09): con alguna casilla marcada o algún texto;
+        if ($seOfrece(DocumentoImpreso::ORTOPEDIA)) {
+            $this->marcar($conAlgo, DB::table('ortopedia')->where('reg_medico', $regMedico)->whereIn('nrohistoria', $historias)
+                ->where(fn ($q) => $q
+                    ->whereIn('botas', ['1'])->orWhereIn('zapatos', ['1'])->orWhereIn('normal', ['1'])->orWhereIn('plantilla', ['1'])
+                    ->orWhereIn('borde_int_rect', ['1'])->orWhereIn('borde_int_abdu', ['1'])
+                    ->orWhereIn('suela_normal', ['1'])->orWhereIn('suela_antirres', ['1'])
+                    ->orWhereRaw("TRIM(COALESCE(soporte, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(thomas, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(tacon_int, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(tacon_ext, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(suela_int, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(suela_ext, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(aparatos, '')) <> ''")
+                    ->orWhereRaw("TRIM(COALESCE(observacion, '')) <> ''")),
+                'nrohistoria', 'nroconsulta');
+        }
+        //  - solicitud de implante y orden de ingreso (Traumatología, T3, 2026-11-10): con algún campo cargado, que es la
+        //    misma regla de `DatosDelImplante`/`DatosDeLaOrdenDeIngreso` (`tieneDatos`), leída de su mapa;
+        foreach ([
+            DocumentoImpreso::IMPLANTE => ['implante', MapaDelImplante::campos()],
+            DocumentoImpreso::ORDEN_DE_INGRESO => ['orden_ingreso', MapaDeLaOrdenDeIngreso::campos()],
+        ] as $documento => [$tabla, $campos]) {
+            if (! $seOfrece($documento)) {
+                continue;
+            }
+
+            $this->marcar($conAlgo, DB::table($tabla)->where('reg_medico', $regMedico)->whereIn('historia', $historias)
+                ->where(function ($q) use ($campos) {
+                    foreach ($campos as $campo) {
+                        if ($campo['tipo'] === 'marca') {
+                            $q->orWhere($campo['columna'], '1');
+                        } else {
+                            $q->orWhereRaw('TRIM(COALESCE(' . $campo['columna'] . ", '')) <> ''");
+                        }
+                    }
+                }), 'historia', 'consulta');
+        }
         //  - pre-factura (F9): al menos un concepto cargado;
         $this->marcar($conAlgo, DB::table('his_con_pre_factura')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias), 'numhistoria', 'nroconsulta');
         //  - orden de laboratorio (WEB-5.4): al menos un examen, o un resumen clínico con texto (`QueEsUnDocumento::laboratorio`; el literal

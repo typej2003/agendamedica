@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\DB;
 final class ResumenMedicoDeLaConsulta
 {
     /** Las columnas de `consultas` que el resumen imprime (enfermedad actual, resultado de exámenes y plan). */
-    private const COLUMNAS_DE_LA_CONSULTA = ['enfermedadactual', 'oido', 'laringe'];
+    private const COLUMNAS_DE_LA_CONSULTA = ['enfermedadactual', 'oido', 'laringe', 'observaciones', 'cuello'];
 
     public function __construct(private RecipesDeLaConsulta $recipes)
     {
@@ -67,6 +67,9 @@ final class ResumenMedicoDeLaConsulta
             ->orderBy('id')
             ->first(['total_f', 'total_g']);
 
+        // ¿La consulta es de ginecología? Sus dos textos del examen (colposcopía e histeroscopía) son bloques
+        // propios del resumen: en medicina interna esas columnas significan otra cosa, así que no se leen.
+        $ginecologia = AlcanceDeLaEspecialidad::esDeGinecologia($regMedico);
         // Pediatría (WEB-12.5): el examen físico es el resumen de `examen_fisico` (su tabla: no hay `examen_fisico_nuevo`), y suma las mediciones y el cuestionario.
         // Es por dato y no por especialidad: en ginecología esas tablas no tienen filas y los tres bloques no salen.
         $pediatrico = DB::table('examen_fisico')->where('reg_medico', $regMedico)->where('nrohistoria', $historia)->where('nroconsulta', $nroconsulta)
@@ -82,6 +85,12 @@ final class ResumenMedicoDeLaConsulta
                     : (TextoDeLaConsulta::limpio($examen->total_f ?? null) ?? ($pediatrico->fisico_resumen ?? null)),
                 ResumenMedico::CUESTIONARIO => $this->cuestionario($regMedico, $historia, $nroconsulta),
                 ResumenMedico::EXAMEN_GINECOLOGICO => $examen->total_g ?? null,
+                ResumenMedico::COLPOSCOPIA => $ginecologia ? ($deLaConsulta->observaciones ?? null) : null,
+                ResumenMedico::HISTEROSCOPIA => $ginecologia ? ($deLaConsulta->cuello ?? null) : null,
+                ResumenMedico::ECO_GINECOLOGICO => $ginecologia ? $this->ecoGinecologico($regMedico, $historia, $nroconsulta) : null,
+                ResumenMedico::ECO_OBSTETRICO => $ginecologia ? $this->ecoObstetrico($regMedico, $historia, $nroconsulta) : null,
+                ResumenMedico::ECO_DOPPLER => $ginecologia ? $this->ecoDoppler($regMedico, $historia, $nroconsulta) : null,
+                ResumenMedico::CONTROL_PRENATAL => $ginecologia ? $this->controlPrenatal($regMedico, $historia) : null,
                 ResumenMedico::RESULTADO_DE_EXAMENES => $deLaConsulta->oido ?? null,
                 ResumenMedico::DIAGNOSTICO => $this->diagnosticos($regMedico, $historia, $nroconsulta),
                 ResumenMedico::TRATAMIENTO => $this->tratamiento($regMedico, $historia, $nroconsulta),
@@ -188,6 +197,47 @@ final class ResumenMedicoDeLaConsulta
     // ------------------------------------------------------------------------------------------ Adentro
 
     /** Las mediciones del niño en la consulta como texto (`null` si no hay fila). */
+    /**
+     * La **conclusión del eco ginecológico** de la consulta (`eco_pelvico.sugerencias`), que es lo que el informe
+     * del eco imprime como conclusión. Sólo para la ginecóloga (2026-11-09).
+     */
+    private function ecoGinecologico(string $regMedico, int $historia, int $nroconsulta): ?string
+    {
+        $fila = DB::table('eco_pelvico')->where('reg_medico', $regMedico)->where('numhistoria', $historia)
+            ->where('nroconsulta', $nroconsulta)->orderBy('id')->first(['sugerencias']);
+
+        return TextoDeLaConsulta::limpio($fila->sugerencias ?? null);
+    }
+
+    /** La **conclusión del eco obstétrico** (`eco_obstetrico.dianostico`, como la llama la tabla del legado). */
+    private function ecoObstetrico(string $regMedico, int $historia, int $nroconsulta): ?string
+    {
+        $fila = DB::table('eco_obstetrico')->where('reg_medico', $regMedico)->where('historia', $historia)
+            ->where('consulta', $nroconsulta)->orderBy('id')->first(['dianostico']);
+
+        return TextoDeLaConsulta::limpio($fila->dianostico ?? null);
+    }
+
+    /** La **conclusión del Doppler** (`eco_doppler.conclusion`, o sus `sugerencias` si la primera está vacía). */
+    private function ecoDoppler(string $regMedico, int $historia, int $nroconsulta): ?string
+    {
+        $fila = DB::table('eco_doppler')->where('reg_medico', $regMedico)->where('historia', $historia)
+            ->where('consulta', $nroconsulta)->orderBy('id')->first(['conclusion', 'sugerencias']);
+
+        return TextoDeLaConsulta::limpio($fila->conclusion ?? null) ?? TextoDeLaConsulta::limpio($fila->sugerencias ?? null);
+    }
+    /**
+     * Las **observaciones del control prenatal** de la historia (`pre_natal_observaciones.observaciones`, la última
+     * fila). La tabla del legado no guarda la consulta: es lo que la gesta tiene anotado, y por eso el bloque es el
+     * mismo en cada resumen de esa historia mientras el texto no cambie.
+     */
+    private function controlPrenatal(string $regMedico, int $historia): ?string
+    {
+        $fila = DB::table('pre_natal_observaciones')->where('reg_medico', $regMedico)->where('historia', $historia)
+            ->orderByDesc('id')->first(['observaciones']);
+
+        return TextoDeLaConsulta::limpio($fila->observaciones ?? null);
+    }
     private function mediciones(string $regMedico, int $historia, int $nroconsulta): ?string
     {
         $fila = DB::table('percentiles_paciente')->where('reg_medico', $regMedico)->where('hhistoria', $historia)->where('hconsulta', $nroconsulta)

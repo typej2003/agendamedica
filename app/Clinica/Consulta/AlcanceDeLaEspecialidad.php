@@ -143,6 +143,11 @@ final class AlcanceDeLaEspecialidad
      * **¿El registro es de un internista?** Para lo que se arma sin el contexto clínico a mano (las hojas impresas, el resumen médico):
      * mira las especialidades del médico dueño del `reg_medico`.
      */
+    /** ¿El médico de ese registro es ginecólogo? (El resumen médico suma sus bloques propios sólo entonces.) */
+    public static function esDeGinecologia(string $regMedico): bool
+    {
+        return (bool) \App\Models\Medico::where('reg_medico', $regMedico)->first()?->specialties->contains('slug', 'ginecologia-y-obstetricia');
+    }
     public static function esDeMedicinaInterna(string $regMedico): bool
     {
         return (bool) \App\Models\Medico::where('reg_medico', $regMedico)->first()?->specialties->contains('slug', 'medicina-interna');
@@ -263,7 +268,22 @@ final class AlcanceDeLaEspecialidad
      */
     public function pestanasDeSolicitudesOcultas(): array
     {
-        return $this->esPediatria() ? [PestanasDeSolicitudes::DIETA] : [];
+        $ocultas = [];
+
+        // En pediatría la dieta es su ítem *Alimentación*, con sección propia.
+        if ($this->esPediatria()) {
+            $ocultas[] = PestanasDeSolicitudes::DIETA;
+        }
+
+        // La plantilla ortopédica, la solicitud de implante y la orden de ingreso son de traumatología: en las demás no
+        // se ofrecen, ni se abren por URL (T3, 2026-11-10).
+        if (! $this->esTraumatologia()) {
+            $ocultas[] = PestanasDeSolicitudes::ORTOPEDIA;
+            $ocultas[] = PestanasDeSolicitudes::IMPLANTE;
+            $ocultas[] = PestanasDeSolicitudes::ORDEN_DE_INGRESO;
+        }
+
+        return $ocultas;
     }
 
     /**
@@ -445,12 +465,23 @@ final class AlcanceDeLaEspecialidad
         ];
     }
 
+    /**
+     * **La hoja ortopédica no se ofrece fuera de traumatología** (2026-11-09): es la plantilla de esa especialidad y en
+     * las demás no se ofrece aunque la consulta tuviera la fila cargada por el escritorio.
+     *
+     * @return array<int,string>
+     */
+    public function documentosDeTraumatologiaQueNoSeOfrecen(): array
+    {
+        return $this->esTraumatologia() ? [] : [DocumentoImpreso::ORTOPEDIA, DocumentoImpreso::IMPLANTE, DocumentoImpreso::ORDEN_DE_INGRESO];
+    }
     public function documentosQueNoSeOfrecen(): array
     {
         return array_values(array_unique(array_merge(
             $this->documentosDeGinecologiaQueNoSeOfrecen(),
             $this->documentosDeLaParejaQueNoSeOfrecen(),
             $this->documentosDeCardiologiaQueNoSeOfrecen(),
+            $this->documentosDeTraumatologiaQueNoSeOfrecen(),
         )));
     }
 }

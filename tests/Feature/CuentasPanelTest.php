@@ -79,13 +79,13 @@ class CuentasPanelTest extends TestCase
     public function test_el_enlace_usuarios_del_panel_lateral_apunta_a_la_seccion_nueva_solo_para_administradores(): void
     {
         $this->actingAs($this->admin());
-        // El enlace viejo (`/users`) ya no está: se busca con las comillas del href porque `/users/permissions` sigue existiendo.
+        // El enlace viejo (`/users`) ya no está: se busca con las comillas del href y la ruta tampoco existe.
         // "Permisos de Usuario" tampoco: nunca funcionó y los roles se cambian desde la fila (menú de 3 puntos).
         Livewire::test('layouts.aside')
             ->assertSee(route('admin.cuentas'))
-            ->assertDontSee('href="' . route('users.index') . '"', false)
+            ->assertDontSee('href="' . '/users' . '"', false)
             ->assertDontSee('Permisos de Usuario')
-            ->assertDontSee(route('users.permissions'));
+            ->assertDontSee('/users/permissions');
 
         $this->app['auth']->forgetGuards();
         $this->actingAs($this->medicoSinPermisos());
