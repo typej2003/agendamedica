@@ -61,7 +61,9 @@ class CambiosEscritorioController extends Controller
             'reg_medico' => $regMedico,
             'medico_nombre' => $medico ? trim($medico->name . ' ' . $medico->lastname) : '',
             'medico_prefix' => $medico ? $medico->prefix : null,
-            'carga'  => $carga ? $carga->estado : 'ninguna',
+            // Una carga que se cerró sin filas no cuenta como completa: el escritorio tiene que volver a
+            // mostrar el botón «Sincronización completa» y no activar el timer de cambios.
+            'carga'  => $carga ? ($carga->completaConDatos() ? SyncCarga::COMPLETA : SyncCarga::EN_CURSO) : 'ninguna',
             // Las tablas que este escritorio tiene que vigilar: las de su especialidad (WEB-7.3). Un
             // escritorio sin especialidad en el pivote sigue recibiendo la lista histórica.
             'tablas' => implode(',', $this->sync->paraMedico($medico)),
@@ -91,7 +93,7 @@ class CambiosEscritorioController extends Controller
         }
 
         $carga = SyncCarga::where('reg_medico', $regMedico)->first();
-        if (! $carga || $carga->estado !== SyncCarga::COMPLETA) {
+        if (! $carga || ! $carga->completaConDatos()) {
             return response()->json([
                 'ok' => false, 'error' => 'sin_carga_inicial',
                 'mensaje' => "El médico {$regMedico} todavía no completó la carga inicial: los cambios se sincronizan después.",

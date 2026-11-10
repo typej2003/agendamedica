@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
 use App\Models\Specialty;
+use App\Models\SyncCarga;
 use App\Models\User;
 use App\Sync\Escritorio\TablasDelSync;
 use App\Sync\Escritorio\TablasLegado;
@@ -369,10 +370,14 @@ class PediatriaSyncTest extends TestCase
      */
     public function test_el_comando_arma_los_pacientes_desde_la_tabla_que_ya_esta_en_el_api(): void
     {
-        $carga = $this->post_('carga-inicial/iniciar', ['reg_medico' => self::REG_PED, 'tablas' => [
-            'paciente_chamo' => 0,
-        ]])->assertOk();
-        $this->post_('carga-inicial/finalizar', ['carga_id' => $carga->json('carga_id')])->assertOk();
+        // El estado histórico, como quedó en producción: una carga cerrada (sin filas) y el espejo de
+        // `paciente_chamo` con filas pero sin historias. El comando repara desde ese estado.
+        $medico = Medico::where('reg_medico', self::REG_PED)->firstOrFail();
+        SyncCarga::create([
+            'reg_medico' => self::REG_PED, 'medico_id' => $medico->id,
+            'estado' => SyncCarga::COMPLETA, 'modo' => SyncCarga::MODO_LIMPIA,
+            'iniciada_at' => now()->subMinute(), 'finalizada_at' => now(),
+        ]);
 
         // El espejo, como lo dejó aquella carga: filas sin historia en el API.
         foreach ([['historia' => 3, 'nombre' => 'UNO CHAMO'], ['historia' => 4, 'nombre' => 'DOS CHAMO']] as $fila) {

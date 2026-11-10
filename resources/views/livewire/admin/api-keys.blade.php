@@ -69,11 +69,13 @@
                                     @endif
                                 </td>
                                 <td data-etiqueta="Carga inicial">
-                                    @if ($r['carga'] && $r['carga']->estado === 'completa')
+                                    @if ($r['carga'] && $r['carga']->completaConDatos())
                                         <span class="badge bg-success">Completa</span>
                                         @if ($r['carga']->finalizada_at)
                                             <div><small class="text-muted">{{ \App\Support\HoraLocal::instante($r['carga']->finalizada_at)?->format(\App\Support\Regionalizacion::formatoActual()) }}</small></div>
                                         @endif
+                                    @elseif ($r['carga'] && $r['carga']->estado === 'completa')
+                                        <span class="badge bg-warning text-dark" title="La carga se cerró sin filas: hay que volver a hacerla desde el escritorio.">Sin datos</span>
                                     @elseif ($r['carga'])
                                         <span class="badge bg-warning text-dark">En curso</span>
                                     @else
