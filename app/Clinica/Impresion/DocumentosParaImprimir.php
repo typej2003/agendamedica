@@ -75,6 +75,8 @@ final class DocumentosParaImprimir
         DocumentoImpreso::HOSPITALIZACION => 'bi-hospital',
         DocumentoImpreso::DIETA => 'bi-egg-fried',
         DocumentoImpreso::ORTOPEDIA => 'bi-person-arms-up',
+        DocumentoImpreso::IMPLANTE => 'bi-clipboard2-pulse',
+        DocumentoImpreso::ORDEN_DE_INGRESO => 'bi-hospital',
         DocumentoImpreso::PREFACTURA => 'bi-receipt',
     ];
 

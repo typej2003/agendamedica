@@ -53,6 +53,8 @@ use App\Clinica\Consulta\Vistas\ConsultaShellVista;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\Vistas\ConstanciaVista;
 use App\Clinica\Consulta\Traumatologia\DatosDeLaOrtopedia;
+use App\Clinica\Consulta\Traumatologia\DatosDeLaOrdenDeIngreso;
+use App\Clinica\Consulta\Traumatologia\DatosDelImplante;
 use App\Clinica\Consulta\Vistas\DietaVista;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoDoppler;
@@ -95,6 +97,7 @@ use App\Clinica\Consulta\Vistas\InformeVista;
 use App\Clinica\Consulta\Vistas\OrdenDeCatalogoVista;
 use App\Clinica\Consulta\Vistas\OrdenVista;
 use App\Clinica\Consulta\Vistas\OrtopediaVista;
+use App\Clinica\Consulta\Vistas\SolicitudDeTraumatologiaVista;
 use App\Clinica\Consulta\Vistas\PestanasDeSolicitudes;
 use App\Clinica\Consulta\Vistas\MedicionesVista;
 use App\Clinica\Consulta\Vistas\PestanasDelExamen;
@@ -1709,6 +1712,39 @@ class ConsultaController extends Controller
             $old,
         );
     }
+
+    /**
+     * La pestaña **Implante** (Traumatología, T3, 2026-11-10): la solicitud de implante del escritorio.
+     *
+     * @param  array<string,mixed>  $old
+     */
+    private function implanteVista(Consulta $consulta, DatosDelImplante $implantes, array $old): SolicitudDeTraumatologiaVista
+    {
+        return SolicitudDeTraumatologiaVista::implante(
+            $implantes->valores($consulta),
+            $implantes->tieneDatos($consulta),
+            route('clinica.consulta.implante.guardar', $consulta->id),
+            route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::IMPLANTE]),
+            $old,
+        );
+    }
+
+    /**
+     * La pestaña **Orden de ingreso** (Traumatología, T3, 2026-11-10): la orden del escritorio con su DX, sus
+     * recomendaciones y sus observaciones.
+     *
+     * @param  array<string,mixed>  $old
+     */
+    private function ordenDeIngresoVista(Consulta $consulta, DatosDeLaOrdenDeIngreso $ordenes, array $old): SolicitudDeTraumatologiaVista
+    {
+        return SolicitudDeTraumatologiaVista::ordenDeIngreso(
+            $ordenes->valores($consulta),
+            $ordenes->tieneDatos($consulta),
+            route('clinica.consulta.orden-ingreso.guardar', $consulta->id),
+            route('clinica.consulta.documentos.imprimir', [$consulta->id, 'documento' => DocumentoImpreso::ORDEN_DE_INGRESO]),
+            $old,
+        );
+    }
     private function solicitudes(
         Consulta $consulta,
         array $registros,
@@ -1841,6 +1877,12 @@ class ConsultaController extends Controller
         } elseif ($activa === PestanasDeSolicitudes::ORTOPEDIA) {
             // La plantilla ortopédica (Traumatología, 2026-11-09): la pestaña Ortopedia de las Solicitudes.
             $vista = $this->ortopediaVista($consulta, app(DatosDeLaOrtopedia::class), $old);
+        } elseif ($activa === PestanasDeSolicitudes::IMPLANTE) {
+            // La solicitud de implante (Traumatología, T3, 2026-11-10).
+            $vista = $this->implanteVista($consulta, app(DatosDelImplante::class), $old);
+        } elseif ($activa === PestanasDeSolicitudes::ORDEN_DE_INGRESO) {
+            // La orden de ingreso (Traumatología, T3, 2026-11-10).
+            $vista = $this->ordenDeIngresoVista($consulta, app(DatosDeLaOrdenDeIngreso::class), $old);
         } elseif ($activa === PestanasDeSolicitudes::DIETA) {
             $vista = $this->dietaVista($consulta, $dietas, $old, $imprimir('dieta'));
         } else {

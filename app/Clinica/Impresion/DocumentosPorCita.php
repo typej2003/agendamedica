@@ -13,6 +13,8 @@ use App\Clinica\Consulta\EcoObstetrico;
 use App\Clinica\Consulta\EcoObstetricoTercero;
 use App\Clinica\Consulta\PacienteDeLaCita;
 use App\Clinica\Consulta\TextosDelExamen;
+use App\Clinica\Consulta\Traumatologia\MapaDeLaOrdenDeIngreso;
+use App\Clinica\Consulta\Traumatologia\MapaDelImplante;
 use App\Models\Cola;
 use App\Models\Consulta;
 use App\Models\Paciente;
@@ -182,6 +184,27 @@ final class DocumentosPorCita
                     ->orWhereRaw("TRIM(COALESCE(aparatos, '')) <> ''")
                     ->orWhereRaw("TRIM(COALESCE(observacion, '')) <> ''")),
                 'nrohistoria', 'nroconsulta');
+        }
+        //  - solicitud de implante y orden de ingreso (Traumatología, T3, 2026-11-10): con algún campo cargado, que es la
+        //    misma regla de `DatosDelImplante`/`DatosDeLaOrdenDeIngreso` (`tieneDatos`), leída de su mapa;
+        foreach ([
+            DocumentoImpreso::IMPLANTE => ['implante', MapaDelImplante::campos()],
+            DocumentoImpreso::ORDEN_DE_INGRESO => ['orden_ingreso', MapaDeLaOrdenDeIngreso::campos()],
+        ] as $documento => [$tabla, $campos]) {
+            if (! $seOfrece($documento)) {
+                continue;
+            }
+
+            $this->marcar($conAlgo, DB::table($tabla)->where('reg_medico', $regMedico)->whereIn('historia', $historias)
+                ->where(function ($q) use ($campos) {
+                    foreach ($campos as $campo) {
+                        if ($campo['tipo'] === 'marca') {
+                            $q->orWhere($campo['columna'], '1');
+                        } else {
+                            $q->orWhereRaw('TRIM(COALESCE(' . $campo['columna'] . ", '')) <> ''");
+                        }
+                    }
+                }), 'historia', 'consulta');
         }
         //  - pre-factura (F9): al menos un concepto cargado;
         $this->marcar($conAlgo, DB::table('his_con_pre_factura')->where('reg_medico', $regMedico)->whereIn('numhistoria', $historias), 'numhistoria', 'nroconsulta');

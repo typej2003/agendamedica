@@ -43,6 +43,19 @@ final class DocumentoImpreso
      */
     public const ORTOPEDIA = 'ortopedia';
 
+    /**
+     * **La solicitud de implante** (Traumatología, T3, 2026-11-10): la hoja «SOLICITUD IMPLANTE» del escritorio
+     * (`d_solicitud_implante_cadera_imprimir`, `d_solicitud_implante_imprimir` y la de texto libre `_pt`). Las tres son
+     * el mismo documento con otro rótulo: la fila es una sola (`implante`) y la web imprime lo que la consulta tiene.
+     */
+    public const IMPLANTE = 'implante';
+
+    /**
+     * **La orden de ingreso** (Traumatología, T3, 2026-11-10): la hoja «ORDEN DE INGRESO» del escritorio
+     * (`d_orden_ingreso_imprimir`), con el diagnóstico, las recomendaciones y las observaciones.
+     */
+    public const ORDEN_DE_INGRESO = 'orden-ingreso';
+
     /** La **pre-factura** (F9): los conceptos facturables de la consulta con su cantidad, su monto y el total. */
     public const PREFACTURA = 'prefactura';
 
@@ -206,6 +219,9 @@ final class DocumentoImpreso
         self::HOSPITALIZACION => ['ORDEN DE HOSPITALIZACIÓN', 'Orden de hospitalización'],
         self::DIETA => ['DIETA / RECOMENDACIONES', 'Dieta / Recomendaciones'],
         self::ORTOPEDIA => ['CALZADOS ORTOPÉDICOS', 'Calzados ortopédicos'],
+        // Los títulos de las hojas de traumatología, tal cual los DataWindows del escritorio.
+        self::IMPLANTE => ['SOLICITUD IMPLANTE', 'Solicitud de implante'],
+        self::ORDEN_DE_INGRESO => ['ORDEN DE INGRESO', 'Orden de ingreso'],
         self::PREFACTURA => ['PRE-FACTURA', 'Pre-factura'],
         self::LABORATORIO => ['SOLICITUD DE EXÁMENES DE LABORATORIO', 'Orden de laboratorio'],
         self::LABORATORIO_PAREJA => ['SOLICITUD DE EXÁMENES DE LABORATORIO', 'Orden de laboratorio de la pareja'],

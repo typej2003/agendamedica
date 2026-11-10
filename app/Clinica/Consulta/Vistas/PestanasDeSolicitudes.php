@@ -66,6 +66,19 @@ final class PestanasDeSolicitudes
      * Es de traumatología: fuera de esa especialidad no se ofrece y su URL no la abre.
      */
     public const ORTOPEDIA = 'ortopedia';
+
+    /**
+     * **La solicitud de implante** (Traumatología, T3, 2026-11-10): la solapa *Implante* del escritorio (`tabpage_23`),
+     * con los datos de la intervención, los componentes, los insumos y el texto libre. Es de traumatología: fuera de esa
+     * especialidad no se ofrece y su URL no la abre.
+     */
+    public const IMPLANTE = 'implante';
+
+    /**
+     * **La orden de ingreso** (Traumatología, T3, 2026-11-10): el diagnóstico, las recomendaciones (escritas y las
+     * casillas de la hoja) y las observaciones. También es de traumatología.
+     */
+    public const ORDEN_DE_INGRESO = 'orden-ingreso';
     /** La orden de laboratorio de la pareja (WEB-11.21): se abre con el botón «Pareja» del laboratorio y no es una pestaña de la fila. */
     public const PAREJA = 'pareja';
 
@@ -101,6 +114,8 @@ final class PestanasDeSolicitudes
         self::HISTORIA => ['texto' => 'Historia clínica', 'icono' => 'bi-journal-medical'],
         self::IMAGENES => ['texto' => 'Imágenes', 'icono' => 'bi-images'],
         self::ORTOPEDIA => ['texto' => 'Ortopedia', 'icono' => 'bi-person-arms-up'],
+        self::IMPLANTE => ['texto' => 'Implante', 'icono' => 'bi-clipboard2-pulse'],
+        self::ORDEN_DE_INGRESO => ['texto' => 'Orden de ingreso', 'icono' => 'bi-hospital'],
         self::DIETA => ['texto' => 'Dieta / Recomendaciones', 'icono' => 'bi-egg-fried'],
     ];
 

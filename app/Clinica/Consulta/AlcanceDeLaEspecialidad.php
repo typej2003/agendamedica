@@ -275,9 +275,12 @@ final class AlcanceDeLaEspecialidad
             $ocultas[] = PestanasDeSolicitudes::DIETA;
         }
 
-        // La plantilla ortopédica es de traumatología: en las demás no se ofrece, ni se abre por URL.
+        // La plantilla ortopédica, la solicitud de implante y la orden de ingreso son de traumatología: en las demás no
+        // se ofrecen, ni se abren por URL (T3, 2026-11-10).
         if (! $this->esTraumatologia()) {
             $ocultas[] = PestanasDeSolicitudes::ORTOPEDIA;
+            $ocultas[] = PestanasDeSolicitudes::IMPLANTE;
+            $ocultas[] = PestanasDeSolicitudes::ORDEN_DE_INGRESO;
         }
 
         return $ocultas;
@@ -470,7 +473,7 @@ final class AlcanceDeLaEspecialidad
      */
     public function documentosDeTraumatologiaQueNoSeOfrecen(): array
     {
-        return $this->esTraumatologia() ? [] : [DocumentoImpreso::ORTOPEDIA];
+        return $this->esTraumatologia() ? [] : [DocumentoImpreso::ORTOPEDIA, DocumentoImpreso::IMPLANTE, DocumentoImpreso::ORDEN_DE_INGRESO];
     }
     public function documentosQueNoSeOfrecen(): array
     {
