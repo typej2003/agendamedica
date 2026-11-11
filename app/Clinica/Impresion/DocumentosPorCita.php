@@ -84,7 +84,11 @@ final class DocumentosPorCita
             ? 'el paciente de la cita'
             : trim(trim((string) $paciente->nombres) . ' ' . trim((string) $paciente->apellidos));
 
-        $historia = $pacienteId === null ? null : $this->pacientes->historia($pacienteId, $registrosMedicos);
+        // La historia es la del registro de la cita, igual que al atenderla (#109): con dos consultorios el
+        // mismo paciente puede tener un número distinto en cada uno.
+        $historia = $pacienteId === null
+            ? null
+            : $this->pacientes->historia($pacienteId, $registrosMedicos, (string) $cita->reg_medico);
         $consulta = $historia === null ? null : $this->consultas->delDia($historia, Carbon::parse($cita->fecha));
 
         // La consulta tiene que ser del registro de la cita: la historia puede estar en otro registro del

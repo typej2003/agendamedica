@@ -471,6 +471,141 @@ class AgendaWebTest extends TestCase
         $this->assertSame(1, (int) $consulta->nroconsulta);
     }
 
+    /**
+     * **«Atender» en el segundo consultorio del doctor** (#109, 2026-11-11).
+     *
+     * El doctor tiene dos registros: el suyo y el del segundo consultorio (la ficha `es_centro` colgada de
+     * `medico_padre_id`, 0.26.0). El **mismo paciente** tiene historia en los dos, y la cita es del segundo.
+     * `PacienteDeLaCita::historia()` elige el vínculo por `orderBy('id')` entre todos los registros, así que
+     * devuelve la historia del **principal**: la consulta nace allí, con el `reg_medico` del principal, y la
+     * redirección a la consulta responde 404 porque el shell exige el `reg_medico` del contexto (el segundo).
+     */
+    public function test_atender_en_el_segundo_consultorio_abre_la_consulta_y_no_da_404(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        // El segundo consultorio del mismo doctor: ficha sin cuenta, colgada del principal.
+        $segundo = 'agenda-hijo-' . substr(uniqid(), -6);
+        Medico::create([
+            'name'       => 'Consultorio',
+            'lastname'   => 'Segundo',
+            'reg_medico' => $segundo,
+            'es_centro'  => true,
+            'medico_padre_id' => $medico->id,
+        ]);
+        MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $segundo]);
+
+        // El mismo paciente, con historia en el consultorio principal (4002) y en el segundo (5002).
+        $pacienteId = $this->pacienteConHistoria($medico, 4002, 'Ana', 'Alvarez');
+        Historia::create([
+            'numhistoria' => '4002',
+            'reg_medico'  => $medico->reg_medico,
+            'paciente_id' => $pacienteId,
+            'medico_id'   => $medico->id,
+        ]);
+
+        DB::table('medico_pacientes')->insert([
+            'medico_id'   => $medico->id,
+            'paciente_id' => $pacienteId,
+            'numhistoria' => '5002',
+            'reg_medico'  => $segundo,
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+        Historia::create([
+            'numhistoria' => '5002',
+            'reg_medico'  => $segundo,
+            'paciente_id' => $pacienteId,
+            'medico_id'   => $medico->id,
+        ]);
+
+        // La cita, en el segundo consultorio, con el número de historia de ese consultorio.
+        $cita = Cola::create([
+            'reg_medico'  => $segundo,
+            'fecha'       => $this->lunes->toDateString(),
+            'hora_ini'    => '08:00:00',
+            'numorden'    => 1,
+            'numhistoria' => 5002,
+            'atendido'    => 0,
+            'estado'      => 0,
+        ]);
+
+        $enElSegundo = fn () => $this->withSession(['clinica.contexto' => [
+            'reg_medico'   => $segundo,
+            'specialty_id' => $gineco->id,
+        ]])->actingAs($user);
+
+        $respuesta = $enElSegundo()->post('/clinica/agenda/' . $cita->id . '/atender');
+
+        // La consulta tiene que ser la del consultorio donde se atiende.
+        $consulta = Consulta::where('reg_medico', $segundo)->where('numhistoria', 5002)->firstOrFail();
+        $respuesta->assertRedirect(route('clinica.consulta', $consulta->id));
+
+        // La pantalla que abre el redirect: en producción es el 404 del reporte.
+        $enElSegundo()->get(route('clinica.consulta', $consulta->id))->assertOk();
+
+        $this->assertSame(1, (int) $cita->fresh()->atendido);
+    }
+
+    /**
+     * **Sin número en el segundo consultorio no se abre la consulta del principal** (#109): la cita es del
+     * segundo y el paciente sólo tiene historia en el principal. Antes se abría la consulta allá y la
+     * pantalla respondía 404; ahora se lo manda a numerar la historia, como cualquier «sin historia».
+     */
+    public function test_atender_en_el_segundo_consultorio_sin_historia_ahi_no_abre_la_del_principal(): void
+    {
+        [$user, $medico, $gineco] = $this->medicoConAcceso();
+
+        $segundo = 'agenda-hijo-' . substr(uniqid(), -6);
+        Medico::create([
+            'name'       => 'Consultorio',
+            'lastname'   => 'Segundo',
+            'reg_medico' => $segundo,
+            'es_centro'  => true,
+            'medico_padre_id' => $medico->id,
+        ]);
+        MedicoRegistro::create(['medico_id' => $medico->id, 'reg_medico' => $segundo]);
+
+        // El paciente tiene historia en el principal (4002) y el vínculo del segundo sin número.
+        $pacienteId = $this->pacienteConHistoria($medico, 4002, 'Ana', 'Alvarez');
+        Historia::create([
+            'numhistoria' => '4002',
+            'reg_medico'  => $medico->reg_medico,
+            'paciente_id' => $pacienteId,
+            'medico_id'   => $medico->id,
+        ]);
+        DB::table('medico_pacientes')->insert([
+            'medico_id'   => $medico->id,
+            'paciente_id' => $pacienteId,
+            'numhistoria' => null,
+            'reg_medico'  => $segundo,
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        // La cita del segundo, anclada al paciente (sin número).
+        $cita = Cola::create([
+            'reg_medico'              => $segundo,
+            'fecha'                   => $this->lunes->toDateString(),
+            'hora_ini'                => '08:00:00',
+            'numorden'                => 1,
+            'paciente_sinhistoria_id' => $pacienteId,
+            'atendido'                => 0,
+            'estado'                  => 0,
+        ]);
+
+        $respuesta = $this->withSession(['clinica.contexto' => [
+            'reg_medico'   => $segundo,
+            'specialty_id' => $gineco->id,
+        ]])->actingAs($user)->post('/clinica/agenda/' . $cita->id . '/atender');
+
+        // No se creó ninguna consulta (ni en el principal ni en el segundo) y se lo manda a la ficha.
+        $respuesta->assertRedirect(route('clinica.pacientes.ver', $pacienteId));
+        $respuesta->assertSessionHas('error');
+        $this->assertSame(0, Consulta::where('numhistoria', 4002)->count());
+        $this->assertSame(0, (int) $cita->fresh()->atendido);
+    }
+
     public function test_cobrar_suma_los_abonos_y_fija_el_monto_solo_si_no_habia(): void
     {
         [$user, $medico, $gineco] = $this->medicoConAcceso();
