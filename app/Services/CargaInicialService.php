@@ -391,7 +391,7 @@ class CargaInicialService
             if (array_key_exists($tabla, $pacientes)) {
                 // El camino de pacientes: crea el paciente, su relación con el médico y su historia. Es lo
                 // que después leen la web y el app.
-                $omitidas = $this->guardarPacientes($carga, $tabla, $filas, $ignoradas, $pacientes[$tabla], $enMezcla);
+                $omitidas = $this->guardarPacientes($carga, $tabla, $filas, $ignoradas, $pacientes[$tabla]);
 
                 // Cuando la tabla de pacientes es propia de la especialidad, además se guarda tal cual: sus
                 // columnas que no existen en `pacientes` (alergia, notas, foto, representante, familia…)
@@ -611,10 +611,12 @@ class CargaInicialService
      * `$tabla` es de dónde vienen (para el mensaje de error) y `$mapa` el mapeo de columnas del manifiesto
      * (`sync.pacientes.columnas`), vacío cuando la tabla es `pacientes`.
      *
-     * En modo mezcla, antes de escribir cada paciente se le deja libre el número de historia: si lo ocupa
-     * otra historia se aparta, y si el mismo paciente ya existe con otro número, esa historia adopta el del
-     * escritorio y se lleva sus consultas (ver `Traslados::prepararPaciente`). El número que se escribe es
-     * **siempre** el del escritorio.
+     * Antes de escribir cada paciente se le deja libre el número de historia: si lo ocupa otra historia se
+     * aparta, y si el mismo paciente ya existe con otro número, esa historia adopta el del escritorio y se
+     * lleva sus consultas (ver `Traslados::prepararPaciente`). El número que se escribe es **siempre** el del
+     * escritorio. Se hace también en una carga que arrancó `limpia`: si el reintento encuentra una historia
+     * ya insertada por un intento anterior (o por la web), el choque se resuelve en vez de reventar con el
+     * índice único de `historias`.
      *
      * @return int filas omitidas
      */
@@ -623,8 +625,7 @@ class CargaInicialService
         string $tabla,
         array $filas,
         array &$ignoradas,
-        array $mapa = [],
-        bool $enMezcla = false
+        array $mapa = []
     ): int {
         $pacientes = new PacientesLegado($this->tablas);
         $omitidas = 0;
@@ -633,7 +634,7 @@ class CargaInicialService
         // corrector del buscador pagaría el vocabulario entero en cada una. La carga no es un guardado
         // suelto: al terminar, `CargaInicialCompletada` manda a reconstruir el índice en segundo plano
         // (`ReconstruirIndiceDePacientes`).
-        Paciente::withoutEvents(function () use ($filas, $carga, $mapa, $pacientes, $enMezcla, &$omitidas, &$ignoradas): void {
+        Paciente::withoutEvents(function () use ($filas, $carga, $mapa, $pacientes, &$omitidas, &$ignoradas): void {
             foreach ($filas as $fila) {
                 if (! is_array($fila)) {
                     $omitidas++;
@@ -646,9 +647,7 @@ class CargaInicialService
                     continue;
                 }
 
-                $numHistoria = $enMezcla
-                    ? $this->traslados->prepararPaciente($carga, $fila, $fila['numhistoria'])
-                    : $fila['numhistoria'];
+                $numHistoria = $this->traslados->prepararPaciente($carga, $fila, $fila['numhistoria']);
 
                 $pacientes->guardar($carga, $fila, $numHistoria, TablasLegado::claveHistoria($fila['numhistoria']), $ignoradas);
             }
