@@ -70,6 +70,14 @@ final class PacienteDeLaCita
      * y, si no es numérico, no hay historia que buscar — castear a ciegas traería la historia `0`, que es
      * de otro paciente (wiki `04-historia-clinica.md`).
      *
+     * **El registro donde se atiende manda** (2026-11-11, #109): el número de historia es único **por
+     * registro** y el mismo paciente puede tener uno distinto en cada consultorio del médico. Buscar por
+     * `orderBy('id')` entre todos los registros devolvía el vínculo más viejo —el del consultorio
+     * principal— y «Atender» en el segundo consultorio abría la consulta allá: la pantalla respondía 404
+     * porque el shell exige la consulta del contexto. Por eso, cuando llega el registro donde se atiende
+     * (el de la cita), la respuesta es la de **ese** registro o nada: no se cae a los demás, y el
+     * paciente sin número ahí se resuelve como siempre, asignándosela (no se atiende sin historia).
+     *
      * **El número tiene que ser del paciente** (2026-10-19): si el vínculo dice un número que en
      * `historias` es de **otro** paciente (el importador de SQL del `/admin` dejó el vínculo antes de
      * fallar, el panel viejo escribía el número a mano), este paciente no tiene historia. Devolver la del
@@ -79,14 +87,44 @@ final class PacienteDeLaCita
      *
      * @param  array<int,string>  $registrosMedicos  todos los `reg_medico` del médico, porque el pivote
      *                                               puede tener la historia en otro de sus registros
+     * @param  string|null  $regMedico  el registro donde se está atendiendo (el de la cita): la historia se
+     *                                  busca **sólo** ahí. `null` = entre todos los registros del médico
      */
-    public function historia(int $pacienteId, array $registrosMedicos): ?Historia
+    public function historia(int $pacienteId, array $registrosMedicos, ?string $regMedico = null): ?Historia
     {
+        // Con registro, la respuesta es de ese registro o nada: no se cae a los demás. La consulta que
+        // abre «Atender» tiene que colgar de la historia del registro de la cita; caer al vínculo de otro
+        // registro creaba una consulta que la pantalla del contexto no puede abrir (404 del #109).
+        if ($regMedico !== null) {
+            if (! in_array((string) $regMedico, $registrosMedicos, true)) {
+                return null;
+            }
+
+            $vinculo = MedicoPaciente::where('reg_medico', (string) $regMedico)
+                ->where('paciente_id', $pacienteId)
+                ->orderBy('id')
+                ->first(['numhistoria', 'reg_medico']);
+
+            return $this->historiaDelVinculo($pacienteId, $vinculo, $registrosMedicos);
+        }
+
+        // Sin registro (la ficha, o la impresión de una cita que no lo trae): el vínculo más viejo entre
+        // los registros del médico, que es el comportamiento de siempre.
         $vinculo = MedicoPaciente::whereIn('reg_medico', $registrosMedicos)
             ->where('paciente_id', $pacienteId)
             ->orderBy('id')
             ->first(['numhistoria', 'reg_medico']);
 
+        return $this->historiaDelVinculo($pacienteId, $vinculo, $registrosMedicos);
+    }
+
+    /**
+     * La `Historia` de la fila del pivote, si el número es del paciente y está en sus registros.
+     *
+     * @param  array<int,string>  $registrosMedicos
+     */
+    private function historiaDelVinculo(int $pacienteId, ?MedicoPaciente $vinculo, array $registrosMedicos): ?Historia
+    {
         $numero = CamposDePaciente::historiaNumerica($vinculo->numhistoria ?? null);
 
         if ($numero === null) {

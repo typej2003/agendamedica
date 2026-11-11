@@ -75,7 +75,11 @@ final class AbrirConsulta
             throw new InvalidArgumentException('Esta cita no tiene un paciente identificable.');
         }
 
-        $historia = $this->pacienteDeLaCita->historia($pacienteId, $registrosMedicos);
+        // La historia, **en el registro de la cita** (#109, 2026-11-11): el número es único por registro y
+        // el mismo paciente puede tener uno distinto en cada consultorio del médico. Si la consulta naciera
+        // con la historia de otro registro, la pantalla —que exige la consulta del contexto— respondería
+        // 404 después de «Atender». Sin número en este registro no se atiende: se manda a asignarlo.
+        $historia = $this->pacienteDeLaCita->historia($pacienteId, $registrosMedicos, (string) $cita->reg_medico);
 
         if ($historia === null) {
             throw new InvalidArgumentException(
