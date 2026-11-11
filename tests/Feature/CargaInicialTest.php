@@ -583,4 +583,37 @@ class CargaInicialTest extends TestCase
         $this->assertNotSame('626', (string) $historiaOcupante->fresh()->numhistoria,
             'el ocupante se apartó a un número libre, no se borró');
     }
+
+    /**
+     * El manejo del número ocupado no depende de que la carga esté en `mezcla`: un lote de una carga
+     * `limpia` (un reintento que quedó así) también tiene que apartar al ocupante. Es el segundo choque
+     * medido en producción (2026-11-10, `med_00005-1894`).
+     */
+    public function test_un_lote_de_una_carga_limpia_tambien_aparta_la_historia_ocupada(): void
+    {
+        $medico = $this->crearMedico('carga-limpia-ocupada');
+        $carga = SyncCarga::create([
+            'reg_medico' => 'carga-limpia-ocupada', 'medico_id' => $medico->id,
+            'estado' => SyncCarga::EN_CURSO, 'modo' => SyncCarga::MODO_LIMPIA,
+            'iniciada_at' => now(),
+        ]);
+        SyncCargaTabla::create([
+            'sync_carga_id' => $carga->id, 'tabla' => 'pacientes',
+            'filas_esperadas' => 1, 'filas_recibidas' => 0,
+        ]);
+
+        $ocupante = Paciente::create(['cedula' => '44444444', 'nombres' => 'VIEJO', 'apellidos' => 'X']);
+        $historiaOcupante = Historia::create([
+            'reg_medico' => 'carga-limpia-ocupada', 'numhistoria' => '1894',
+            'paciente_id' => $ocupante->id, 'medico_id' => $medico->id,
+        ]);
+
+        $this->enviar('lote', ['carga_id' => $carga->id, 'tabla' => 'pacientes', 'desde' => 0, 'filas' => [
+            $this->paciente(1894, '55555555', 'NUEVO'),
+        ]])->assertOk()->assertJson(['recibidas' => 1]);
+
+        $this->assertNotSame('1894', (string) $historiaOcupante->fresh()->numhistoria);
+        $this->assertSame('1894', (string) Historia::where('reg_medico', 'carga-limpia-ocupada')
+            ->where('paciente_id', Paciente::where('cedula', '55555555')->value('id'))->value('numhistoria'));
+    }
 }
