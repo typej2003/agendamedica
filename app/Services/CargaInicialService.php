@@ -184,6 +184,16 @@ class CargaInicialService
             ]);
         }
 
+        // Reintento de una carga que arrancó como `limpia`: si el API ya tiene datos de ese médico (una
+        // carga anterior que se cortó, la web o el app), el número de historia del escritorio puede estar
+        // ocupado. Se pasa a `mezcla` para que `Traslados::prepararPaciente` aparte o adopte antes de
+        // insertar; sin esto el reintento moría con `Duplicate entry ... for key
+        // historias.reg_medico_numhistoria_unique` (medido en producción el 2026-11-10, med_00005).
+        if ($carga->modo === Traslados::MODO_LIMPIA && $this->tablasConDatos($regMedico, $medico) !== []) {
+            $carga->modo = Traslados::MODO_MEZCLA;
+            $carga->save();
+        }
+
         // Antes de armarle la lista: si este médico no tiene ninguna especialidad vinculada, se la deduce de
         // las tablas que acaba de anunciar y se le asigna. Es la primera sincronización de esa instalación y
         // el técnico no tiene que hacer este paso a mano —sin especialidad el médico no recibe su lista de
@@ -339,49 +349,56 @@ class CargaInicialService
     {
         $tabla = $this->tablas->normalizar($tabla);
 
-        if ($carga->estado !== SyncCarga::EN_CURSO) {
-            return $this->error(409, 'carga_cerrada', 'La carga inicial ya está cerrada.');
-        }
+        // Todo el lote (chequeo de posición, escritura y avance) va en UNA transacción con la fila de
+        // `sync_carga_tablas` bloqueada. Sin el bloqueo, dos reintentos del mismo lote —el cliente corta a
+        // los 60 s y `sync.exe` reenvía mientras el servidor todavía lo está procesando— leían el mismo
+        // `filas_recibidas`, insertaban las mismas historias y una de las dos moría con `Duplicate entry`
+        // (medido en producción el 2026-11-10, med_00005). El segundo espera, ve el avance y se saltea.
+        return DB::transaction(function () use ($carga, $tabla, $desde, $filas) {
+            $carga = SyncCarga::whereKey($carga->id)->lockForUpdate()->first();
+            if (! $carga || $carga->estado !== SyncCarga::EN_CURSO) {
+                return $this->error(409, 'carga_cerrada', 'La carga inicial ya está cerrada.');
+            }
 
-        $registro = SyncCargaTabla::where('sync_carga_id', $carga->id)->where('tabla', $tabla)->first();
-        if (! $registro) {
-            return $this->error(422, 'tabla_no_anunciada',
-                "La tabla {$tabla} no se anunció al iniciar la carga o no está permitida.");
-        }
+            $registro = SyncCargaTabla::where('sync_carga_id', $carga->id)
+                ->where('tabla', $tabla)->lockForUpdate()->first();
+            if (! $registro) {
+                return $this->error(422, 'tabla_no_anunciada',
+                    "La tabla {$tabla} no se anunció al iniciar la carga o no está permitida.");
+            }
 
-        $cantidad = count($filas);
-        $recibidas = (int) $registro->filas_recibidas;
+            $cantidad = count($filas);
+            $recibidas = (int) $registro->filas_recibidas;
 
-        // Lote ya aplicado (reintento después de un corte): se confirma sin volver a escribir.
-        if ($cantidad > 0 && $desde + $cantidad <= $recibidas) {
-            return $this->okLote($tabla, $recibidas, 1);
-        }
+            // Lote ya aplicado (reintento después de un corte): se confirma sin volver a escribir.
+            if ($cantidad > 0 && $desde + $cantidad <= $recibidas) {
+                return $this->okLote($tabla, $recibidas, 1);
+            }
 
-        // Hueco o solapamiento: el escritorio tiene que seguir desde donde dice el API.
-        if ($desde !== $recibidas) {
-            return ['http' => 409, 'cuerpo' => [
-                'ok'       => false,
-                'error'    => 'posicion_incorrecta',
-                'mensaje'  => "Se esperaba el lote de {$tabla} desde la fila {$recibidas} y llegó desde {$desde}.",
-                'tabla'    => $tabla,
-                'esperado' => $recibidas,
-            ]];
-        }
+            // Hueco o solapamiento: el escritorio tiene que seguir desde donde dice el API.
+            if ($desde !== $recibidas) {
+                return ['http' => 409, 'cuerpo' => [
+                    'ok'       => false,
+                    'error'    => 'posicion_incorrecta',
+                    'mensaje'  => "Se esperaba el lote de {$tabla} desde la fila {$recibidas} y llegó desde {$desde}.",
+                    'tabla'    => $tabla,
+                    'esperado' => $recibidas,
+                ]];
+            }
 
-        $ignoradas = [];
-        $omitidas = 0;
-        $enMezcla = $carga->modo === Traslados::MODO_MEZCLA;
+            $ignoradas = [];
+            $omitidas = 0;
+            $enMezcla = $carga->modo === Traslados::MODO_MEZCLA;
 
-        // Las tablas de las que salen los **pacientes** de este médico: `pacientes` siempre y, si su
-        // especialidad declara otra (pediatría: `paciente_chamo`), también esa. Ver
-        // `TablasDelSync::pacientesDe()`.
-        $pacientes = $this->sync->pacientesDe($this->medicoDe($carga->reg_medico));
+            // Las tablas de las que salen los **pacientes** de este médico: `pacientes` siempre y, si su
+            // especialidad declara otra (pediatría: `paciente_chamo`), también esa. Ver
+            // `TablasDelSync::pacientesDe()`.
+            $pacientes = $this->sync->pacientesDe($this->medicoDe($carga->reg_medico));
 
-        DB::transaction(function () use ($carga, $tabla, $filas, $pacientes, $enMezcla, $desde, &$ignoradas, &$omitidas) {
             if (array_key_exists($tabla, $pacientes)) {
                 // El camino de pacientes: crea el paciente, su relación con el médico y su historia. Es lo
                 // que después leen la web y el app.
-                $omitidas = $this->guardarPacientes($carga, $tabla, $filas, $ignoradas, $pacientes[$tabla], $enMezcla);
+                $omitidas = $this->guardarPacientes($carga, $tabla, $filas, $ignoradas, $pacientes[$tabla]);
 
                 // Cuando la tabla de pacientes es propia de la especialidad, además se guarda tal cual: sus
                 // columnas que no existen en `pacientes` (alergia, notas, foto, representante, familia…)
@@ -389,38 +406,36 @@ class CargaInicialService
                 if ($tabla !== 'pacientes') {
                     $this->insertarGenerico($carga, $tabla, $filas, $ignoradas);
                 }
-
-                return;
-            }
-
-            switch ($tabla) {
-                case 'evolucion':
-                    $this->guardarEvolucion($carga, $filas, $ignoradas);
-                    break;
-                default:
-                    // En modo mezcla el escritorio manda: antes de insertar se aparta lo que ocupe el
-                    // número de una consulta (sin red de índice único: la detección es explícita) o se
-                    // reemplaza la tabla si es un catálogo.
-                    if ($enMezcla) {
-                        if ($tabla === 'consultas') {
-                            $this->traslados->prepararConsultas($carga, $filas);
-                        } else {
-                            $this->traslados->reemplazarCatalogo($carga, $tabla, $desde);
+            } else {
+                switch ($tabla) {
+                    case 'evolucion':
+                        $this->guardarEvolucion($carga, $filas, $ignoradas);
+                        break;
+                    default:
+                        // En modo mezcla el escritorio manda: antes de insertar se aparta lo que ocupe el
+                        // número de una consulta (sin red de índice único: la detección es explícita) o se
+                        // reemplaza la tabla si es un catálogo.
+                        if ($enMezcla) {
+                            if ($tabla === 'consultas') {
+                                $this->traslados->prepararConsultas($carga, $filas);
+                            } else {
+                                $this->traslados->reemplazarCatalogo($carga, $tabla, $desde);
+                            }
                         }
-                    }
-                    $this->insertarGenerico($carga, $tabla, $filas, $ignoradas);
+                        $this->insertarGenerico($carga, $tabla, $filas, $ignoradas);
+                }
             }
+
+            $registro->filas_recibidas = $recibidas + $cantidad;
+            $registro->filas_omitidas += $omitidas;
+            if ($ignoradas !== []) {
+                $previas = array_filter(explode(',', (string) $registro->columnas_ignoradas));
+                $registro->columnas_ignoradas = implode(',', array_unique(array_merge($previas, $ignoradas)));
+            }
+            $registro->save();
+
+            return $this->okLote($tabla, $registro->filas_recibidas, 0);
         });
-
-        $registro->filas_recibidas = $recibidas + $cantidad;
-        $registro->filas_omitidas += $omitidas;
-        if ($ignoradas !== []) {
-            $previas = array_filter(explode(',', (string) $registro->columnas_ignoradas));
-            $registro->columnas_ignoradas = implode(',', array_unique(array_merge($previas, $ignoradas)));
-        }
-        $registro->save();
-
-        return $this->okLote($tabla, $registro->filas_recibidas, 0);
     }
 
     /* ------------------------------------------------------------------ */
@@ -601,10 +616,12 @@ class CargaInicialService
      * `$tabla` es de dónde vienen (para el mensaje de error) y `$mapa` el mapeo de columnas del manifiesto
      * (`sync.pacientes.columnas`), vacío cuando la tabla es `pacientes`.
      *
-     * En modo mezcla, antes de escribir cada paciente se le deja libre el número de historia: si lo ocupa
-     * otra historia se aparta, y si el mismo paciente ya existe con otro número, esa historia adopta el del
-     * escritorio y se lleva sus consultas (ver `Traslados::prepararPaciente`). El número que se escribe es
-     * **siempre** el del escritorio.
+     * Antes de escribir cada paciente se le deja libre el número de historia: si lo ocupa otra historia se
+     * aparta, y si el mismo paciente ya existe con otro número, esa historia adopta el del escritorio y se
+     * lleva sus consultas (ver `Traslados::prepararPaciente`). El número que se escribe es **siempre** el del
+     * escritorio. Se hace también en una carga que arrancó `limpia`: si el reintento encuentra una historia
+     * ya insertada por un intento anterior (o por la web), el choque se resuelve en vez de reventar con el
+     * índice único de `historias`.
      *
      * @return int filas omitidas
      */
@@ -613,8 +630,7 @@ class CargaInicialService
         string $tabla,
         array $filas,
         array &$ignoradas,
-        array $mapa = [],
-        bool $enMezcla = false
+        array $mapa = []
     ): int {
         $pacientes = new PacientesLegado($this->tablas);
         $omitidas = 0;
@@ -623,7 +639,7 @@ class CargaInicialService
         // corrector del buscador pagaría el vocabulario entero en cada una. La carga no es un guardado
         // suelto: al terminar, `CargaInicialCompletada` manda a reconstruir el índice en segundo plano
         // (`ReconstruirIndiceDePacientes`).
-        Paciente::withoutEvents(function () use ($filas, $carga, $mapa, $pacientes, $enMezcla, &$omitidas, &$ignoradas): void {
+        Paciente::withoutEvents(function () use ($filas, $carga, $mapa, $pacientes, &$omitidas, &$ignoradas): void {
             foreach ($filas as $fila) {
                 if (! is_array($fila)) {
                     $omitidas++;
@@ -636,9 +652,7 @@ class CargaInicialService
                     continue;
                 }
 
-                $numHistoria = $enMezcla
-                    ? $this->traslados->prepararPaciente($carga, $fila, $fila['numhistoria'])
-                    : $fila['numhistoria'];
+                $numHistoria = $this->traslados->prepararPaciente($carga, $fila, $fila['numhistoria']);
 
                 $pacientes->guardar($carga, $fila, $numHistoria, TablasLegado::claveHistoria($fila['numhistoria']), $ignoradas);
             }
