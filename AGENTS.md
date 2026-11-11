@@ -1131,6 +1131,18 @@ con aprobación** y el de la suscripción son las fases siguientes. Lo nuevo se 
   comprobar el permiso en `hydrate()`: la ruta solo protege la carga de la página. "Permisos de Usuario" se quitó del panel lateral
   (no funcionaba; `/users/permissions` sigue en `routes/web.php`, sin enlace). **Cerrar sesión** pide confirmación
   en el panel lateral y en el menú del usuario (`confirmarCierreSesion` en `layouts/app.blade.php`, SweetAlert2).
+- **Borrar la cuenta de un doctor: baja lógica** (2026-11-10). Está en el menú de 3 puntos de Usuarios · Médicos
+  («Borrar la cuenta») y en la ficha del médico («Zona de riesgo»), con la ventana compartida
+  `Concerns\ArchivaLaCuenta`: se pide escribir el nombre del médico y un motivo opcional. **No se borra nada
+  clínico**: la ficha queda con `medicos.archivado_en` (más `archivado_por_id` y `archivado_motivo`), `is_active`
+  apagado y fuera de las listas, pero sus historias, citas y récipes siguen colgando de su `reg_medico`. Lo que se
+  libera es lo que identifica a la persona: `users.email` se renombra a `borrado+<id>@archivado.doctorisimo.local`
+  (el original queda en `users.email_original`) y `medicos.email`, `medicos.phone` y `medicos.license_number` quedan
+  nulos con sus originales en `*_original`. Cierra sus sesiones (tokens) y **no** toca las credenciales del sync del
+  escritorio. Las archivadas tienen su vista («Archivados») con «Restaurar» (`CuentaService::restaurarMedico`, que
+  devuelve el correo sólo si sigue libre). No se archiva un centro ni un consultorio hijo, ni un doctor con
+  consultorios colgando, ni una cuenta con rol de administración, ni la propia. Tests:
+  `tests/Feature/ArchivoDeCuentaTest.php`.
 - **Sección "Especialidades"** (`/admin/especialidades`, `Admin\Especialidades`, misma ruta-archivo
   `routes/web/cuentas.php`): con qué especialidades trabaja cada médico — es lo que enciende los módulos de la web
   clínica (`specialties` + pivote `medico_specialty`, ver `ContextoTrabajo`; **no** confundir con `especial`, el

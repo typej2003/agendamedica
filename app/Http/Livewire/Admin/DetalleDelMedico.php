@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Admin;
 
 use App\Clinica\Catalogos\MotivosDeCitaDelCatalogo;
+use App\Http\Livewire\Admin\Concerns\ArchivaLaCuenta;
 use App\Http\Livewire\Admin\Concerns\EmiteApiKeys;
 use App\Http\Livewire\Admin\DetalleDelMedico\GestionaCitaOnline;
 use App\Http\Livewire\Admin\DetalleDelMedico\GestionaCuentasDeCobro;
@@ -54,6 +55,7 @@ use Livewire\Component;
 class DetalleDelMedico extends Component
 {
     use EmiteApiKeys;
+    use ArchivaLaCuenta;
     use GestionaDatos;
     use GestionaHorarios;
     use GestionaRoles;
@@ -109,6 +111,8 @@ class DetalleDelMedico extends Component
     public function mount(Medico $medico)
     {
         $this->autorizar();
+        // Una cuenta archivada no tiene ficha que mostrar: se restaura desde «Usuarios · Médicos › Archivados».
+        abort_if($medico->estaArchivado(), 404);
         $this->medico = $medico;
     }
 
@@ -207,6 +211,18 @@ class DetalleDelMedico extends Component
         $this->reemplazar = false;
         $this->mostrarReemplazo = false;
         $this->resetErrorBag();
+    }
+
+    /**
+     * **Borrar la cuenta desde la ficha** (concern `ArchivaLaCuenta`): la ficha archivada ya no se muestra, así
+     * que se vuelve al listado con el aviso.
+     */
+    protected function despuesDeArchivar(Medico $medico, string $nombre)
+    {
+        session()->flash('message', 'Borraste la cuenta de ' . $nombre
+            . '. Su correo, su teléfono y su carnet quedaron libres; sus historias, citas y récipes se conservan.');
+
+        return redirect()->route('admin.cuentas');
     }
 
     public function cerrarToken(): void
