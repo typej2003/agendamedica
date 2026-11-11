@@ -57,7 +57,7 @@ class ApiKeys extends Component
     {
         $busqueda = trim($this->search);
 
-        $medicos = Medico::query()
+        $medicos = Medico::vigentes()
             ->when($busqueda !== '', fn ($q) => $q->where(fn ($w) => $w
                 ->where('name', 'like', "%{$busqueda}%")
                 ->orWhere('lastname', 'like', "%{$busqueda}%")
@@ -67,7 +67,7 @@ class ApiKeys extends Component
 
         $resumen = $resumenes->resumir($medicos->getCollection());
 
-        $seleccionado = $this->medicoId ? Medico::find($this->medicoId) : null;
+        $seleccionado = $this->medicoId ? Medico::vigentes()->find($this->medicoId) : null;
 
         return view('livewire.admin.api-keys', [
             'medicos'      => $medicos,
@@ -86,7 +86,7 @@ class ApiKeys extends Component
 
     public function verCredenciales(int $medicoId)
     {
-        $this->medicoId = Medico::findOrFail($medicoId)->id;
+        $this->medicoId = Medico::vigentes()->findOrFail($medicoId)->id;
         $this->modal = 'credenciales';
     }
 

@@ -36,7 +36,8 @@ trait EmiteApiKeys
     public function abrirEmitir(int $medicoId)
     {
         $this->resetErrorBag();
-        $medico = Medico::findOrFail($medicoId);
+        // Una cuenta archivada no emite credenciales nuevas (sus datos clínicos se conservan, pero ya no opera).
+        $medico = Medico::vigentes()->findOrFail($medicoId);
         $this->medicoId = $medico->id;
         $this->equipo = 'CONSULTORIO-1';
         $this->anios = 1;
@@ -56,7 +57,7 @@ trait EmiteApiKeys
             'equipo.required' => 'Escribe el nombre del equipo (por ejemplo CONSULTORIO-1).',
         ]);
 
-        $medico = Medico::findOrFail($this->medicoId);
+        $medico = Medico::vigentes()->findOrFail($this->medicoId);
         $registros = $medico->registrosDeTrabajo();
 
         if ($registros === []) {

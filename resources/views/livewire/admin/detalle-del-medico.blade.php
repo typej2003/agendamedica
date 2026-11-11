@@ -144,6 +144,20 @@
                     @endforelse
                 @endif
 
+                {{-- **Zona de riesgo** (2026-11-10): la baja lógica de la cuenta. Se pide confirmar escribiendo el
+                     nombre y lo que se libera (correo, teléfono y carnet) se explica en la ventana. --}}
+                @unless ($medico->es_centro)
+                    <h2 class="h6 mt-4 text-danger">Zona de riesgo</h2>
+                    <p class="text-muted small mb-2">
+                        Borrar la cuenta la archiva: no puede volver a entrar y desaparece de las listas, pero sus
+                        pacientes, historias, citas y récipes se conservan. Su correo, su teléfono y su carnet quedan
+                        libres para otra cuenta. Se puede restaurar después desde «Archivados».
+                    </p>
+                    <button type="button" class="btn btn-outline-danger" wire:click="abrirArchivo({{ $medico->id }})">
+                        <i class="bi bi-trash me-1" aria-hidden="true"></i> Borrar la cuenta
+                    </button>
+                @endunless
+
             {{-- ============================ Sedes ============================ --}}
             @elseif ($pestana === 'sedes')
                 {{-- Un grupo por **consultorio del médico** (`reg_medico`): el principal y los que cuelgan de él
@@ -1093,4 +1107,7 @@
     {{-- Ventanas compartidas del emisor de API keys (generar y mostrar una sola vez). --}}
     @include('livewire.admin.partials.api-key-emitir')
     @include('livewire.admin.partials.api-key-generada')
+
+    {{-- Ventana de «Borrar la cuenta» (baja lógica), la misma de «Usuarios · Médicos». --}}
+    @include('livewire.admin.partials.archivar-cuenta')
 </div>
