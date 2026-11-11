@@ -19,6 +19,9 @@
  *  - Se cierra con «Saltar», con «Listo» y con `Esc` (la salida de teclado de cualquier diálogo modal).
  *  - Sus **propios botones siempre responden**, aunque el globo se haya movido a `<body>`: son la única salida
  *    del modal además de `Esc` (2026-10-31, ver `bloquearLaAplicacion`).
+ *  - **El diálogo manda** (2026-11-11): si se abre cualquier `<dialog>`, el tutorial se cierra; y si el
+ *    tutorial va a abrirse con un diálogo ya abierto, no se abre. En los dos casos **no se marca**: sigue
+ *    disponible en «¿Cómo funciona esta pantalla?» y vuelve a intentarse en la próxima visita.
  *  - Al terminar o saltar avisa por `POST` (nunca por GET) para no volver a mostrarlo. `Esc` cuenta como
  *    saltar: si no, el tour reaparecería en cada visita de quien lo cerró con el teclado.
  */
@@ -90,6 +93,25 @@
                     elemento.removeAttribute('aria-hidden');
                 }
             });
+        });
+    };
+
+    /**
+     * **El diálogo manda sobre el tutorial** (2026-11-11). El panel de una sede o de un consultorio puede
+     * abrirse solo al cargar —una validación que vuelve, un `?panel=`— y el tutorial de primera vez también.
+     * Los dos son modales, así que se pisaban: el velo y el `inert` del tutorial dejaban el `<dialog>` sin
+     * poder escribir ni un espacio (el formulario de «Nueva sede» quedaba trabado), aunque el navegador lo
+     * pinte en el top layer.
+     *
+     * La regla es una sola: con un diálogo abierto no hay tutorial. Se resuelve en las dos direcciones y
+     * **siempre sin marcarlo como visto ni como saltado** —sigue disponible en «¿Cómo funciona esta
+     * pantalla?» y vuelve a intentarse en la próxima visita:
+     *  - si un diálogo se abre con el tutorial abierto, el tutorial se cierra (ver `apoyarLosDialogos`);
+     *  - si el tutorial va a abrirse y ya hay un diálogo abierto, no se abre (ver `abrir`).
+     */
+    const hayDialogoAbierto = function () {
+        return Array.prototype.some.call(document.querySelectorAll('dialog'), function (dialogo) {
+            return dialogo.open;
         });
     };
 
@@ -322,6 +344,14 @@
     };
 
     const abrir = function () {
+        // Con un diálogo abierto el tutorial no se muestra: manda el diálogo (2026-11-11). Cubre la
+        // autoapertura: `sedes.js` reabre el panel de la sede antes de que corra este `requestAnimationFrame`.
+        if (hayDialogoAbierto()) {
+            if (abierto) cerrar(false);
+
+            return;
+        }
+
         if (!recolectar()) return; // ningún elemento a la vista: no se muestra ni se marca
 
         if (!abierto) {
@@ -364,6 +394,31 @@
             abrir();
         });
     }
+
+    /**
+     * **Cualquier diálogo cierra el tutorial** (2026-11-11). Se envuelve el método del prototipo una sola vez
+     * para no tocar los ~58 `showModal()` de las pantallas (ni los que vengan). El cierre va **antes** de
+     * abrir el diálogo, así el foco lo toma el diálogo y no la pantalla de atrás; y no marca el tutorial,
+     * porque `cerrar(false)` no llama a `marcarVisto()`.
+     *
+     * El globo y el velo del tour son `<div>`, no `<dialog>`, así que esto no puede cerrar el propio tour.
+     */
+    const apoyarLosDialogos = function () {
+        if (typeof window.HTMLDialogElement !== 'function') return;
+
+        ['showModal', 'show'].forEach(function (metodo) {
+            const original = HTMLDialogElement.prototype[metodo];
+            if (typeof original !== 'function') return;
+
+            HTMLDialogElement.prototype[metodo] = function () {
+                if (!this.open && abierto) cerrar(false);
+
+                return original.apply(this, arguments);
+            };
+        });
+    };
+
+    apoyarLosDialogos();
 
     document.addEventListener('keydown', function (evento) {
         if (!abierto) return;

@@ -514,6 +514,164 @@ class CuentaService
         });
     }
 
+    /* ------------------------------------------------------------------ */
+    /* Baja lógica de una cuenta de doctor (archivar)                      */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * El dominio de los correos que deja una cuenta archivada. No es un buzón real: es un marcador único
+     * (`borrado+<id del usuario>@…`) que libera el correo verdadero sin perder de vista a quién pertenecía.
+     * El original queda en `users.email_original` / `medicos.email_original`.
+     */
+    public const DOMINIO_ARCHIVADO = 'archivado.doctorisimo.local';
+
+    /** El correo marcador de una cuenta archivada: único por cuenta y estable si se archiva dos veces. */
+    public function correoArchivado(User $user): string
+    {
+        return 'borrado+' . $user->id . '@' . self::DOMINIO_ARCHIVADO;
+    }
+
+    /**
+     * **Archiva la cuenta de un doctor** (2026-11-10): «borrarla» sin borrar nada.
+     *
+     * Es la decisión del proyecto («archivar, no eliminar»): un médico tiene historias, consultas y citas
+     * colgando de su `reg_medico`, así que la ficha se conserva y sólo se **oculta**. Lo que se libera es lo
+     * que identifica a la persona y hay que poder reutilizar en otra cuenta:
+     *
+     *  - el **correo** de la cuenta (`users.email`, único) se renombra a `borrado+<id>@…` y el original
+     *    queda en `email_original`; el de la ficha (`medicos.email`) se vacía y el original se guarda;
+     *  - el **teléfono** y el **carnet** de la ficha quedan nulos, con su original guardado.
+     *
+     * Se cierran las sesiones del app y de la web (tokens) y la cuenta queda inactiva. **Las credenciales
+     * del sincronizador del escritorio no se tocan**: son de la PC del consultorio, no de la cuenta, igual
+     * que en un bloqueo.
+     *
+     * No se archiva un centro médico (o un consultorio hijo del mismo doctor: no son cuentas), ni un doctor
+     * con consultorios colgando, ni una cuenta con rol de administración (hay que quitárselo antes), ni la
+     * propia cuenta de quien la ejecuta.
+     *
+     * @throws ValidationException
+     */
+    public function archivarMedico(Medico $medico, string $motivo, User $actor): Medico
+    {
+        $motivo = trim($motivo);
+
+        if ($medico->estaArchivado()) {
+            throw ValidationException::withMessages(['archivo' => 'Esa cuenta ya está borrada.']);
+        }
+
+        if ($medico->es_centro) {
+            throw ValidationException::withMessages([
+                'archivo' => $medico->esConsultorioHijo()
+                    ? 'Ese es un consultorio del médico, no una cuenta: borra la cuenta del doctor principal.'
+                    : 'Ese es un centro médico, no una cuenta de doctor.',
+            ]);
+        }
+
+        $consultorios = $medico->hijos()->count();
+        if ($consultorios > 0) {
+            throw ValidationException::withMessages([
+                'archivo' => 'Antes de borrar la cuenta, archiva los ' . $consultorios
+                    . ($consultorios === 1 ? ' consultorio que cuelga de ella.' : ' consultorios que cuelgan de ella.'),
+            ]);
+        }
+
+        $user = $medico->user_id ? User::find($medico->user_id) : null;
+
+        if ($user !== null && $user->is($actor)) {
+            throw ValidationException::withMessages(['archivo' => 'No puedes borrar tu propia cuenta.']);
+        }
+
+        if ($user !== null && $user->esAdministrador()) {
+            throw ValidationException::withMessages([
+                'archivo' => 'Esa cuenta también es de administración: quítale ese rol antes de borrarla.',
+            ]);
+        }
+
+        DB::transaction(function () use ($medico, $motivo, $actor, $user) {
+            $medico->forceFill([
+                'archivado_en'      => now(),
+                'archivado_por_id'  => $actor->id,
+                'archivado_motivo'  => $motivo !== '' ? $motivo : null,
+                'email_original'    => $medico->email,
+                'telefono_original' => $medico->phone,
+                'carnet_original'   => $medico->license_number,
+                'email'             => null,
+                'phone'             => null,
+                'license_number'    => null,
+                'is_active'         => false,
+            ])->save();
+
+            if ($user !== null) {
+                $user->forceFill([
+                    'archivado_en'   => now(),
+                    'email_original' => $user->email,
+                    'email'          => $this->correoArchivado($user),
+                    'is_active'      => false,
+                    'blocked_reason' => 'Cuenta borrada por un administrador.',
+                ])->save();
+
+                $user->tokens()->delete();
+            }
+        });
+
+        return $medico->fresh();
+    }
+
+    /**
+     * **Restaura una cuenta archivada**: vuelve a mostrarse, a poder entrar y recupera su teléfono y carnet.
+     *
+     * El correo original sólo se devuelve **si sigue libre**; si otra cuenta ya lo tomó, la cuenta se
+     * restaura con el correo marcador (`borrado+…`) y se avisa, porque dejárselo a medias sería peor: dos
+     * cuentas con el mismo correo y un login que no sabe cuál es cuál.
+     *
+     * @return array{correo_original:?string, correo_restaurado:bool}
+     *
+     * @throws ValidationException
+     */
+    public function restaurarMedico(Medico $medico): array
+    {
+        if (! $medico->estaArchivado()) {
+            throw ValidationException::withMessages(['archivo' => 'Esa cuenta no está borrada.']);
+        }
+
+        $user = $medico->user_id ? User::find($medico->user_id) : null;
+        $correo = trim((string) ($user?->email_original ?? $medico->email_original));
+
+        $libre = $correo === ''
+            || (! User::whereRaw('lower(email) = ?', [mb_strtolower($correo)])
+                    ->when($user, fn ($q) => $q->where('id', '!=', $user->id))
+                    ->exists()
+                && ! Medico::whereRaw('lower(email) = ?', [mb_strtolower($correo)])
+                    ->where('id', '!=', $medico->id)
+                    ->exists());
+
+        DB::transaction(function () use ($medico, $user, $correo, $libre) {
+            $medico->forceFill([
+                'archivado_en'      => null,
+                'archivado_por_id'  => null,
+                'archivado_motivo'  => null,
+                'email'             => $libre ? ($medico->email_original ?: null) : null,
+                'phone'             => $medico->telefono_original,
+                'license_number'    => $medico->carnet_original,
+                'is_active'         => true,
+                'email_original'    => $libre ? null : $medico->email_original,
+            ])->save();
+
+            if ($user !== null) {
+                $user->forceFill([
+                    'archivado_en'   => null,
+                    'email'          => $libre && $correo !== '' ? $correo : $user->email,
+                    'email_original' => $libre ? null : $user->email_original,
+                    'is_active'      => true,
+                    'blocked_reason' => null,
+                ])->save();
+            }
+        });
+
+        return ['correo_original' => $correo !== '' ? $correo : null, 'correo_restaurado' => $libre];
+    }
+
     public function hacerAdministrador(User $user): void
     {
         $user->assignRole($this->rol('Administrador'));
@@ -612,6 +770,7 @@ class CuentaService
     public function registrosAsignables(Medico $medico): array
     {
         return Medico::whereNotNull('reg_medico')
+            ->vigentes()
             ->whereNotIn('reg_medico', $this->registrosDe($medico))
             ->orderBy('name')->orderBy('lastname')
             ->get(['name', 'lastname', 'reg_medico', 'es_centro'])

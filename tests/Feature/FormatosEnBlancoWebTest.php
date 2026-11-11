@@ -260,7 +260,7 @@ class FormatosEnBlancoWebTest extends TestCase
 
     // ------------------------------------------------------------------------------- El acceso y lo real
 
-    public function test_la_pantalla_del_formato_ofrece_los_dieciocho_formatos_en_blanco(): void
+    public function test_la_pantalla_del_formato_ofrece_los_diecinueve_formatos_en_blanco(): void
     {
         [$user, $medico, $gineco] = $this->medicoConFormato();
 
@@ -270,7 +270,7 @@ class FormatosEnBlancoWebTest extends TestCase
         foreach (FormatosEnBlanco::claves() as $clave) {
             $this->assertStringContainsString($this->url($clave), $html);
         }
-        $this->assertCount(18, FormatosEnBlanco::catalogo());
+        $this->assertCount(19, FormatosEnBlanco::catalogo());
         // El del eco obstétrico es el único documento de la hoja real que sigue sin formato en blanco.
         $this->assertStringNotContainsString($this->url(DocumentoImpreso::ECO_PELVICO), $html);
     }

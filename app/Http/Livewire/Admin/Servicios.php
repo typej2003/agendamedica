@@ -130,7 +130,7 @@ class Servicios extends Component
             [$conteo, $regsPorEstado] = $this->clasificarMedicos($servicios);
             $busqueda = trim($this->search);
 
-            $medicos = Medico::query()
+            $medicos = Medico::vigentes()
                 ->when($busqueda !== '', fn ($q) => $q->where(fn ($w) => $w
                     ->where('name', 'like', "%{$busqueda}%")
                     ->orWhere('lastname', 'like', "%{$busqueda}%")
@@ -148,7 +148,7 @@ class Servicios extends Component
             $datos['filas'] = $filas;
         }
 
-        $seleccionado = $this->medicoId ? Medico::find($this->medicoId) : null;
+        $seleccionado = $this->medicoId ? Medico::vigentes()->find($this->medicoId) : null;
         $datos['seleccionado'] = $seleccionado;
         if ($seleccionado && $this->modal === 'historial') {
             $datos['historial'] = RegMedicoServicio::where('reg_medico', $seleccionado->reg_medico)->orderByDesc('vence_el')->orderByDesc('id')->get();
@@ -192,7 +192,8 @@ class Servicios extends Component
         $vencimientos = $servicios->vencimientos();
         $porEstado = ['vigente' => [], 'por_vencer' => [], 'gracia' => [], 'vencido' => [], 'sin_servicio' => []];
 
-        foreach (Medico::pluck('reg_medico') as $reg) {
+        // Las cuentas borradas (archivadas) no cuentan ni se clasifican: ya no operan.
+        foreach (Medico::vigentes()->pluck('reg_medico') as $reg) {
             $reg = (string) $reg;
             if (! isset($vencimientos[$reg])) {
                 $porEstado['sin_servicio'][] = $reg;
@@ -203,7 +204,7 @@ class Servicios extends Component
             $porEstado[$clave][] = $reg;
         }
         $conteo = array_map('count', $porEstado);
-        $conteo['todos'] = Medico::count();
+        $conteo['todos'] = Medico::vigentes()->count();
 
         return [$conteo, $porEstado];
     }

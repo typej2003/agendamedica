@@ -22,11 +22,19 @@
     <div class="card">
         <x-ui.cargando cubre wire:loading.delay.flex />
         <div class="card-header bg-white py-3">
-            <div class="row">
+            <div class="row g-2">
                 <div class="col-md-5">
                     <input type="text" wire:model.live.debounce.400ms="search" class="form-control"
                            placeholder="{{ $pestana === 'medicos' ? 'Buscar por nombre, correo o registro...' : 'Buscar por nombre o correo...' }}">
                 </div>
+                @if ($pestana === 'medicos')
+                    <div class="col-md-3">
+                        <select wire:model.live="estado" class="form-select" aria-label="Ver cuentas vigentes o archivadas">
+                            <option value="vigentes">Vigentes</option>
+                            <option value="archivados">Archivados</option>
+                        </select>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -70,7 +78,14 @@
                                         @endif
                                     @endif
                                 </td>
-                                <td data-etiqueta="Correo">{{ $u?->email ?? $fila->email }}</td>
+                                <td data-etiqueta="Correo">
+                                    @if ($pestana === 'medicos' && $fila->estaArchivado())
+                                        {{ $fila->email_original ?: ($u?->email_original ?: '—') }}
+                                        <small class="text-muted d-block">correo liberado</small>
+                                    @else
+                                        {{ $u?->email ?? $fila->email }}
+                                    @endif
+                                </td>
                                 <td data-etiqueta="Roles">
                                     @if ($u)
                                         @foreach ($u->roles as $rol)
@@ -79,7 +94,9 @@
                                     @endif
                                 </td>
                                 <td data-etiqueta="Estado">
-                                    @if (! $u)
+                                    @if ($pestana === 'medicos' && $fila->estaArchivado())
+                                        <span class="badge bg-dark" title="La cuenta se borró: no puede entrar y su correo, teléfono y carnet quedaron libres. Sus datos clínicos se conservan.">Archivado</span>
+                                    @elseif (! $u)
                                         <span class="badge bg-secondary">Sin acceso</span>
                                     @elseif ($u->is_active === false)
                                         <span class="badge bg-danger" @if ($u->blocked_reason) title="{{ $u->blocked_reason }}" @endif>Bloqueado</span>
@@ -91,6 +108,12 @@
                                     @endif
                                 </td>
                                 <td class="text-end text-nowrap celda-acciones">
+                                    @if ($pestana === 'medicos' && $fila->estaArchivado())
+                                        <button type="button" class="btn btn-sm btn-outline-success" wire:click="restaurarArchivo({{ $fila->id }})">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i> Restaurar
+                                        </button>
+                                    @else
+                                    {{-- Cuenta vigente: las acciones de siempre (crear acceso, editar y el menú «…»). --}}
                                     @if (! $u && ! $fila->es_centro)
                                         <button wire:click="abrirAcceso({{ $fila->id }})" class="btn btn-sm btn-primary">
                                             <i class="bi bi-key me-1"></i> Crear acceso
@@ -184,8 +207,20 @@
                                                         @endif
                                                     </li>
                                                 @endif
+
+                                                {{-- **Borrar la cuenta** (2026-11-10): baja lógica del doctor. No se ofrece en un
+                                                     centro ni en un consultorio (no son cuentas): los rechaza el servicio. --}}
+                                                @if ($pestana === 'medicos' && $m && ! $m->es_centro)
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <button type="button" class="dropdown-item text-danger" wire:click="abrirArchivo({{ $m->id }})">
+                                                            <i class="bi bi-trash me-2"></i> Borrar la cuenta
+                                                        </button>
+                                                    </li>
+                                                @endif
                                             </ul>
                                         </div>
+                                    @endif
                                     @endif
                                 </td>
                             </tr>
@@ -610,4 +645,7 @@
     @endif
 
     @include('livewire.admin.partials.api-key-generada')
+
+    {{-- Ventana de «Borrar la cuenta» (baja lógica del doctor), compartida con el detalle del médico. --}}
+    @include('livewire.admin.partials.archivar-cuenta')
 </div>

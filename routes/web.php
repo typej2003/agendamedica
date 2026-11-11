@@ -66,11 +66,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cambiar-password', [CambiarPasswordWebController::class, 'formulario'])->name('cuenta.password');
     Route::post('/cambiar-password', [CambiarPasswordWebController::class, 'actualizar'])->name('cuenta.password.update');
 
-    // Ruta para la gestión de usuarios (protegida por permiso)
-    Route::get('/users', \App\Http\Livewire\Admin\ListUsers::class)->name('users.index')->middleware('role:Root|Administrador');
-
-    // Ruta para asignar permisos a usuarios
-    Route::get('/users/permissions', \App\Http\Livewire\Admin\PermissionsUsers::class)->name('users.permissions')->middleware('role:Root|Administrador');
 });
 
 // Búsqueda heredada: ningún menú ni correo la enlaza (el registro y las reservas tienen sus propias pantallas), así que no se

@@ -30,6 +30,10 @@ class User extends Authenticatable
         'must_change_password',
         'is_active',
         'blocked_reason',
+        // **La baja lógica de la cuenta** (2026-11-10): el correo original se guarda acá porque el de
+        // `users.email` se renombra (es único) para poder reutilizarlo. Ver `CuentaService::archivarMedico()`.
+        'archivado_en',
+        'email_original',
     ];
 
     /**
@@ -53,6 +57,7 @@ class User extends Authenticatable
         'is_active' => 'boolean',
         'ultima_actividad_web_at' => 'datetime',
         'telefono_validado_en' => 'datetime',
+        'archivado_en' => 'datetime',
     ];
 
     /** Roles Spatie que dan acceso al dashboard de administración. */

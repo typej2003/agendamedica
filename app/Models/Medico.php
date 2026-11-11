@@ -49,10 +49,19 @@ class Medico extends Model
         // El consultorio del que cuelga esta ficha (2026-11-06): el segundo consultorio del mismo doctor usa
         // el plan del principal. Nulo = independiente, como todas las fichas anteriores a esta columna.
         'medico_padre_id',
+        // **La baja lógica de la cuenta** (2026-11-10): cuándo, quién y por qué se archivó, más lo que se
+        // liberó para poder reutilizarlo (correo, teléfono y carnet). Ver `CuentaService::archivarMedico()`.
+        'archivado_en',
+        'archivado_por_id',
+        'archivado_motivo',
+        'email_original',
+        'telefono_original',
+        'carnet_original',
     ];
 
     protected $casts = [
         'es_centro' => 'boolean',
+        'archivado_en' => 'datetime',
     ];
 
     /** Al crearse un médico (por cualquier camino) recibe su mes de prueba: ver App\Listeners\OtorgarServicioDePrueba. */
@@ -124,6 +133,28 @@ class Medico extends Model
     public function esConsultorioHijo(): bool
     {
         return $this->medico_padre_id !== null;
+    }
+
+    /**
+     * ¿La cuenta está **archivada**? (2026-11-10) Es la baja lógica del doctor: la ficha se conserva —sus
+     * historias, citas y récipes siguen colgando de su `reg_medico`— pero desaparece de las listas del panel,
+     * no puede entrar y su correo, teléfono y carnet quedaron libres para otra cuenta.
+     */
+    public function estaArchivado(): bool
+    {
+        return $this->archivado_en !== null;
+    }
+
+    /** Las fichas vigentes: las que no se archivaron. Es el filtro por defecto de las listas del panel. */
+    public function scopeVigentes($query)
+    {
+        return $query->whereNull('archivado_en');
+    }
+
+    /** Las fichas archivadas, para la vista «Archivados» del panel. */
+    public function scopeArchivados($query)
+    {
+        return $query->whereNotNull('archivado_en');
     }
 
     /**

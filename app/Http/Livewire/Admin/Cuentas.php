@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Admin;
 
+use App\Http\Livewire\Admin\Concerns\ArchivaLaCuenta;
 use App\Http\Livewire\Admin\Concerns\EmiteApiKeys;
 use App\Models\Medico;
 use App\Models\MedicoRegistro;
@@ -16,6 +17,10 @@ use Livewire\WithPagination;
  * editar sus datos, resetear claves, bloquear/desbloquear, cambiar sus roles y generar la API key de sync.
  * Cada fila tiene un botón "Editar" y un menú de 3 puntos con el resto de acciones.
  *
+ * Desde el 2026-11-10 incluye la **baja lógica** de una cuenta de doctor («Borrar la cuenta»): la ficha queda
+ * archivada y oculta, con sus datos clínicos intactos, y su correo, teléfono y carnet se liberan. Las
+ * archivadas tienen su vista («Archivados») con la opción de restaurarlas. Ver `ArchivaLaCuenta`.
+ *
  * Toda la lógica de cuentas vive en `CuentaService`; acá solo hay pantalla. Las claves en claro se muestran UNA
  * sola vez (`$claveGenerada`) y no se guardan en ningún lado.
  *
@@ -26,6 +31,7 @@ class Cuentas extends Component
 {
     use WithPagination;
     use EmiteApiKeys;
+    use ArchivaLaCuenta;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -34,6 +40,12 @@ class Cuentas extends Component
     // Listado
     public $pestana = 'medicos';
     public $search = '';
+
+    /**
+     * En «Médicos»: `vigentes` (las cuentas que existen) o `archivados` (las que se borraron, con la opción de
+     * restaurarlas). La baja es lógica: ver `CuentaService::archivarMedico()`.
+     */
+    public $estado = 'vigentes';
 
     // Qué ventana está abierta: alta | editar | acceso | reset | bloquear | roles | registros | emitir (API key) | null
     public $modal = null;
@@ -97,7 +109,7 @@ class Cuentas extends Component
 
         // `?editar=ID` (el botón «Editar» del detalle del médico): abre el diálogo de edición de ese médico.
         $editar = (int) request()->query('editar');
-        if ($editar > 0 && $this->pestana === 'medicos' && Medico::whereKey($editar)->exists()) {
+        if ($editar > 0 && $this->pestana === 'medicos' && Medico::vigentes()->whereKey($editar)->exists()) {
             $this->abrirEditar('medico', $editar);
         }
     }
@@ -125,6 +137,15 @@ class Cuentas extends Component
         $this->resetPage();
     }
 
+    /** Cambiar entre «Vigentes» y «Archivados» vuelve a la primera página. */
+    public function updatedEstado()
+    {
+        if (! in_array($this->estado, ['vigentes', 'archivados'], true)) {
+            $this->estado = 'vigentes';
+        }
+        $this->resetPage();
+    }
+
     public function render()
     {
         $busqueda = trim($this->search);
@@ -139,10 +160,13 @@ class Cuentas extends Component
                 ->paginate(10);
         } else {
             $filas = Medico::with(['user.roles', 'registros'])
+                // La baja es lógica: las archivadas no aparecen en la lista de trabajo y tienen su propia vista.
+                ->when($this->estado === 'archivados', fn ($q) => $q->archivados(), fn ($q) => $q->vigentes())
                 ->when($busqueda !== '', fn ($q) => $q->where(fn ($w) => $w
                     ->where('name', 'like', "%{$busqueda}%")
                     ->orWhere('lastname', 'like', "%{$busqueda}%")
                     ->orWhere('email', 'like', "%{$busqueda}%")
+                    ->orWhere('email_original', 'like', "%{$busqueda}%")
                     ->orWhere('reg_medico', 'like', "%{$busqueda}%")))
                 ->orderBy('name')
                 ->orderBy('lastname')
@@ -178,7 +202,7 @@ class Cuentas extends Component
 
         $ids = MedicoRegistro::where('reg_medico', $centro->reg_medico)->pluck('medico_id')->filter()->unique()->all();
 
-        return Medico::whereIn('id', $ids)->orderBy('name')->orderBy('lastname')->get();
+        return Medico::vigentes()->whereIn('id', $ids)->orderBy('name')->orderBy('lastname')->get();
     }
 
     /**
@@ -198,6 +222,7 @@ class Cuentas extends Component
         $yaVinculados = MedicoRegistro::where('reg_medico', $centro->reg_medico)->pluck('medico_id')->filter()->unique()->all();
 
         return Medico::where('es_centro', false)
+            ->vigentes()
             ->whereNotIn('id', $yaVinculados)
             ->whereNotNull('reg_medico')
             ->orderBy('name')
@@ -309,7 +334,7 @@ class Cuentas extends Component
             $this->name = (string) $user->name;
             $this->email = (string) $user->email;
         } else {
-            $medico = Medico::findOrFail($id);
+            $medico = Medico::vigentes()->findOrFail($id);
             $this->tipoEdicion = 'medico';
             $this->medicoId = $medico->id;
             $this->name = (string) $medico->name;

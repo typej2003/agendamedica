@@ -8,6 +8,10 @@ use App\Clinica\Consulta\TextoDelExamen;
 use App\Clinica\Consulta\TextosDelExamen;
 use App\Clinica\Consulta\ConstanciaDeLaConsulta;
 use App\Clinica\Consulta\DietaDeLaConsulta;
+use App\Clinica\Consulta\Traumatologia\DatosDeLaOrtopedia;
+use App\Clinica\Consulta\Traumatologia\MapaDeLaOrtopedia;
+use App\Clinica\Consulta\Traumatologia\MapaDeLaOrdenDeIngreso;
+use App\Clinica\Consulta\Traumatologia\MapaDelImplante;
 use App\Clinica\Consulta\DoctoresDelMedico;
 use App\Clinica\Consulta\EcoCardiogramaFetal;
 use App\Clinica\Consulta\EcoAbdominal;
@@ -134,6 +138,9 @@ final class SolicitudesParaImprimir
         private LaboratorioDeLaPareja $laboratoriosDeLaPareja,
         private ImagenesDelExamenParaElInforme $imagenesDelExamen,
         private RepresentanteParaLaHoja $representantes,
+        private DatosDeLaOrtopedia $ortopedias,
+        private \App\Clinica\Consulta\Traumatologia\DatosDelImplante $implantes,
+        private \App\Clinica\Consulta\Traumatologia\DatosDeLaOrdenDeIngreso $ordenesDeIngreso,
     ) {
     }
 
@@ -467,6 +474,40 @@ final class SolicitudesParaImprimir
             ];
         }
 
+        // La **plantilla ortopédica** (Traumatología, 2026-11-09): se ofrece si la consulta tiene algo cargado.
+        if ($this->ortopedias->tieneDatos($consulta)) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::ORTOPEDIA,
+                'tipo' => DocumentoImpreso::ORTOPEDIA,
+                'titulo' => 'Calzados ortopédicos',
+                // Sin los valores clínicos: la lista de la cita la ve la secretaría.
+                'resumen' => 'Plantilla ortopédica',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+        // La **solicitud de implante** y la **orden de ingreso** (Traumatología, T3, 2026-11-10): se ofrecen si la
+        // consulta tiene algo cargado, como la plantilla ortopédica.
+        if ($this->implantes->tieneDatos($consulta)) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::IMPLANTE,
+                'tipo' => DocumentoImpreso::IMPLANTE,
+                'titulo' => 'Implante',
+                // Sin los datos clínicos: la lista de la cita la ve la secretaría.
+                'resumen' => 'Solicitud de implante',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
+        if ($this->ordenesDeIngreso->tieneDatos($consulta)) {
+            $disponibles[] = [
+                'clave' => DocumentoImpreso::ORDEN_DE_INGRESO,
+                'tipo' => DocumentoImpreso::ORDEN_DE_INGRESO,
+                'titulo' => 'Orden de ingreso',
+                'resumen' => 'Orden de ingreso',
+                'fecha' => $fechaDeLaConsulta,
+            ];
+        }
+
         // La **pre-factura** (F9): se ofrece si tiene algún concepto **y si la sección está encendida** (O-45: con la
         // bandera apagada el documento no se ofrece y lo cargado queda intacto). La lista de la cita lleva sólo la
         // cuenta, no los montos.
@@ -743,6 +784,24 @@ final class SolicitudesParaImprimir
             return $this->dietas->esReal($dieta) ? $this->dieta($paciente, $dieta, $fechaDeLaConsulta) : null;
         }
 
+        if ($clave === DocumentoImpreso::ORTOPEDIA) {
+            return $this->ortopedias->tieneDatos($consulta)
+                ? $this->ortopedia($paciente, $this->ortopedias->valores($consulta), $fechaDeLaConsulta)
+                : null;
+        }
+
+        // **Traumatología** (T3, 2026-11-10): la solicitud de implante y la orden de ingreso.
+        if ($clave === DocumentoImpreso::IMPLANTE) {
+            return $this->implantes->tieneDatos($consulta)
+                ? $this->implante($paciente, $this->implantes->valores($consulta), $fechaDeLaConsulta)
+                : null;
+        }
+
+        if ($clave === DocumentoImpreso::ORDEN_DE_INGRESO) {
+            return $this->ordenesDeIngreso->tieneDatos($consulta)
+                ? $this->ordenDeIngreso($paciente, $this->ordenesDeIngreso->valores($consulta), $fechaDeLaConsulta)
+                : null;
+        }
         if ($clave === DocumentoImpreso::PREFACTURA) {
             $items = $this->preFacturas->de($consulta);
 
@@ -988,6 +1047,161 @@ final class SolicitudesParaImprimir
      *
      * @param  Collection<int,\App\Models\PreFacturaConsulta>  $items
      */
+    /**
+     * La hoja **«Calzados Ortopédicos»** (Traumatología, 2026-11-09): las casillas marcadas y los textos que tienen algo,
+     * con el rótulo de la hoja, y la observación como párrafo. Las casillas van como «Sí»: la hoja del escritorio las
+     * tacha, y acá se leen.
+     *
+     * @param  array<string,string>  $valores  clave del mapa => valor guardado
+     */
+    private function ortopedia(Paciente $paciente, array $valores, string $fecha): DocumentoImpreso
+    {
+        $fijos = [];
+        $observacion = '';
+
+        foreach (MapaDeLaOrtopedia::campos() as $campo) {
+            $valor = trim((string) ($valores[$campo['clave']] ?? ''));
+
+            if ($campo['tipo'] === 'parrafo') {
+                $observacion = $valor;
+                continue;
+            }
+
+            if ($campo['tipo'] === 'marca') {
+                if ($valor === '1') {
+                    $fijos[] = ['etiqueta' => mb_strtoupper($campo['etiqueta']) . ':', 'valor' => 'Sí'];
+                }
+
+                continue;
+            }
+
+            if ($valor !== '') {
+                $fijos[] = ['etiqueta' => mb_strtoupper($campo['etiqueta']) . ':', 'valor' => $valor];
+            }
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::ORTOPEDIA,
+            DocumentoImpreso::ORTOPEDIA,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ORTOPEDIA][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ORTOPEDIA][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            $fijos,
+            DocumentoImpreso::parrafosDe($observacion, 'OBSERVACIÓN:', true),
+        );
+    }
+
+    /**
+     * **La solicitud de implante** (Traumatología, T3): la hoja del escritorio, con lo que la consulta tiene cargado.
+     *
+     * Las tres hojas del escritorio (cadera, rodilla y texto libre `_pt`) son el **mismo documento con otro rótulo** —los
+     * DataWindows comparten la tabla y cambian los campos que muestran—, y el radio de cadera/rodilla y la casilla del
+     * texto libre son una elección **al imprimir**, no un dato. Por eso la web imprime **una sola hoja** con los campos
+     * con valor: la de la intervención, los componentes, los insumos, el diagnóstico y el plan, y el texto libre si lo
+     * hay (como el `_pt` del escritorio).
+     *
+     * @param  array<string,string>  $valores
+     */
+    private function implante(Paciente $paciente, array $valores, string $fecha): DocumentoImpreso
+    {
+        $fijos = [];
+        $parrafos = [];
+
+        foreach (MapaDelImplante::campos() as $campo) {
+            $valor = trim((string) ($valores[$campo['clave']] ?? ''));
+
+            if ($campo['tipo'] === 'marca') {
+                if ($valor === '1') {
+                    $fijos[] = ['etiqueta' => mb_strtoupper($campo['etiqueta']) . ':', 'valor' => 'Sí'];
+                }
+
+                continue;
+            }
+
+            if ($valor === '') {
+                continue;
+            }
+
+            if (in_array($campo['tipo'], ['parrafo'], true)) {
+                $parrafos = array_merge($parrafos, DocumentoImpreso::parrafosDe($valor, mb_strtoupper($campo['etiqueta']) . ':', true));
+
+                continue;
+            }
+
+            $fijos[] = [
+                'etiqueta' => mb_strtoupper($campo['etiqueta']) . ':',
+                'valor' => $campo['tipo'] === 'fecha' ? FechaClinica::formato($valor) : $valor,
+            ];
+        }
+
+        // El texto libre (`puro_texto`) es el cuerpo de la hoja `_pt` del escritorio: va como párrafo, no como dato.
+        if (trim((string) ($valores['puro_texto'] ?? '')) !== '') {
+            $parrafos = DocumentoImpreso::parrafosDe($valores['puro_texto']);
+        }
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::IMPLANTE,
+            DocumentoImpreso::IMPLANTE,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::IMPLANTE][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::IMPLANTE][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            $fijos,
+            $parrafos,
+        );
+    }
+
+    /**
+     * **La orden de ingreso** (Traumatología, T3): el diagnóstico (`idx`), las recomendaciones escritas (`texto`) más las
+     * casillas de la hoja (`reco_*`) y las observaciones (`detalle`), con los rótulos del DataWindow.
+     *
+     * @param  array<string,string>  $valores
+     */
+    private function ordenDeIngreso(Paciente $paciente, array $valores, string $fecha): DocumentoImpreso
+    {
+        $fijos = [];
+        $parrafos = [];
+
+        foreach (['fecha_reporte', 'fecha_operacion'] as $clave) {
+            $valor = trim((string) ($valores[$clave] ?? ''));
+
+            if ($valor !== '') {
+                $fijos[] = ['etiqueta' => $clave === 'fecha_reporte' ? 'FECHA:' : 'FECHA DE LA INTERVENCIÓN:', 'valor' => FechaClinica::formato($valor)];
+            }
+        }
+
+        $parrafos = array_merge(
+            DocumentoImpreso::parrafosDe($valores['idx'] ?? null, 'DX:', true),
+            DocumentoImpreso::parrafosDe($valores['texto'] ?? null, 'RECOMENDACIONES:', true),
+        );
+
+        $marcadas = [];
+
+        foreach (MapaDeLaOrdenDeIngreso::recomendaciones() as $columna => $rotulo) {
+            if (trim((string) ($valores[$columna] ?? '')) === '1') {
+                $marcadas[] = $rotulo;
+            }
+        }
+
+        if ($marcadas !== []) {
+            $parrafos[] = DocumentoImpreso::parrafoDeLista('RECOMENDACIONES DE LA HOJA:', $marcadas);
+        }
+
+        $parrafos = array_merge($parrafos, DocumentoImpreso::parrafosDe($valores['detalle'] ?? null, 'OBSERVACIONES:', true));
+
+        return new DocumentoImpreso(
+            DocumentoImpreso::ORDEN_DE_INGRESO,
+            DocumentoImpreso::ORDEN_DE_INGRESO,
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ORDEN_DE_INGRESO][0],
+            DocumentoImpreso::TITULOS[DocumentoImpreso::ORDEN_DE_INGRESO][1],
+            $fecha,
+            PacienteImpreso::datos($paciente, $fecha),
+            $fijos,
+            $parrafos,
+        );
+    }
+
     private function preFactura(Paciente $paciente, Collection $items, string $fecha): DocumentoImpreso
     {
         $dinero = fn (float $valor) => number_format($valor, 2, ',', '.');

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Catalogos\AsegurarElSeguroPersonal;
 use App\Models\City;
 use App\Models\Medico;
 use App\Models\MedicalCenter;
@@ -123,12 +124,17 @@ class MedicalDataSeeder extends Seeder
                         'reg_medico' => $docData['reg_medico'],
                     ]);
 
-                    // 4. Asociar al centro médico a través de la tabla pivote guardando reg_medico
+                    // 4. El consultorio estrena su seguro «Personal» si no tiene ninguno (O-60): una base nueva
+                    //    de desarrollo no depende de un INSERT a mano para que el alta de un paciente encuentre
+                    //    el catálogo con algo adentro.
+                    app(AsegurarElSeguroPersonal::class)->paraRegistro($docData['reg_medico']);
+
+                    // 5. Asociar al centro médico a través de la tabla pivote guardando reg_medico
                     $medico->medicalCenters()->attach($center->id, [
                         'reg_medico' => $docData['reg_medico'],
                     ]);
 
-                    // 5. Asignar especialidades aleatorias
+                    // 6. Asignar especialidades aleatorias
                     $assignedSpecialties = $specialties->random(rand(1, 2))->pluck('id');
                     $medico->specialties()->attach($assignedSpecialties);
 

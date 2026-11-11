@@ -215,11 +215,11 @@ class ImpresionDeEcoDopplerWebTest extends TestCase
         [, $medico, $gineco, , $secretaria, $cita] = $this->escenario();
         $this->doppler($medico, ['conclusion' => 'CONCLUSION RESERVADA']);
 
-        // Con un solo documento, la lista se salta y va directo a la hoja.
-        $this->lista($secretaria, $medico, $gineco, $cita)
-            ->assertRedirect(route('clinica.agenda.documentos.imprimir', [$cita->id, 'documento' => DocumentoImpreso::ECO_DOPPLER]));
+        // El Doppler alimenta un bloque del resumen médico, así que la cita tiene **dos** documentos y la lista no se
+        // salta: se ve el informe del eco, sin su contenido clínico, y la hoja sale igual.
+        $this->lista($secretaria, $medico, $gineco, $cita)->assertOk();
 
-        $this->hojaDeLaCita($secretaria, $medico, $gineco, $cita)->assertOk()
+        $this->hojaDeLaCita($secretaria, $medico, $gineco, $cita, DocumentoImpreso::ECO_DOPPLER)->assertOk()
             ->assertSee('ECO DOPPLER PERINATAL')
             ->assertSee('CONCLUSION RESERVADA');
     }
@@ -252,7 +252,7 @@ class ImpresionDeEcoDopplerWebTest extends TestCase
         $cuerpo = fn (string $html) => substr($html, strpos($html, '<main class="recipe-hojas"'), strpos($html, '</main>') - strpos($html, '<main class="recipe-hojas"'));
 
         $delMedico = $this->como($user, $medico, $gineco)->get($this->hoja($consulta))->getContent();
-        $deLaSecretaria = $this->hojaDeLaCita($secretaria, $medico, $gineco, $cita)->getContent();
+        $deLaSecretaria = $this->hojaDeLaCita($secretaria, $medico, $gineco, $cita, DocumentoImpreso::ECO_DOPPLER)->getContent();
 
         $this->assertSame($cuerpo($delMedico), $cuerpo($deLaSecretaria));
     }

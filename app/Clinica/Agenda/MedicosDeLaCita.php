@@ -72,6 +72,8 @@ final class MedicosDeLaCita
             ->where(function ($consulta) {
                 $consulta->whereNull('es_centro')->orWhere('es_centro', false);
             })
+            // Una cuenta archivada ya no se ofrece para citas nuevas (sus citas viejas siguen ahí).
+            ->whereNull('archivado_en')
             ->orderBy('lastname')
             ->orderBy('name')
             ->get();

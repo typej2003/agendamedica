@@ -90,7 +90,7 @@ class Especialidades extends Component
     {
         $busqueda = trim($this->search);
 
-        $filas = Medico::with('specialties')
+        $filas = Medico::vigentes()->with('specialties')
             ->when($busqueda !== '', fn ($q) => $q->where(fn ($w) => $w
                 ->where('name', 'like', "%{$busqueda}%")
                 ->orWhere('lastname', 'like', "%{$busqueda}%")
@@ -113,17 +113,17 @@ class Especialidades extends Component
             'conteo'      => $this->conteo(),
             'catalogo'    => $catalogo,
             'sinActivas'  => $catalogo->where('activo', false)->count(),
-            'seleccionado' => $this->modal === 'asignar' && $this->medicoId ? Medico::find($this->medicoId) : null,
+            'seleccionado' => $this->modal === 'asignar' && $this->medicoId ? Medico::vigentes()->find($this->medicoId) : null,
         ]);
     }
 
-    /** @return array<string,int> cuántos médicos hay en cada pastilla */
+    /** @return array<string,int> cuántos médicos hay en cada pastilla (las cuentas borradas no cuentan) */
     private function conteo(): array
     {
         return [
-            'todos' => Medico::count(),
-            'sin'   => Medico::whereDoesntHave('specialties')->count(),
-            'con'   => Medico::whereHas('specialties')->count(),
+            'todos' => Medico::vigentes()->count(),
+            'sin'   => Medico::vigentes()->whereDoesntHave('specialties')->count(),
+            'con'   => Medico::vigentes()->whereHas('specialties')->count(),
         ];
     }
 
@@ -133,7 +133,7 @@ class Especialidades extends Component
 
     public function abrirAsignar(int $medicoId)
     {
-        $medico = Medico::findOrFail($medicoId);
+        $medico = Medico::vigentes()->findOrFail($medicoId);
 
         $this->medicoId = $medico->id;
         // El formulario manda los ids como texto: se comparan con los del pivote tal cual llegan.
