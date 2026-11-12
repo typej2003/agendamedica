@@ -852,6 +852,10 @@ input[type="datetime-local"]:disabled::-webkit-calendar-picker-indicator { curso
     font-size: .625rem;
 }
 
+/* Dentro de un grupo, la bandeja cuenta en el `<summary>` para que se vea con el grupo cerrado; abierto se esconde,
+   porque entonces está el número del hijo y no se lee dos veces. */
+.app-sidebar .nav-grupo[open] > summary .app-sidebar-aviso { display: none; }
+
 .app-sidebar .nav-link.disabled {
     color: var(--ds-barra-texto-2);
     opacity: .55;

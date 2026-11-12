@@ -36,6 +36,9 @@
             </li>
         @endif
 
+        {{-- Ocho áreas y **dos niveles**: grupo → enlace. «Facturación y pagos» junta lo que antes eran los grupos
+             «Planes y servicios» y «Métodos de pago» más «Pagos»; «Crecimiento y fidelización» junta «Referidos» y
+             «Latidos». Un grupo no se anida dentro de otro (decisión del 2026-11-12, tarjeta #111). --}}
         @if ($esAdmin)
             <li class="app-sidebar-titulo link-text">Administración</li>
 
@@ -48,6 +51,15 @@
                     ['texto' => 'Pacientes', 'icono' => 'bi-person-heart', 'url' => route('admin.cuentas.pacientes'), 'rutas' => ['admin.cuentas.pacientes']],
                 ],
             ]])
+            <li class="nav-item">
+                <a href="{{ route('admin.solicitudes-medicos') }}" class="nav-link {{ request()->routeIs('admin.solicitudes-medicos') ? 'active' : '' }}"
+                   @if (request()->routeIs('admin.solicitudes-medicos')) aria-current="page" @endif
+                   title="Solicitudes de médicos{{ $avisos['solicitudes'] ? ' (' . $avisos['solicitudes'] . ' sin responder)' : '' }}">
+                    <i class="bi bi-person-badge" aria-hidden="true"></i>
+                    <span class="link-text">Solicitudes de médicos</span>
+                    @include('livewire.layouts.aviso', ['total' => $avisos['solicitudes'], 'que' => 'sin responder'])
+                </a>
+            </li>
             <li class="nav-item">
                 <a href="{{ route('admin.especialidades') }}" class="nav-link {{ request()->routeIs('admin.especialidades') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.especialidades')) aria-current="page" @endif title="Especialidades">
@@ -66,6 +78,28 @@
                 'texto' => 'Catálogo inicial', 'icono' => 'bi-capsule', 'clave' => 'catalogo-inicial',
                 'rutas' => ['admin.catalogo-inicial.*'], 'hijos' => $hijosCatalogo,
             ]])
+            @include('livewire.layouts._aside-grupo', ['grupo' => [
+                'texto' => 'Facturación y pagos', 'icono' => 'bi-receipt', 'clave' => 'facturacion-y-pagos',
+                'rutas' => ['admin.servicios*', 'admin.metodos-pago*', 'admin.pagos'],
+                // El número de los pagos sin confirmar también en el grupo cerrado (el hijo lo repite).
+                'aviso' => ['total' => $avisos['pagos'], 'que' => 'sin confirmar'],
+                'hijos' => [
+                    ['texto' => 'Servicios por médico', 'icono' => 'bi-people', 'url' => route('admin.servicios'), 'rutas' => ['admin.servicios']],
+                    ['texto' => 'Planes', 'icono' => 'bi-card-checklist', 'url' => route('admin.servicios.planes'), 'rutas' => ['admin.servicios.planes']],
+                    ['texto' => 'Métodos de pago', 'icono' => 'bi-credit-card', 'url' => route('admin.metodos-pago'), 'rutas' => ['admin.metodos-pago']],
+                    // Hoy sólo existe VES; cuando haya más monedas, esta pantalla se parte en una pestaña por moneda.
+                    ['texto' => 'Tasas de cambio', 'icono' => 'bi-currency-exchange', 'url' => route('admin.metodos-pago.tasas'), 'rutas' => ['admin.metodos-pago.tasas']],
+                    ['texto' => 'Pagos', 'icono' => 'bi-cash-stack', 'url' => route('admin.pagos'), 'rutas' => ['admin.pagos'], 'aviso' => ['total' => $avisos['pagos'], 'que' => 'sin confirmar']],
+                ],
+            ]])
+            @include('livewire.layouts._aside-grupo', ['grupo' => [
+                'texto' => 'Crecimiento y fidelización', 'icono' => 'bi-graph-up-arrow', 'clave' => 'crecimiento-y-fidelizacion',
+                'rutas' => ['admin.referidos', 'admin.latidos'],
+                'hijos' => [
+                    ['texto' => 'Referidos', 'icono' => 'bi-gift', 'url' => route('admin.referidos'), 'rutas' => ['admin.referidos']],
+                    ['texto' => 'Latidos', 'icono' => 'bi-stars', 'url' => route('admin.latidos'), 'rutas' => ['admin.latidos']],
+                ],
+            ]])
             <li class="nav-item">
                 <a href="{{ route('admin.api-keys') }}" class="nav-link {{ request()->routeIs('admin.api-keys') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.api-keys')) aria-current="page" @endif title="API Keys">
@@ -73,61 +107,12 @@
                     <span class="link-text">API Keys</span>
                 </a>
             </li>
-            @include('livewire.layouts._aside-grupo', ['grupo' => [
-                'texto' => 'Planes y servicios', 'icono' => 'bi-card-checklist', 'clave' => 'planes-y-servicios',
-                'rutas' => ['admin.servicios*'],
-                'hijos' => [
-                    ['texto' => 'Servicios por médico', 'icono' => 'bi-people', 'url' => route('admin.servicios'), 'rutas' => ['admin.servicios']],
-                    ['texto' => 'Planes', 'icono' => 'bi-card-checklist', 'url' => route('admin.servicios.planes'), 'rutas' => ['admin.servicios.planes']],
-                ],
-            ]])
-            @include('livewire.layouts._aside-grupo', ['grupo' => [
-                'texto' => 'Métodos de pago', 'icono' => 'bi-credit-card', 'clave' => 'metodos-de-pago',
-                'rutas' => ['admin.metodos-pago*'],
-                'hijos' => [
-                    ['texto' => 'Métodos de pago', 'icono' => 'bi-credit-card', 'url' => route('admin.metodos-pago'), 'rutas' => ['admin.metodos-pago']],
-                    // Hoy sólo existe VES; cuando haya más monedas, esta pantalla se parte en una pestaña por moneda.
-                    ['texto' => 'Tasas de cambio', 'icono' => 'bi-currency-exchange', 'url' => route('admin.metodos-pago.tasas'), 'rutas' => ['admin.metodos-pago.tasas']],
-                ],
-            ]])
-            <li class="nav-item">
-                <a href="{{ route('admin.pagos') }}" class="nav-link {{ request()->routeIs('admin.pagos') ? 'active' : '' }}"
-                   @if (request()->routeIs('admin.pagos')) aria-current="page" @endif
-                   title="Pagos{{ $avisos['pagos'] ? ' (' . $avisos['pagos'] . ' sin confirmar)' : '' }}">
-                    <i class="bi bi-cash-stack" aria-hidden="true"></i>
-                    <span class="link-text">Pagos</span>
-                    @include('livewire.layouts.aviso', ['total' => $avisos['pagos'], 'que' => 'sin confirmar'])
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('admin.latidos') }}" class="nav-link {{ request()->routeIs('admin.latidos') ? 'active' : '' }}"
-                   @if (request()->routeIs('admin.latidos')) aria-current="page" @endif title="Latidos">
-                    <i class="bi bi-stars" aria-hidden="true"></i>
-                    <span class="link-text">Latidos</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('admin.referidos') }}" class="nav-link {{ request()->routeIs('admin.referidos') ? 'active' : '' }}"
-                   @if (request()->routeIs('admin.referidos')) aria-current="page" @endif title="Referidos">
-                    <i class="bi bi-gift" aria-hidden="true"></i>
-                    <span class="link-text">Referidos</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('admin.solicitudes-medicos') }}" class="nav-link {{ request()->routeIs('admin.solicitudes-medicos') ? 'active' : '' }}"
-                   @if (request()->routeIs('admin.solicitudes-medicos')) aria-current="page" @endif
-                   title="Solicitudes de médicos{{ $avisos['solicitudes'] ? ' (' . $avisos['solicitudes'] . ' sin responder)' : '' }}">
-                    <i class="bi bi-person-badge" aria-hidden="true"></i>
-                    <span class="link-text">Solicitudes de médicos</span>
-                    @include('livewire.layouts.aviso', ['total' => $avisos['solicitudes'], 'que' => 'sin responder'])
-                </a>
-            </li>
             <li class="nav-item">
                 <a href="{{ route('admin.comentarios') }}" class="nav-link {{ request()->routeIs('admin.comentarios') ? 'active' : '' }}"
                    @if (request()->routeIs('admin.comentarios')) aria-current="page" @endif
-                   title="Soporte y Sugerencias{{ $avisos['comentarios'] ? ' (' . $avisos['comentarios'] . ' sin responder)' : '' }}">
+                   title="Soporte y sugerencias{{ $avisos['comentarios'] ? ' (' . $avisos['comentarios'] . ' sin responder)' : '' }}">
                     <i class="bi bi-chat-heart" aria-hidden="true"></i>
-                    <span class="link-text">Soporte y Sugerencias</span>
+                    <span class="link-text">Soporte y sugerencias</span>
                     @include('livewire.layouts.aviso', ['total' => $avisos['comentarios'], 'que' => 'sin responder'])
                 </a>
             </li>
