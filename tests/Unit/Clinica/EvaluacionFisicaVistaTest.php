@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Clinica;
 
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\EvaluacionFisica;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 use App\Clinica\Consulta\Vistas\EvaluacionFisicaVista;
@@ -16,13 +17,14 @@ use PHPUnit\Framework\TestCase;
  */
 class EvaluacionFisicaVistaTest extends TestCase
 {
-    private function vista(array $consulta = [], array $examen = [], array $old = []): EvaluacionFisicaVista
+    private function vista(array $consulta = [], array $examen = [], array $old = [], ?AlcanceDeLaEspecialidad $alcance = null): EvaluacionFisicaVista
     {
         return new EvaluacionFisicaVista(
             new EvaluacionFisica($consulta, $examen),
             '/clinica/consulta/42/evaluacion',
             '/clinica/consulta/42?seccion=evaluacion',
             $old,
+            alcance: $alcance,
         );
     }
 
@@ -92,6 +94,62 @@ class EvaluacionFisicaVistaTest extends TestCase
 
         $this->assertSame('Mama derecha', $filas['mamas']['etiqueta']);
         $this->assertSame('Mama izquierda', $filas['mama_derecha']['etiqueta']);
+    }
+
+    // ------------------------------------------------------- Las circunferencias del niño (#107)
+
+    /**
+     * El **núcleo general** —cardiología y las demás especialidades sin módulo propio, y el médico sin
+     * especialidad— no ofrece las dos circunferencias del niño, igual que el app desde la #90. Su
+     * escritorio no tiene la cefálica y mide una sola «Circunferencia Abdominal», que sí se ofrece.
+     */
+    public function test_el_nucleo_general_no_ofrece_las_circunferencias_del_nino(): void
+    {
+        $vista = $this->vista([], [], [], AlcanceDeLaEspecialidad::de('cardiologia'));
+
+        $columnas = array_column($vista->antropometria(), 'columna');
+
+        $this->assertContains('circabdominal', $columnas);
+        $this->assertNotContains('circcefalica', $columnas);
+        $this->assertNotContains('circtoraxica', $columnas);
+
+        // El denominador del contador es el de las filas que se ven: 8 de antropometría − 2 + 8 del examen.
+        $this->assertSame(14, $vista->totalCampos());
+    }
+
+    public function test_ginecologia_y_pediatria_conservan_las_tres_circunferencias(): void
+    {
+        foreach (['ginecologia-y-obstetricia', 'pediatria'] as $especialidad) {
+            $vista = $this->vista([], [], [], AlcanceDeLaEspecialidad::de($especialidad));
+
+            $this->assertSame(
+                ['peso', 'talla', 'tension', 'fc', 'pp', 'circabdominal', 'circtoraxica', 'circcefalica'],
+                array_column($vista->antropometria(), 'columna'),
+                $especialidad,
+            );
+            $this->assertSame(16, $vista->totalCampos(), $especialidad);
+        }
+    }
+
+    /** Un valor viejo en una columna que ya no se ofrece no se ve ni se cuenta. */
+    public function test_un_valor_guardado_en_una_circunferencia_que_no_se_ofrece_no_cuenta(): void
+    {
+        $vista = $this->vista(
+            ['peso' => 70.0, 'circcefalica' => 55.0, 'circtoraxica' => 95.0],
+            [],
+            [],
+            AlcanceDeLaEspecialidad::de('cardiologia'),
+        );
+
+        $this->assertSame(1, $vista->cargados());
+        $this->assertSame(14, $vista->totalCampos());
+    }
+
+    /** Sin alcance —la vista construida sola— se ofrece todo, como antes: no se esconde nada por olvido. */
+    public function test_sin_alcance_se_ofrece_toda_la_antropometria(): void
+    {
+        $this->assertCount(8, $this->vista()->antropometria());
+        $this->assertSame(16, $this->vista()->totalCampos());
     }
 
     // ------------------------------------------------------------------- Los valores sucios del legado

@@ -65,11 +65,11 @@ class ConsultaEvaluacionWebTest extends TestCase
     // --------------------------------------------------------------------------------------- Ayudas
 
     /** @return array{0:User, 1:Medico, 2:Specialty} */
-    private function medicoConAcceso(string $rol = 'Medico'): array
+    private function medicoConAcceso(string $rol = 'Medico', string $especialidad = 'ginecologia-y-obstetricia'): array
     {
         $this->seed(EspecialidadesYModulosSeeder::class);
 
-        $gineco = Specialty::where('slug', 'ginecologia-y-obstetricia')->firstOrFail();
+        $gineco = Specialty::where('slug', $especialidad)->firstOrFail();
         $regMedico = 'evaluacion-te' . substr(uniqid(), -6);
 
         $user = User::create([
@@ -240,6 +240,39 @@ class ConsultaEvaluacionWebTest extends TestCase
         // Desde WEB-11.8 el resumen vive en un cuadro editable con su botón «Actualizar».
         $respuesta->assertSee('data-resumen-actualizar="fisico"', false);
     }
+
+    /**
+     * **El núcleo general no ofrece las circunferencias del niño** (#107, el mismo caso de la #90 en el
+     * app). En cardiología el escritorio no tiene el campo de la cefálica y mide una sola «Circunferencia
+     * Abdominal»; la web ofrecía las dos pediátricas. Ahora ni se ven ni cuentan, y el valor viejo que
+     * pudiera haber guardado no se pierde: sólo deja de mostrarse.
+     */
+    public function test_el_nucleo_general_no_muestra_las_circunferencias_del_nino(): void
+    {
+        [$user, $medico, $cardio] = $this->medicoConAcceso('Medico', 'cardiologia');
+        [, $consulta] = $this->pacienteYConsulta($medico);
+
+        // Una consulta vieja con las dos pediátricas cargadas y el peso: el peso sigue contando, ellas no.
+        $consulta->forceFill([
+            'peso' => 70.0, 'circcefalica' => 55.0, 'circtoraxica' => 95.0,
+        ])->save();
+
+        $respuesta = $this->conContexto($user, $medico, $cardio)->actingAs($user)->get($this->urlSeccion($consulta));
+
+        $respuesta->assertOk();
+        $respuesta->assertDontSee('Circunferencia cefálica', false);
+        $respuesta->assertDontSee('Circunferencia toráxica', false);
+        $respuesta->assertDontSee('id="circcefalica"', false);
+        $respuesta->assertDontSee('id="circtoraxica"', false);
+
+        // La abdominal sí: es la que su escritorio mide.
+        $respuesta->assertSee('Circunferencia abdominal', false);
+        $respuesta->assertSee('id="circabdominal"', false);
+
+        // El contador usa la misma lista: 14 campos que se ven, y de esos sólo el peso tiene dato.
+        $respuesta->assertSee('1 de 14 campos con dato', false);
+    }
+
 
     public function test_el_examen_se_lee_por_el_numero_de_la_consulta_y_no_por_su_id(): void
     {

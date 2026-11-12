@@ -2,6 +2,7 @@
 
 namespace App\Clinica\Consulta\Vistas;
 
+use App\Clinica\Consulta\AlcanceDeLaEspecialidad;
 use App\Clinica\Consulta\EvaluacionFisica;
 use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
 
@@ -25,6 +26,10 @@ use App\Clinica\Consulta\ExamenFisicoDeLaConsulta;
  *    resumen vacío se muestra como "sin resumen", no como un hallazgo.
  *  - **Los valores del formulario**: lo que se acaba de escribir (`old()`, para no borrar nada ante un
  *    error —guía de UI §3—) o lo guardado.
+ *  - **Qué se ofrece**, que depende de la especialidad (#107): el **núcleo general** no muestra las dos
+ *    circunferencias del niño —la cefálica y la toráxica—, igual que el app desde la #90. La decisión de
+ *    qué sobra es del `AlcanceDeLaEspecialidad`; acá sólo se filtra **en una sola lista**, la que usan las
+ *    filas y el contador.
  */
 final class EvaluacionFisicaVista
 {
@@ -43,6 +48,9 @@ final class EvaluacionFisicaVista
         private array $plantillasGinecologico = [],
         private string $parte = PestanasDelExamen::FISICO,
         private array $historial = [],
+        // El alcance de la especialidad (#107): null = no se pasó, y entonces se ofrece todo, como antes.
+        // El controlador siempre lo pasa; es opcional para no romper a quien construya la vista sola.
+        private ?AlcanceDeLaEspecialidad $alcance = null,
     ) {
     }
 
@@ -67,9 +75,36 @@ final class EvaluacionFisicaVista
     {
         $campos = $this->esGinecologico()
             ? ExamenFisicoDeLaConsulta::ginecologico()
-            : array_merge(ExamenFisicoDeLaConsulta::antropometria(), ExamenFisicoDeLaConsulta::general());
+            : array_merge($this->camposDeLaAntropometria(), ExamenFisicoDeLaConsulta::general());
 
         return array_flip(array_column($campos, 'columna'));
+    }
+
+    /**
+     * La antropometría que esta pantalla **ofrece**: el mapa completo menos lo que la especialidad no
+     * ofrece (la cefálica y la toráxica en el núcleo general, #107).
+     *
+     * Es **la única lista** de la antropometría: de acá salen las filas del formulario y el denominador
+     * del contador, para que «N de M campos con dato» no cuente campos que no se ven. Las columnas no
+     * salen del mapa —una consulta vieja conserva sus valores guardados y la impresión los sigue
+     * leyendo—: lo que no se ofrece es escribirlos.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private function camposDeLaAntropometria(): array
+    {
+        $campos = ExamenFisicoDeLaConsulta::antropometria();
+
+        if ($this->alcance === null) {
+            return $campos;
+        }
+
+        $ocultas = $this->alcance->antropometriaQueNoSeOfrece();
+
+        return array_values(array_filter(
+            $campos,
+            fn (array $campo) => ! in_array($campo['columna'], $ocultas, true),
+        ));
     }
 
     /** A dónde pide «Actualizar» el resumen armado con lo que hay en el formulario (WEB-11.8). */
@@ -114,7 +149,7 @@ final class EvaluacionFisicaVista
      */
     public function antropometria(): array
     {
-        return $this->filas(ExamenFisicoDeLaConsulta::antropometria());
+        return $this->filas($this->camposDeLaAntropometria());
     }
 
     /** El examen por aparatos, en filas listas para pintar. */
