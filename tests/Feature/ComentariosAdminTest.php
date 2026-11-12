@@ -121,6 +121,7 @@ class ComentariosAdminTest extends TestCase
     public function test_el_comentario_abierto_enlaza_al_medico_y_muestra_su_especialidad_principal(): void
     {
         $autor = $this->usuario('Medico');
+        $autor->update(['name' => 'Dr. de prueba Sugerencia']);
         $medico = \App\Models\Medico::create([
             'user_id' => $autor->id, 'name' => 'Dr. de prueba', 'lastname' => 'Sugerencia', 'email' => $autor->email,
             'password' => $autor->password, 'reg_medico' => 'sug-esp-' . substr(uniqid(), -6),
@@ -140,7 +141,13 @@ class ComentariosAdminTest extends TestCase
             ->call('abrir', $comentario->id)
             ->assertSeeHtml('href="' . route('admin.cuentas.medico', $medico) . '"')
             ->assertSee('Primera de prueba')
-            ->assertSee('(+1)', false);
+            ->assertSee('(+1)', false)
+            ->assertSee('Dr. de prueba Sugerencia</a>', false);
+
+        // El autor es el propio médico: en la cabecera su nombre sale una sola vez (la lista de abajo es otra cosa).
+        $html = preg_replace('/<!--.*?-->/s', '', Livewire::test(Comentarios::class)->call('abrir', $comentario->id)->html());
+        $this->assertDoesNotMatchRegularExpression('/Sugerencia\s*·\s*Medico\s*·\s*<a/u', $html);
+        $this->assertMatchesRegularExpression('/<small class="text-muted">\s*Medico\s*·\s*<a/u', $html);
     }
 
     public function test_la_respuesta_necesita_texto(): void
