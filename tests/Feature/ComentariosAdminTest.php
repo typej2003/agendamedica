@@ -118,6 +118,31 @@ class ComentariosAdminTest extends TestCase
         // Que el usuario vea la respuesta en su pantalla se prueba en AyudaWebTest: acá no hay contexto
     }
 
+    public function test_el_comentario_abierto_enlaza_al_medico_y_muestra_su_especialidad_principal(): void
+    {
+        $autor = $this->usuario('Medico');
+        $medico = \App\Models\Medico::create([
+            'user_id' => $autor->id, 'name' => 'Dr. de prueba', 'lastname' => 'Sugerencia', 'email' => $autor->email,
+            'password' => $autor->password, 'reg_medico' => 'sug-esp-' . substr(uniqid(), -6),
+        ]);
+        $primera = \App\Models\Specialty::firstOrCreate(['slug' => 'sug-primera'], ['name' => 'Primera de prueba']);
+        $segunda = \App\Models\Specialty::firstOrCreate(['slug' => 'sug-segunda'], ['name' => 'Aaa segunda de prueba']);
+        $medico->specialties()->attach($primera->id);
+        $medico->specialties()->attach($segunda->id);
+
+        $comentario = $this->comentario('Una sugerencia.', Comentario::NUEVO, $autor);
+        $comentario->update(['medico_id' => $medico->id, 'reg_medico' => $medico->reg_medico]);
+
+        $this->actingAs($this->usuario('Root'));
+
+        // La principal es la primera que se le asignó, no la primera por orden alfabético; las demás van en «+N».
+        Livewire::test(Comentarios::class)
+            ->call('abrir', $comentario->id)
+            ->assertSeeHtml('href="' . route('admin.cuentas.medico', $medico) . '"')
+            ->assertSee('Primera de prueba')
+            ->assertSee('(+1)', false);
+    }
+
     public function test_la_respuesta_necesita_texto(): void
     {
         $comentario = $this->comentario('Algo que reportar.');

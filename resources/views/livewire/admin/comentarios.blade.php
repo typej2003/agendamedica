@@ -35,7 +35,13 @@
                     <small class="text-muted">
                         {{ $seleccionado->usuario?->name ?? 'Cuenta borrada' }}
                         @if ($seleccionado->rol) · {{ $seleccionado->rol }} @endif
-                        @if ($seleccionado->medico) · {{ trim($seleccionado->medico->name . ' ' . $seleccionado->medico->lastname) }} ({{ $seleccionado->reg_medico }}) @endif
+                        @if ($seleccionado->medico)
+                            · <a href="{{ route('admin.cuentas.medico', $seleccionado->medico) }}">{{ trim($seleccionado->medico->name . ' ' . $seleccionado->medico->lastname) }}</a> ({{ $seleccionado->reg_medico }})
+                            @php($especialidades = $seleccionado->medico->specialties)
+                            @if ($especialidades->isNotEmpty())
+                                · {{ $especialidades->first()->name }}@if ($especialidades->count() > 1) <span title="{{ $especialidades->skip(1)->pluck('name')->implode(', ') }}">(+{{ $especialidades->count() - 1 }})</span>@endif
+                            @endif
+                        @endif
                         · {{ \App\Support\HoraLocal::fechaHora($seleccionado->created_at) }}
                     </small>
                 </div>

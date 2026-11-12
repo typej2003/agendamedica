@@ -141,7 +141,11 @@ class Comentarios extends Component
             'comentarios' => $comentarios,
             'conteos' => $this->conteos(),
             'seleccionado' => $this->comentarioId
-                ? Comentario::with(['usuario', 'medico', 'respondedor', 'imagenes'])->find($this->comentarioId)
+                // La especialidad principal del médico es la primera que se le asignó (el pivote no marca otra).
+                ? Comentario::with([
+                    'usuario', 'respondedor', 'imagenes',
+                    'medico.specialties' => fn ($query) => $query->orderBy('medico_specialty.id'),
+                ])->find($this->comentarioId)
                 : null,
         ]);
     }
