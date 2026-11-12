@@ -33,7 +33,8 @@
         <input type="hidden" name="pestana" value="fisico">
 
         {{-- 1. Antropometría, signos y tensión: las siete columnas `double` de `consultas` (peso, talla,
-             FC, FR y las tres circunferencias) más `examen_fisico_nuevo.tension`. --}}
+             FC, FR y las tres circunferencias) más `examen_fisico_nuevo.tension`. El ViewModel no ofrece
+             la cefálica ni la toráxica en el núcleo general (#107): las filtra él, no esta vista. --}}
         <h3 class="paso-titulo mb-2">Antropometría y signos</h3>
         <div class="row g-3 mb-3">
             @foreach ($seccion->antropometria() as $campo)

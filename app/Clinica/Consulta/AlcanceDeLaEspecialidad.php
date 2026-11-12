@@ -415,6 +415,26 @@ final class AlcanceDeLaEspecialidad
     }
 
     /**
+     * **Las circunferencias que el núcleo general no ofrece** (2026-11-11, #107 — el mismo defecto de la #90 en el
+     * app): la **cefálica** y la **toráxica** son medidas del niño.
+     *
+     * La fuente lo confirma en cardiología (`fuentes-cardiologia/…/w_consulta_principal.srw`, `tabpage_signos`): no
+     * hay campo de la cefálica, `em_toraxica` y `em_abdominal` están en `visible = false`, y en su lugar mide una sola
+     * **Circunferencia Abdominal**. Por eso la abdominal **sí** se ofrece: es la que su escritorio mide.
+     *
+     * No es una lista de columnas del mapa: las que no se ofrecen siguen en
+     * `ExamenFisicoDeLaConsulta::antropometria()` —una consulta vieja que las tenga guardadas las conserva, y la
+     * impresión y el resumen las siguen leyendo—; el que filtra la pantalla es el ViewModel. Ginecología y pediatría
+     * las conservan, y el médico sin especialidad es núcleo general (`esGeneral()`), así que tampoco las ve.
+     *
+     * @return array<int,string>
+     */
+    public function antropometriaQueNoSeOfrece(): array
+    {
+        return $this->esGeneral() ? ['circcefalica', 'circtoraxica'] : [];
+    }
+
+    /**
      * **Los documentos de la pareja que no se ofrecen** fuera de ginecología (Alexander, 2026-11-06): el récipe de la
      * pareja y su orden de laboratorio. La consulta de pareja es **sólo de ginecología** (`muestraLaPareja()`), así que
      * fuera de ginecología no se ofrece nada de eso, igual que los documentos de ginecología: al pediatra no le toca

@@ -939,6 +939,9 @@ class ConsultaController extends Controller
                         PlantillasDelTexto::de($regMedico, 'EG')->all(),
                         $pestana,
                         $pestana === PestanasDelExamen::GINECOLOGICO ? (new ResumenesAnteriores())->de($consulta, 'total_g') : [],
+                        // Qué antropometría se ofrece depende de la especialidad (#107): el núcleo general
+                        // no muestra las circunferencias del niño (el mismo caso de la #90 en el app).
+                        $this->alcance(),
                     )),
             );
         }
