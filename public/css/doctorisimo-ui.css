@@ -710,6 +710,12 @@ input[type="datetime-local"]:disabled::-webkit-calendar-picker-indicator { curso
 /* El corazón de la marca (<x-marca-corazon>) mide como un ícono de Bootstrap: alto 1em, con el ancho del dibujo. */
 .marca-corazon { width: 1.096em; height: 1em; vertical-align: -.125em; flex: none; }
 
+/* El imagotipo de la identidad Doctorísimo (la «D» de los dos médicos) mide igual: alto 1em. En la ficha de
+   marca —el recuadro blanco del menú lateral y del login— ocupa la mayor parte del recuadro. */
+.marca-imagotipo { width: auto; height: 1em; vertical-align: -.125em; flex: none; }
+.app-marca-ficha .marca-imagotipo { height: 62%; }
+.auth-marca-logo .marca-imagotipo { height: 62%; }
+
 /* --- Menú lateral: indigo del logo, de arriba abajo --- */
 .app-sidebar {
     background: var(--ds-barra);

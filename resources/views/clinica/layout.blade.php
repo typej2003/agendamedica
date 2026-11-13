@@ -32,7 +32,7 @@
 
 <nav class="app-sidebar" id="clinica-sidebar" aria-label="Menú del consultorio">
     <a class="app-sidebar-marca" href="{{ route('clinica.inicio') }}">
-        <span class="app-marca-ficha" aria-hidden="true"><x-marca-corazon /></span>
+        <span class="app-marca-ficha" aria-hidden="true"><x-marca-imagotipo /></span>
         <span class="app-marca-nombre"><strong>Doctorísimo</strong><small>Consultorio</small></span>
     </a>
 
@@ -123,7 +123,7 @@
 
                 {{-- La marca vive en la barra lateral; en el celular, donde ésta se esconde, vuelve acá. --}}
                 <div class="app-marca d-lg-none">
-                    <x-marca-corazon class="app-marca-icono" />
+                    <x-marca-imagotipo class="app-marca-icono" />
                     <span class="d-none d-sm-inline">Doctorísimo</span>
                 </div>
 
@@ -190,7 +190,7 @@
                 <i class="bi bi-list fs-5" aria-hidden="true"></i>
             </button>
             <div class="app-marca">
-                <x-marca-corazon class="app-marca-icono" />
+                <x-marca-imagotipo class="app-marca-icono" />
                 <span class="d-none d-sm-inline">Doctorísimo</span>
             </div>
         </header>

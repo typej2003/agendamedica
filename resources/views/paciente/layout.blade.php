@@ -18,7 +18,7 @@
     <header class="paciente-barra">
         <div class="container paciente-barra-interior">
             <a href="{{ route('paciente.citas') }}" class="paciente-marca">
-                <span class="app-marca-ficha" aria-hidden="true"><x-marca-corazon /></span>
+                <span class="app-marca-ficha" aria-hidden="true"><x-marca-imagotipo /></span>
                 <span class="paciente-marca-nombre">Doctorísimo<span>.App</span></span>
             </a>
 
