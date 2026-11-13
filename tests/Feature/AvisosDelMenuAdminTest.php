@@ -14,9 +14,12 @@ use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /**
- * **Los números del menú del administrador** (2026-10-21): junto a Pagos, Solicitudes de médicos y Ayúdanos a
- * mejorar, cuántos esperan respuesta. Se cuenta lo pendiente (pagos pendientes o en proceso, solicitudes
+ * **Los números del menú del administrador** (2026-10-21): junto a Pagos, Solicitudes de médicos y Soporte y
+ * sugerencias, cuántos esperan respuesta. Se cuenta lo pendiente (pagos pendientes o en proceso, solicitudes
  * pendientes, comentarios nuevos) y nada más; quien no es administrador no ve esas bandejas ni sus números.
+ *
+ * Desde la tarjeta #111 (2026-11-12) «Pagos» vive dentro del grupo «Facturación y pagos»: el número va en el hijo y,
+ * para que se vea con el grupo cerrado, también en el `<summary>` del grupo.
  */
 class AvisosDelMenuAdminTest extends TestCase
 {
@@ -113,7 +116,9 @@ class AvisosDelMenuAdminTest extends TestCase
             ->assertSeeHtml('2 sin confirmar')
             ->assertSeeHtml('3 sin responder')
             ->assertSeeHtml('1 sin responder')
-            ->assertSeeHtml('title="Pagos (2 sin confirmar)"');
+            // El número de pagos, en el hijo y en el grupo cerrado.
+            ->assertSeeHtml('title="Facturación y pagos (2 sin confirmar)"')
+            ->assertSeeHtml('title="Facturación y pagos · Pagos (2 sin confirmar)"');
     }
 
     public function test_sin_pendientes_no_aparece_ningún_número(): void
@@ -126,7 +131,8 @@ class AvisosDelMenuAdminTest extends TestCase
         Livewire::test(Aside::class)
             ->assertViewHas('avisos', ['pagos' => 0, 'solicitudes' => 0, 'comentarios' => 0])
             ->assertDontSeeHtml('app-sidebar-aviso')
-            ->assertSeeHtml('title="Pagos"');
+            ->assertSeeHtml('title="Facturación y pagos"')
+            ->assertSeeHtml('title="Facturación y pagos · Pagos"');
     }
 
     public function test_más_de_99_se_muestra_como_99_más(): void
