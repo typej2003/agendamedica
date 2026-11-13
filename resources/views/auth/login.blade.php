@@ -22,7 +22,7 @@
     {{-- Panel de marca: en escritorio ocupa la mitad izquierda con el lema; en el celular queda de franja. --}}
     <aside class="auth-marca" aria-label="Doctorísimo">
         <a href="{{ url('/') }}" class="auth-marca-logo">
-            <span class="app-marca-ficha" aria-hidden="true"><x-marca-corazon /></span>
+            <span class="app-marca-ficha" aria-hidden="true"><x-marca-imagotipo /></span>
             <span class="auth-marca-nombre">Doctorísimo<span>.App</span></span>
         </a>
 
