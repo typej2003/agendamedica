@@ -5,17 +5,17 @@ namespace App\Support;
 /**
  * El logo de una especialidad, para la barra lateral de la web clínica (`clinica/layout`).
  *
- * Los logos son **los del escritorio de cada especialidad** —su carpeta `imagenes`: `PEDIATRIA.jpg` en
- * Ddrpedia, `OTORRINO.jpg` en ORLReport, `TRAUMATOLOGIA.jpg` en OrthoReport…—, copiados al tamaño que entra
- * en la barra (no se recorta ni se reescribe el arte original: se elige la variante que ya existe).
+ * Los logos son **los del manual de identidad** (`IDENTIDAD_BÁSICA_DOCTORISIMO.pdf`, 2026-11-13): la marca de
+ * cada especialidad —gineco report, pedia report…— con el azul de marca pasado a blanco para que se lea sobre
+ * la barra oscura, y el acento de la especialidad tal cual. Salen del manual a 600 dpi, con el fondo
+ * transparente.
  *
- * **El archivo se llama como el `slug` de la especialidad** (`pediatria.jpg`, `ginecologia-y-obstetricia.jpg`…)
+ * **El archivo se llama como el `slug` de la especialidad** (`pediatria.png`, `ginecologia-y-obstetricia.png`…)
  * y vive en `public/img/especialidades/`: sumar una especialidad es dejar su logo ahí, sin tocar la vista ni
  * este archivo.
  *
  * Una especialidad que todavía no tiene logo **no dibuja nada**: la barra no muestra un hueco ni un texto de
- * relleno. Hoy lo tienen las dos que la web atiende: pediatría (`PEDIATRIA_p_p.jpg` de Ddrpedia) y ginecología
- * y obstetricia (`GINECOLOGIA2_m.jpg` de MICONSULTAGI, la instalación de GinecoReport).
+ * relleno. Hoy lo tienen pediatría y ginecología y obstetricia.
  */
 class LogotipoEspecialidad
 {
@@ -23,10 +23,10 @@ class LogotipoEspecialidad
     public const CARPETA = 'img/especialidades';
 
     /**
-     * Las extensiones que se aceptan, en orden de preferencia. El JPEG es lo que trae el escritorio; las demás
-     * están para no tener que tocar esto si algún día un logo viene sin fondo.
+     * Las extensiones que se aceptan, en orden de preferencia. Los logos del manual son PNG con transparencia;
+     * el JPEG quedó del escritorio, para no tener que tocar esto si algún día vuelve uno sin fondo.
      */
-    private const EXTENSIONES = ['jpg', 'jpeg', 'png', 'webp'];
+    private const EXTENSIONES = ['png', 'webp', 'jpg', 'jpeg'];
 
     /** La URL del logo de esa especialidad, o `null` si no tiene (o si el archivo no está). */
     public static function url(?string $slug): ?string
